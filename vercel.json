@@ -1,3 +1,11 @@
 {
-  "cleanUrls": true
+  "cleanUrls": true,
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "www.oprek.net" }],
+      "destination": "https://oprek.net/$1",
+      "permanent": true
+    }
+  ]
 }
