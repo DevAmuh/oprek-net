@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>oprek.net</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+  canvas { display: block; position: fixed; inset: 0; }
+
+  /* QUOTE — top right */
+  #quote {
+    position: fixed;
+    top: clamp(16px, 4vw, 32px);
+    right: clamp(16px, 4vw, 32px);
+    z-index: 100;
+    max-width: min(280px, calc(100vw - 32px));
+    text-align: right;
+    pointer-events: none;
+    user-select: none;
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  #quote-text {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: clamp(11px, 1.4vw, 14px);
+    line-height: 1.65;
+    color: rgba(255,255,255,0.55);
+    font-style: italic;
+    letter-spacing: 0.01em;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.85), 0 0 14px rgba(0,0,0,0.6);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  #quote-author {
+    margin-top: 8px;
+    font-family: 'Georgia', serif;
+    font-size: clamp(9px, 1.1vw, 11px);
+    letter-spacing: 0.18em;
+    color: rgba(255,255,255,0.35);
+    text-transform: uppercase;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.85);
+    transition: opacity 0.7s ease;
+  }
+  #quote.fade { opacity: 0; transform: translateY(-4px); }
+
+  /* NAV — bottom left */
+  #nav {
+    position: fixed;
+    bottom: clamp(20px, 4vw, 32px);
+    left: clamp(20px, 4vw, 32px);
+    z-index: 100;
+  }
+  #nav-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+    min-height: 44px;
+    color: rgba(255,255,255,0.55);
+    text-shadow: 0 1px 6px rgba(0,0,0,0.85);
+    transition: color 0.3s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  #nav-toggle:hover { color: rgba(255,255,255,0.9); }
+  #nav-toggle .hamburger {
+    width: 22px;
+    height: 16px;
+    position: relative;
+    flex-shrink: 0;
+  }
+  #nav-toggle .hamburger span {
+    position: absolute;
+    left: 0; right: 0;
+    height: 1px;
+    background: currentColor;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+  #nav-toggle .hamburger span:nth-child(1) { top: 0; }
+  #nav-toggle .hamburger span:nth-child(2) { top: 50%; transform: translateY(-50%); }
+  #nav-toggle .hamburger span:nth-child(3) { bottom: 0; }
+  #nav-toggle.open .hamburger span:nth-child(1) { transform: translateY(8px) rotate(45deg); }
+  #nav-toggle.open .hamburger span:nth-child(2) { opacity: 0; transform: translateY(-50%) scaleX(0); }
+  #nav-toggle.open .hamburger span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
+  #nav-toggle .nav-label {
+    font-family: 'Georgia', serif;
+    font-size: clamp(11px, 2.5vw, 13px);
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+  }
+  #nav-links {
+    margin-top: 12px;
+    margin-left: 2px;
+    padding-left: 16px;
+    border-left: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.4s ease, opacity 0.4s ease;
+  }
+  #nav-links.open { max-height: 160px; opacity: 1; }
+  #nav-links a {
+    font-family: 'Georgia', serif;
+    font-size: clamp(11px, 2.5vw, 13px);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.5);
+    text-shadow: 0 1px 6px rgba(0,0,0,0.85);
+    text-decoration: none;
+    transition: color 0.25s, transform 0.25s;
+    display: inline-block;
+    padding: 4px 0;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+  #nav-links a:hover { color: rgba(255,255,255,0.95); transform: translateX(5px); }
+
+  /* DRAG HINT — sits between menu button and Earth */
+  #hint {
+    position: fixed;
+    bottom: clamp(70px, 12vw, 100px);
+    left: clamp(20px, 4vw, 32px);
+    z-index: 10;
+    font-family: 'Georgia', serif;
+    font-size: clamp(9px, 2.2vw, 11px);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+    text-shadow: 0 1px 6px rgba(0,0,0,0.85);
+    pointer-events: none;
+    transition: opacity 1.5s ease;
+    max-width: calc(50vw - 24px);
+    line-height: 1.6;
+  }
+  #hint.hidden { opacity: 0; }
+
+  /* VERTICAL EDGE TOGGLES — sky on the right (reads bottom-to-top, CCW),
+     orbits on the left (reads top-to-bottom, CW). They're geometric
+     mirrors of each other across the screen's vertical center line. */
+  #sky-toggle, #orbit-toggle {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Georgia', serif;
+    font-size: clamp(10px, 2.2vw, 12px);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.85);
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    white-space: nowrap;
+  }
+  #sky-toggle {
+    right: clamp(4px, 1.2vw, 14px);
+    /* CCW: text reads bottom-to-top — STARS at bottom, NATURE at top */
+    writing-mode: sideways-lr;
+  }
+  #orbit-toggle {
+    left: clamp(4px, 1.2vw, 14px);
+    /* CW: text reads top-to-bottom — mirror of the right side */
+    writing-mode: sideways-rl;
+  }
+  #sky-toggle .opt, #orbit-toggle .opt {
+    cursor: pointer;
+    color: rgba(255,255,255,0.32);
+    transition: color 0.25s ease;
+    padding: 10px 6px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    touch-action: manipulation;
+  }
+  #sky-toggle .opt:hover, #orbit-toggle .opt:hover { color: rgba(255,255,255,0.7); }
+  #sky-toggle .opt.active, #orbit-toggle .opt.active { color: rgba(255,255,255,0.95); }
+  #sky-toggle .sep, #orbit-toggle .sep {
+    color: rgba(255,255,255,0.18);
+    font-size: 0.8em;
+    pointer-events: none;
+  }
+  #sky-toggle .loading {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.4);
+    border-top-color: rgba(255,255,255,0.9);
+    margin-left: 6px;
+    animation: sky-spin 0.9s linear infinite;
+    display: none;
+  }
+  #sky-toggle.loading .loading { display: inline-block; }
+  @keyframes sky-spin { to { transform: rotate(360deg); } }
+
+  /* Sun handled entirely in WebGL — no CSS overlay needed */
+  #time-indicator {
+    position: fixed;
+    bottom: clamp(20px, 4vw, 32px);
+    right: clamp(20px, 4vw, 32px);
+    z-index: 10;
+    font-family: 'Georgia', serif;
+    font-size: clamp(9px, 2vw, 11px);
+    letter-spacing: 0.16em;
+    color: rgba(255,255,255,0.3);
+    text-shadow: 0 1px 6px rgba(0,0,0,0.85);
+    text-transform: uppercase;
+    pointer-events: none;
+    text-align: right;
+    transition: color 0.5s;
+  }
+  #time-indicator.active { color: rgba(255,255,255,0.6); }
+</style>
+</head>
+<body>
+
+<!-- QUOTE -->
+<div id="quote">
+  <div id="quote-text"></div>
+  <div id="quote-author"></div>
+</div>
+
+<!-- NAV -->
+<nav id="nav">
+  <button id="nav-toggle" aria-label="Menu" aria-expanded="false">
+    <span class="hamburger">
+      <span></span><span></span><span></span>
+    </span>
+    <span class="nav-label">MENU</span>
+  </button>
+  <div id="nav-links" role="menu">
+    <a href="/english" role="menuitem">english class</a>
+    <a href="/lab" role="menuitem">lab</a>
+  </div>
+</nav>
+
+<!-- DRAG HINT -->
+<div id="hint">DRAG EARTH OR MOON<br>TO ACCELERATE TIME</div>
+
+<!-- TIME INDICATOR -->
+<div id="time-indicator">1h = 1s</div>
+
+<!-- SKY TOGGLE -->
+<div id="sky-toggle" role="group" aria-label="Sky mode">
+  <span class="opt active" data-mode="stars" role="button" tabindex="0">Stars</span>
+  <span class="sep">·</span>
+  <span class="opt" data-mode="nature" role="button" tabindex="0">Nature</span>
+  <span class="loading" aria-hidden="true"></span>
+</div>
+
+<!-- ORBITS TOGGLE -->
+<div id="orbit-toggle" role="group" aria-label="Orbit paths">
+  <span class="opt active" data-orbits="off" role="button" tabindex="0">Off</span>
+  <span class="sep">·</span>
+  <span class="opt" data-orbits="on" role="button" tabindex="0">Orbits</span>
+</div>
+
+<!-- THREE.JS -->
+<script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+
+<script>
+// ============================================================
+// QUOTES
+// ============================================================
+const QUOTES = [
+  { text: "The more I learn, the more I realize how much I don't know.", author: "Albert Einstein" },
+  { text: "Live as if you were to die tomorrow. Learn as if you were to live forever.", author: "Mahatma Gandhi" },
+  { text: "Education is not the filling of a pail, but the lighting of a fire.", author: "W.B. Yeats" },
+  { text: "The beautiful thing about learning is that no one can take it away from you.", author: "B.B. King" },
+  { text: "Curiosity is the wick in the candle of learning.", author: "William Arthur Ward" },
+  { text: "The mind is not a vessel to be filled, but a fire to be kindled.", author: "Plutarch" },
+  { text: "Anyone who stops learning is old, whether at twenty or eighty.", author: "Henry Ford" },
+  { text: "I am still learning.", author: "Michelangelo" },
+  { text: "The only true wisdom is in knowing you know nothing.", author: "Socrates" },
+  { text: "Tell me and I forget. Teach me and I remember. Involve me and I learn.", author: "Benjamin Franklin" },
+  { text: "Learning never exhausts the mind.", author: "Leonardo da Vinci" },
+  { text: "An investment in knowledge pays the best interest.", author: "Benjamin Franklin" },
+  { text: "The more that you read, the more things you will know.", author: "Dr. Seuss" },
+  { text: "Wonder is the beginning of wisdom.", author: "Socrates" },
+  { text: "In learning you will teach, and in teaching you will learn.", author: "Phil Collins" },
+  { text: "Knowledge is of no value unless you put it into practice.", author: "Anton Chekhov" },
+];
+
+let currentQuoteIdx = Math.floor(Math.random() * QUOTES.length);
+const quoteEl = document.getElementById('quote');
+const quoteText = document.getElementById('quote-text');
+const quoteAuthor = document.getElementById('quote-author');
+
+function showQuote(idx, animate = false) {
+  const q = QUOTES[idx];
+  if (animate) {
+    quoteEl.style.opacity = '0';
+    quoteEl.style.transform = 'translateY(-5px)';
+    setTimeout(() => {
+      quoteText.textContent = '\u201c' + q.text + '\u201d';
+      quoteAuthor.textContent = '— ' + q.author;
+      quoteEl.style.transition = 'opacity 1s ease, transform 1s ease';
+      quoteEl.style.opacity = '1';
+      quoteEl.style.transform = 'translateY(0)';
+    }, 700);
+  } else {
+    quoteText.textContent = '\u201c' + q.text + '\u201d';
+    quoteAuthor.textContent = '— ' + q.author;
+    quoteEl.style.opacity = '0';
+    quoteEl.style.transform = 'translateY(-5px)';
+    setTimeout(() => {
+      quoteEl.style.transition = 'opacity 1.5s ease, transform 1.5s ease';
+      quoteEl.style.opacity = '1';
+      quoteEl.style.transform = 'translateY(0)';
+    }, 100);
+  }
+}
+
+showQuote(currentQuoteIdx);
+setInterval(() => {
+  currentQuoteIdx = (currentQuoteIdx + 1) % QUOTES.length;
+  showQuote(currentQuoteIdx, true);
+}, 12000);
+
+// ============================================================
+// NAV
+// ============================================================
+const navToggle = document.getElementById('nav-toggle');
+const navLinks = document.getElementById('nav-links');
+let navOpen = false;
+
+navToggle.addEventListener('click', (e) => {
+  e.stopPropagation();
+  navOpen = !navOpen;
+  navToggle.classList.toggle('open', navOpen);
+  navLinks.classList.toggle('open', navOpen);
+  navToggle.setAttribute('aria-expanded', navOpen);
+});
+
+document.addEventListener('click', () => {
+  if (navOpen) {
+    navOpen = false;
+    navToggle.classList.remove('open');
+    navLinks.classList.remove('open');
+    navToggle.setAttribute('aria-expanded', false);
+  }
+});
+
+// HINT
+const hintEl = document.getElementById('hint');
+setTimeout(() => { hintEl.classList.add('hidden'); }, 5000);
+
+// ============================================================
+// SCENE SETUP
+// ============================================================
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 5000);
+// Pull back more on portrait to give Earth breathing room
+const initZ = window.innerWidth < window.innerHeight ? 16 : 13;
+camera.position.set(0.8, 1.2, initZ);
+camera.lookAt(0, 0, 0);
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  // Adjust camera depth for portrait vs landscape
+  const targetZ = window.innerWidth < window.innerHeight ? 16 : 13;
+  camera.position.z = targetZ;
+  // Update moon orbit radius responsively
+  const newDist = window.innerWidth < 500 ? 3.2 : window.innerWidth < 768 ? 4.2 : 6;
+  if (moonMesh) moonMesh.position.x = newDist;
+});
+
+// ============================================================
+// LIGHTING
+// ============================================================
+// Ambient — slightly warmer so Earth's daylit face is always visible
+scene.add(new THREE.AmbientLight(0x223355, 0.7));
+
+// Sun light matches visual position (upper-left)
+const sunLight = new THREE.DirectionalLight(0xfff5e0, 3.0);
+sunLight.position.set(-7, 6, -5);
+scene.add(sunLight);
+
+// Subtle camera fill — ensures the Earth face toward viewer is never pitch black
+const camFill = new THREE.DirectionalLight(0x334466, 0.35);
+camFill.position.set(0, 0, 10);
+scene.add(camFill);
+
+// Earthshine fill from below
+const fillLight = new THREE.DirectionalLight(0x1a3060, 0.2);
+fillLight.position.set(4, -3, 6);
+scene.add(fillLight);
+
+// ============================================================
+// TEXTURE LOADER
+// ============================================================
+const loader = new THREE.TextureLoader();
+loader.crossOrigin = 'anonymous';
+
+function loadTex(url, fallbackColor) {
+  return new Promise((resolve) => {
+    loader.load(url, resolve, undefined, () => {
+      // on error, return null so we fall back gracefully
+      resolve(null);
+    });
+  });
+}
+
+// ============================================================
+// CELESTIAL SPHERE — stars + nebulae fixed in this group
+// Rotates with Earth's orbital position (parallax / star drift)
+// 1 full revolution per Earth year = 365.25 * 24 * 3600 sim-seconds
+// ============================================================
+const celestialSphere = new THREE.Group();
+scene.add(celestialSphere);
+
+function buildStarField() {
+  // ── STARS ──────────────────────────────────────────────────────────────
+  // Reference: NuSTAR deep field — sparse, mostly tiny colored dots,
+  // few bright blue stars with soft halos, not crowded.
+  // Two layers: (1) dim background dots, (2) bright foreground stars with glow sprites
+
+  const BG_COUNT = 2000; // background dots filling the entire celestial sphere
+  const bgPos = new Float32Array(BG_COUNT * 3);
+  const bgCol = new Float32Array(BG_COUNT * 3);
+  const bgSz  = new Float32Array(BG_COUNT);
+  // Per-star twinkle phase stored as extra attrib
+  const bgPhase = new Float32Array(BG_COUNT);
+
+  for (let i = 0; i < BG_COUNT; i++) {
+    const theta = Math.random() * Math.PI * 2;
+    const phi   = Math.acos(2 * Math.random() - 1);
+    const r     = 400 + Math.random() * 500;
+    bgPos[i*3]   = r * Math.sin(phi) * Math.cos(theta);
+    bgPos[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
+    bgPos[i*3+2] = r * Math.cos(phi);
+
+    // Realistic stellar color distribution — mostly white-yellow, some warm
+    // reds, a few hot blue-whites. Tuned brighter than before since the prior
+    // colors were paired with a broken attribute name (rendered as black).
+    const t = Math.random();
+    if (t < 0.55) {
+      // white / pale-yellow (most common — sun-like)
+      const k = 0.85 + Math.random() * 0.15;
+      bgCol[i*3]=k; bgCol[i*3+1]=k*(0.92+Math.random()*0.08); bgCol[i*3+2]=k*(0.85+Math.random()*0.1);
+    } else if (t < 0.78) {
+      // warm yellow-orange (K-type)
+      bgCol[i*3]=0.95+Math.random()*0.05; bgCol[i*3+1]=0.78+Math.random()*0.15; bgCol[i*3+2]=0.45+Math.random()*0.2;
+    } else if (t < 0.90) {
+      // red-orange (red giants / M-type)
+      bgCol[i*3]=0.95+Math.random()*0.05; bgCol[i*3+1]=0.55+Math.random()*0.2; bgCol[i*3+2]=0.35+Math.random()*0.15;
+    } else {
+      // blue-white (hot young O/B-type)
+      bgCol[i*3]=0.7+Math.random()*0.2; bgCol[i*3+1]=0.85+Math.random()*0.15; bgCol[i*3+2]=1.0;
+    }
+    bgSz[i] = 0.6 + Math.random() * 1.2;
+    bgPhase[i] = Math.random() * Math.PI * 2;
+  }
+
+  const bgGeo = new THREE.BufferGeometry();
+  bgGeo.setAttribute('position',   new THREE.BufferAttribute(bgPos,   3));
+  bgGeo.setAttribute('aStarColor', new THREE.BufferAttribute(bgCol,   3));
+  bgGeo.setAttribute('aSize',      new THREE.BufferAttribute(bgSz,    1));
+  bgGeo.setAttribute('aPhase',     new THREE.BufferAttribute(bgPhase, 1));
+
+  // Custom shader material for twinkling.
+  // FIX: previous version declared `attribute vec3 starColor;` while the
+  // geometry attribute was named `color` — names didn't match so colors
+  // came in as zero (black on black, invisible). Renamed every attribute to
+  // unambiguous `aStarColor`/`aSize`/`aPhase` to avoid any clash with
+  // Three.js's built-ins (`color`, `size`).
+  const bgMat = new THREE.ShaderMaterial({
+    uniforms: { time: { value: 0 } },
+    vertexShader: `
+      attribute vec3 aStarColor;
+      attribute float aSize;
+      attribute float aPhase;
+      uniform float time;
+      varying vec3 vColor;
+      varying float vTwinkle;
+      void main() {
+        vColor = aStarColor;
+        float freq = 0.8 + fract(aPhase * 7.3) * 1.4;
+        vTwinkle = 0.72 + 0.28 * sin(time * freq + aPhase);
+        vec4 mv = modelViewMatrix * vec4(position, 1.0);
+        // Stars sit at 400–900 units; the multiplier converts world-size to
+        // screen pixels at typical depths. ~2000 gives 1.5–4.5 px points.
+        gl_PointSize = aSize * (2000.0 / -mv.z) * vTwinkle;
+        gl_Position = projectionMatrix * mv;
+      }
+    `,
+    fragmentShader: `
+      varying vec3 vColor;
+      varying float vTwinkle;
+      void main() {
+        float d = length(gl_PointCoord - 0.5) * 2.0;
+        float alpha = smoothstep(1.0, 0.05, d) * vTwinkle;
+        if (alpha < 0.01) discard;
+        gl_FragColor = vec4(vColor * vTwinkle, alpha);
+      }
+    `,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+
+  const bgStars = new THREE.Points(bgGeo, bgMat);
+  celestialSphere.add(bgStars);
+
+  // Bright foreground stars — canvas sprite blobs (like the blue halos in NuSTAR)
+  // ~12 prominent stars scattered around
+  const brightStarData = [
+    {r:320, theta:0.8,  phi:1.2, size:6,  col:'rgba(140,200,255,'},  // blue
+    {r:350, theta:2.1,  phi:0.7, size:5,  col:'rgba(160,210,255,'},
+    {r:380, theta:3.5,  phi:1.8, size:4.5,col:'rgba(120,190,255,'},
+    {r:360, theta:5.0,  phi:0.9, size:5.5,col:'rgba(150,205,255,'},
+    {r:400, theta:1.4,  phi:2.4, size:4,  col:'rgba(255,240,180,'},  // warm yellow
+    {r:340, theta:4.2,  phi:1.5, size:4,  col:'rgba(255,220,140,'},
+    {r:370, theta:0.3,  phi:2.8, size:3.5,col:'rgba(255,180,120,'},  // orange
+    {r:410, theta:2.8,  phi:0.4, size:4,  col:'rgba(130,195,255,'},  // blue
+    {r:330, theta:6.0,  phi:1.1, size:5,  col:'rgba(145,202,255,'},
+    {r:390, theta:3.0,  phi:2.1, size:3.5,col:'rgba(255,255,220,'},  // white
+    {r:355, theta:1.8,  phi:3.0, size:4.5,col:'rgba(140,200,255,'},
+    {r:420, theta:4.8,  phi:2.0, size:3,  col:'rgba(255,200,150,'},
+  ];
+
+  // Build a star glow canvas texture
+  function makeStarTex(col, size) {
+    const s = Math.ceil(size * 24);
+    const nc = document.createElement('canvas');
+    nc.width = s * 2; nc.height = s * 2;
+    const ctx = nc.getContext('2d');
+    // Diffuse halo
+    const halo = ctx.createRadialGradient(s,s,0, s,s,s);
+    halo.addColorStop(0,   col + '0.35)');
+    halo.addColorStop(0.4, col + '0.12)');
+    halo.addColorStop(0.8, col + '0.03)');
+    halo.addColorStop(1,   col + '0)');
+    ctx.fillStyle = halo; ctx.fillRect(0,0,s*2,s*2);
+    // Bright core
+    const core = ctx.createRadialGradient(s,s,0, s,s,s*0.18);
+    core.addColorStop(0, 'rgba(255,255,255,0.95)');
+    core.addColorStop(1, col + '0.5)');
+    ctx.fillStyle = core; ctx.beginPath(); ctx.arc(s,s,s*0.22,0,Math.PI*2); ctx.fill();
+    return new THREE.CanvasTexture(nc);
+  }
+
+  brightStarData.forEach(({ r, theta, phi: p, size, col }) => {
+    const x = r * Math.sin(p) * Math.cos(theta);
+    const y = r * Math.sin(p) * Math.sin(theta);
+    const z = r * Math.cos(p);
+    const tex = makeStarTex(col, size);
+    const mat = new THREE.SpriteMaterial({
+      map: tex, transparent: true, blending: THREE.AdditiveBlending,
+      depthTest: false, depthWrite: false
+    });
+    const sp = new THREE.Sprite(mat);
+    sp.position.set(x, y, z);
+    sp.scale.setScalar(size * 5);
+    celestialSphere.add(sp);
+  });
+
+  return bgStars; // return for animation loop reference
+}
+
+const starPoints = buildStarField();
+
+// ============================================================
+// NATURE SKY — toggleable ESO Milky Way panorama (real photograph)
+// ============================================================
+// 6000×3000 ESO/Brunier 360° panorama. Galactic bulge, dust lanes,
+// Magellanic Clouds, Andromeda, and naked-eye nebulae are baked in
+// at real sky positions. Wrapped on an inverted sphere and tilted so
+// the galactic poles sit on world ±Y (out of camera FOV) — kills the
+// equirectangular pole-singularity "vortex" that appears at high tilts.
+const SKY_HD_LOCAL = 'assets/milkyway-hd.jpg';
+const SKY_HD_CDN   = 'https://upload.wikimedia.org/wikipedia/commons/6/60/ESO_-_Milky_Way.jpg';
+const SKY_LD_LOCAL = 'assets/milkyway.jpg';
+const SKY_LD_CDN   = 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/ESO_-_Milky_Way.jpg/3840px-ESO_-_Milky_Way.jpg';
+
+let skyTilt = null;
+let skyTexCache = null;
+let skyLoading = false;
+
+async function ensureNatureSky() {
+  if (skyTilt || skyLoading) return;
+  skyLoading = true;
+  document.getElementById('sky-toggle').classList.add('loading');
+  try {
+    if (!skyTexCache) {
+      skyTexCache =
+        (await loadTex(SKY_HD_LOCAL)) ||
+        (await loadTex(SKY_HD_CDN))   ||
+        (await loadTex(SKY_LD_LOCAL)) ||
+        (await loadTex(SKY_LD_CDN));
+      if (!skyTexCache) return; // all sources failed; procedural stars carry on
+      skyTexCache.colorSpace = THREE.SRGBColorSpace;
+      skyTexCache.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    }
+    skyTilt = new THREE.Group();
+    // X=0 so galactic poles stay on world Y axis (vertical, off-screen) —
+    // no equirectangular pole singularity in the camera's view.
+    // Y=π/2 puts the galactic-center bulge directly in front of camera.
+    // Z=28° tilts the band into a pleasing diagonal across the screen.
+    skyTilt.rotation.set(0, Math.PI / 2, THREE.MathUtils.degToRad(28));
+
+    const skyMesh = new THREE.Mesh(
+      new THREE.SphereGeometry(1500, 64, 32),
+      new THREE.MeshBasicMaterial({
+        map: skyTexCache,
+        side: THREE.BackSide,
+        depthWrite: false,
+        // Warm-gray multiplier — long-exposure feel, lets dust lanes pop
+        color: 0xc8c2b2,
+        toneMapped: false,
+      })
+    );
+    skyMesh.renderOrder = -1;
+    skyTilt.add(skyMesh);
+    celestialSphere.add(skyTilt);
+  } finally {
+    skyLoading = false;
+    document.getElementById('sky-toggle').classList.remove('loading');
+  }
+}
+
+function removeNatureSky() {
+  if (!skyTilt) return;
+  const mesh = skyTilt.children[0];
+  celestialSphere.remove(skyTilt);
+  if (mesh) {
+    mesh.geometry.dispose();
+    mesh.material.dispose();
+  }
+  skyTilt = null;
+}
+
+// ============================================================
+// SKY MODE TOGGLE — STARS (procedural only) / NATURE (panorama)
+// ============================================================
+const skyToggleEl = document.getElementById('sky-toggle');
+const skyToggleOpts = skyToggleEl.querySelectorAll('.opt');
+let skyMode = localStorage.getItem('oprek.skyMode') || 'stars';
+
+function setSkyMode(mode) {
+  if (mode !== 'stars' && mode !== 'nature') mode = 'stars';
+  skyMode = mode;
+  localStorage.setItem('oprek.skyMode', mode);
+  skyToggleOpts.forEach((opt) => {
+    opt.classList.toggle('active', opt.dataset.mode === mode);
+    opt.setAttribute('aria-pressed', opt.dataset.mode === mode);
+  });
+  if (mode === 'nature') ensureNatureSky();
+  else removeNatureSky();
+}
+
+skyToggleOpts.forEach((opt) => {
+  const handler = (e) => { e.stopPropagation(); setSkyMode(opt.dataset.mode); };
+  opt.addEventListener('click', handler);
+  opt.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handler(e); }
+  });
+});
+
+setSkyMode(skyMode); // initial
+
+// ============================================================
+// EARTH
+// ============================================================
+const earthGroup = new THREE.Group();
+earthGroup.rotation.z = 23.5 * (Math.PI / 180); // axial tilt
+scene.add(earthGroup);
+
+let earthMesh, cloudMesh;
+
+// Atmosphere shader — thin limb glow only
+const atmMat = new THREE.ShaderMaterial({
+  vertexShader: `
+    varying vec3 vNormal;
+    void main() {
+      vNormal = normalize(normalMatrix * normal);
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+    }`,
+  fragmentShader: `
+    varying vec3 vNormal;
+    void main() {
+      float i = pow(max(0.0, 0.42 - dot(vNormal, vec3(0,0,1))), 6.0);
+      gl_FragColor = vec4(0.3, 0.6, 1.0, 1.0) * i * 0.5;
+    }`,
+  blending: THREE.AdditiveBlending,
+  side: THREE.BackSide,
+  transparent: true,
+});
+const atmMesh = new THREE.Mesh(new THREE.SphereGeometry(1.12, 48, 48), atmMat);
+earthGroup.add(atmMesh);
+
+(async () => {
+  const [map, bump, spec, clouds] = await Promise.all([
+    loadTex('https://unpkg.com/three-globe@2.31.1/example/img/earth-blue-marble.jpg'),
+    loadTex('https://unpkg.com/three-globe@2.31.1/example/img/earth-topology.png'),
+    loadTex('https://unpkg.com/three-globe@2.31.1/example/img/earth-water.png'),
+    loadTex('https://unpkg.com/three-globe@2.31.1/example/img/earth-clouds.png'),
+  ]);
+
+  const earthMat = new THREE.MeshPhongMaterial({
+    map:        map  || undefined,
+    bumpMap:    bump || undefined,
+    bumpScale:  0.025,
+    specularMap: spec || undefined,
+    specular:   new THREE.Color(0x444444),
+    shininess:  8,
+    color:      map ? 0xffffff : 0x2244aa,
+  });
+
+  earthMesh = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 64), earthMat);
+  earthGroup.add(earthMesh);
+
+  if (clouds) {
+    const cloudMat = new THREE.MeshPhongMaterial({
+      map: clouds, transparent: true, opacity: 0.38, depthWrite: false
+    });
+    cloudMesh = new THREE.Mesh(new THREE.SphereGeometry(1.012, 48, 48), cloudMat);
+    earthGroup.add(cloudMesh);
+  }
+})();
+
+// ============================================================
+// MOON
+// ============================================================
+const moonOrbitGroup = new THREE.Group();
+moonOrbitGroup.rotation.x = 5.14 * (Math.PI / 180); // orbital inclination
+scene.add(moonOrbitGroup);
+
+const moonPivot = new THREE.Group();
+moonOrbitGroup.add(moonPivot);
+
+let moonMesh;
+// Responsive moon distance — smaller on portrait/narrow screens
+const MOON_DIST = Math.min(6, window.innerWidth < 500 ? 3.2 : window.innerWidth < 768 ? 4.2 : 6);
+
+// No orbit ring — keep it clean
+
+(async () => {
+  const moonMap = await loadTex('https://unpkg.com/three-globe@2.31.1/example/img/moon.jpg');
+  const moonMat = new THREE.MeshStandardMaterial({
+    map: moonMap || undefined,
+    color: moonMap ? 0xffffff : 0xaaaaaa,
+    roughness: 1, metalness: 0,
+  });
+  moonMesh = new THREE.Mesh(new THREE.SphereGeometry(0.27, 32, 32), moonMat);
+  moonMesh.position.x = MOON_DIST;
+  moonPivot.add(moonMesh);
+})();
+
+// Moon trail
+const trailCount = 80;
+const trailPositions = new Float32Array(trailCount * 3);
+const trailGeo = new THREE.BufferGeometry();
+trailGeo.setAttribute('position', new THREE.BufferAttribute(trailPositions, 3));
+const trailMat = new THREE.LineBasicMaterial({ color: 0xaaaaaa, transparent: true, opacity: 0.15 });
+const trailLine = new THREE.Line(trailGeo, trailMat);
+scene.add(trailLine);
+const trailHistory = [];
+
+// ============================================================
+// SUN — billboard sprite, always faces camera
+// ============================================================
+const SUN_POS = new THREE.Vector3(-7, 6, -5);
+
+// Sun core disc
+const sunCoreMesh = new THREE.Mesh(
+  new THREE.SphereGeometry(0.28, 20, 20),
+  new THREE.MeshBasicMaterial({ color: 0xFFFFBB, depthTest: false })
+);
+sunCoreMesh.position.copy(SUN_POS);
+sunCoreMesh.renderOrder = 999;
+scene.add(sunCoreMesh);
+
+// Glow — canvas texture billboard
+const sunCanvas = document.createElement('canvas');
+sunCanvas.width = 128; sunCanvas.height = 128;
+const sCtx = sunCanvas.getContext('2d');
+const sGrad = sCtx.createRadialGradient(64,64,0, 64,64,64);
+sGrad.addColorStop(0,   'rgba(255,255,180,1)');
+sGrad.addColorStop(0.15,'rgba(255,220,80,0.9)');
+sGrad.addColorStop(0.35,'rgba(255,160,30,0.5)');
+sGrad.addColorStop(0.6, 'rgba(255,120,0,0.15)');
+sGrad.addColorStop(1,   'rgba(255,80,0,0)');
+sCtx.fillStyle = sGrad;
+sCtx.fillRect(0,0,128,128);
+
+const sunTex = new THREE.CanvasTexture(sunCanvas);
+const sunSpriteMat = new THREE.SpriteMaterial({
+  map: sunTex, transparent: true, blending: THREE.AdditiveBlending,
+  depthTest: false, depthWrite: false
+});
+const sunSprite = new THREE.Sprite(sunSpriteMat);
+sunSprite.position.copy(SUN_POS);
+sunSprite.scale.setScalar(7);
+sunSprite.renderOrder = 998;
+scene.add(sunSprite);
+
+// Larger soft outer halo
+const sunHaloCanvas = document.createElement('canvas');
+sunHaloCanvas.width = 128; sunHaloCanvas.height = 128;
+const hCtx = sunHaloCanvas.getContext('2d');
+const hGrad = hCtx.createRadialGradient(64,64,0, 64,64,64);
+hGrad.addColorStop(0,   'rgba(255,200,60,0.15)');
+hGrad.addColorStop(0.4, 'rgba(255,140,20,0.07)');
+hGrad.addColorStop(1,   'rgba(255,80,0,0)');
+hCtx.fillStyle = hGrad;
+hCtx.fillRect(0,0,128,128);
+
+const sunHaloTex = new THREE.CanvasTexture(sunHaloCanvas);
+const sunHaloSprite = new THREE.Sprite(new THREE.SpriteMaterial({
+  map: sunHaloTex, transparent: true, blending: THREE.AdditiveBlending,
+  depthTest: false, depthWrite: false
+}));
+sunHaloSprite.position.copy(SUN_POS);
+sunHaloSprite.scale.setScalar(18);
+sunHaloSprite.renderOrder = 997;
+scene.add(sunHaloSprite);
+
+// sunGlowMat placeholder (no longer used as mesh, but referenced in animate)
+const sunGlowMat = { uniforms: { time: { value: 0 } } };
+
+// ============================================================
+// PLANETS — fixed positions relative to Sun, no orbit rings shown
+// ============================================================
+// Instead of orbiting around the sun with huge rings,
+// we place planets at fixed world positions (they move slowly)
+// Planets are small dots at varying distances, no orbit lines
+
+// Scientifically accurate sidereal rotation periods (Earth days):
+// Mercury: 58.6d, Venus: -243d (retrograde), Earth: 1d, Mars: 1.03d
+// Jupiter: 0.41d, Saturn: 0.44d, Uranus: -0.72d, Neptune: 0.67d
+// We scale these relative to Earth's rotation so differences are visible.
+// Earth base rotation speed (real): 2π / (24*3600) rad/s
+// We multiply by TIME_RATE (3600) to get rad/sim-second.
+// Relative factors below = sidereal_day / 1_earth_day, so
+// rotSpeed = EARTH_ROT_SPEED * (1 / relative_factor)
+// Negative = retrograde (Venus).
+
+const EARTH_ROT = (2 * Math.PI) / (24 * 3600); // rad per real second
+// Each planet's rotation speed in real rad/s (scaled by TIME_RATE via elapsedSim)
+const PLANET_DATA = [
+  // rotDays: sidereal rotation period in Earth days (neg = retrograde)
+  { name:'Mercury', r:0.05, pos:new THREE.Vector3( 1.0, 0.1, 0.3),  color:0xb5b5b5, period:88,    rotDays: 58.6  },
+  { name:'Venus',   r:0.09, pos:new THREE.Vector3( 1.8,-0.2, 0.6),  color:0xE6C87A, period:225,   rotDays:-243.0 },
+  { name:'Mars',    r:0.06, pos:new THREE.Vector3(-1.6, 0.4,-0.5),  color:0xC1440E, period:687,   rotDays: 1.026 },
+  { name:'Jupiter', r:0.20, pos:new THREE.Vector3( 3.2, 0.8,-1.2),  color:0xC9A86C, period:4333,  rotDays: 0.413 },
+  { name:'Saturn',  r:0.17, pos:new THREE.Vector3(-3.8, 1.2,-2.0),  color:0xE3D5A8, period:10759, rotDays: 0.444, rings:true },
+];
+
+const planetMeshes = [];
+
+PLANET_DATA.forEach((p) => {
+  // Planet body
+  const mat = new THREE.MeshStandardMaterial({
+    color: p.color, roughness: 0.85, metalness: 0.05,
+    emissive: new THREE.Color(p.color).multiplyScalar(0.08)
+  });
+  const mesh = new THREE.Mesh(new THREE.SphereGeometry(p.r, 16, 16), mat);
+  mesh.position.copy(SUN_POS).add(p.pos);
+  scene.add(mesh);
+
+  // Saturn's ring — added as a SIBLING (not child) of planet mesh,
+  // so it doesn't inherit the planet's spin. Tilted 26.7° to ecliptic.
+  let ringMesh = null;
+  if (p.rings) {
+    const rGeo = new THREE.RingGeometry(p.r * 1.5, p.r * 2.4, 64);
+    const rMat = new THREE.MeshBasicMaterial({
+      color: 0xC9B896, transparent: true, opacity: 0.55, side: THREE.DoubleSide
+    });
+    ringMesh = new THREE.Mesh(rGeo, rMat);
+    // Saturn's ring tilt: 26.7° from equatorial plane
+    ringMesh.rotation.x = Math.PI / 2 - 26.7 * (Math.PI / 180);
+    ringMesh.position.copy(mesh.position);
+    scene.add(ringMesh);
+  }
+
+  const angSpeed  = (2 * Math.PI) / (p.period * 24 * 3600); // orbital rad/real-s
+  const rotSpeed  = (2 * Math.PI) / (Math.abs(p.rotDays) * 24 * 3600); // axial rad/real-s
+  const rotDir    = p.rotDays < 0 ? -1 : 1; // retrograde check
+  const initAngle = Math.atan2(p.pos.z, p.pos.x);
+  const orbitR    = Math.sqrt(p.pos.x ** 2 + p.pos.z ** 2);
+
+  planetMeshes.push({ mesh, ringMesh, angSpeed, rotSpeed, rotDir, initAngle, orbitR, sunPos: SUN_POS, yOff: p.pos.y });
+});
+
+// Keep planetPivots empty — we animate planetMeshes directly
+const planetPivots = [];
+
+// ============================================================
+// ORBIT PATHS — line loops showing each planet's orbit around the Sun
+// and the Moon's orbit around Earth. Default hidden; toggled by the
+// left-side ORBITS UI. We track every ring in `orbitMeshes` so a single
+// visibility flag covers them all (the moon ring lives under
+// moonOrbitGroup to inherit its 5.14° tilt, so it can't share a parent
+// with the planet rings).
+// ============================================================
+const orbitMeshes = [];
+
+function makeOrbitRing(radius, color, opacity, segments) {
+  const pts = [];
+  for (let i = 0; i <= segments; i++) {
+    const a = (i / segments) * Math.PI * 2;
+    pts.push(new THREE.Vector3(Math.cos(a) * radius, 0, Math.sin(a) * radius));
+  }
+  const geo = new THREE.BufferGeometry().setFromPoints(pts);
+  const mat = new THREE.LineBasicMaterial({
+    color, transparent: true, opacity, depthWrite: false,
+  });
+  return new THREE.LineLoop(geo, mat);
+}
+
+// Planet orbits — anchored at the Sun, lying in the ecliptic plane (with
+// each planet's small Y offset preserved so the ring intersects the planet)
+planetMeshes.forEach((p) => {
+  const ring = makeOrbitRing(p.orbitR, 0x5b6582, 0.30, 256);
+  ring.position.copy(p.sunPos);
+  ring.position.y += p.yOff;
+  ring.visible = false;
+  scene.add(ring);
+  orbitMeshes.push(ring);
+});
+
+// Moon orbit — child of moonOrbitGroup so it inherits the 5.14° inclination
+{
+  const ring = makeOrbitRing(MOON_DIST, 0x7884a0, 0.40, 128);
+  ring.visible = false;
+  moonOrbitGroup.add(ring);
+  orbitMeshes.push(ring);
+}
+
+function setOrbitsVisible(visible) {
+  for (const m of orbitMeshes) m.visible = visible;
+}
+
+// ============================================================
+// ORBIT PATHS TOGGLE — left side, mirrors the sky toggle
+// ============================================================
+const orbitToggleEl   = document.getElementById('orbit-toggle');
+const orbitToggleOpts = orbitToggleEl.querySelectorAll('.opt');
+let orbitsMode = localStorage.getItem('oprek.orbitsMode') || 'off';
+
+function setOrbitsMode(mode) {
+  if (mode !== 'on' && mode !== 'off') mode = 'off';
+  orbitsMode = mode;
+  localStorage.setItem('oprek.orbitsMode', mode);
+  setOrbitsVisible(mode === 'on');
+  orbitToggleOpts.forEach((opt) => {
+    opt.classList.toggle('active', opt.dataset.orbits === mode);
+    opt.setAttribute('aria-pressed', opt.dataset.orbits === mode);
+  });
+}
+
+orbitToggleOpts.forEach((opt) => {
+  const handler = (e) => { e.stopPropagation(); setOrbitsMode(opt.dataset.orbits); };
+  opt.addEventListener('click', handler);
+  opt.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handler(e); }
+  });
+});
+
+setOrbitsMode(orbitsMode); // initial
+
+// ============================================================
+// COSMIC EVENTS
+// ============================================================
+const cosmicObjects = [];
+
+// Meteor / shooting star
+function spawnMeteor() {
+  const geo = new THREE.BufferGeometry();
+  const len = 2.5 + Math.random() * 4;
+  const dir = new THREE.Vector3(
+    (Math.random() - 0.5) * 0.6 - 0.4,
+    -0.5 - Math.random() * 0.5,
+    (Math.random() - 0.5) * 0.4
+  ).normalize();
+
+  // Start from random edge of screen (in 3D space near camera)
+  const start = new THREE.Vector3(
+    (Math.random() - 0.5) * 30,
+    8 + Math.random() * 8,
+    -5 + Math.random() * 8
+  );
+
+  const pts = [start.clone(), start.clone().addScaledVector(dir, len)];
+  geo.setFromPoints(pts);
+
+  const brightness = 0.7 + Math.random() * 0.3;
+  const mat = new THREE.LineBasicMaterial({
+    color: new THREE.Color(brightness, brightness * 0.95, brightness * 0.85),
+    transparent: true, opacity: 0.9
+  });
+  const line = new THREE.Line(geo, mat);
+  scene.add(line);
+
+  cosmicObjects.push({
+    type: 'meteor', mesh: line, mat,
+    velocity: dir.clone().multiplyScalar(0.35 + Math.random() * 0.25),
+    life: 0, maxLife: 0.6 + Math.random() * 0.4
+  });
+}
+
+// Comet (longer trail, slower)
+function spawnComet() {
+  const trailLen = 6 + Math.random() * 8;
+  const dir = new THREE.Vector3(
+    (Math.random() - 0.5) * 0.8,
+    -0.2 - Math.random() * 0.3,
+    (Math.random() - 0.5) * 0.5
+  ).normalize();
+
+  const start = new THREE.Vector3(
+    (Math.random() - 0.5) * 50,
+    12 + Math.random() * 10,
+    -20 + Math.random() * 15
+  );
+
+  const pts = [];
+  for (let i = 0; i <= 20; i++) {
+    pts.push(start.clone().addScaledVector(dir, (i / 20) * trailLen));
+  }
+  const geo = new THREE.BufferGeometry().setFromPoints(pts);
+
+  // Gradient-ish via vertex colors workaround: just use a very bright line
+  const mat = new THREE.LineBasicMaterial({
+    color: 0xccddff, transparent: true, opacity: 0.75
+  });
+  const line = new THREE.Line(geo, mat);
+  scene.add(line);
+
+  // Nucleus
+  const nucleusMat = new THREE.MeshBasicMaterial({ color: 0xeeeeff });
+  const nucleus = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), nucleusMat);
+  nucleus.position.copy(pts[pts.length - 1]);
+  scene.add(nucleus);
+
+  cosmicObjects.push({
+    type: 'comet', mesh: line, mat, nucleus,
+    velocity: dir.clone().multiplyScalar(0.06 + Math.random() * 0.04),
+    life: 0, maxLife: 8 + Math.random() * 6
+  });
+}
+
+// Asteroid (small dot tumbling across)
+function spawnAsteroid() {
+  const mat = new THREE.MeshBasicMaterial({ color: 0x887766, transparent: true, opacity: 0.85 });
+  const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.06 + Math.random() * 0.08, 6, 6), mat);
+  mesh.position.set(
+    (Math.random() - 0.5) * 40,
+    5 + Math.random() * 8,
+    -10 + Math.random() * 10
+  );
+  scene.add(mesh);
+
+  const vel = new THREE.Vector3(
+    (Math.random() - 0.5) * 0.12,
+    -0.03 - Math.random() * 0.04,
+    (Math.random() - 0.5) * 0.06
+  );
+
+  cosmicObjects.push({
+    type: 'asteroid', mesh, mat,
+    velocity: vel,
+    rotSpeed: new THREE.Vector3(Math.random() * 0.05, Math.random() * 0.05, Math.random() * 0.05),
+    life: 0, maxLife: 10 + Math.random() * 8
+  });
+}
+
+// Aurora removed — was misleading visually
+
+// Probabilities per frame at ~60fps
+const EVENT_PROB = {
+  meteor:   0.004,
+  comet:    0.00008,
+  asteroid: 0.0005,
+
+};
+
+function tickCosmicEvents(dt) {
+  // Don't spawn new events while user is dragging
+  if (!isDragging) {
+    const r = Math.random();
+    if (r < EVENT_PROB.meteor)   spawnMeteor();
+    if (r < EVENT_PROB.comet)    spawnComet();
+    if (r < EVENT_PROB.asteroid) spawnAsteroid();
+  }
+
+  // Still tick existing events to let them finish gracefully
+
+  for (let i = cosmicObjects.length - 1; i >= 0; i--) {
+    const obj = cosmicObjects[i];
+    obj.life += dt;
+    const t = obj.life / obj.maxLife; // 0→1
+
+    if (obj.type === 'meteor') {
+      obj.mesh.position.addScaledVector(obj.velocity, dt * 60);
+      obj.mat.opacity = t < 0.3 ? t / 0.3 : (1 - (t - 0.3) / 0.7);
+      obj.mat.opacity *= 0.9;
+      if (t >= 1) { scene.remove(obj.mesh); obj.mesh.geometry.dispose(); cosmicObjects.splice(i, 1); }
+    }
+
+    if (obj.type === 'comet') {
+      obj.mesh.position.addScaledVector(obj.velocity, dt * 60);
+      obj.nucleus.position.addScaledVector(obj.velocity, dt * 60);
+      obj.mat.opacity = t < 0.1 ? t / 0.1 * 0.75 : t > 0.8 ? (1 - t) / 0.2 * 0.75 : 0.75;
+      if (t >= 1) { scene.remove(obj.mesh); scene.remove(obj.nucleus); cosmicObjects.splice(i, 1); }
+    }
+
+    if (obj.type === 'asteroid') {
+      obj.mesh.position.addScaledVector(obj.velocity, dt * 60);
+      obj.mesh.rotation.x += obj.rotSpeed.x;
+      obj.mesh.rotation.y += obj.rotSpeed.y;
+      obj.mat.opacity = t < 0.1 ? t / 0.1 * 0.85 : t > 0.85 ? (1 - t) / 0.15 * 0.85 : 0.85;
+      if (t >= 1) { scene.remove(obj.mesh); cosmicObjects.splice(i, 1); }
+    }
+
+
+  }
+}
+
+// ============================================================
+// INTERACTION — grab Earth or Moon to rotate it directly with the cursor
+// ============================================================
+// Single source of truth per object: every frame, exactly ONE thing writes
+// to each object's rotation accumulator — either time-based natural motion
+// (idle frames) or cursor delta (drag frames). No double-counting, no
+// compound motion, no time multiplier ramp. Pure interlock during drag,
+// pure natural rotation otherwise.
+const TIME_RATE = 3600;     // 1 real-second = 1 sim-hour (fixed)
+
+let isDragging = false;
+let dragTarget = null;      // 'earth' | 'moon'
+let lastDragX  = 0;
+let lastDragY  = 0;
+
+// Per-object rotation accumulators (radians). Initialized so the page
+// loads with Earth/Moon in their natural starting pose.
+let earthSpinY  = 0;        // earthMesh.rotation.y
+let cloudSpinY  = 0;        // cloudMesh.rotation.y (slightly faster)
+let moonOrbitY  = 0;        // moonPivot.rotation.y
+
+// Cursor → rotation sensitivity (radians per pixel). Tuned so 1 swipe
+// across an object's apparent diameter rotates it ~½ turn — the "globe
+// under your finger" feel.
+const EARTH_DRAG_K = 0.012;
+const MOON_DRAG_K  = 0.010;
+
+const timeIndicator = document.getElementById('time-indicator');
+
+// Project a world Vector3 to screen pixel coords
+function worldToScreen(v3) {
+  const v = v3.clone().project(camera);
+  return {
+    x: (v.x *  0.5 + 0.5) * window.innerWidth,
+    y: (v.y * -0.5 + 0.5) * window.innerHeight,
+  };
+}
+
+// Check if screen point (px,py) is within radius of a world position
+function nearObject(px, py, worldPos, radiusPx) {
+  const s = worldToScreen(worldPos);
+  const dx = px - s.x, dy = py - s.y;
+  return Math.sqrt(dx*dx + dy*dy) < radiusPx;
+}
+
+function getXY(e) {
+  if (e.touches && e.touches.length > 0) {
+    return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  }
+  return { x: e.clientX, y: e.clientY };
+}
+
+function onPointerDown(e) {
+  const { x, y } = getXY(e);
+
+  const earthWorld = new THREE.Vector3(0, 0, 0);
+  const moonWorld = new THREE.Vector3();
+  if (moonMesh) moonMesh.getWorldPosition(moonWorld);
+
+  // Test moon first (smaller, on top) so it wins ties with earth's bigger hitbox
+  const hitMoon  = moonMesh && nearObject(x, y, moonWorld, 50);
+  const hitEarth = !hitMoon && nearObject(x, y, earthWorld, 90);
+
+  if (hitEarth || hitMoon) {
+    isDragging = true;
+    dragTarget = hitMoon ? 'moon' : 'earth';
+    lastDragX = x;
+    lastDragY = y;
+    renderer.domElement.style.cursor = 'grabbing';
+    // Clear all active cosmic objects immediately
+    for (let i = cosmicObjects.length - 1; i >= 0; i--) {
+      const obj = cosmicObjects[i];
+      scene.remove(obj.mesh);
+      if (obj.nucleus) scene.remove(obj.nucleus);
+    }
+    cosmicObjects.length = 0;
+    e.preventDefault();
+  }
+}
+
+function onPointerMove(e) {
+  if (!isDragging) return;
+  const { x, y } = getXY(e);
+  const dx = x - lastDragX;
+  // Vertical (dy) is intentionally ignored: Earth's axis is fixed in
+  // space, and the Moon orbits in one plane — neither tilts under
+  // vertical drag.
+  lastDragX = x;
+  lastDragY = y;
+
+  // Direct interlock — cursor delta drives the grabbed object's
+  // rotation, frame-for-frame, with nothing else writing to it.
+  if (dragTarget === 'earth') {
+    earthSpinY += dx * EARTH_DRAG_K;
+    cloudSpinY += dx * EARTH_DRAG_K * 1.018;
+  } else if (dragTarget === 'moon') {
+    moonOrbitY += dx * MOON_DRAG_K;
+  }
+
+  e.preventDefault();
+}
+
+function onPointerUp() {
+  isDragging = false;
+  dragTarget = null;
+  renderer.domElement.style.cursor = 'default';
+}
+
+// Hover cursor hint
+renderer.domElement.addEventListener('mousemove', (e) => {
+  if (isDragging) return;
+  const earthWorld = new THREE.Vector3(0, 0, 0);
+  const moonWorld = new THREE.Vector3();
+  if (moonMesh) moonMesh.getWorldPosition(moonWorld);
+  const over = nearObject(e.clientX, e.clientY, earthWorld, 90) ||
+               (moonMesh && nearObject(e.clientX, e.clientY, moonWorld, 50));
+  renderer.domElement.style.cursor = over ? 'grab' : 'default';
+}, { passive: true });
+
+renderer.domElement.addEventListener('mousedown',  onPointerDown, { passive: false });
+renderer.domElement.addEventListener('mousemove',  onPointerMove, { passive: false });
+renderer.domElement.addEventListener('mouseup',    onPointerUp);
+window.addEventListener('mouseup', onPointerUp); // catch release outside canvas
+renderer.domElement.addEventListener('touchstart', onPointerDown, { passive: false });
+renderer.domElement.addEventListener('touchmove',  onPointerMove, { passive: false });
+renderer.domElement.addEventListener('touchend',   onPointerUp);
+
+// ============================================================
+// ANIMATION LOOP
+// ============================================================
+const clock = new THREE.Clock();
+let elapsedSim = 0; // simulated seconds
+
+// Constants
+const EARTH_ROT_SPEED = (2 * Math.PI) / (24 * 3600);   // rad/sim-second
+const MOON_ORB_SPEED  = (2 * Math.PI) / (27.3 * 24 * 3600);
+// planet speeds handled per-mesh via planetMeshes[].angSpeed
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt    = clock.getDelta();
+  const simDt = dt * TIME_RATE;
+  elapsedSim += simDt;
+
+  // Earth: natural rotation only when NOT being dragged. While dragged,
+  // earthSpinY is updated exclusively by onPointerMove → no compound motion.
+  if (!isDragging || dragTarget !== 'earth') {
+    earthSpinY += simDt * EARTH_ROT_SPEED;
+    cloudSpinY += simDt * EARTH_ROT_SPEED * 1.018;
+  }
+  if (earthMesh) earthMesh.rotation.y = earthSpinY;
+  if (cloudMesh) cloudMesh.rotation.y = cloudSpinY;
+
+  // Moon: same pattern
+  if (!isDragging || dragTarget !== 'moon') {
+    moonOrbitY += simDt * MOON_ORB_SPEED;
+  }
+  moonPivot.rotation.y = moonOrbitY;
+  // Tidal lock — moon face always toward Earth
+  if (moonMesh) moonMesh.rotation.y = -moonOrbitY;
+
+  // Moon trail
+  if (moonMesh) {
+    const wp = new THREE.Vector3();
+    moonMesh.getWorldPosition(wp);
+    trailHistory.unshift(wp.clone());
+    if (trailHistory.length > trailCount) trailHistory.pop();
+    for (let i = 0; i < trailHistory.length; i++) {
+      trailPositions[i*3]   = trailHistory[i].x;
+      trailPositions[i*3+1] = trailHistory[i].y;
+      trailPositions[i*3+2] = trailHistory[i].z;
+    }
+    trailGeo.attributes.position.needsUpdate = true;
+    trailGeo.setDrawRange(0, trailHistory.length);
+    trailLine.material.opacity = 0.12;
+  }
+
+  // Planets — orbit + accurate axial rotation, ring stays world-aligned
+  planetMeshes.forEach((p) => {
+    const angle = p.initAngle + elapsedSim * p.angSpeed;
+    const wx = p.sunPos.x + Math.cos(angle) * p.orbitR;
+    const wz = p.sunPos.z + Math.sin(angle) * p.orbitR;
+    p.mesh.position.set(wx, p.sunPos.y + p.yOff, wz);
+    // Axial spin — scaled via elapsedSim (TIME_RATE)
+    p.mesh.rotation.y = elapsedSim * p.rotSpeed * p.rotDir;
+    // Ring follows planet position but keeps its own fixed world tilt
+    if (p.ringMesh) {
+      p.ringMesh.position.set(wx, p.sunPos.y + p.yOff, wz);
+      // No rotation update — ring stays at its fixed ecliptic tilt
+    }
+  });
+
+  // Sun glow pulse — handled via sprite, no shader update needed
+
+  // Cosmic events
+  tickCosmicEvents(dt);
+
+  // Star twinkle shader time update
+  if (starPoints && starPoints.material.uniforms) {
+    starPoints.material.uniforms.time.value += dt;
+  }
+
+  // Celestial sphere rotates with Earth's orbital position around the Sun
+  // 1 full rotation per year (365.25 days) — stars drift as Earth revolves.
+  // Initial offset chosen so the galactic-center bulge is visible at page load.
+  const EARTH_ORB_SPEED = (2 * Math.PI) / (365.25 * 24 * 3600);
+  const SKY_INITIAL_ROT = 0;
+  celestialSphere.rotation.y = SKY_INITIAL_ROT + elapsedSim * EARTH_ORB_SPEED;
+
+  renderer.render(scene, camera);
+}
+
+animate();
+</script>
+
+<template id="__bundler_thumbnail">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 56">
+  <rect width="80" height="56" fill="#000010"/>
+  <circle cx="40" cy="28" r="12" fill="#1a3a8a"/>
+  <circle cx="40" cy="28" r="12.8" fill="none" stroke="#3a6aff" stroke-width="0.4" opacity="0.3"/>
+  <circle cx="62" cy="24" r="3" fill="#FDB813" opacity="0.9"/>
+  <circle cx="28" cy="18" r="1" fill="white" opacity="0.6"/>
+  <circle cx="55" cy="38" r="0.6" fill="white" opacity="0.5"/>
+  <circle cx="18" cy="35" r="0.8" fill="white" opacity="0.4"/>
+</svg>
+</template>
+</body>
+</html>
