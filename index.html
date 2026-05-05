@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>oprek.net</title>
+<!-- Atom favicon — three crossed orbital ellipses with a glowing nucleus.
+     Inline SVG so we don't need a separate file. -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3CradialGradient id='n' cx='32' cy='32' r='6' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%23ffe7a3'/%3E%3Cstop offset='1' stop-color='%23ff8030'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cg fill='none' stroke='%2380c8ff' stroke-width='2' opacity='0.9'%3E%3Cellipse cx='32' cy='32' rx='26' ry='10'/%3E%3Cellipse cx='32' cy='32' rx='26' ry='10' transform='rotate(60 32 32)'/%3E%3Cellipse cx='32' cy='32' rx='26' ry='10' transform='rotate(-60 32 32)'/%3E%3C/g%3E%3Ccircle cx='32' cy='32' r='5' fill='url(%23n)'/%3E%3C/svg%3E"/>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
@@ -123,24 +126,29 @@
   }
   #nav-links a:hover { color: rgba(255,255,255,0.95); transform: translateX(5px); }
 
-  /* DRAG HINT — sits between menu button and Earth */
-  #hint {
+  /* WELCOME — centered horizontally, vertically halfway between Earth
+     and the bottom of the viewport (so it sits at 75% screen height).
+     Fade-cycles through intro messages then disappears. */
+  #welcome {
     position: fixed;
-    bottom: clamp(70px, 12vw, 100px);
-    left: clamp(20px, 4vw, 32px);
+    top: 75%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     z-index: 10;
     font-family: 'Georgia', serif;
-    font-size: clamp(9px, 2.2vw, 11px);
-    letter-spacing: 0.18em;
+    font-size: clamp(11px, 2vw, 15px);
+    letter-spacing: 0.22em;
     text-transform: uppercase;
-    color: rgba(255,255,255,0.4);
-    text-shadow: 0 1px 6px rgba(0,0,0,0.85);
+    color: rgba(255,255,255,0.85);
+    text-shadow: 0 1px 8px rgba(0,0,0,0.85), 0 0 20px rgba(0,0,0,0.5);
     pointer-events: none;
-    transition: opacity 1.5s ease;
-    max-width: calc(50vw - 24px);
-    line-height: 1.6;
+    text-align: center;
+    line-height: 1.5;
+    max-width: min(640px, 90vw);
+    opacity: 0;
+    transition: opacity 1.1s ease;
   }
-  #hint.hidden { opacity: 0; }
+  #welcome.visible { opacity: 1; }
 
   /* VERTICAL EDGE TOGGLES — sky on the right (reads bottom-to-top, CCW),
      orbits on the left (reads top-to-bottom, CW). They're geometric
@@ -185,11 +193,11 @@
   }
 
   /* Edge HANDLES (‹ / ›) — always visible, click to slide the matching
-     toggle in or out. Sleek serif chevron, large enough for a tap. */
+     toggle in or out. The handle TRANSLATES inward when its toggle is
+     showing, so the chevron never sits on top of the toggle's labels. */
   #sky-toggle-handle, #orbit-toggle-handle {
     position: fixed;
     top: 50%;
-    transform: translateY(-50%);
     z-index: 101;
     background: none;
     border: none;
@@ -202,15 +210,29 @@
     min-width: 44px;
     min-height: 44px;
     text-shadow: 0 1px 6px rgba(0,0,0,0.85);
-    transition: color 0.2s ease, transform 0.2s ease;
+    /* Same easing as the toggle — they slide together as a unit */
+    transition: color 0.2s ease, transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
   }
   #sky-toggle-handle:hover, #orbit-toggle-handle:hover {
     color: rgba(255,255,255,0.85);
   }
-  #sky-toggle-handle   { right: clamp(2px, 0.6vw, 8px); }
-  #orbit-toggle-handle { left:  clamp(2px, 0.6vw, 8px); }
+  #sky-toggle-handle   {
+    right: clamp(2px, 0.6vw, 8px);
+    transform: translateY(-50%) translateX(0);
+  }
+  #sky-toggle-handle.shifted {
+    /* Slide left by ~toggle width so it sits next to the toggle, not over it */
+    transform: translateY(-50%) translateX(-44px);
+  }
+  #orbit-toggle-handle {
+    left: clamp(2px, 0.6vw, 8px);
+    transform: translateY(-50%) translateX(0);
+  }
+  #orbit-toggle-handle.shifted {
+    transform: translateY(-50%) translateX(44px);
+  }
   #sky-toggle .opt, #orbit-toggle .opt {
     cursor: pointer;
     color: rgba(255,255,255,0.32);
@@ -242,25 +264,26 @@
   @keyframes sky-spin { to { transform: rotate(360deg); } }
 
   /* Sun handled entirely in WebGL — no CSS overlay needed */
-  #time-indicator {
-    position: fixed;
-    bottom: clamp(20px, 4vw, 32px);
-    right: clamp(20px, 4vw, 32px);
-    z-index: 10;
-    font-family: 'Georgia', serif;
-    font-size: clamp(9px, 2vw, 11px);
-    letter-spacing: 0.16em;
-    color: rgba(255,255,255,0.3);
-    text-shadow: 0 1px 6px rgba(0,0,0,0.85);
-    text-transform: uppercase;
-    pointer-events: none;
-    text-align: right;
-    transition: color 0.5s;
-  }
-  #time-indicator.active { color: rgba(255,255,255,0.6); }
 </style>
 </head>
 <body>
+
+<!-- LOADING SCREEN — black void with a rotating wireframe sphere that
+     progressively draws itself from vertex to vertex while assets load -->
+<div id="loading-screen" aria-hidden="true">
+  <div id="loading-content">
+    <svg id="loading-sphere" viewBox="-60 -60 120 120">
+      <g id="wf-rotor">
+        <ellipse cx="0" cy="0" rx="50" ry="50" pathLength="100"></ellipse>
+        <ellipse cx="0" cy="0" rx="50" ry="20" pathLength="100"></ellipse>
+        <ellipse cx="0" cy="0" rx="20" ry="50" pathLength="100"></ellipse>
+        <ellipse cx="0" cy="0" rx="50" ry="35" pathLength="100" transform="rotate(35)"></ellipse>
+        <ellipse cx="0" cy="0" rx="50" ry="35" pathLength="100" transform="rotate(-35)"></ellipse>
+      </g>
+    </svg>
+    <div id="loading-text">PLEASE STAND BY</div>
+  </div>
+</div>
 
 <!-- QUOTE -->
 <div id="quote">
@@ -282,11 +305,8 @@
   </div>
 </nav>
 
-<!-- DRAG HINT -->
-<div id="hint">DRAG EARTH OR MOON<br>TO ACCELERATE TIME</div>
-
-<!-- TIME INDICATOR -->
-<div id="time-indicator">1h = 1s</div>
+<!-- WELCOME — fade-cycles through a couple of intro messages, then stays out of the way -->
+<div id="welcome" aria-live="polite"></div>
 
 <!-- SKY TOGGLE (right edge, hidden by default — show via the ‹ handle) -->
 <div id="sky-toggle" class="hidden" role="group" aria-label="Sky mode">
@@ -392,8 +412,33 @@ document.addEventListener('click', () => {
 });
 
 // HINT
-const hintEl = document.getElementById('hint');
-setTimeout(() => { hintEl.classList.add('hidden'); }, 5000);
+// ============================================================
+// WELCOME message — fade cycle through intro lines, then quietly retire
+// ============================================================
+const welcomeEl = document.getElementById('welcome');
+const WELCOME_LINES = [
+  'Welcome',
+  'Drag around to see the expanse of our universe',
+];
+
+(function cycleWelcome() {
+  let i = 0;
+  function step() {
+    if (i >= WELCOME_LINES.length) return;
+    welcomeEl.textContent = WELCOME_LINES[i];
+    // Fade in
+    requestAnimationFrame(() => welcomeEl.classList.add('visible'));
+    setTimeout(() => {
+      // Fade out
+      welcomeEl.classList.remove('visible');
+      i++;
+      // Wait for fade-out, then move on
+      setTimeout(step, 1300);
+    }, 3200);
+  }
+  // Initial delay so the scene has time to render before the message appears
+  setTimeout(step, 700);
+})();
 
 // ============================================================
 // SCENE SETUP
@@ -405,7 +450,10 @@ renderer.outputColorSpace = THREE.SRGBColorSpace;
 document.body.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 5000);
+// Far plane has to clear Neptune at ~704,000 scene units (1 AU = 23,481
+// Earth radii × 30 AU). 1.5 M leaves headroom for the celestial-sphere
+// skybox at 1.5 M (which we also bump up below).
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1500000);
 
 // ============================================================
 // ORBIT CAMERA — Earth stays at world origin; the camera flies on a
@@ -415,9 +463,10 @@ const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerH
 //   camTheta     — azimuth (around world Y axis), 0 = camera at +Z
 //   camPhi       — polar angle from world +Y, π/2 = looking from equator
 // ============================================================
-// Defaults are pulled in close because Earth is now small (radius 0.25).
-// At camDistance=5 Earth fills a comfortable portion of the view; user
-// can zoom out to see the planets on their orbits.
+// At real scale (1 unit = 1 Earth radius), camDistance=5 fills the frame
+// with Earth (radius 1). Default 6 on portrait. User scrolls/pinches out
+// to find the Moon (60 units), other planets (Mercury ~9 k, Saturn ~224 k,
+// Neptune ~704 k), or the Sun (~23 k away).
 let camDistance = window.innerWidth < window.innerHeight ? 6 : 5;
 let camTheta    = 0.06;        // tiny offset so camera is barely off the +Z axis
 let camPhi      = 1.48;        // ≈ 84.8° from +Y → roughly looking from the equator
@@ -501,7 +550,7 @@ function buildStarField() {
   for (let i = 0; i < BG_COUNT; i++) {
     const theta = Math.random() * Math.PI * 2;
     const phi   = Math.acos(2 * Math.random() - 1);
-    const r     = 400 + Math.random() * 500;
+    const r     = 900000 + Math.random() * 250000;  // outside Neptune, near skybox
     bgPos[i*3]   = r * Math.sin(phi) * Math.cos(theta);
     bgPos[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
     bgPos[i*3+2] = r * Math.cos(phi);
@@ -554,9 +603,9 @@ function buildStarField() {
         float freq = 0.8 + fract(aPhase * 7.3) * 1.4;
         vTwinkle = 0.72 + 0.28 * sin(time * freq + aPhase);
         vec4 mv = modelViewMatrix * vec4(position, 1.0);
-        // Stars sit at 400–900 units; the multiplier converts world-size to
-        // screen pixels at typical depths. ~2000 gives 1.5–4.5 px points.
-        gl_PointSize = aSize * (2000.0 / -mv.z) * vTwinkle;
+        // Stars sit ~1 M units out at real scale. Multiplier scaled so a
+        // unit-size star reads as 1.5–4.5 px on screen at that distance.
+        gl_PointSize = aSize * (2500000.0 / -mv.z) * vTwinkle;
         gl_Position = projectionMatrix * mv;
       }
     `,
@@ -578,21 +627,24 @@ function buildStarField() {
   const bgStars = new THREE.Points(bgGeo, bgMat);
   celestialSphere.add(bgStars);
 
-  // Bright foreground stars — canvas sprite blobs (like the blue halos in NuSTAR)
-  // ~12 prominent stars scattered around
+  // Bright foreground stars — distant pinpoints with soft halos. At
+  // real scale (1 unit = 1 Earth radius) they sit near the skybox
+  // (~1 M units out), well past Neptune, so they sort BEHIND every
+  // body in the solar system regardless of camera angle.
+  const STAR_R = 950000;
   const brightStarData = [
-    {r:320, theta:0.8,  phi:1.2, size:6,  col:'rgba(140,200,255,'},  // blue
-    {r:350, theta:2.1,  phi:0.7, size:5,  col:'rgba(160,210,255,'},
-    {r:380, theta:3.5,  phi:1.8, size:4.5,col:'rgba(120,190,255,'},
-    {r:360, theta:5.0,  phi:0.9, size:5.5,col:'rgba(150,205,255,'},
-    {r:400, theta:1.4,  phi:2.4, size:4,  col:'rgba(255,240,180,'},  // warm yellow
-    {r:340, theta:4.2,  phi:1.5, size:4,  col:'rgba(255,220,140,'},
-    {r:370, theta:0.3,  phi:2.8, size:3.5,col:'rgba(255,180,120,'},  // orange
-    {r:410, theta:2.8,  phi:0.4, size:4,  col:'rgba(130,195,255,'},  // blue
-    {r:330, theta:6.0,  phi:1.1, size:5,  col:'rgba(145,202,255,'},
-    {r:390, theta:3.0,  phi:2.1, size:3.5,col:'rgba(255,255,220,'},  // white
-    {r:355, theta:1.8,  phi:3.0, size:4.5,col:'rgba(140,200,255,'},
-    {r:420, theta:4.8,  phi:2.0, size:3,  col:'rgba(255,200,150,'},
+    {r:STAR_R*1.00, theta:0.8,  phi:1.2, size:6,  col:'rgba(140,200,255,'},  // blue
+    {r:STAR_R*1.05, theta:2.1,  phi:0.7, size:5,  col:'rgba(160,210,255,'},
+    {r:STAR_R*0.95, theta:3.5,  phi:1.8, size:4.5,col:'rgba(120,190,255,'},
+    {r:STAR_R*1.02, theta:5.0,  phi:0.9, size:5.5,col:'rgba(150,205,255,'},
+    {r:STAR_R*1.08, theta:1.4,  phi:2.4, size:4,  col:'rgba(255,240,180,'},  // warm yellow
+    {r:STAR_R*0.98, theta:4.2,  phi:1.5, size:4,  col:'rgba(255,220,140,'},
+    {r:STAR_R*1.04, theta:0.3,  phi:2.8, size:3.5,col:'rgba(255,180,120,'},  // orange
+    {r:STAR_R*1.06, theta:2.8,  phi:0.4, size:4,  col:'rgba(130,195,255,'},  // blue
+    {r:STAR_R*0.97, theta:6.0,  phi:1.1, size:5,  col:'rgba(145,202,255,'},
+    {r:STAR_R*1.03, theta:3.0,  phi:2.1, size:3.5,col:'rgba(255,255,220,'},  // white
+    {r:STAR_R*0.99, theta:1.8,  phi:3.0, size:4.5,col:'rgba(140,200,255,'},
+    {r:STAR_R*1.10, theta:4.8,  phi:2.0, size:3,  col:'rgba(255,200,150,'},
   ];
 
   // Build a star glow canvas texture
@@ -623,11 +675,12 @@ function buildStarField() {
     const tex = makeStarTex(col, size);
     const mat = new THREE.SpriteMaterial({
       map: tex, transparent: true, blending: THREE.AdditiveBlending,
-      depthTest: false, depthWrite: false
+      depthWrite: false, // depthTest stays TRUE so they sort behind solar bodies
     });
     const sp = new THREE.Sprite(mat);
     sp.position.set(x, y, z);
-    sp.scale.setScalar(size * 5);
+    // Scale proportional to distance so they remain pinpoint-sized on screen
+    sp.scale.setScalar(size * 5000);
     celestialSphere.add(sp);
   });
 
@@ -676,7 +729,7 @@ async function ensureNatureSky() {
     skyTilt.rotation.set(0, Math.PI / 2, THREE.MathUtils.degToRad(28));
 
     const skyMesh = new THREE.Mesh(
-      new THREE.SphereGeometry(1500, 64, 32),
+      new THREE.SphereGeometry(1200000, 64, 32), // beyond Neptune (~704k)
       new THREE.MeshBasicMaterial({
         map: skyTexCache,
         side: THREE.BackSide,
@@ -749,12 +802,14 @@ const orbitToggleBody    = document.getElementById('orbit-toggle');
 
 function setSkyToggleHidden(hidden) {
   skyToggleBody.classList.toggle('hidden', hidden);
+  skyToggleHandle.classList.toggle('shifted', !hidden);
   // ‹ when hidden (click to expand left), › when expanded (click to collapse right)
   skyToggleHandle.textContent = hidden ? '‹' : '›';
   skyToggleHandle.setAttribute('aria-expanded', String(!hidden));
 }
 function setOrbitToggleHidden(hidden) {
   orbitToggleBody.classList.toggle('hidden', hidden);
+  orbitToggleHandle.classList.toggle('shifted', !hidden);
   // › when hidden (click to expand right), ‹ when expanded
   orbitToggleHandle.textContent = hidden ? '›' : '‹';
   orbitToggleHandle.setAttribute('aria-expanded', String(!hidden));
@@ -782,26 +837,37 @@ scene.add(earthGroup);
 
 let earthMesh, cloudMesh;
 
-// Atmosphere shader — thin limb glow only
+// Atmosphere shader — thin blue limb halo only. Sharp Fresnel power so
+// the glow is concentrated right at the silhouette edge, not bleeding
+// across the whole sphere. Pure blue, no white mix.
 const atmMat = new THREE.ShaderMaterial({
   vertexShader: `
     varying vec3 vNormal;
+    varying vec3 vViewPos;
     void main() {
       vNormal = normalize(normalMatrix * normal);
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+      vec4 mv = modelViewMatrix * vec4(position, 1.0);
+      vViewPos = -mv.xyz;
+      gl_Position = projectionMatrix * mv;
     }`,
   fragmentShader: `
     varying vec3 vNormal;
+    varying vec3 vViewPos;
     void main() {
-      float i = pow(max(0.0, 0.42 - dot(vNormal, vec3(0,0,1))), 6.0);
-      gl_FragColor = vec4(0.3, 0.6, 1.0, 1.0) * i * 0.5;
+      vec3 v = normalize(vViewPos);
+      float fresnel = 1.0 - max(0.0, dot(vNormal, v));
+      // Tight ring concentrated at the limb (high power = thin band)
+      float rim = pow(fresnel, 7.0);
+      vec3 col = vec3(0.30, 0.60, 1.0);  // pure cyan-blue, no white mix
+      gl_FragColor = vec4(col * rim, rim * 0.85);
     }`,
   blending: THREE.AdditiveBlending,
   side: THREE.BackSide,
   transparent: true,
+  depthWrite: false,
 });
-// Earth radius is 0.25; atmosphere sits 12% beyond surface = 0.28
-const atmMesh = new THREE.Mesh(new THREE.SphereGeometry(0.28, 48, 48), atmMat);
+// Earth radius = 1 (real-scale base); atmosphere sits 5% beyond surface
+const atmMesh = new THREE.Mesh(new THREE.SphereGeometry(1.05, 64, 64), atmMat);
 earthGroup.add(atmMesh);
 
 (async () => {
@@ -839,17 +905,17 @@ earthGroup.add(atmMesh);
     color:      map ? 0xffffff : 0x2244aa,
   });
 
-  // Earth at 0.25 — final scale-correct size relative to other planets.
-  // Higher-poly sphere keeps the silhouette smooth even when zoomed in.
-  earthMesh = new THREE.Mesh(new THREE.SphereGeometry(0.25, 128, 96), earthMat);
+  // Earth radius = 1 (real-scale base unit). High-poly so the silhouette
+  // stays smooth right down to a 1.5-unit zoom (just outside atmosphere).
+  earthMesh = new THREE.Mesh(new THREE.SphereGeometry(1, 128, 96), earthMat);
   earthGroup.add(earthMesh);
 
   if (clouds) {
     const cloudMat = new THREE.MeshPhongMaterial({
       map: clouds, transparent: true, opacity: 0.38, depthWrite: false
     });
-    // Clouds 1.2% above surface, matching Earth's radius
-    cloudMesh = new THREE.Mesh(new THREE.SphereGeometry(0.253, 96, 64), cloudMat);
+    // Clouds 1.2% above surface (real ratio scaled to Earth-radius=1)
+    cloudMesh = new THREE.Mesh(new THREE.SphereGeometry(1.012, 96, 64), cloudMat);
     earthGroup.add(cloudMesh);
   }
 })();
@@ -865,14 +931,11 @@ const moonPivot = new THREE.Group();
 moonOrbitGroup.add(moonPivot);
 
 let moonMesh;
-// Moon distance from Earth in scene units. Real Moon distance is 60
-// Earth-radii (= 60 × 0.25 = 15 here), but that would land past Mercury's
-// orbit (perihelion = AU − 0.39·AU = 4.88 from Earth at AU=8), so the
-// orbit ring would visually cross planet rings. Compromise: 3.0 keeps
-// Moon outside Earth's atmosphere AND inside Mercury's perihelion. Moon
-// orbit ratio = 3 / 0.25 = 12 Earth-radii (vs real 60 — much closer to
-// real than the previous 8 Earth-radii compromise).
-const MOON_DIST = 3.0;
+// Moon distance — REAL: 60.3 Earth-radii from Earth's centre. With
+// 1 scene unit = 1 Earth radius, Moon orbit radius is exactly 60.3.
+// Mercury's perihelion is now at (1 − 0.39) × AU = 14,323 — Moon orbit
+// fits with kilometers to spare. No more compromise.
+const MOON_DIST = 60.3;
 
 // No orbit ring — keep it clean
 
@@ -883,8 +946,8 @@ const MOON_DIST = 3.0;
     color: moonMap ? 0xffffff : 0xaaaaaa,
     roughness: 1, metalness: 0,
   });
-  // Moon radius = real ratio (0.273 × Earth) = 0.273 × 0.25 = 0.068
-  moonMesh = new THREE.Mesh(new THREE.SphereGeometry(0.068, 32, 32), moonMat);
+  // Moon radius = 0.273 Earth-radii (real ratio)
+  moonMesh = new THREE.Mesh(new THREE.SphereGeometry(0.273, 48, 48), moonMat);
   moonMesh.position.x = MOON_DIST;
   moonPivot.add(moonMesh);
 })();
@@ -923,22 +986,132 @@ scene.add(eclipticGroup);
 // eclipticGroup. Earth is at scene origin (= eclipticGroup origin), so
 // Earth-Sun distance is exactly AU regardless of how the group is tilted.
 // ============================================================
-const AU = 8;                                          // 1 AU in scene units
+// Real-scale: 1 scene unit = 1 Earth radius. Then 1 AU = 23,481 Earth
+// radii (the actual ratio). All distances and body sizes flow from this
+// — Moon at 60, Mercury at 0.39 AU, Sun radius 109, etc.
+const AU = 23481;
 const SUN_LOCAL = new THREE.Vector3(-AU, 0, 0);
+// Public-domain planet textures (CORS-friendly, served by jsdelivr from
+// the threex.planets repo). Used by both the Sun setup below and the
+// PLANET_DATA block further down.
+const TEX_BASE = 'https://cdn.jsdelivr.net/gh/jeromeetienne/threex.planets@master/images/';
 // Sun's WORLD position — needed for the directional light (which lives
 // in scene-space, not eclipticGroup-space).
 const SUN_WORLD = SUN_LOCAL.clone().applyEuler(eclipticGroup.rotation);
 
-// Sun body — radius 4. Real ratio would be 109 × Earth = 27.3, which
-// would dwarf Earth's whole orbit (8); 4 keeps the Sun visibly the
-// biggest body in the scene without engulfing it. depthTest re-enabled
-// so Earth properly occludes the Sun when it's behind Earth.
-const sunCoreMesh = new THREE.Mesh(
-  new THREE.SphereGeometry(4, 48, 48),
-  new THREE.MeshBasicMaterial({ color: 0xFFE5A0 })
-);
-sunCoreMesh.position.copy(SUN_LOCAL);
-eclipticGroup.add(sunCoreMesh);
+// Sun body — radius 4 (capped, see comment at top of section). Wrapped
+// in a tilted group (Sun's actual axial tilt is 7.25° from ecliptic) so
+// the spin pivots through the Sun's real poles. Texture from
+// threex.planets — gives the Sun a granulated surface instead of a
+// flat-yellow disc. MeshBasicMaterial because the Sun is a light source
+// (no scene lighting on it).
+const sunGroup = new THREE.Group();
+sunGroup.position.copy(SUN_LOCAL);
+sunGroup.rotation.z = 7.25 * Math.PI / 180;
+eclipticGroup.add(sunGroup);
+
+// Sun radius — real ratio (109 × Earth). At 1 scene unit = 1 Earth radius
+// this is exactly 109. Higher poly count so the curvature stays smooth
+// when the user zooms close to the Sun's surface.
+const SUN_RADIUS = 109;
+const sunMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+const sunCoreMesh = new THREE.Mesh(new THREE.SphereGeometry(SUN_RADIUS, 96, 64), sunMat);
+sunGroup.add(sunCoreMesh);
+
+// Procedural high-res Sun texture — 2048 × 1024 equirectangular canvas
+// painted with red-orange base, dense granulation noise, and sunspot
+// dark patches. Looks like a close-up of the photosphere instead of the
+// flat-yellow tile from threex.planets.
+function makeSunTexture(W = 2048, H = 1024) {
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const ctx = c.getContext('2d');
+
+  // 1. Base — vertical gradient to fake limb darkening (poles slightly dimmer)
+  const base = ctx.createLinearGradient(0, 0, 0, H);
+  base.addColorStop(0,    '#9c2d10');
+  base.addColorStop(0.5,  '#dc6020');
+  base.addColorStop(1,    '#8c2510');
+  ctx.fillStyle = base;
+  ctx.fillRect(0, 0, W, H);
+
+  // 2. Granulation — tens of thousands of small bright/dark cells
+  for (let i = 0; i < 80000; i++) {
+    const x = Math.random() * W;
+    const y = Math.random() * H;
+    const r = 1 + Math.random() * 2.6;
+    if (Math.random() < 0.55) {
+      // bright cell — yellow-orange flare
+      const a = 0.18 + Math.random() * 0.45;
+      ctx.fillStyle = `rgba(255,${190 + (Math.random()*65|0)},${80 + (Math.random()*100|0)},${a})`;
+    } else {
+      // dark cell — deep red shadow
+      const a = 0.18 + Math.random() * 0.40;
+      ctx.fillStyle = `rgba(${90 + (Math.random()*60|0)},${20 + (Math.random()*30|0)},${5 + (Math.random()*15|0)},${a})`;
+    }
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // 3. Bigger plasma "blobs" for medium-scale variation
+  for (let i = 0; i < 300; i++) {
+    const x = Math.random() * W;
+    const y = Math.random() * H;
+    const r = 12 + Math.random() * 30;
+    const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
+    if (Math.random() < 0.6) {
+      grad.addColorStop(0, `rgba(255,${180 + (Math.random()*60|0)},${60 + (Math.random()*80|0)},0.35)`);
+      grad.addColorStop(1, 'rgba(255,160,40,0)');
+    } else {
+      grad.addColorStop(0, 'rgba(70,15,0,0.45)');
+      grad.addColorStop(1, 'rgba(70,15,0,0)');
+    }
+    ctx.fillStyle = grad;
+    ctx.fillRect(x - r, y - r, r * 2, r * 2);
+  }
+
+  // 4. Sunspots — distinct dark cores with surrounding penumbra
+  for (let i = 0; i < 14; i++) {
+    const x = Math.random() * W;
+    const y = H * 0.25 + Math.random() * H * 0.5; // mid-latitudes (real sunspots)
+    const r = 14 + Math.random() * 28;
+    const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
+    grad.addColorStop(0,    'rgba(20,5,0,0.92)');
+    grad.addColorStop(0.35, 'rgba(50,15,0,0.70)');
+    grad.addColorStop(0.70, 'rgba(120,40,5,0.40)');
+    grad.addColorStop(1,    'rgba(180,70,15,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // 5. Bright surface flares — rare hot spots
+  for (let i = 0; i < 22; i++) {
+    const x = Math.random() * W;
+    const y = Math.random() * H;
+    const r = 4 + Math.random() * 8;
+    const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
+    grad.addColorStop(0, 'rgba(255,255,200,0.85)');
+    grad.addColorStop(0.5, 'rgba(255,210,100,0.45)');
+    grad.addColorStop(1, 'rgba(255,160,40,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  return tex;
+}
+sunMat.map = makeSunTexture();
+sunMat.needsUpdate = true;
+
+// Sun rotation rate: ~25.4-day equatorial period
+const SUN_ROT_SPEED = (2 * Math.PI) / (25.4 * 24 * 3600);
 
 // Glow sprite (canvas-backed, billboard)
 const sunCanvas = document.createElement('canvas');
@@ -953,16 +1126,14 @@ sunCanvas.width = 128; sunCanvas.height = 128;
   g.addColorStop(1,   'rgba(255,80,0,0)');
   ctx.fillStyle = g; ctx.fillRect(0,0,128,128);
 }
-// Glow sprite — sized so the halo wraps just outside the new (bigger)
-// Sun body. depthTest enabled (with depthWrite off) so Earth properly
-// occludes the sprite when it's in front of the Sun.
+// Glow sprite — wraps just outside the Sun body (radius 109)
 const sunSprite = new THREE.Sprite(new THREE.SpriteMaterial({
   map: new THREE.CanvasTexture(sunCanvas),
   transparent: true, blending: THREE.AdditiveBlending,
   depthWrite: false,
 }));
 sunSprite.position.copy(SUN_LOCAL);
-sunSprite.scale.setScalar(9);
+sunSprite.scale.setScalar(SUN_RADIUS * 2.5);   // ≈270, lush near-corona
 eclipticGroup.add(sunSprite);
 
 // Outer halo
@@ -976,15 +1147,41 @@ sunHaloCanvas.width = 128; sunHaloCanvas.height = 128;
   g.addColorStop(1,   'rgba(255,80,0,0)');
   ctx.fillStyle = g; ctx.fillRect(0,0,128,128);
 }
-// Outer halo sprite — broader, dimmer corona around the Sun body
+// Outer halo — broader, dimmer corona around the body
 const sunHaloSprite = new THREE.Sprite(new THREE.SpriteMaterial({
   map: new THREE.CanvasTexture(sunHaloCanvas),
   transparent: true, blending: THREE.AdditiveBlending,
   depthWrite: false,
 }));
 sunHaloSprite.position.copy(SUN_LOCAL);
-sunHaloSprite.scale.setScalar(16);
+sunHaloSprite.scale.setScalar(SUN_RADIUS * 5);  // ≈545
 eclipticGroup.add(sunHaloSprite);
+
+// ── BLOOM LAYER — third radial-gradient sprite, very wide and very dim,
+// gives the impression of bloomy haze radiating out of the Sun body
+// without needing post-processing. Brighter near the disc, fading to
+// nothing at ~14× Sun radius.
+const sunBloomCanvas = document.createElement('canvas');
+sunBloomCanvas.width = 256; sunBloomCanvas.height = 256;
+{
+  const ctx = sunBloomCanvas.getContext('2d');
+  const g = ctx.createRadialGradient(128,128,0, 128,128,128);
+  g.addColorStop(0,    'rgba(255,170,40,0.20)');
+  g.addColorStop(0.10, 'rgba(255,140,30,0.12)');
+  g.addColorStop(0.25, 'rgba(255,110,20,0.06)');
+  g.addColorStop(0.55, 'rgba(255,80,10,0.025)');
+  g.addColorStop(1,    'rgba(255,60,0,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,256,256);
+}
+const sunBloomSprite = new THREE.Sprite(new THREE.SpriteMaterial({
+  map: new THREE.CanvasTexture(sunBloomCanvas),
+  transparent: true, blending: THREE.AdditiveBlending,
+  depthWrite: false,
+}));
+sunBloomSprite.position.copy(SUN_LOCAL);
+sunBloomSprite.scale.setScalar(SUN_RADIUS * 14);   // ≈1525, broad radial bloom
+eclipticGroup.add(sunBloomSprite);
 
 // Compatibility placeholder for any code that still pokes at sunGlowMat
 const sunGlowMat = { uniforms: { time: { value: 0 } } };
@@ -1000,59 +1197,101 @@ sunLight.position.copy(SUN_WORLD);
 // on screen — the user wanted "scientifically close" not exact).
 // Real sidereal rotation periods kept (Mercury slow, Jupiter fast,
 // Venus retrograde).
-// r     = body radius in scene units. ALL bodies are now strictly
-//         proportional: Earth = 0.25, every other planet/Moon scaled
-//         by its REAL radius ratio to Earth (Mercury 0.38×, Venus 0.95×,
-//         Mars 0.53×, Jupiter 11.21×, Saturn 9.45×, Moon 0.273×). The
-//         Sun is the only exception — it would need radius 27.3 at this
-//         scale (109× Earth = 109 × 0.25), which would swallow Earth's
-//         orbit; instead the Sun sphere is set to 4 below, making it
-//         visibly the biggest body without breaking the scene.
-// dist  = orbital radius in AU — REAL ratios (Mercury 0.39, Venus 0.72,
-//         Earth 1.00, Mars 1.52, Jupiter 5.20, Saturn 9.54).
-// theta = initial orbital phase (radians) — spreads the planets across
-//         the visible part of the scene at page load.
+// r       = body radius in scene units. With 1 unit = 1 Earth radius,
+//           every value is the planet's REAL Earth-radii ratio.
+// dist    = orbital radius in AU (× AU = 23,481 to get scene units)
+// theta   = initial orbital phase (radians)
+// tiltDeg = real axial tilt (applied to parent group so the mesh's local
+//           Y is the planet's actual spin axis; texture poles pivot)
+// tex     = equirectangular surface map (jsdelivr/threex.planets)
 const PLANET_DATA = [
-  { name:'Mercury', r:0.095, dist:0.39, theta: 0.6,  color:0xb5b5b5, period:88,    rotDays: 58.6  },
-  { name:'Venus',   r:0.238, dist:0.72, theta:-0.9,  color:0xE6C87A, period:225,   rotDays:-243.0 },
-  { name:'Mars',    r:0.133, dist:1.52, theta: 1.6,  color:0xC1440E, period:687,   rotDays: 1.026 },
-  { name:'Jupiter', r:2.80,  dist:5.20, theta:-2.1,  color:0xC9A86C, period:4333,  rotDays: 0.413 },
-  { name:'Saturn',  r:2.36,  dist:9.54, theta: 2.4,  color:0xE3D5A8, period:10759, rotDays: 0.444, rings:true },
+  { name:'Mercury', r:0.383, dist: 0.39, theta: 0.6,  tiltDeg:  0.034, period:   88, rotDays: 58.6,  tex:TEX_BASE+'mercurymap.jpg' },
+  { name:'Venus',   r:0.949, dist: 0.72, theta:-0.9,  tiltDeg:177.4,   period:  225, rotDays:-243.0, tex:TEX_BASE+'venusmap.jpg'   },
+  { name:'Mars',    r:0.532, dist: 1.52, theta: 1.6,  tiltDeg: 25.19,  period:  687, rotDays:  1.026, tex:TEX_BASE+'marsmap1k.jpg'  },
+  { name:'Jupiter', r:11.21, dist: 5.20, theta:-2.1,  tiltDeg:  3.13,  period: 4333, rotDays:  0.413, tex:TEX_BASE+'jupitermap.jpg' },
+  { name:'Saturn',  r: 9.45, dist: 9.54, theta: 2.4,  tiltDeg: 26.73,  period:10759, rotDays:  0.444, tex:TEX_BASE+'saturnmap.jpg', rings:true },
+  { name:'Uranus',  r: 4.01, dist:19.20, theta:-1.3,  tiltDeg: 97.77,  period:30687, rotDays: -0.72,  tex:TEX_BASE+'uranusmap.jpg'  },
+  { name:'Neptune', r: 3.88, dist:30.05, theta: 1.9,  tiltDeg: 28.32,  period:60190, rotDays:  0.671, tex:TEX_BASE+'neptunemap.jpg' },
 ];
 
 const planetMeshes = [];
 
 PLANET_DATA.forEach((p) => {
-  const mesh = new THREE.Mesh(
-    new THREE.SphereGeometry(p.r, 20, 20),
-    new THREE.MeshStandardMaterial({
-      color: p.color, roughness: 0.85, metalness: 0.05,
-      emissive: new THREE.Color(p.color).multiplyScalar(0.08),
-    })
-  );
+  // Axial-tilt group — its rotation.z is the planet's true axial tilt.
+  // The planet mesh sits inside as a child, so the mesh's *local Y axis*
+  // is now the planet's actual spin axis. Spinning via mesh.rotation.y
+  // pivots strictly through the texture's north and south poles.
+  const planetGroup = new THREE.Group();
+  planetGroup.rotation.z = (p.tiltDeg || 0) * Math.PI / 180;
+
   const orbitR = p.dist * AU;
-  // Place on circular orbit at angle theta, in the eclipticGroup local
-  // XZ plane — every planet at LOCAL y = SUN_LOCAL.y, guaranteeing
-  // strict coplanarity with the Sun and Earth.
-  mesh.position.set(
+  planetGroup.position.set(
     SUN_LOCAL.x + orbitR * Math.cos(p.theta),
     SUN_LOCAL.y,
     SUN_LOCAL.z + orbitR * Math.sin(p.theta)
   );
-  eclipticGroup.add(mesh);
+  eclipticGroup.add(planetGroup);
 
-  // Saturn's ring — sibling of the planet mesh so it keeps its fixed
-  // 26.7° tilt instead of inheriting the planet's spin.
+  // Use Phong (not Standard) so the texture survives the existing scene
+  // lighting setup without a costly metalness/roughness path. Bumped poly
+  // count so big planets (Jupiter/Saturn) stay smooth even when zoomed in.
+  const segs = p.r > 1 ? 64 : 32;
+  const mat = new THREE.MeshPhongMaterial({ color: 0xffffff, shininess: 4 });
+  const mesh = new THREE.Mesh(new THREE.SphereGeometry(p.r, segs, segs), mat);
+  planetGroup.add(mesh);
+
+  // Async-load equirectangular surface texture
+  if (p.tex) {
+    loadTex(p.tex).then((t) => {
+      if (!t) return;
+      t.colorSpace = THREE.SRGBColorSpace;
+      t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      mat.map = t;
+      mat.needsUpdate = true;
+    });
+  }
+
+  // Saturn's ring — child of planetGroup so it inherits the axial tilt
+  // (real Saturn rings sit in the planet's equatorial plane). Textured
+  // with the iconic ring color map; the JPEG's brightness drives both
+  // colour AND alpha, so dark gaps between rings render transparent.
   let ringMesh = null;
   if (p.rings) {
-    const rGeo = new THREE.RingGeometry(p.r * 1.5, p.r * 2.4, 64);
+    // Saturn ring proportions: real values are 1.11× to 2.27× planet radius
+    const RING_INNER = p.r * 1.11;
+    const RING_OUTER = p.r * 2.27;
+    const rGeo = new THREE.RingGeometry(RING_INNER, RING_OUTER, 192);
+    // RingGeometry default UVs run as (u,v) per quad. Re-map so the
+    // texture stripes are read radially — each ring band is a vertical
+    // column of the source image.
+    {
+      const pos = rGeo.attributes.position;
+      const uv = rGeo.attributes.uv;
+      for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i), y = pos.getY(i);
+        const r = Math.hypot(x, y);
+        const tU = (r - RING_INNER) / (RING_OUTER - RING_INNER);
+        uv.setXY(i, tU, 1);
+      }
+      uv.needsUpdate = true;
+    }
     const rMat = new THREE.MeshBasicMaterial({
-      color: 0xC9B896, transparent: true, opacity: 0.55, side: THREE.DoubleSide,
+      transparent: true, opacity: 0.95,
+      side: THREE.DoubleSide, depthWrite: false,
     });
     ringMesh = new THREE.Mesh(rGeo, rMat);
-    ringMesh.rotation.x = Math.PI / 2 - 26.7 * (Math.PI / 180);
-    ringMesh.position.copy(mesh.position);
-    eclipticGroup.add(ringMesh);
+    // Lay the ring flat in the planet's equatorial plane (planetGroup's
+    // local XZ — the tilt is already on the parent group).
+    ringMesh.rotation.x = Math.PI / 2;
+    planetGroup.add(ringMesh);
+
+    loadTex(TEX_BASE + 'saturnringcolor.jpg').then((t) => {
+      if (!t) return;
+      t.colorSpace = THREE.SRGBColorSpace;
+      rMat.map = t;
+      rMat.alphaMap = t;          // brightness drives alpha → dark gaps go transparent
+      rMat.needsUpdate = true;
+    });
   }
 
   const angSpeed = (2 * Math.PI) / (p.period * 24 * 3600);
@@ -1060,7 +1299,7 @@ PLANET_DATA.forEach((p) => {
   const rotDir   = p.rotDays < 0 ? -1 : 1; // Venus retrograde
 
   planetMeshes.push({
-    mesh, ringMesh, angSpeed, rotSpeed, rotDir,
+    group: planetGroup, mesh, ringMesh, angSpeed, rotSpeed, rotDir,
     initAngle: p.theta, orbitR, sunLocal: SUN_LOCAL,
   });
 });
@@ -1069,29 +1308,30 @@ const planetPivots = []; // legacy — animation drives planetMeshes directly
 
 // ============================================================
 // ORBIT PATHS — Earth + every planet + Moon, controlled by the left
-// ORBITS toggle. Uses RingGeometry (a thin disc-ring) instead of
-// LineLoop so the ring has guaranteed visible thickness regardless of
-// GPU/driver line-width support.
+// ORBITS toggle. Thin LineLoop rings (1px hairline) with a high opacity
+// so they read clearly on any background without looking like bloated
+// strips around the planets.
 // ============================================================
 const orbitMeshes = [];
 
-function makeOrbitRing(radius, opacity, color = 0x6b7898, thicknessFrac = 0.005) {
-  const t = Math.max(0.005, radius * thicknessFrac);
-  const geo = new THREE.RingGeometry(radius - t, radius + t, 256);
-  // RingGeometry sits in XY plane by default — flip to XZ
-  geo.rotateX(-Math.PI / 2);
-  const mat = new THREE.MeshBasicMaterial({
-    color, transparent: true, opacity,
-    side: THREE.DoubleSide, depthWrite: false,
+function makeOrbitRing(radius, opacity, color = 0x9aaad0, segments = 256) {
+  const pts = [];
+  for (let i = 0; i <= segments; i++) {
+    const a = (i / segments) * Math.PI * 2;
+    pts.push(new THREE.Vector3(Math.cos(a) * radius, 0, Math.sin(a) * radius));
+  }
+  const geo = new THREE.BufferGeometry().setFromPoints(pts);
+  const mat = new THREE.LineBasicMaterial({
+    color, transparent: true, opacity, depthWrite: false,
   });
-  return new THREE.Mesh(geo, mat);
+  return new THREE.LineLoop(geo, mat);
 }
 
 // Earth's own orbit around the Sun — a full ring of radius AU centered
 // on the Sun, lying in the ecliptic. Earth itself stays at scene origin
 // (one fixed point on this ring, since this is the camera-fixed view).
 {
-  const ring = makeOrbitRing(AU, 0.55, 0x9aaad0);
+  const ring = makeOrbitRing(AU, 0.75, 0xb0c0e0);
   ring.position.copy(SUN_LOCAL);
   ring.visible = false;
   eclipticGroup.add(ring);
@@ -1100,7 +1340,7 @@ function makeOrbitRing(radius, opacity, color = 0x6b7898, thicknessFrac = 0.005)
 
 // Other planets' orbits — same plane as Earth's, all centered on Sun
 planetMeshes.forEach((p) => {
-  const ring = makeOrbitRing(p.orbitR, 0.40);
+  const ring = makeOrbitRing(p.orbitR, 0.55, 0x6b7898);
   ring.position.copy(p.sunLocal);
   ring.visible = false;
   eclipticGroup.add(ring);
@@ -1109,10 +1349,11 @@ planetMeshes.forEach((p) => {
 
 // Moon orbit — child of moonOrbitGroup so it inherits the 5.14° tilt
 // and stays exactly where the moon traces its orbit (same parent group,
-// same plane, same radius).
+// same plane, same radius). Bigger segment count keeps the small ring
+// looking circular even up close.
 let moonOrbitRing = null;
 {
-  moonOrbitRing = makeOrbitRing(MOON_DIST, 0.55, 0x9aa5c0, 0.012);
+  moonOrbitRing = makeOrbitRing(MOON_DIST, 0.7, 0xa0afc8, 192);
   moonOrbitRing.visible = false;
   moonOrbitGroup.add(moonOrbitRing);
   orbitMeshes.push(moonOrbitRing);
@@ -1333,7 +1574,8 @@ let moonOrbitY = 0;
 // full screen-width drag is roughly 180° of orbit.
 const ORBIT_K = 0.005;
 
-const timeIndicator = document.getElementById('time-indicator');
+// (time-indicator element removed — TIME_RATE is now fixed and the
+// indicator served no purpose. nothing reads `timeIndicator` anymore.)
 
 // Project a world Vector3 to screen pixel coords
 function worldToScreen(v3) {
@@ -1414,12 +1656,12 @@ renderer.domElement.addEventListener('touchend',   onPointerUp);
 
 // ============================================================
 // ZOOM — mousewheel and two-finger pinch dolly the camera radius along
-// the orbit-sphere. Range: close enough to come right up to Earth's
-// atmosphere (Earth radius 0.25 + atmosphere 0.03 + tiny gap = 0.4),
-// far enough to see Saturn's orbit (~85 scene units from Earth at AU=8).
+// the orbit-sphere. Range at real scale: close enough to brush Earth's
+// atmosphere (Earth radius 1, atmosphere 1.05, gap = 1.5), far enough
+// to leave Neptune (~704 k from Earth) inside the frame.
 // ============================================================
-const ZOOM_MIN = 0.4;
-const ZOOM_MAX = 100;
+const ZOOM_MIN = 1.5;
+const ZOOM_MAX = 800000;
 
 function clampZoom(z) { return Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, z)); }
 
@@ -1477,12 +1719,17 @@ function animate() {
   const simDt = dt * TIME_RATE;
   elapsedSim += simDt;
 
-  // Earth: natural daily rotation around the inertially-fixed spin axis
-  // (EARTH_AXIS in world space). Always runs — drag now controls the
-  // camera, never the Earth mesh, so the two no longer compete.
-  const dEarth = simDt * EARTH_ROT_SPEED;
-  if (earthMesh) earthMesh.rotateOnWorldAxis(EARTH_AXIS, dEarth);
-  if (cloudMesh) cloudMesh.rotateOnWorldAxis(EARTH_AXIS, dEarth * 1.018);
+  // Earth: natural daily rotation. The earth mesh sits inside earthGroup
+  // (which carries the 23.5° axial tilt), so rotating earthMesh on its
+  // LOCAL Y is rotation around the texture's pole axis — guaranteed to
+  // pivot through the Arctic and Antarctic. Absolute assignment (no
+  // accumulating quaternion drift).
+  if (earthMesh) earthMesh.rotation.y = elapsedSim * EARTH_ROT_SPEED;
+  if (cloudMesh) cloudMesh.rotation.y = elapsedSim * EARTH_ROT_SPEED * 1.018;
+
+  // Sun: same trick — sunCoreMesh inside the tilted sunGroup, so local
+  // Y rotation = real Sun-pole spin axis.
+  sunCoreMesh.rotation.y = elapsedSim * SUN_ROT_SPEED;
 
   // Moon: natural orbit, no user input.
   moonOrbitY += simDt * MOON_ORB_SPEED;
@@ -1506,19 +1753,17 @@ function animate() {
     trailLine.material.opacity = 0.12;
   }
 
-  // Planets — circular orbits in eclipticGroup local frame. Every planet
-  // shares SUN_LOCAL.y, so all orbits are strictly coplanar (textbook).
+  // Planets — circular orbits in eclipticGroup local frame. The planet
+  // GROUP carries the axial tilt; the planet MESH spins on local Y, which
+  // (because of that tilt on the parent) is the planet's true pole axis.
+  // Saturn's ring is a child of the same group, so it follows position
+  // and tilt automatically — no separate update needed.
   planetMeshes.forEach((p) => {
     const angle = p.initAngle + elapsedSim * p.angSpeed;
     const lx = p.sunLocal.x + Math.cos(angle) * p.orbitR;
     const lz = p.sunLocal.z + Math.sin(angle) * p.orbitR;
-    p.mesh.position.set(lx, p.sunLocal.y, lz);
-    // Axial spin — scaled via elapsedSim (TIME_RATE)
+    p.group.position.set(lx, p.sunLocal.y, lz);
     p.mesh.rotation.y = elapsedSim * p.rotSpeed * p.rotDir;
-    // Saturn's ring follows the planet's position but keeps its fixed tilt
-    if (p.ringMesh) {
-      p.ringMesh.position.set(lx, p.sunLocal.y, lz);
-    }
   });
 
   // Sun glow pulse — handled via sprite, no shader update needed
