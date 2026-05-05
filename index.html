@@ -144,11 +144,11 @@
 
   /* VERTICAL EDGE TOGGLES — sky on the right (reads bottom-to-top, CCW),
      orbits on the left (reads top-to-bottom, CW). They're geometric
-     mirrors of each other across the screen's vertical center line. */
+     mirrors of each other across the screen's vertical center line.
+     Hidden by default; revealed by clicking their ‹ / › handle. */
   #sky-toggle, #orbit-toggle {
     position: fixed;
     top: 50%;
-    transform: translateY(-50%);
     z-index: 100;
     display: flex;
     align-items: center;
@@ -161,17 +161,56 @@
     user-select: none;
     -webkit-tap-highlight-color: transparent;
     white-space: nowrap;
+    transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
   }
   #sky-toggle {
     right: clamp(4px, 1.2vw, 14px);
-    /* CCW: text reads bottom-to-top — STARS at bottom, NATURE at top */
-    writing-mode: sideways-lr;
+    transform: translateY(-50%) translateX(0);
+    writing-mode: sideways-lr; /* CCW: bottom-to-top */
+  }
+  #sky-toggle.hidden {
+    transform: translateY(-50%) translateX(140%);
+    opacity: 0;
+    pointer-events: none;
   }
   #orbit-toggle {
     left: clamp(4px, 1.2vw, 14px);
-    /* CW: text reads top-to-bottom — mirror of the right side */
-    writing-mode: sideways-rl;
+    transform: translateY(-50%) translateX(0);
+    writing-mode: sideways-rl; /* CW: top-to-bottom */
   }
+  #orbit-toggle.hidden {
+    transform: translateY(-50%) translateX(-140%);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* Edge HANDLES (‹ / ›) — always visible, click to slide the matching
+     toggle in or out. Sleek serif chevron, large enough for a tap. */
+  #sky-toggle-handle, #orbit-toggle-handle {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 101;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: rgba(255,255,255,0.35);
+    font-family: 'Georgia', serif;
+    font-size: clamp(20px, 3vw, 26px);
+    line-height: 1;
+    padding: 14px 12px;
+    min-width: 44px;
+    min-height: 44px;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.85);
+    transition: color 0.2s ease, transform 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  #sky-toggle-handle:hover, #orbit-toggle-handle:hover {
+    color: rgba(255,255,255,0.85);
+  }
+  #sky-toggle-handle   { right: clamp(2px, 0.6vw, 8px); }
+  #orbit-toggle-handle { left:  clamp(2px, 0.6vw, 8px); }
   #sky-toggle .opt, #orbit-toggle .opt {
     cursor: pointer;
     color: rgba(255,255,255,0.32);
@@ -249,20 +288,22 @@
 <!-- TIME INDICATOR -->
 <div id="time-indicator">1h = 1s</div>
 
-<!-- SKY TOGGLE -->
-<div id="sky-toggle" role="group" aria-label="Sky mode">
-  <span class="opt active" data-mode="stars" role="button" tabindex="0">Stars</span>
+<!-- SKY TOGGLE (right edge, hidden by default — show via the ‹ handle) -->
+<div id="sky-toggle" class="hidden" role="group" aria-label="Sky mode">
+  <span class="opt active" data-mode="stars" role="button" tabindex="0">Artificial</span>
   <span class="sep">·</span>
-  <span class="opt" data-mode="nature" role="button" tabindex="0">Nature</span>
+  <span class="opt" data-mode="nature" role="button" tabindex="0">Natural</span>
   <span class="loading" aria-hidden="true"></span>
 </div>
+<button id="sky-toggle-handle" type="button" aria-label="Show or hide sky-mode toggle" aria-expanded="false">‹</button>
 
-<!-- ORBITS TOGGLE -->
-<div id="orbit-toggle" role="group" aria-label="Orbit paths">
+<!-- ORBITS TOGGLE (left edge, hidden by default — show via the › handle) -->
+<div id="orbit-toggle" class="hidden" role="group" aria-label="Orbit paths">
   <span class="opt active" data-orbits="off" role="button" tabindex="0">Off</span>
   <span class="sep">·</span>
   <span class="opt" data-orbits="on" role="button" tabindex="0">Orbits</span>
 </div>
+<button id="orbit-toggle-handle" type="button" aria-label="Show or hide orbit toggle" aria-expanded="false">›</button>
 
 <!-- THREE.JS -->
 <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
@@ -365,21 +406,39 @@ document.body.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 5000);
-// Pull back more on portrait to give Earth breathing room
-const initZ = window.innerWidth < window.innerHeight ? 16 : 13;
-camera.position.set(0.8, 1.2, initZ);
-camera.lookAt(0, 0, 0);
+
+// ============================================================
+// ORBIT CAMERA — Earth stays at world origin; the camera flies on a
+// sphere around it. Drag anywhere on the canvas to pan the perspective;
+// scroll/pinch dollies in and out. Spherical coords:
+//   camDistance  — radius from origin
+//   camTheta     — azimuth (around world Y axis), 0 = camera at +Z
+//   camPhi       — polar angle from world +Y, π/2 = looking from equator
+// ============================================================
+// Defaults are pulled in close because Earth is now small (radius 0.25).
+// At camDistance=5 Earth fills a comfortable portion of the view; user
+// can zoom out to see the planets on their orbits.
+let camDistance = window.innerWidth < window.innerHeight ? 6 : 5;
+let camTheta    = 0.06;        // tiny offset so camera is barely off the +Z axis
+let camPhi      = 1.48;        // ≈ 84.8° from +Y → roughly looking from the equator
+
+function updateCamera() {
+  const sinPhi = Math.sin(camPhi);
+  camera.position.set(
+    camDistance * sinPhi * Math.sin(camTheta),
+    camDistance * Math.cos(camPhi),
+    camDistance * sinPhi * Math.cos(camTheta)
+  );
+  camera.lookAt(0, 0, 0);
+}
+updateCamera();
 
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
-  // Adjust camera depth for portrait vs landscape
-  const targetZ = window.innerWidth < window.innerHeight ? 16 : 13;
-  camera.position.z = targetZ;
-  // Update moon orbit radius responsively
-  const newDist = window.innerWidth < 500 ? 3.2 : window.innerWidth < 768 ? 4.2 : 6;
-  if (moonMesh) moonMesh.position.x = newDist;
+  // Don't touch camera.position.z on resize — the user owns it via
+  // mousewheel/pinch zoom and we don't want to wipe their setting.
 });
 
 // ============================================================
@@ -677,6 +736,44 @@ skyToggleOpts.forEach((opt) => {
 setSkyMode(skyMode); // initial
 
 // ============================================================
+// TOGGLE HANDLES — ‹ on the right edge slides the sky toggle in/out;
+// › on the left edge slides the orbit toggle in/out. Default state for
+// both toggles is hidden (set via the .hidden class in the markup).
+// We use getElementById for the toggle bodies because the orbit-toggle
+// var is declared later in the file (after planets/orbits init).
+// ============================================================
+const skyToggleHandle    = document.getElementById('sky-toggle-handle');
+const orbitToggleHandle  = document.getElementById('orbit-toggle-handle');
+const skyToggleBody      = document.getElementById('sky-toggle');
+const orbitToggleBody    = document.getElementById('orbit-toggle');
+
+function setSkyToggleHidden(hidden) {
+  skyToggleBody.classList.toggle('hidden', hidden);
+  // ‹ when hidden (click to expand left), › when expanded (click to collapse right)
+  skyToggleHandle.textContent = hidden ? '‹' : '›';
+  skyToggleHandle.setAttribute('aria-expanded', String(!hidden));
+}
+function setOrbitToggleHidden(hidden) {
+  orbitToggleBody.classList.toggle('hidden', hidden);
+  // › when hidden (click to expand right), ‹ when expanded
+  orbitToggleHandle.textContent = hidden ? '›' : '‹';
+  orbitToggleHandle.setAttribute('aria-expanded', String(!hidden));
+}
+
+skyToggleHandle.addEventListener('click', (e) => {
+  e.stopPropagation();
+  setSkyToggleHidden(!skyToggleBody.classList.contains('hidden'));
+});
+orbitToggleHandle.addEventListener('click', (e) => {
+  e.stopPropagation();
+  setOrbitToggleHidden(!orbitToggleBody.classList.contains('hidden'));
+});
+
+// Initialise handle glyphs to match the .hidden default in markup
+setSkyToggleHidden(true);
+setOrbitToggleHidden(true);
+
+// ============================================================
 // EARTH
 // ============================================================
 const earthGroup = new THREE.Group();
@@ -703,12 +800,30 @@ const atmMat = new THREE.ShaderMaterial({
   side: THREE.BackSide,
   transparent: true,
 });
-const atmMesh = new THREE.Mesh(new THREE.SphereGeometry(1.12, 48, 48), atmMat);
+// Earth radius is 0.25; atmosphere sits 12% beyond surface = 0.28
+const atmMesh = new THREE.Mesh(new THREE.SphereGeometry(0.28, 48, 48), atmMat);
 earthGroup.add(atmMesh);
 
 (async () => {
+  // Earth's color (diffuse) map — try the high-res 4096×1920 NASA Blue
+  // Marble locally first, fall back to the 2K unpkg version. Bump,
+  // specular and clouds maps stay at their unpkg sources because
+  // they're masks, not high-frequency detail — 2K is plenty there.
+  const HD_DAY_LOCAL = 'assets/earth-day-4k.jpg';
+  const HD_DAY_CDN   = 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Whole_world_-_land_and_oceans_12000.jpg/3840px-Whole_world_-_land_and_oceans_12000.jpg';
+  const FALLBACK_DAY = 'https://unpkg.com/three-globe@2.31.1/example/img/earth-blue-marble.jpg';
+
   const [map, bump, spec, clouds] = await Promise.all([
-    loadTex('https://unpkg.com/three-globe@2.31.1/example/img/earth-blue-marble.jpg'),
+    (async () => {
+      const t = (await loadTex(HD_DAY_LOCAL))
+            || (await loadTex(HD_DAY_CDN))
+            || (await loadTex(FALLBACK_DAY));
+      if (t) {
+        t.colorSpace = THREE.SRGBColorSpace;
+        t.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      }
+      return t;
+    })(),
     loadTex('https://unpkg.com/three-globe@2.31.1/example/img/earth-topology.png'),
     loadTex('https://unpkg.com/three-globe@2.31.1/example/img/earth-water.png'),
     loadTex('https://unpkg.com/three-globe@2.31.1/example/img/earth-clouds.png'),
@@ -724,14 +839,17 @@ earthGroup.add(atmMesh);
     color:      map ? 0xffffff : 0x2244aa,
   });
 
-  earthMesh = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 64), earthMat);
+  // Earth at 0.25 — final scale-correct size relative to other planets.
+  // Higher-poly sphere keeps the silhouette smooth even when zoomed in.
+  earthMesh = new THREE.Mesh(new THREE.SphereGeometry(0.25, 128, 96), earthMat);
   earthGroup.add(earthMesh);
 
   if (clouds) {
     const cloudMat = new THREE.MeshPhongMaterial({
       map: clouds, transparent: true, opacity: 0.38, depthWrite: false
     });
-    cloudMesh = new THREE.Mesh(new THREE.SphereGeometry(1.012, 48, 48), cloudMat);
+    // Clouds 1.2% above surface, matching Earth's radius
+    cloudMesh = new THREE.Mesh(new THREE.SphereGeometry(0.253, 96, 64), cloudMat);
     earthGroup.add(cloudMesh);
   }
 })();
@@ -747,8 +865,14 @@ const moonPivot = new THREE.Group();
 moonOrbitGroup.add(moonPivot);
 
 let moonMesh;
-// Responsive moon distance — smaller on portrait/narrow screens
-const MOON_DIST = Math.min(6, window.innerWidth < 500 ? 3.2 : window.innerWidth < 768 ? 4.2 : 6);
+// Moon distance from Earth in scene units. Real Moon distance is 60
+// Earth-radii (= 60 × 0.25 = 15 here), but that would land past Mercury's
+// orbit (perihelion = AU − 0.39·AU = 4.88 from Earth at AU=8), so the
+// orbit ring would visually cross planet rings. Compromise: 3.0 keeps
+// Moon outside Earth's atmosphere AND inside Mercury's perihelion. Moon
+// orbit ratio = 3 / 0.25 = 12 Earth-radii (vs real 60 — much closer to
+// real than the previous 8 Earth-radii compromise).
+const MOON_DIST = 3.0;
 
 // No orbit ring — keep it clean
 
@@ -759,7 +883,8 @@ const MOON_DIST = Math.min(6, window.innerWidth < 500 ? 3.2 : window.innerWidth 
     color: moonMap ? 0xffffff : 0xaaaaaa,
     roughness: 1, metalness: 0,
   });
-  moonMesh = new THREE.Mesh(new THREE.SphereGeometry(0.27, 32, 32), moonMat);
+  // Moon radius = real ratio (0.273 × Earth) = 0.273 × 0.25 = 0.068
+  moonMesh = new THREE.Mesh(new THREE.SphereGeometry(0.068, 32, 32), moonMat);
   moonMesh.position.x = MOON_DIST;
   moonPivot.add(moonMesh);
 })();
@@ -775,174 +900,222 @@ scene.add(trailLine);
 const trailHistory = [];
 
 // ============================================================
-// SUN — billboard sprite, always faces camera
+// ECLIPTIC PLANE — single tilted group containing the Sun and every
+// planet (Mercury through Saturn). One plane, one Sun, all orbits
+// strictly coplanar — the textbook layout. Earth stays at scene origin
+// (camera focus) and is the only planet not inside this group; its
+// orbit ring is, however, drawn inside the group so it shares the same
+// tilt as the rest of the solar system.
 // ============================================================
-const SUN_POS = new THREE.Vector3(-7, 6, -5);
-
-// Sun core disc
-const sunCoreMesh = new THREE.Mesh(
-  new THREE.SphereGeometry(0.28, 20, 20),
-  new THREE.MeshBasicMaterial({ color: 0xFFFFBB, depthTest: false })
+const eclipticGroup = new THREE.Group();
+// Mild ecliptic tilt — textbook view of the orbital plane from slightly
+// above, NOT looking down a pole. -28° on X is roughly the angle a real
+// astronomy diagram uses; small Z roll lifts the Sun to upper-left.
+eclipticGroup.rotation.set(
+  THREE.MathUtils.degToRad(-28),  // X: gentle pitch — orbits become wide flat ellipses
+  0,                               // Y: none
+  THREE.MathUtils.degToRad(-22),  // Z: roll — Sun ends up upper-left of Earth
 );
-sunCoreMesh.position.copy(SUN_POS);
-sunCoreMesh.renderOrder = 999;
-scene.add(sunCoreMesh);
+scene.add(eclipticGroup);
 
-// Glow — canvas texture billboard
+// ============================================================
+// SUN — visual + lighting. Sun lives at LOCAL (-AU, 0, 0) inside
+// eclipticGroup. Earth is at scene origin (= eclipticGroup origin), so
+// Earth-Sun distance is exactly AU regardless of how the group is tilted.
+// ============================================================
+const AU = 8;                                          // 1 AU in scene units
+const SUN_LOCAL = new THREE.Vector3(-AU, 0, 0);
+// Sun's WORLD position — needed for the directional light (which lives
+// in scene-space, not eclipticGroup-space).
+const SUN_WORLD = SUN_LOCAL.clone().applyEuler(eclipticGroup.rotation);
+
+// Sun body — radius 4. Real ratio would be 109 × Earth = 27.3, which
+// would dwarf Earth's whole orbit (8); 4 keeps the Sun visibly the
+// biggest body in the scene without engulfing it. depthTest re-enabled
+// so Earth properly occludes the Sun when it's behind Earth.
+const sunCoreMesh = new THREE.Mesh(
+  new THREE.SphereGeometry(4, 48, 48),
+  new THREE.MeshBasicMaterial({ color: 0xFFE5A0 })
+);
+sunCoreMesh.position.copy(SUN_LOCAL);
+eclipticGroup.add(sunCoreMesh);
+
+// Glow sprite (canvas-backed, billboard)
 const sunCanvas = document.createElement('canvas');
 sunCanvas.width = 128; sunCanvas.height = 128;
-const sCtx = sunCanvas.getContext('2d');
-const sGrad = sCtx.createRadialGradient(64,64,0, 64,64,64);
-sGrad.addColorStop(0,   'rgba(255,255,180,1)');
-sGrad.addColorStop(0.15,'rgba(255,220,80,0.9)');
-sGrad.addColorStop(0.35,'rgba(255,160,30,0.5)');
-sGrad.addColorStop(0.6, 'rgba(255,120,0,0.15)');
-sGrad.addColorStop(1,   'rgba(255,80,0,0)');
-sCtx.fillStyle = sGrad;
-sCtx.fillRect(0,0,128,128);
+{
+  const ctx = sunCanvas.getContext('2d');
+  const g = ctx.createRadialGradient(64,64,0, 64,64,64);
+  g.addColorStop(0,   'rgba(255,255,180,1)');
+  g.addColorStop(0.15,'rgba(255,220,80,0.9)');
+  g.addColorStop(0.35,'rgba(255,160,30,0.5)');
+  g.addColorStop(0.6, 'rgba(255,120,0,0.15)');
+  g.addColorStop(1,   'rgba(255,80,0,0)');
+  ctx.fillStyle = g; ctx.fillRect(0,0,128,128);
+}
+// Glow sprite — sized so the halo wraps just outside the new (bigger)
+// Sun body. depthTest enabled (with depthWrite off) so Earth properly
+// occludes the sprite when it's in front of the Sun.
+const sunSprite = new THREE.Sprite(new THREE.SpriteMaterial({
+  map: new THREE.CanvasTexture(sunCanvas),
+  transparent: true, blending: THREE.AdditiveBlending,
+  depthWrite: false,
+}));
+sunSprite.position.copy(SUN_LOCAL);
+sunSprite.scale.setScalar(9);
+eclipticGroup.add(sunSprite);
 
-const sunTex = new THREE.CanvasTexture(sunCanvas);
-const sunSpriteMat = new THREE.SpriteMaterial({
-  map: sunTex, transparent: true, blending: THREE.AdditiveBlending,
-  depthTest: false, depthWrite: false
-});
-const sunSprite = new THREE.Sprite(sunSpriteMat);
-sunSprite.position.copy(SUN_POS);
-sunSprite.scale.setScalar(7);
-sunSprite.renderOrder = 998;
-scene.add(sunSprite);
-
-// Larger soft outer halo
+// Outer halo
 const sunHaloCanvas = document.createElement('canvas');
 sunHaloCanvas.width = 128; sunHaloCanvas.height = 128;
-const hCtx = sunHaloCanvas.getContext('2d');
-const hGrad = hCtx.createRadialGradient(64,64,0, 64,64,64);
-hGrad.addColorStop(0,   'rgba(255,200,60,0.15)');
-hGrad.addColorStop(0.4, 'rgba(255,140,20,0.07)');
-hGrad.addColorStop(1,   'rgba(255,80,0,0)');
-hCtx.fillStyle = hGrad;
-hCtx.fillRect(0,0,128,128);
-
-const sunHaloTex = new THREE.CanvasTexture(sunHaloCanvas);
+{
+  const ctx = sunHaloCanvas.getContext('2d');
+  const g = ctx.createRadialGradient(64,64,0, 64,64,64);
+  g.addColorStop(0,   'rgba(255,200,60,0.15)');
+  g.addColorStop(0.4, 'rgba(255,140,20,0.07)');
+  g.addColorStop(1,   'rgba(255,80,0,0)');
+  ctx.fillStyle = g; ctx.fillRect(0,0,128,128);
+}
+// Outer halo sprite — broader, dimmer corona around the Sun body
 const sunHaloSprite = new THREE.Sprite(new THREE.SpriteMaterial({
-  map: sunHaloTex, transparent: true, blending: THREE.AdditiveBlending,
-  depthTest: false, depthWrite: false
+  map: new THREE.CanvasTexture(sunHaloCanvas),
+  transparent: true, blending: THREE.AdditiveBlending,
+  depthWrite: false,
 }));
-sunHaloSprite.position.copy(SUN_POS);
-sunHaloSprite.scale.setScalar(18);
-sunHaloSprite.renderOrder = 997;
-scene.add(sunHaloSprite);
+sunHaloSprite.position.copy(SUN_LOCAL);
+sunHaloSprite.scale.setScalar(16);
+eclipticGroup.add(sunHaloSprite);
 
-// sunGlowMat placeholder (no longer used as mesh, but referenced in animate)
+// Compatibility placeholder for any code that still pokes at sunGlowMat
 const sunGlowMat = { uniforms: { time: { value: 0 } } };
 
-// ============================================================
-// PLANETS — fixed positions relative to Sun, no orbit rings shown
-// ============================================================
-// Instead of orbiting around the sun with huge rings,
-// we place planets at fixed world positions (they move slowly)
-// Planets are small dots at varying distances, no orbit lines
+// Re-aim the existing directional light from the Sun's world position
+// toward Earth at origin — direction matches what we see.
+sunLight.position.copy(SUN_WORLD);
 
-// Scientifically accurate sidereal rotation periods (Earth days):
-// Mercury: 58.6d, Venus: -243d (retrograde), Earth: 1d, Mars: 1.03d
-// Jupiter: 0.41d, Saturn: 0.44d, Uranus: -0.72d, Neptune: 0.67d
-// We scale these relative to Earth's rotation so differences are visible.
-// Earth base rotation speed (real): 2π / (24*3600) rad/s
-// We multiply by TIME_RATE (3600) to get rad/sim-second.
-// Relative factors below = sidereal_day / 1_earth_day, so
-// rotSpeed = EARTH_ROT_SPEED * (1 / relative_factor)
-// Negative = retrograde (Venus).
-
-const EARTH_ROT = (2 * Math.PI) / (24 * 3600); // rad per real second
-// Each planet's rotation speed in real rad/s (scaled by TIME_RATE via elapsedSim)
+// ============================================================
+// PLANETS — coplanar circular orbits centered on the Sun
+// ============================================================
+// Distances are in AU (compressed for outer planets so they all fit
+// on screen — the user wanted "scientifically close" not exact).
+// Real sidereal rotation periods kept (Mercury slow, Jupiter fast,
+// Venus retrograde).
+// r     = body radius in scene units. ALL bodies are now strictly
+//         proportional: Earth = 0.25, every other planet/Moon scaled
+//         by its REAL radius ratio to Earth (Mercury 0.38×, Venus 0.95×,
+//         Mars 0.53×, Jupiter 11.21×, Saturn 9.45×, Moon 0.273×). The
+//         Sun is the only exception — it would need radius 27.3 at this
+//         scale (109× Earth = 109 × 0.25), which would swallow Earth's
+//         orbit; instead the Sun sphere is set to 4 below, making it
+//         visibly the biggest body without breaking the scene.
+// dist  = orbital radius in AU — REAL ratios (Mercury 0.39, Venus 0.72,
+//         Earth 1.00, Mars 1.52, Jupiter 5.20, Saturn 9.54).
+// theta = initial orbital phase (radians) — spreads the planets across
+//         the visible part of the scene at page load.
 const PLANET_DATA = [
-  // rotDays: sidereal rotation period in Earth days (neg = retrograde)
-  { name:'Mercury', r:0.05, pos:new THREE.Vector3( 1.0, 0.1, 0.3),  color:0xb5b5b5, period:88,    rotDays: 58.6  },
-  { name:'Venus',   r:0.09, pos:new THREE.Vector3( 1.8,-0.2, 0.6),  color:0xE6C87A, period:225,   rotDays:-243.0 },
-  { name:'Mars',    r:0.06, pos:new THREE.Vector3(-1.6, 0.4,-0.5),  color:0xC1440E, period:687,   rotDays: 1.026 },
-  { name:'Jupiter', r:0.20, pos:new THREE.Vector3( 3.2, 0.8,-1.2),  color:0xC9A86C, period:4333,  rotDays: 0.413 },
-  { name:'Saturn',  r:0.17, pos:new THREE.Vector3(-3.8, 1.2,-2.0),  color:0xE3D5A8, period:10759, rotDays: 0.444, rings:true },
+  { name:'Mercury', r:0.095, dist:0.39, theta: 0.6,  color:0xb5b5b5, period:88,    rotDays: 58.6  },
+  { name:'Venus',   r:0.238, dist:0.72, theta:-0.9,  color:0xE6C87A, period:225,   rotDays:-243.0 },
+  { name:'Mars',    r:0.133, dist:1.52, theta: 1.6,  color:0xC1440E, period:687,   rotDays: 1.026 },
+  { name:'Jupiter', r:2.80,  dist:5.20, theta:-2.1,  color:0xC9A86C, period:4333,  rotDays: 0.413 },
+  { name:'Saturn',  r:2.36,  dist:9.54, theta: 2.4,  color:0xE3D5A8, period:10759, rotDays: 0.444, rings:true },
 ];
 
 const planetMeshes = [];
 
 PLANET_DATA.forEach((p) => {
-  // Planet body
-  const mat = new THREE.MeshStandardMaterial({
-    color: p.color, roughness: 0.85, metalness: 0.05,
-    emissive: new THREE.Color(p.color).multiplyScalar(0.08)
-  });
-  const mesh = new THREE.Mesh(new THREE.SphereGeometry(p.r, 16, 16), mat);
-  mesh.position.copy(SUN_POS).add(p.pos);
-  scene.add(mesh);
+  const mesh = new THREE.Mesh(
+    new THREE.SphereGeometry(p.r, 20, 20),
+    new THREE.MeshStandardMaterial({
+      color: p.color, roughness: 0.85, metalness: 0.05,
+      emissive: new THREE.Color(p.color).multiplyScalar(0.08),
+    })
+  );
+  const orbitR = p.dist * AU;
+  // Place on circular orbit at angle theta, in the eclipticGroup local
+  // XZ plane — every planet at LOCAL y = SUN_LOCAL.y, guaranteeing
+  // strict coplanarity with the Sun and Earth.
+  mesh.position.set(
+    SUN_LOCAL.x + orbitR * Math.cos(p.theta),
+    SUN_LOCAL.y,
+    SUN_LOCAL.z + orbitR * Math.sin(p.theta)
+  );
+  eclipticGroup.add(mesh);
 
-  // Saturn's ring — added as a SIBLING (not child) of planet mesh,
-  // so it doesn't inherit the planet's spin. Tilted 26.7° to ecliptic.
+  // Saturn's ring — sibling of the planet mesh so it keeps its fixed
+  // 26.7° tilt instead of inheriting the planet's spin.
   let ringMesh = null;
   if (p.rings) {
     const rGeo = new THREE.RingGeometry(p.r * 1.5, p.r * 2.4, 64);
     const rMat = new THREE.MeshBasicMaterial({
-      color: 0xC9B896, transparent: true, opacity: 0.55, side: THREE.DoubleSide
+      color: 0xC9B896, transparent: true, opacity: 0.55, side: THREE.DoubleSide,
     });
     ringMesh = new THREE.Mesh(rGeo, rMat);
-    // Saturn's ring tilt: 26.7° from equatorial plane
     ringMesh.rotation.x = Math.PI / 2 - 26.7 * (Math.PI / 180);
     ringMesh.position.copy(mesh.position);
-    scene.add(ringMesh);
+    eclipticGroup.add(ringMesh);
   }
 
-  const angSpeed  = (2 * Math.PI) / (p.period * 24 * 3600); // orbital rad/real-s
-  const rotSpeed  = (2 * Math.PI) / (Math.abs(p.rotDays) * 24 * 3600); // axial rad/real-s
-  const rotDir    = p.rotDays < 0 ? -1 : 1; // retrograde check
-  const initAngle = Math.atan2(p.pos.z, p.pos.x);
-  const orbitR    = Math.sqrt(p.pos.x ** 2 + p.pos.z ** 2);
+  const angSpeed = (2 * Math.PI) / (p.period * 24 * 3600);
+  const rotSpeed = (2 * Math.PI) / (Math.abs(p.rotDays) * 24 * 3600);
+  const rotDir   = p.rotDays < 0 ? -1 : 1; // Venus retrograde
 
-  planetMeshes.push({ mesh, ringMesh, angSpeed, rotSpeed, rotDir, initAngle, orbitR, sunPos: SUN_POS, yOff: p.pos.y });
+  planetMeshes.push({
+    mesh, ringMesh, angSpeed, rotSpeed, rotDir,
+    initAngle: p.theta, orbitR, sunLocal: SUN_LOCAL,
+  });
 });
 
-// Keep planetPivots empty — we animate planetMeshes directly
-const planetPivots = [];
+const planetPivots = []; // legacy — animation drives planetMeshes directly
 
 // ============================================================
-// ORBIT PATHS — line loops showing each planet's orbit around the Sun
-// and the Moon's orbit around Earth. Default hidden; toggled by the
-// left-side ORBITS UI. We track every ring in `orbitMeshes` so a single
-// visibility flag covers them all (the moon ring lives under
-// moonOrbitGroup to inherit its 5.14° tilt, so it can't share a parent
-// with the planet rings).
+// ORBIT PATHS — Earth + every planet + Moon, controlled by the left
+// ORBITS toggle. Uses RingGeometry (a thin disc-ring) instead of
+// LineLoop so the ring has guaranteed visible thickness regardless of
+// GPU/driver line-width support.
 // ============================================================
 const orbitMeshes = [];
 
-function makeOrbitRing(radius, color, opacity, segments) {
-  const pts = [];
-  for (let i = 0; i <= segments; i++) {
-    const a = (i / segments) * Math.PI * 2;
-    pts.push(new THREE.Vector3(Math.cos(a) * radius, 0, Math.sin(a) * radius));
-  }
-  const geo = new THREE.BufferGeometry().setFromPoints(pts);
-  const mat = new THREE.LineBasicMaterial({
-    color, transparent: true, opacity, depthWrite: false,
+function makeOrbitRing(radius, opacity, color = 0x6b7898, thicknessFrac = 0.005) {
+  const t = Math.max(0.005, radius * thicknessFrac);
+  const geo = new THREE.RingGeometry(radius - t, radius + t, 256);
+  // RingGeometry sits in XY plane by default — flip to XZ
+  geo.rotateX(-Math.PI / 2);
+  const mat = new THREE.MeshBasicMaterial({
+    color, transparent: true, opacity,
+    side: THREE.DoubleSide, depthWrite: false,
   });
-  return new THREE.LineLoop(geo, mat);
+  return new THREE.Mesh(geo, mat);
 }
 
-// Planet orbits — anchored at the Sun, lying in the ecliptic plane (with
-// each planet's small Y offset preserved so the ring intersects the planet)
-planetMeshes.forEach((p) => {
-  const ring = makeOrbitRing(p.orbitR, 0x5b6582, 0.30, 256);
-  ring.position.copy(p.sunPos);
-  ring.position.y += p.yOff;
+// Earth's own orbit around the Sun — a full ring of radius AU centered
+// on the Sun, lying in the ecliptic. Earth itself stays at scene origin
+// (one fixed point on this ring, since this is the camera-fixed view).
+{
+  const ring = makeOrbitRing(AU, 0.55, 0x9aaad0);
+  ring.position.copy(SUN_LOCAL);
   ring.visible = false;
-  scene.add(ring);
+  eclipticGroup.add(ring);
+  orbitMeshes.push(ring);
+}
+
+// Other planets' orbits — same plane as Earth's, all centered on Sun
+planetMeshes.forEach((p) => {
+  const ring = makeOrbitRing(p.orbitR, 0.40);
+  ring.position.copy(p.sunLocal);
+  ring.visible = false;
+  eclipticGroup.add(ring);
   orbitMeshes.push(ring);
 });
 
-// Moon orbit — child of moonOrbitGroup so it inherits the 5.14° inclination
+// Moon orbit — child of moonOrbitGroup so it inherits the 5.14° tilt
+// and stays exactly where the moon traces its orbit (same parent group,
+// same plane, same radius).
+let moonOrbitRing = null;
 {
-  const ring = makeOrbitRing(MOON_DIST, 0x7884a0, 0.40, 128);
-  ring.visible = false;
-  moonOrbitGroup.add(ring);
-  orbitMeshes.push(ring);
+  moonOrbitRing = makeOrbitRing(MOON_DIST, 0.55, 0x9aa5c0, 0.012);
+  moonOrbitRing.visible = false;
+  moonOrbitGroup.add(moonOrbitRing);
+  orbitMeshes.push(moonOrbitRing);
 }
 
 function setOrbitsVisible(visible) {
@@ -1136,31 +1309,29 @@ function tickCosmicEvents(dt) {
 }
 
 // ============================================================
-// INTERACTION — grab Earth or Moon to rotate it directly with the cursor
+// INTERACTION — drag anywhere to orbit the camera around Earth
 // ============================================================
-// Single source of truth per object: every frame, exactly ONE thing writes
-// to each object's rotation accumulator — either time-based natural motion
-// (idle frames) or cursor delta (drag frames). No double-counting, no
-// compound motion, no time multiplier ramp. Pure interlock during drag,
-// pure natural rotation otherwise.
+// Earth (and the Moon, the planets, the sky) all run on their own
+// natural rotations every frame, untouched by user input. The user
+// only controls the camera: drag pans the orbit angle, wheel/pinch
+// zooms in and out.
 const TIME_RATE = 3600;     // 1 real-second = 1 sim-hour (fixed)
 
 let isDragging = false;
-let dragTarget = null;      // 'earth' | 'moon'
 let lastDragX  = 0;
 let lastDragY  = 0;
 
-// Per-object rotation accumulators (radians). Initialized so the page
-// loads with Earth/Moon in their natural starting pose.
-let earthSpinY  = 0;        // earthMesh.rotation.y
-let cloudSpinY  = 0;        // cloudMesh.rotation.y (slightly faster)
-let moonOrbitY  = 0;        // moonPivot.rotation.y
+// Earth's spin axis in world coords — tilted 23.5° around Z (Polaris-like)
+const EARTH_AXIS = new THREE.Vector3(0, 1, 0).applyEuler(
+  new THREE.Euler(0, 0, 23.5 * Math.PI / 180)
+).normalize();
 
-// Cursor → rotation sensitivity (radians per pixel). Tuned so 1 swipe
-// across an object's apparent diameter rotates it ~½ turn — the "globe
-// under your finger" feel.
-const EARTH_DRAG_K = 0.012;
-const MOON_DRAG_K  = 0.010;
+// Moon's orbit accumulator (no longer driven by the user)
+let moonOrbitY = 0;
+
+// Cursor → camera rotation sensitivity (radians per pixel). Tuned so a
+// full screen-width drag is roughly 180° of orbit.
+const ORBIT_K = 0.005;
 
 const timeIndicator = document.getElementById('time-indicator');
 
@@ -1188,71 +1359,50 @@ function getXY(e) {
 }
 
 function onPointerDown(e) {
+  // Ignore second/third fingers — those are pinch-zoom, not drag
+  if (e.touches && e.touches.length >= 2) return;
   const { x, y } = getXY(e);
 
-  const earthWorld = new THREE.Vector3(0, 0, 0);
-  const moonWorld = new THREE.Vector3();
-  if (moonMesh) moonMesh.getWorldPosition(moonWorld);
-
-  // Test moon first (smaller, on top) so it wins ties with earth's bigger hitbox
-  const hitMoon  = moonMesh && nearObject(x, y, moonWorld, 50);
-  const hitEarth = !hitMoon && nearObject(x, y, earthWorld, 90);
-
-  if (hitEarth || hitMoon) {
-    isDragging = true;
-    dragTarget = hitMoon ? 'moon' : 'earth';
-    lastDragX = x;
-    lastDragY = y;
-    renderer.domElement.style.cursor = 'grabbing';
-    // Clear all active cosmic objects immediately
-    for (let i = cosmicObjects.length - 1; i >= 0; i--) {
-      const obj = cosmicObjects[i];
-      scene.remove(obj.mesh);
-      if (obj.nucleus) scene.remove(obj.nucleus);
-    }
-    cosmicObjects.length = 0;
-    e.preventDefault();
+  isDragging = true;
+  lastDragX = x;
+  lastDragY = y;
+  renderer.domElement.style.cursor = 'grabbing';
+  // Clear active cosmic events so they don't fly past at warp during the orbit
+  for (let i = cosmicObjects.length - 1; i >= 0; i--) {
+    const obj = cosmicObjects[i];
+    scene.remove(obj.mesh);
+    if (obj.nucleus) scene.remove(obj.nucleus);
   }
+  cosmicObjects.length = 0;
+  e.preventDefault();
 }
 
 function onPointerMove(e) {
   if (!isDragging) return;
   const { x, y } = getXY(e);
   const dx = x - lastDragX;
-  // Vertical (dy) is intentionally ignored: Earth's axis is fixed in
-  // space, and the Moon orbits in one plane — neither tilts under
-  // vertical drag.
+  const dy = y - lastDragY;
   lastDragX = x;
   lastDragY = y;
 
-  // Direct interlock — cursor delta drives the grabbed object's
-  // rotation, frame-for-frame, with nothing else writing to it.
-  if (dragTarget === 'earth') {
-    earthSpinY += dx * EARTH_DRAG_K;
-    cloudSpinY += dx * EARTH_DRAG_K * 1.018;
-  } else if (dragTarget === 'moon') {
-    moonOrbitY += dx * MOON_DRAG_K;
-  }
+  // Drag → orbit camera around Earth. Sign convention matches Three.js
+  // OrbitControls: drag right → world appears to follow finger right
+  // (camera swings opposite). Polar angle clamped to avoid pole flip.
+  camTheta -= dx * ORBIT_K;
+  camPhi   -= dy * ORBIT_K;
+  camPhi = Math.max(0.05, Math.min(Math.PI - 0.05, camPhi));
+  updateCamera();
 
   e.preventDefault();
 }
 
 function onPointerUp() {
   isDragging = false;
-  dragTarget = null;
-  renderer.domElement.style.cursor = 'default';
+  renderer.domElement.style.cursor = 'grab';
 }
 
-// Hover cursor hint
-renderer.domElement.addEventListener('mousemove', (e) => {
-  if (isDragging) return;
-  const earthWorld = new THREE.Vector3(0, 0, 0);
-  const moonWorld = new THREE.Vector3();
-  if (moonMesh) moonMesh.getWorldPosition(moonWorld);
-  const over = nearObject(e.clientX, e.clientY, earthWorld, 90) ||
-               (moonMesh && nearObject(e.clientX, e.clientY, moonWorld, 50));
-  renderer.domElement.style.cursor = over ? 'grab' : 'default';
-}, { passive: true });
+// Hover cursor hint — anywhere on canvas is grabbable
+renderer.domElement.style.cursor = 'grab';
 
 renderer.domElement.addEventListener('mousedown',  onPointerDown, { passive: false });
 renderer.domElement.addEventListener('mousemove',  onPointerMove, { passive: false });
@@ -1261,6 +1411,54 @@ window.addEventListener('mouseup', onPointerUp); // catch release outside canvas
 renderer.domElement.addEventListener('touchstart', onPointerDown, { passive: false });
 renderer.domElement.addEventListener('touchmove',  onPointerMove, { passive: false });
 renderer.domElement.addEventListener('touchend',   onPointerUp);
+
+// ============================================================
+// ZOOM — mousewheel and two-finger pinch dolly the camera radius along
+// the orbit-sphere. Range: close enough to come right up to Earth's
+// atmosphere (Earth radius 0.25 + atmosphere 0.03 + tiny gap = 0.4),
+// far enough to see Saturn's orbit (~85 scene units from Earth at AU=8).
+// ============================================================
+const ZOOM_MIN = 0.4;
+const ZOOM_MAX = 100;
+
+function clampZoom(z) { return Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, z)); }
+
+renderer.domElement.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  // deltaY > 0 = scroll-down = zoom out. Exponential step → uniform feel.
+  const factor = Math.exp(e.deltaY * 0.001);
+  camDistance = clampZoom(camDistance * factor);
+  updateCamera();
+}, { passive: false });
+
+// Pinch-to-zoom on touch devices
+let pinchStartDist = 0;
+let pinchStartZ    = 0;
+
+renderer.domElement.addEventListener('touchstart', (e) => {
+  if (e.touches.length === 2) {
+    // A second finger landed — abort any in-flight single-touch drag
+    if (isDragging) {
+      isDragging = false;
+      renderer.domElement.style.cursor = 'grab';
+    }
+    const a = e.touches[0], b = e.touches[1];
+    pinchStartDist = Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY);
+    pinchStartZ = camDistance;
+  }
+}, { passive: true });
+
+renderer.domElement.addEventListener('touchmove', (e) => {
+  if (e.touches.length === 2 && pinchStartDist > 0) {
+    e.preventDefault();
+    const a = e.touches[0], b = e.touches[1];
+    const d = Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY);
+    camDistance = clampZoom(pinchStartZ * (pinchStartDist / d));
+    updateCamera();
+  }
+}, { passive: false });
+
+renderer.domElement.addEventListener('touchend', () => { pinchStartDist = 0; });
 
 // ============================================================
 // ANIMATION LOOP
@@ -1279,19 +1477,15 @@ function animate() {
   const simDt = dt * TIME_RATE;
   elapsedSim += simDt;
 
-  // Earth: natural rotation only when NOT being dragged. While dragged,
-  // earthSpinY is updated exclusively by onPointerMove → no compound motion.
-  if (!isDragging || dragTarget !== 'earth') {
-    earthSpinY += simDt * EARTH_ROT_SPEED;
-    cloudSpinY += simDt * EARTH_ROT_SPEED * 1.018;
-  }
-  if (earthMesh) earthMesh.rotation.y = earthSpinY;
-  if (cloudMesh) cloudMesh.rotation.y = cloudSpinY;
+  // Earth: natural daily rotation around the inertially-fixed spin axis
+  // (EARTH_AXIS in world space). Always runs — drag now controls the
+  // camera, never the Earth mesh, so the two no longer compete.
+  const dEarth = simDt * EARTH_ROT_SPEED;
+  if (earthMesh) earthMesh.rotateOnWorldAxis(EARTH_AXIS, dEarth);
+  if (cloudMesh) cloudMesh.rotateOnWorldAxis(EARTH_AXIS, dEarth * 1.018);
 
-  // Moon: same pattern
-  if (!isDragging || dragTarget !== 'moon') {
-    moonOrbitY += simDt * MOON_ORB_SPEED;
-  }
+  // Moon: natural orbit, no user input.
+  moonOrbitY += simDt * MOON_ORB_SPEED;
   moonPivot.rotation.y = moonOrbitY;
   // Tidal lock — moon face always toward Earth
   if (moonMesh) moonMesh.rotation.y = -moonOrbitY;
@@ -1312,18 +1506,18 @@ function animate() {
     trailLine.material.opacity = 0.12;
   }
 
-  // Planets — orbit + accurate axial rotation, ring stays world-aligned
+  // Planets — circular orbits in eclipticGroup local frame. Every planet
+  // shares SUN_LOCAL.y, so all orbits are strictly coplanar (textbook).
   planetMeshes.forEach((p) => {
     const angle = p.initAngle + elapsedSim * p.angSpeed;
-    const wx = p.sunPos.x + Math.cos(angle) * p.orbitR;
-    const wz = p.sunPos.z + Math.sin(angle) * p.orbitR;
-    p.mesh.position.set(wx, p.sunPos.y + p.yOff, wz);
+    const lx = p.sunLocal.x + Math.cos(angle) * p.orbitR;
+    const lz = p.sunLocal.z + Math.sin(angle) * p.orbitR;
+    p.mesh.position.set(lx, p.sunLocal.y, lz);
     // Axial spin — scaled via elapsedSim (TIME_RATE)
     p.mesh.rotation.y = elapsedSim * p.rotSpeed * p.rotDir;
-    // Ring follows planet position but keeps its own fixed world tilt
+    // Saturn's ring follows the planet's position but keeps its fixed tilt
     if (p.ringMesh) {
-      p.ringMesh.position.set(wx, p.sunPos.y + p.yOff, wz);
-      // No rotation update — ring stays at its fixed ecliptic tilt
+      p.ringMesh.position.set(lx, p.sunLocal.y, lz);
     }
   });
 
