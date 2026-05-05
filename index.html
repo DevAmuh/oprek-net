@@ -12,6 +12,67 @@
   html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
   canvas { display: block; position: fixed; inset: 0; }
 
+  /* LOADING SCREEN — covers the scene while textures load. Wireframe
+     ellipses draw themselves with stroke-dashoffset, the whole rig
+     spins, "PLEASE STAND BY" pulses below. Fades out + removes itself
+     before the cinematic zoom-in starts. */
+  #loading-screen {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 1.2s ease;
+  }
+  #loading-screen.fade-out {
+    opacity: 0;
+    pointer-events: none;
+  }
+  #loading-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  #loading-sphere {
+    width: clamp(120px, 22vw, 180px);
+    height: clamp(120px, 22vw, 180px);
+    overflow: visible;
+  }
+  #wf-rotor {
+    transform-origin: center;
+    animation: wf-spin 5s linear infinite;
+  }
+  #wf-rotor ellipse {
+    fill: none;
+    stroke: rgba(255,255,255,0.85);
+    stroke-width: 0.6;
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    animation: wf-draw 2.4s cubic-bezier(0.45, 0, 0.55, 1) forwards;
+  }
+  #wf-rotor ellipse:nth-child(1) { animation-delay: 0s;   }
+  #wf-rotor ellipse:nth-child(2) { animation-delay: 0.30s; }
+  #wf-rotor ellipse:nth-child(3) { animation-delay: 0.60s; }
+  #wf-rotor ellipse:nth-child(4) { animation-delay: 0.90s; }
+  #wf-rotor ellipse:nth-child(5) { animation-delay: 1.20s; }
+  #loading-text {
+    margin-top: 28px;
+    font-family: 'Georgia', serif;
+    font-size: clamp(11px, 1.7vw, 13px);
+    letter-spacing: 0.4em;
+    color: rgba(255,255,255,0.6);
+    text-transform: uppercase;
+    animation: wf-text-pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes wf-spin     { to   { transform: rotate(360deg); } }
+  @keyframes wf-draw     { to   { stroke-dashoffset: 0; } }
+  @keyframes wf-text-pulse {
+    0%, 100% { opacity: 0.40; }
+    50%      { opacity: 0.85; }
+  }
+
   /* QUOTE — top right */
   #quote {
     position: fixed;
@@ -413,32 +474,36 @@ document.addEventListener('click', () => {
 
 // HINT
 // ============================================================
-// WELCOME message — fade cycle through intro lines, then quietly retire
+// WELCOME message — runs ONCE, after the cinematic zoom-in finishes.
+// Sequence: fade-in "Welcome" (4 s visible), fade-out, brief pause,
+// fade-in "Drag around …" (5 s visible), fade-out, then nothing — the
+// element stays out of the way for the rest of the session.
 // ============================================================
 const welcomeEl = document.getElementById('welcome');
 const WELCOME_LINES = [
-  'Welcome',
-  'Drag around to see the expanse of our universe',
+  { text: 'Welcome',                                        hold: 4000 },
+  { text: 'Drag around to see the expanse of our universe', hold: 5000 },
 ];
 
-(function cycleWelcome() {
+let welcomeStarted = false;
+function startWelcome() {
+  if (welcomeStarted) return;
+  welcomeStarted = true;
   let i = 0;
   function step() {
     if (i >= WELCOME_LINES.length) return;
-    welcomeEl.textContent = WELCOME_LINES[i];
-    // Fade in
+    const { text, hold } = WELCOME_LINES[i];
+    welcomeEl.textContent = text;
     requestAnimationFrame(() => welcomeEl.classList.add('visible'));
     setTimeout(() => {
-      // Fade out
       welcomeEl.classList.remove('visible');
       i++;
-      // Wait for fade-out, then move on
-      setTimeout(step, 1300);
-    }, 3200);
+      // wait for fade-out (1.1 s) + a small breath, then next line
+      setTimeout(step, 1500);
+    }, hold);
   }
-  // Initial delay so the scene has time to render before the message appears
-  setTimeout(step, 700);
-})();
+  step();
+}
 
 // ============================================================
 // SCENE SETUP
@@ -480,7 +545,50 @@ function updateCamera() {
   );
   camera.lookAt(0, 0, 0);
 }
+
+// ============================================================
+// CINEMATIC INTRO — start far, zoom in to a comfortable framing of
+// Earth (camDistance ≈ 7), then quietly auto-rotate around it. Auto-
+// rotate pauses while the user is dragging, resumes when they let go.
+// ============================================================
+const ZOOM_FROM       = 100;           // far away, tiny Earth at start
+const ZOOM_TO         = 7;             // matches the intended welcome framing
+const ZOOM_DURATION   = 3.0;           // seconds
+const AUTO_ROTATE_RAD = (10 * Math.PI / 180); // 10°/sec → very gentle drift
+
+let zoomingIn   = false;
+let zoomStartT  = 0;     // performance.now() / 1000 when zoom-in begins
+let autoRotate  = false;
+
+camDistance = ZOOM_FROM;
 updateCamera();
+
+function startZoomIn() {
+  camDistance = ZOOM_FROM;
+  zoomStartT  = performance.now() / 1000;
+  zoomingIn   = true;
+  updateCamera();
+}
+
+// Loading-screen flow: minimum visible time so the wireframe can fully
+// draw itself, then fade out, remove from DOM, kick off the zoom-in.
+const LOADING_MIN_MS = 2800;
+function dismissLoadingScreen() {
+  const el = document.getElementById('loading-screen');
+  if (!el) return;
+  el.classList.add('fade-out');
+  setTimeout(() => {
+    el.remove();
+    startZoomIn();
+  }, 1200); // matches CSS opacity transition
+}
+window.addEventListener('load', () => {
+  setTimeout(dismissLoadingScreen, LOADING_MIN_MS);
+});
+// Safety net: if the load event has already fired (cached reload), still trigger
+if (document.readyState === 'complete') {
+  setTimeout(dismissLoadingScreen, LOADING_MIN_MS);
+}
 
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
@@ -837,9 +945,11 @@ scene.add(earthGroup);
 
 let earthMesh, cloudMesh;
 
-// Atmosphere shader — thin blue limb halo only. Sharp Fresnel power so
-// the glow is concentrated right at the silhouette edge, not bleeding
-// across the whole sphere. Pure blue, no white mix.
+// Atmosphere shader — subtle blue glow with a soft gradient. Two-stage
+// falloff: a wider base (low fresnel power) gives the smooth gradient
+// from inner edge outward, plus a fainter rim accent for definition.
+// Overall opacity dialed way down so it reads as a subtle haze, not a
+// solid ring.
 const atmMat = new THREE.ShaderMaterial({
   vertexShader: `
     varying vec3 vNormal;
@@ -856,10 +966,13 @@ const atmMat = new THREE.ShaderMaterial({
     void main() {
       vec3 v = normalize(vViewPos);
       float fresnel = 1.0 - max(0.0, dot(vNormal, v));
-      // Tight ring concentrated at the limb (high power = thin band)
-      float rim = pow(fresnel, 7.0);
-      vec3 col = vec3(0.30, 0.60, 1.0);  // pure cyan-blue, no white mix
-      gl_FragColor = vec4(col * rim, rim * 0.85);
+      // Smooth base gradient — thicker, fades with distance from the limb
+      float base = pow(fresnel, 2.0);
+      // Slight extra accent right AT the silhouette, very thin
+      float accent = pow(fresnel, 8.0);
+      vec3 col = vec3(0.30, 0.60, 1.0);
+      float a = base * 0.18 + accent * 0.20;   // total opacity stays low
+      gl_FragColor = vec4(col * a, a);
     }`,
   blending: THREE.AdditiveBlending,
   side: THREE.BackSide,
@@ -1718,6 +1831,28 @@ function animate() {
   const dt    = clock.getDelta();
   const simDt = dt * TIME_RATE;
   elapsedSim += simDt;
+
+  // Cinematic zoom-in — runs ONCE at the start of the session
+  if (zoomingIn) {
+    const t = (performance.now() / 1000 - zoomStartT) / ZOOM_DURATION;
+    if (t >= 1) {
+      camDistance = ZOOM_TO;
+      zoomingIn   = false;
+      autoRotate  = true;          // begin gentle drift
+      setTimeout(startWelcome, 350); // small pause then the welcome lines
+    } else {
+      // ease-out quartic — fast at start, soft landing
+      const e = 1 - Math.pow(1 - t, 4);
+      camDistance = ZOOM_FROM + (ZOOM_TO - ZOOM_FROM) * e;
+    }
+    updateCamera();
+  }
+
+  // Auto-rotate — gentle 10°/sec drift around Earth, paused on drag
+  if (autoRotate && !isDragging && !zoomingIn) {
+    camTheta += AUTO_ROTATE_RAD * dt;
+    updateCamera();
+  }
 
   // Earth: natural daily rotation. The earth mesh sits inside earthGroup
   // (which carries the 23.5° axial tilt), so rotating earthMesh on its
