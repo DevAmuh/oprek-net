@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>oprek.net</title>
+<title>Expanse of The Universe</title>
 <!-- Atom favicon — three crossed orbital ellipses with a glowing nucleus.
      Inline SVG so we don't need a separate file. -->
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3CradialGradient id='n' cx='32' cy='32' r='6' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%23ffe7a3'/%3E%3Cstop offset='1' stop-color='%23ff8030'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cg fill='none' stroke='%2380c8ff' stroke-width='2' opacity='0.9'%3E%3Cellipse cx='32' cy='32' rx='26' ry='10'/%3E%3Cellipse cx='32' cy='32' rx='26' ry='10' transform='rotate(60 32 32)'/%3E%3Cellipse cx='32' cy='32' rx='26' ry='10' transform='rotate(-60 32 32)'/%3E%3C/g%3E%3Ccircle cx='32' cy='32' r='5' fill='url(%23n)'/%3E%3C/svg%3E"/>
@@ -12,65 +12,63 @@
   html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
   canvas { display: block; position: fixed; inset: 0; }
 
-  /* LOADING SCREEN — covers the scene while textures load. Wireframe
-     ellipses draw themselves with stroke-dashoffset, the whole rig
-     spins, "PLEASE STAND BY" pulses below. Fades out + removes itself
-     before the cinematic zoom-in starts. */
+  /* LOADING SCREEN — black void with a fixed wireframe sphere placed
+     EXACTLY where Earth lands at default zoom (screen centre), and
+     "PLEASE STAND BY" placed where the welcome text lands (top: 82%).
+     This keeps visual continuity: when the loading screen fades out
+     and the scene fades in, the sphere → Earth and the loading text
+     → welcome text without anything jumping around the screen. */
   #loading-screen {
     position: fixed;
     inset: 0;
     background: #000;
     z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: opacity 1.2s ease;
+    transition: opacity 1s ease;
   }
   #loading-screen.fade-out {
     opacity: 0;
     pointer-events: none;
   }
-  #loading-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
   #loading-sphere {
-    width: clamp(120px, 22vw, 180px);
-    height: clamp(120px, 22vw, 180px);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: clamp(140px, 22vw, 200px);
+    height: clamp(140px, 22vw, 200px);
     overflow: visible;
   }
-  #wf-rotor {
-    transform-origin: center;
-    animation: wf-spin 5s linear infinite;
-  }
+  /* Wireframe ellipses draw themselves once with stroke-dashoffset, then
+     stay fixed in place — no spin (was disorienting). Staggered delays
+     give the "completing from vertex to vertex" feel. */
   #wf-rotor ellipse {
     fill: none;
     stroke: rgba(255,255,255,0.85);
     stroke-width: 0.6;
     stroke-dasharray: 100;
     stroke-dashoffset: 100;
-    animation: wf-draw 2.4s cubic-bezier(0.45, 0, 0.55, 1) forwards;
+    animation: wf-draw 1.6s cubic-bezier(0.45, 0, 0.55, 1) forwards;
   }
-  #wf-rotor ellipse:nth-child(1) { animation-delay: 0s;   }
-  #wf-rotor ellipse:nth-child(2) { animation-delay: 0.30s; }
-  #wf-rotor ellipse:nth-child(3) { animation-delay: 0.60s; }
-  #wf-rotor ellipse:nth-child(4) { animation-delay: 0.90s; }
-  #wf-rotor ellipse:nth-child(5) { animation-delay: 1.20s; }
+  #wf-rotor ellipse:nth-child(1) { animation-delay: 0s;    }
+  #wf-rotor ellipse:nth-child(2) { animation-delay: 0.35s; }
+  #wf-rotor ellipse:nth-child(3) { animation-delay: 0.70s; }
   #loading-text {
-    margin-top: 28px;
+    position: absolute;
+    top: 82%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     font-family: 'Georgia', serif;
-    font-size: clamp(11px, 1.7vw, 13px);
+    font-size: clamp(11px, 2vw, 15px);
     letter-spacing: 0.4em;
-    color: rgba(255,255,255,0.6);
+    color: rgba(255,255,255,0.65);
     text-transform: uppercase;
-    animation: wf-text-pulse 2.4s ease-in-out infinite;
+    text-align: center;
+    animation: wf-text-pulse 2s ease-in-out infinite;
   }
-  @keyframes wf-spin     { to   { transform: rotate(360deg); } }
-  @keyframes wf-draw     { to   { stroke-dashoffset: 0; } }
+  @keyframes wf-draw       { to   { stroke-dashoffset: 0; } }
   @keyframes wf-text-pulse {
-    0%, 100% { opacity: 0.40; }
-    50%      { opacity: 0.85; }
+    0%, 100% { opacity: 0.45; }
+    50%      { opacity: 0.90; }
   }
 
   /* QUOTE — top right */
@@ -187,12 +185,39 @@
   }
   #nav-links a:hover { color: rgba(255,255,255,0.95); transform: translateX(5px); }
 
-  /* WELCOME — centered horizontally, vertically halfway between Earth
-     and the bottom of the viewport (so it sits at 75% screen height).
-     Fade-cycles through intro messages then disappears. */
+  /* AUDIO TOGGLE — top-right corner, white speaker icon. Clicking
+     mutes/unmutes; muted state = 20 % opacity (we draw the fully-built
+     speaker; no slash/cross because not every font/SVG renders one
+     cleanly across browsers). */
+  #audio-toggle {
+    position: fixed;
+    top: clamp(16px, 4vw, 32px);
+    right: clamp(64px, 10vw, 88px);
+    z-index: 100;
+    background: none;
+    border: none;
+    padding: 11px;
+    cursor: pointer;
+    color: rgba(255,255,255,0.8);
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.25s ease, color 0.25s ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    filter: drop-shadow(0 1px 6px rgba(0,0,0,0.85));
+  }
+  #audio-toggle:hover { color: rgba(255,255,255,1); }
+  #audio-toggle.muted { opacity: 0.20; }
+
+  /* WELCOME — centered horizontally, sits at the visual midpoint between
+     Earth's bottom and the MENU button row. Same vertical line that the
+     loading-screen text uses, so they cross-fade in place. */
   #welcome {
     position: fixed;
-    top: 75%;
+    top: 82%;
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: 10;
@@ -207,7 +232,7 @@
     line-height: 1.5;
     max-width: min(640px, 90vw);
     opacity: 0;
-    transition: opacity 1.1s ease;
+    transition: opacity 1s ease;
   }
   #welcome.visible { opacity: 1; }
 
@@ -335,11 +360,10 @@
   <div id="loading-content">
     <svg id="loading-sphere" viewBox="-60 -60 120 120">
       <g id="wf-rotor">
+        <!-- Three orthogonal great circles, drawn in sequence -->
         <ellipse cx="0" cy="0" rx="50" ry="50" pathLength="100"></ellipse>
-        <ellipse cx="0" cy="0" rx="50" ry="20" pathLength="100"></ellipse>
-        <ellipse cx="0" cy="0" rx="20" ry="50" pathLength="100"></ellipse>
-        <ellipse cx="0" cy="0" rx="50" ry="35" pathLength="100" transform="rotate(35)"></ellipse>
-        <ellipse cx="0" cy="0" rx="50" ry="35" pathLength="100" transform="rotate(-35)"></ellipse>
+        <ellipse cx="0" cy="0" rx="50" ry="18" pathLength="100"></ellipse>
+        <ellipse cx="0" cy="0" rx="18" ry="50" pathLength="100"></ellipse>
       </g>
     </svg>
     <div id="loading-text">PLEASE STAND BY</div>
@@ -369,11 +393,22 @@
 <!-- WELCOME — fade-cycles through a couple of intro messages, then stays out of the way -->
 <div id="welcome" aria-live="polite"></div>
 
+<!-- AUDIO + mute toggle. Music starts on first click/tap (browsers block
+     autoplay until user gestures); mute button below dims when muted. -->
+<audio id="bg-music" src="assets/audio/armageddon-theme.mp3" loop preload="auto"></audio>
+<button id="audio-toggle" type="button" aria-label="Toggle music" aria-pressed="false">
+  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 10v4h3l5 4V6L6 10H3z"/>
+    <path class="wave-1" d="M14 9c1.4 0.7 2.3 2 2.3 3.5S15.4 15.3 14 16"/>
+    <path class="wave-2" d="M16.5 6c2.7 1.3 4.5 3.7 4.5 6.5S19.2 17.7 16.5 19"/>
+  </svg>
+</button>
+
 <!-- SKY TOGGLE (right edge, hidden by default — show via the ‹ handle) -->
 <div id="sky-toggle" class="hidden" role="group" aria-label="Sky mode">
-  <span class="opt active" data-mode="stars" role="button" tabindex="0">Artificial</span>
+  <span class="opt" data-mode="stars" role="button" tabindex="0">Artificial</span>
   <span class="sep">·</span>
-  <span class="opt" data-mode="nature" role="button" tabindex="0">Natural</span>
+  <span class="opt active" data-mode="nature" role="button" tabindex="0">Natural</span>
   <span class="loading" aria-hidden="true"></span>
 </div>
 <button id="sky-toggle-handle" type="button" aria-label="Show or hide sky-mode toggle" aria-expanded="false">‹</button>
@@ -474,6 +509,61 @@ document.addEventListener('click', () => {
 
 // HINT
 // ============================================================
+// MUSIC — Armageddon theme on loop. Browsers block autoplay until the
+// user interacts with the page, so we attempt playback on every click,
+// keypress, or canvas pointer-down. Once started, the audio element's
+// own loop=true handles the loop (mp3 itself is short; tiny gap on the
+// loop boundary, but acceptable for ambient bg music).
+// ============================================================
+const bgMusic     = document.getElementById('bg-music');
+const audioToggle = document.getElementById('audio-toggle');
+const TARGET_VOLUME = 0.42;
+bgMusic.volume = 0;     // start silent so first play can crossfade up
+
+let musicStarted = false;
+let musicMuted   = false;
+
+function fadeAudio(to, ms = 1200) {
+  const from = bgMusic.volume;
+  const t0   = performance.now();
+  function tick() {
+    const t = Math.min(1, (performance.now() - t0) / ms);
+    bgMusic.volume = from + (to - from) * t;
+    if (t < 1) requestAnimationFrame(tick);
+  }
+  tick();
+}
+
+function tryStartMusic() {
+  if (musicStarted || musicMuted) return;
+  bgMusic.play().then(() => {
+    musicStarted = true;
+    fadeAudio(TARGET_VOLUME, 1500);
+  }).catch(() => { /* still blocked — wait for next gesture */ });
+}
+
+// Attempt on every gesture until we succeed
+['pointerdown', 'keydown', 'touchstart'].forEach((ev) => {
+  document.addEventListener(ev, tryStartMusic, { passive: true });
+});
+
+audioToggle.addEventListener('click', (e) => {
+  e.stopPropagation();
+  musicMuted = !musicMuted;
+  audioToggle.classList.toggle('muted', musicMuted);
+  audioToggle.setAttribute('aria-pressed', String(musicMuted));
+  if (musicMuted) {
+    fadeAudio(0, 250);
+  } else {
+    if (!musicStarted) {
+      tryStartMusic();
+    } else {
+      fadeAudio(TARGET_VOLUME, 400);
+    }
+  }
+});
+
+// ============================================================
 // WELCOME message — runs ONCE, after the cinematic zoom-in finishes.
 // Sequence: fade-in "Welcome" (4 s visible), fade-out, brief pause,
 // fade-in "Drag around …" (5 s visible), fade-out, then nothing — the
@@ -554,7 +644,7 @@ function updateCamera() {
 const ZOOM_FROM       = 100;           // far away, tiny Earth at start
 const ZOOM_TO         = 7;             // matches the intended welcome framing
 const ZOOM_DURATION   = 3.0;           // seconds
-const AUTO_ROTATE_RAD = (10 * Math.PI / 180); // 10°/sec → very gentle drift
+const AUTO_ROTATE_RAD = (3 * Math.PI / 180);  // 3°/sec — gentle, no motion sickness
 
 let zoomingIn   = false;
 let zoomStartT  = 0;     // performance.now() / 1000 when zoom-in begins
@@ -580,7 +670,7 @@ function dismissLoadingScreen() {
   setTimeout(() => {
     el.remove();
     startZoomIn();
-  }, 1200); // matches CSS opacity transition
+  }, 1000); // matches CSS 1s opacity transition
 }
 window.addEventListener('load', () => {
   setTimeout(dismissLoadingScreen, LOADING_MIN_MS);
@@ -872,7 +962,7 @@ function removeNatureSky() {
 // ============================================================
 const skyToggleEl = document.getElementById('sky-toggle');
 const skyToggleOpts = skyToggleEl.querySelectorAll('.opt');
-let skyMode = localStorage.getItem('oprek.skyMode') || 'stars';
+let skyMode = localStorage.getItem('oprek.skyMode') || 'nature';
 
 function setSkyMode(mode) {
   if (mode !== 'stars' && mode !== 'nature') mode = 'stars';
@@ -945,43 +1035,8 @@ scene.add(earthGroup);
 
 let earthMesh, cloudMesh;
 
-// Atmosphere shader — subtle blue glow with a soft gradient. Two-stage
-// falloff: a wider base (low fresnel power) gives the smooth gradient
-// from inner edge outward, plus a fainter rim accent for definition.
-// Overall opacity dialed way down so it reads as a subtle haze, not a
-// solid ring.
-const atmMat = new THREE.ShaderMaterial({
-  vertexShader: `
-    varying vec3 vNormal;
-    varying vec3 vViewPos;
-    void main() {
-      vNormal = normalize(normalMatrix * normal);
-      vec4 mv = modelViewMatrix * vec4(position, 1.0);
-      vViewPos = -mv.xyz;
-      gl_Position = projectionMatrix * mv;
-    }`,
-  fragmentShader: `
-    varying vec3 vNormal;
-    varying vec3 vViewPos;
-    void main() {
-      vec3 v = normalize(vViewPos);
-      float fresnel = 1.0 - max(0.0, dot(vNormal, v));
-      // Smooth base gradient — thicker, fades with distance from the limb
-      float base = pow(fresnel, 2.0);
-      // Slight extra accent right AT the silhouette, very thin
-      float accent = pow(fresnel, 8.0);
-      vec3 col = vec3(0.30, 0.60, 1.0);
-      float a = base * 0.18 + accent * 0.20;   // total opacity stays low
-      gl_FragColor = vec4(col * a, a);
-    }`,
-  blending: THREE.AdditiveBlending,
-  side: THREE.BackSide,
-  transparent: true,
-  depthWrite: false,
-});
-// Earth radius = 1 (real-scale base); atmosphere sits 5% beyond surface
-const atmMesh = new THREE.Mesh(new THREE.SphereGeometry(1.05, 64, 64), atmMat);
-earthGroup.add(atmMesh);
+// (Earth atmosphere outline removed entirely — was reading as a hard
+// blue line rather than a subtle gradient.)
 
 (async () => {
   // Earth's color (diffuse) map — try the high-res 4096×1920 NASA Blue
@@ -1267,8 +1322,79 @@ const sunHaloSprite = new THREE.Sprite(new THREE.SpriteMaterial({
   depthWrite: false,
 }));
 sunHaloSprite.position.copy(SUN_LOCAL);
-sunHaloSprite.scale.setScalar(SUN_RADIUS * 5);  // ≈545
+sunHaloSprite.scale.setScalar(SUN_RADIUS * 7);  // ≈760
 eclipticGroup.add(sunHaloSprite);
+
+// ── BRIGHT CORE — pure-white sprite right at the body, makes the disc
+// read as overexposed even from very far away.
+const sunCoreCanvas = document.createElement('canvas');
+sunCoreCanvas.width = 128; sunCoreCanvas.height = 128;
+{
+  const ctx = sunCoreCanvas.getContext('2d');
+  const g = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+  g.addColorStop(0,    'rgba(255,255,255,1)');
+  g.addColorStop(0.25, 'rgba(255,250,210,0.85)');
+  g.addColorStop(0.55, 'rgba(255,210,120,0.30)');
+  g.addColorStop(1,    'rgba(255,160,40,0)');
+  ctx.fillStyle = g; ctx.fillRect(0,0,128,128);
+}
+const sunCoreSprite = new THREE.Sprite(new THREE.SpriteMaterial({
+  map: new THREE.CanvasTexture(sunCoreCanvas),
+  transparent: true, blending: THREE.AdditiveBlending,
+  depthWrite: false,
+}));
+sunCoreSprite.position.copy(SUN_LOCAL);
+sunCoreSprite.scale.setScalar(SUN_RADIUS * 1.5);
+eclipticGroup.add(sunCoreSprite);
+
+// ── RAY SPIKES — radial streaks emanating from the Sun, the
+// recognisable "lens-flare star" silhouette. Procedural canvas with
+// alternating long/short rays plus a very bright centre.
+const sunRaysCanvas = document.createElement('canvas');
+sunRaysCanvas.width = 512; sunRaysCanvas.height = 512;
+{
+  const ctx = sunRaysCanvas.getContext('2d');
+  const cx = 256, cy = 256;
+  ctx.translate(cx, cy);
+  // 16 rays — alternating long/short
+  for (let i = 0; i < 16; i++) {
+    const ang = (i / 16) * Math.PI * 2;
+    const long = (i % 2 === 0);
+    const len = long ? 240 : 130;
+    const width = long ? 3 : 1.6;
+    ctx.save();
+    ctx.rotate(ang);
+    const grad = ctx.createLinearGradient(0, 0, len, 0);
+    grad.addColorStop(0,    'rgba(255,235,160,0.55)');
+    grad.addColorStop(0.30, 'rgba(255,200,100,0.25)');
+    grad.addColorStop(0.70, 'rgba(255,160,60,0.08)');
+    grad.addColorStop(1,    'rgba(255,120,30,0)');
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = width;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(len, 0);
+    ctx.stroke();
+    ctx.restore();
+  }
+  // Bright glow at the centre to bind the rays to the disc
+  ctx.translate(-cx, -cy);
+  const cg = ctx.createRadialGradient(cx, cy, 0, cx, cy, 80);
+  cg.addColorStop(0,   'rgba(255,255,220,0.45)');
+  cg.addColorStop(0.5, 'rgba(255,200,100,0.15)');
+  cg.addColorStop(1,   'rgba(255,160,40,0)');
+  ctx.fillStyle = cg;
+  ctx.fillRect(0, 0, 512, 512);
+}
+const sunRaysSprite = new THREE.Sprite(new THREE.SpriteMaterial({
+  map: new THREE.CanvasTexture(sunRaysCanvas),
+  transparent: true, blending: THREE.AdditiveBlending,
+  depthWrite: false,
+}));
+sunRaysSprite.position.copy(SUN_LOCAL);
+sunRaysSprite.scale.setScalar(SUN_RADIUS * 11);
+eclipticGroup.add(sunRaysSprite);
 
 // ── BLOOM LAYER — third radial-gradient sprite, very wide and very dim,
 // gives the impression of bloomy haze radiating out of the Sun body
@@ -1293,7 +1419,7 @@ const sunBloomSprite = new THREE.Sprite(new THREE.SpriteMaterial({
   depthWrite: false,
 }));
 sunBloomSprite.position.copy(SUN_LOCAL);
-sunBloomSprite.scale.setScalar(SUN_RADIUS * 14);   // ≈1525, broad radial bloom
+sunBloomSprite.scale.setScalar(SUN_RADIUS * 22);   // ≈2400, broad atmospheric bloom
 eclipticGroup.add(sunBloomSprite);
 
 // Compatibility placeholder for any code that still pokes at sunGlowMat
@@ -1717,6 +1843,9 @@ function onPointerDown(e) {
   // Ignore second/third fingers — those are pinch-zoom, not drag
   if (e.touches && e.touches.length >= 2) return;
   const { x, y } = getXY(e);
+
+  // First user drag stops the cinematic auto-rotate for the rest of the session.
+  autoRotate = false;
 
   isDragging = true;
   lastDragX = x;
