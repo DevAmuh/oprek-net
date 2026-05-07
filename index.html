@@ -1597,18 +1597,18 @@ function updateLensFlare() {
   // Anamorphic horizontal streak through Sun
   const sLen = diag * 0.40 * fs;
   const sH   = Math.max(1, 2.5 * fs);
-  for (const [len, alpha, cr, cg, cb] of [
-    [sLen,       0.50, 255, 230, 160],
-    [sLen * 1.4, 0.18, 180, 200, 255],
-  ]) {
-    const sg = ctx.createLinearGradient(sx - len/2, sy, sx + len/2, sy);
-    sg.addColorStop(0,   `rgba(${cr},${cg},${cb},0)`);
-    sg.addColorStop(0.35,`rgba(${cr},${cg},${cb},${(alpha*sf*0.45).toFixed(3)})`);
-    sg.addColorStop(0.5, `rgba(${cr},${cg},${cb},${(alpha*sf).toFixed(3)})`);
-    sg.addColorStop(0.65,`rgba(${cr},${cg},${cb},${(alpha*sf*0.45).toFixed(3)})`);
-    sg.addColorStop(1,   `rgba(${cr},${cg},${cb},0)`);
+  // Single streak: white-hot core fading to warm gold at the wings
+  {
+    const sg = ctx.createLinearGradient(sx - sLen/2, sy, sx + sLen/2, sy);
+    sg.addColorStop(0,    `rgba(255,210,120,0)`);
+    sg.addColorStop(0.28, `rgba(255,230,160,${(0.12*sf).toFixed(3)})`);
+    sg.addColorStop(0.44, `rgba(255,250,210,${(0.45*sf).toFixed(3)})`);
+    sg.addColorStop(0.5,  `rgba(255,255,245,${(0.75*sf).toFixed(3)})`);
+    sg.addColorStop(0.56, `rgba(255,250,210,${(0.45*sf).toFixed(3)})`);
+    sg.addColorStop(0.72, `rgba(255,230,160,${(0.12*sf).toFixed(3)})`);
+    sg.addColorStop(1,    `rgba(255,210,120,0)`);
     ctx.fillStyle = sg;
-    ctx.fillRect(sx - len/2, sy - sH/2, len, sH);
+    ctx.fillRect(sx - sLen/2, sy - sH/2, sLen, sH);
   }
 
   // Bokeh circles reflected through screen centre
