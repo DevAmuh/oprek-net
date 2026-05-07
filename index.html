@@ -1243,6 +1243,7 @@ eclipticGroup.add(sunGroup);
 const SUN_RADIUS = 109;
 const sunMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true });
 const sunCoreMesh = new THREE.Mesh(new THREE.SphereGeometry(SUN_RADIUS, 96, 64), sunMat);
+sunCoreMesh.visible = false; // sprites handle the visuals; opaque sphere creates a black-hole look
 sunGroup.add(sunCoreMesh);
 
 // Procedural high-res Sun texture — 2048 × 1024 equirectangular canvas
