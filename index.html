@@ -191,7 +191,9 @@
      cleanly across browsers). */
   #audio-toggle {
     position: fixed;
-    bottom: clamp(20px, 4vw, 32px);
+    /* +12px compensates for #nav-links margin-top that shifts the nav up,
+       so the speaker icon is vertically centred on the same line as MENU */
+    bottom: calc(clamp(20px, 4vw, 32px) + 12px);
     right: clamp(20px, 4vw, 32px);
     z-index: 100;
     background: none;
@@ -204,13 +206,38 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: opacity 0.25s ease, color 0.25s ease;
+    opacity: 0;
+    transition: opacity 0.5s ease, color 0.25s ease;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
     filter: drop-shadow(0 1px 6px rgba(0,0,0,0.85));
   }
   #audio-toggle:hover { color: rgba(255,255,255,1); }
   #audio-toggle.muted { opacity: 0.20; }
+
+  /* NOW-PLAYING — slides in from the right edge, same row as speaker */
+  #now-playing {
+    position: fixed;
+    bottom: calc(clamp(20px, 4vw, 32px) + 12px);
+    right: clamp(20px, 4vw, 32px);
+    z-index: 100;
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: clamp(9px, 1.2vw, 11px);
+    font-style: italic;
+    letter-spacing: 0.12em;
+    color: rgba(255,255,255,0.65);
+    text-shadow: 0 1px 6px rgba(0,0,0,0.85);
+    pointer-events: none;
+    user-select: none;
+    white-space: nowrap;
+    transform: translateX(calc(100% + clamp(20px, 4vw, 32px) + 20px));
+    opacity: 0;
+    transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease;
+  }
+  #now-playing.show {
+    transform: translateX(0);
+    opacity: 1;
+  }
 
   /* WELCOME — centered horizontally, sits at the visual midpoint between
      Earth's bottom and the MENU button row. Same vertical line that the
@@ -393,8 +420,10 @@
 <!-- WELCOME — fade-cycles through a couple of intro messages, then stays out of the way -->
 <div id="welcome" aria-live="polite"></div>
 
-<!-- AUDIO + mute toggle. Music starts on first click/tap (browsers block
-     autoplay until user gestures); mute button below dims when muted. -->
+<!-- NOW PLAYING notification — slides in from right on music start -->
+<div id="now-playing" aria-live="polite">🎵 Theme from &#8220;Armageddon&#8221; — Trevor Rabin (1998)</div>
+
+<!-- AUDIO + mute toggle -->
 <audio id="bg-music" src="assets/audio/theme from armageddon.mp3" loop preload="auto"></audio>
 <button id="audio-toggle" type="button" aria-label="Toggle music" aria-pressed="false">
   <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
@@ -534,10 +563,22 @@ function fadeAudio(to, ms = 1200) {
   tick();
 }
 
+function showNowPlaying() {
+  const notif = document.getElementById('now-playing');
+  const btn   = document.getElementById('audio-toggle');
+  notif.classList.add('show');
+  // After 4.5 s: slide out, then reveal speaker button
+  setTimeout(() => {
+    notif.classList.remove('show');
+    setTimeout(() => { btn.style.opacity = '1'; }, 550);
+  }, 4500);
+}
+
 function tryStartMusic() {
   if (musicStarted || musicMuted) return;
   bgMusic.play().then(() => {
     musicStarted = true;
+    showNowPlaying();
   }).catch(() => { /* still blocked — wait for next gesture */ });
 }
 
