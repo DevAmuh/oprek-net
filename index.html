@@ -395,7 +395,7 @@
 
 <!-- AUDIO + mute toggle. Music starts on first click/tap (browsers block
      autoplay until user gestures); mute button below dims when muted. -->
-<audio id="bg-music" src="assets/audio/armageddon-theme.mp3" loop preload="auto"></audio>
+<audio id="bg-music" src="assets/audio/theme from armageddon.mp3" loop preload="auto"></audio>
 <button id="audio-toggle" type="button" aria-label="Toggle music" aria-pressed="false">
   <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
     <path d="M3 10v4h3l5 4V6L6 10H3z"/>
@@ -518,7 +518,7 @@ document.addEventListener('click', () => {
 const bgMusic     = document.getElementById('bg-music');
 const audioToggle = document.getElementById('audio-toggle');
 const TARGET_VOLUME = 0.42;
-bgMusic.volume = 0;     // start silent so first play can crossfade up
+bgMusic.volume = TARGET_VOLUME;
 
 let musicStarted = false;
 let musicMuted   = false;
@@ -538,7 +538,6 @@ function tryStartMusic() {
   if (musicStarted || musicMuted) return;
   bgMusic.play().then(() => {
     musicStarted = true;
-    fadeAudio(TARGET_VOLUME, 1500);
   }).catch(() => { /* still blocked — wait for next gesture */ });
 }
 
