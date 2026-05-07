@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fireplace</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    :root {
+      --bg:      #0d0b09;
+      --bg2:     #181410;
+      --bg3:     #221d17;
+      --accent:  #e8914a;
+      --accent2: #b86828;
+      --text:    #ecddd0;
+      --muted:   #8a7a6a;
+      --border:  #2c251d;
+      --red:     #c0392b;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Georgia', serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── LOGIN ───────────────────────────────── */
+
+    #login-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: radial-gradient(ellipse at 50% 60%, #1c1108 0%, #080604 100%);
+    }
+
+    .login-box {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 52px 44px;
+      width: 360px;
+      text-align: center;
+    }
+
+    .login-flame { font-size: 52px; margin-bottom: 14px; }
+
+    .login-box h1 {
+      font-size: 26px;
+      font-weight: normal;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    .login-box p {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 34px;
+    }
+
+    .btn-google {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+      background: #fff;
+      color: #3c3c3c;
+      border: none;
+      border-radius: 8px;
+      padding: 13px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background .2s;
+    }
+
+    .btn-google:hover { background: #f0f0f0; }
+
+    .btn-google svg { width: 20px; height: 20px; flex-shrink: 0; }
+
+    .err-box {
+      display: none;
+      margin-top: 16px;
+      background: rgba(192,57,43,.15);
+      border: 1px solid rgba(192,57,43,.3);
+      border-radius: 7px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: #e57373;
+    }
+
+    /* ── DASHBOARD ───────────────────────────── */
+
+    #dashboard {
+      display: none;
+      height: 100vh;
+    }
+
+    .layout {
+      display: flex;
+      height: 100%;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 210px;
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .sb-brand {
+      padding: 22px 20px 18px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sb-brand h1 {
+      font-size: 17px;
+      font-weight: normal;
+      color: var(--accent);
+    }
+
+    .sb-brand span {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 20px;
+      font-size: 14px;
+      color: var(--muted);
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: all .15s;
+      user-select: none;
+    }
+
+    .nav-link:hover { background: var(--bg3); color: var(--text); }
+
+    .nav-link.active {
+      background: var(--bg3);
+      color: var(--accent);
+      border-left-color: var(--accent);
+    }
+
+    .sb-footer {
+      margin-top: auto;
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .sb-email {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 10px;
+      word-break: break-all;
+    }
+
+    .btn-signout {
+      width: 100%;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all .15s;
+    }
+
+    .btn-signout:hover { border-color: var(--red); color: var(--red); }
+
+    /* Main area */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 36px 40px;
+    }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .page-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+
+    .page-top h2 {
+      font-size: 22px;
+      font-weight: normal;
+    }
+
+    .btn-new {
+      background: var(--accent);
+      color: #0d0b09;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background .2s;
+    }
+
+    .btn-new:hover { background: var(--accent2); color: #fff; }
+
+    /* Cards */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      cursor: pointer;
+      position: relative;
+      transition: border-color .15s;
+    }
+
+    .card:hover { border-color: var(--accent); }
+
+    .card-title {
+      font-size: 15px;
+      margin-bottom: 8px;
+    }
+
+    .card-body {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.55;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+    }
+
+    .card-date {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 12px;
+    }
+
+    .del-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 18px;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity .15s, color .15s;
+      line-height: 1;
+      padding: 2px 5px;
+    }
+
+    .card:hover .del-btn { opacity: 1; }
+    .del-btn:hover { color: var(--red); }
+
+    .badge {
+      display: inline-block;
+      font-size: 10px;
+      padding: 2px 9px;
+      border-radius: 100px;
+      margin-top: 10px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    .badge-pub  { background: rgba(39,174,96,.18); color: #6fcf97; }
+    .badge-draft{ background: rgba(138,122,106,.15); color: var(--muted); }
+
+    /* Overview stats */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 8px;
+    }
+
+    .stat-num { font-size: 30px; color: var(--accent); }
+
+    .recent-title {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 14px;
+    }
+
+    .recent-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+
+    .recent-name { flex: 1; }
+    .recent-type { color: var(--muted); font-size: 11px; }
+    .recent-date { color: var(--muted); font-size: 11px; }
+
+    /* Empty state */
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+
+    .empty-icon { font-size: 38px; margin-bottom: 14px; }
+
+    /* Modal / overlay */
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.75);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .overlay.open { display: flex; }
+
+    .modal {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+      width: 660px;
+      max-width: 96vw;
+      max-height: 92vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-head h3 { font-size: 18px; font-weight: normal; }
+
+    .close-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 22px;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .close-btn:hover { color: var(--text); }
+
+    .modal input[type=text],
+    .modal textarea {
+      width: 100%;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      color: var(--text);
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      resize: vertical;
+      transition: border-color .2s;
+    }
+
+    .modal input[type=text]:focus,
+    .modal textarea:focus { border-color: var(--accent); }
+
+    .modal textarea { min-height: 200px; line-height: 1.65; }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 18px;
+      color: var(--muted);
+      font-size: 13px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all .15s;
+    }
+
+    .btn-ghost:hover { border-color: var(--muted); color: var(--text); }
+
+    .loading { padding: 40px; text-align: center; color: var(--muted); font-size: 14px; }
+  </style>
+</head>
+<body>
+
+<!-- ── LOGIN ─────────────────────────────────────────── -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-flame">🔥</div>
+    <h1>Fireplace</h1>
+    <p>Your private space</p>
+
+    <button class="btn-google" id="login-btn">
+      <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.5 6.5 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.5 6.5 29.5 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.3 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8H6.3C9.7 35.7 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.3 5.6l6.2 5.2C41 35.2 44 30 44 24c0-1.3-.1-2.7-.4-3.9z"/></svg>
+      Sign in with Google
+    </button>
+    <div class="err-box" id="login-err"></div>
+  </div>
+</div>
+
+<!-- ── DASHBOARD ─────────────────────────────────────── -->
+<div id="dashboard">
+  <div class="layout">
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <div class="sb-brand">
+        <h1>🔥 Fireplace</h1>
+        <span>oprek.net</span>
+      </div>
+
+      <div class="nav-link active" data-page="overview">⌂&nbsp;&nbsp;Overview</div>
+      <div class="nav-link" data-page="notes">✎&nbsp;&nbsp;Notes</div>
+      <div class="nav-link" data-page="ideas">✦&nbsp;&nbsp;Ideas</div>
+      <div class="nav-link" data-page="blog">◈&nbsp;&nbsp;Blog Posts</div>
+
+      <div class="sb-footer">
+        <div class="sb-email" id="sb-email">—</div>
+        <button class="btn-signout" id="signout-btn">Sign out</button>
+      </div>
+    </nav>
+
+    <!-- Main -->
+    <main class="main">
+
+      <!-- Overview -->
+      <div class="page active" id="page-overview">
+        <div class="page-top">
+          <h2>Good to be home.</h2>
+        </div>
+        <div class="stats-row">
+          <div class="stat"><div class="stat-label">Notes</div><div class="stat-num" id="s-notes">—</div></div>
+          <div class="stat"><div class="stat-label">Ideas</div><div class="stat-num" id="s-ideas">—</div></div>
+          <div class="stat"><div class="stat-label">Blog Posts</div><div class="stat-num" id="s-posts">—</div></div>
+        </div>
+        <div class="recent-title">Recent</div>
+        <div id="recent-list"><div class="loading">Loading...</div></div>
+      </div>
+
+      <!-- Notes -->
+      <div class="page" id="page-notes">
+        <div class="page-top">
+          <h2>Notes</h2>
+          <button class="btn-new" id="note-new-btn">+ New Note</button>
+        </div>
+        <div class="grid" id="notes-grid"></div>
+      </div>
+
+      <!-- Ideas -->
+      <div class="page" id="page-ideas">
+        <div class="page-top">
+          <h2>Ideas</h2>
+          <button class="btn-new" id="idea-new-btn">+ New Idea</button>
+        </div>
+        <div class="grid" id="ideas-grid"></div>
+      </div>
+
+      <!-- Blog -->
+      <div class="page" id="page-blog">
+        <div class="page-top">
+          <h2>Blog Posts</h2>
+          <button class="btn-new" id="post-new-btn">+ New Post</button>
+        </div>
+        <div class="grid" id="blog-grid"></div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ── NOTE MODAL ─────────────────────────────────────── -->
+<div class="overlay" id="note-overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="note-modal-title">New Note</h3>
+      <button class="close-btn" data-close="note-overlay">×</button>
+    </div>
+    <input type="text" id="note-title" placeholder="Title" />
+    <textarea id="note-body" placeholder="Write your note..."></textarea>
+    <div class="modal-actions">
+      <button class="btn-ghost" data-close="note-overlay">Cancel</button>
+      <button class="btn-new" id="note-save-btn">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── IDEA MODAL ─────────────────────────────────────── -->
+<div class="overlay" id="idea-overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="idea-modal-title">New Idea</h3>
+      <button class="close-btn" data-close="idea-overlay">×</button>
+    </div>
+    <input type="text" id="idea-title" placeholder="What's the idea?" />
+    <textarea id="idea-body" placeholder="Describe it..."></textarea>
+    <div class="modal-actions">
+      <button class="btn-ghost" data-close="idea-overlay">Cancel</button>
+      <button class="btn-new" id="idea-save-btn">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── BLOG MODAL ─────────────────────────────────────── -->
+<div class="overlay" id="blog-overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="blog-modal-title">New Post</h3>
+      <button class="close-btn" data-close="blog-overlay">×</button>
+    </div>
+    <input type="text" id="post-title" placeholder="Post title" />
+    <textarea id="post-body" placeholder="Write your post..." style="min-height:300px"></textarea>
+    <div class="modal-actions">
+      <button class="btn-ghost" data-close="blog-overlay">Cancel</button>
+      <button class="btn-ghost" id="post-draft-btn">Save Draft</button>
+      <button class="btn-new" id="post-publish-btn">Publish</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://pvgsrurcxssjqxshqkli.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_oDZbTs1Ssm92kTIqqzwqWQ_-31YHKOU';
+
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let user = null;
+  let editId = null;
+
+  // ── AUTH ─────────────────────────────────────────────
+
+  async function init() {
+    const { data: { session } } = await db.auth.getSession();
+    if (session) { user = session.user; showDash(); }
+  }
+
+  document.getElementById('login-btn').onclick = async () => {
+    const errEl = document.getElementById('login-err');
+    errEl.style.display = 'none';
+
+    const { error } = await db.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.href }
+    });
+
+    if (error) {
+      errEl.textContent = error.message;
+      errEl.style.display = 'block';
+    }
+  };
+
+  document.getElementById('signout-btn').onclick = async () => {
+    await db.auth.signOut();
+    location.reload();
+  };
+
+  // ── NAVIGATION ───────────────────────────────────────
+
+  function showDash() {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('dashboard').style.display   = 'block';
+    document.getElementById('sb-email').textContent = user.email;
+    loadAll();
+  }
+
+  document.querySelectorAll('.nav-link').forEach(link => {
+    link.onclick = () => {
+      document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      link.classList.add('active');
+      document.getElementById('page-' + link.dataset.page).classList.add('active');
+    };
+  });
+
+  // ── MODALS ───────────────────────────────────────────
+
+  const open  = id => document.getElementById(id).classList.add('open');
+  const close = id => { document.getElementById(id).classList.remove('open'); editId = null; };
+
+  document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => close(b.dataset.close));
+  document.querySelectorAll('.overlay').forEach(o => o.onclick = e => { if (e.target === o) close(o.id); });
+
+  // ── DATA ─────────────────────────────────────────────
+
+  let notes = [], ideas = [], posts = [];
+
+  async function loadAll() {
+    const [n, i, p] = await Promise.all([
+      db.from('notes').select('*').order('created_at', { ascending: false }),
+      db.from('ideas').select('*').order('created_at', { ascending: false }),
+      db.from('posts').select('*').order('created_at', { ascending: false }),
+    ]);
+    notes = n.data || [];
+    ideas = i.data || [];
+    posts = p.data || [];
+    renderNotes(); renderIdeas(); renderPosts(); renderOverview();
+  }
+
+  // Notes
+  function renderNotes() {
+    document.getElementById('s-notes').textContent = notes.length;
+    const g = document.getElementById('notes-grid');
+    if (!notes.length) { g.innerHTML = empty('✎', 'No notes yet.'); return; }
+    g.innerHTML = notes.map(n => card(n, 'note')).join('');
+  }
+
+  document.getElementById('note-new-btn').onclick = () => {
+    editId = null;
+    document.getElementById('note-modal-title').textContent = 'New Note';
+    document.getElementById('note-title').value = '';
+    document.getElementById('note-body').value = '';
+    open('note-overlay');
+  };
+
+  document.getElementById('note-save-btn').onclick = async () => {
+    const title   = document.getElementById('note-title').value.trim();
+    const content = document.getElementById('note-body').value.trim();
+    if (!title && !content) return;
+    if (editId) await db.from('notes').update({ title, content }).eq('id', editId);
+    else        await db.from('notes').insert({ title, content, user_id: user.id });
+    close('note-overlay');
+    loadAll();
+  };
+
+  // Ideas
+  function renderIdeas() {
+    document.getElementById('s-ideas').textContent = ideas.length;
+    const g = document.getElementById('ideas-grid');
+    if (!ideas.length) { g.innerHTML = empty('✦', 'No ideas yet.'); return; }
+    g.innerHTML = ideas.map(n => card(n, 'idea')).join('');
+  }
+
+  document.getElementById('idea-new-btn').onclick = () => {
+    editId = null;
+    document.getElementById('idea-modal-title').textContent = 'New Idea';
+    document.getElementById('idea-title').value = '';
+    document.getElementById('idea-body').value = '';
+    open('idea-overlay');
+  };
+
+  document.getElementById('idea-save-btn').onclick = async () => {
+    const title   = document.getElementById('idea-title').value.trim();
+    const content = document.getElementById('idea-body').value.trim();
+    if (!title && !content) return;
+    if (editId) await db.from('ideas').update({ title, content }).eq('id', editId);
+    else        await db.from('ideas').insert({ title, content, user_id: user.id });
+    close('idea-overlay');
+    loadAll();
+  };
+
+  // Posts
+  function renderPosts() {
+    document.getElementById('s-posts').textContent = posts.length;
+    const g = document.getElementById('blog-grid');
+    if (!posts.length) { g.innerHTML = empty('◈', 'No posts yet.'); return; }
+    g.innerHTML = posts.map(p => card(p, 'post')).join('');
+  }
+
+  document.getElementById('post-new-btn').onclick = () => {
+    editId = null;
+    document.getElementById('blog-modal-title').textContent = 'New Post';
+    document.getElementById('post-title').value = '';
+    document.getElementById('post-body').value = '';
+    open('blog-overlay');
+  };
+
+  document.getElementById('post-draft-btn').onclick   = () => savePost(false);
+  document.getElementById('post-publish-btn').onclick = () => savePost(true);
+
+  async function savePost(published) {
+    const title   = document.getElementById('post-title').value.trim();
+    const content = document.getElementById('post-body').value.trim();
+    if (!title && !content) return;
+    if (editId) await db.from('posts').update({ title, content, published }).eq('id', editId);
+    else        await db.from('posts').insert({ title, content, published, user_id: user.id });
+    close('blog-overlay');
+    loadAll();
+  }
+
+  // Edit / delete
+  window.editCard = (type, id) => {
+    editId = id;
+    if (type === 'note') {
+      const item = notes.find(n => n.id === id);
+      document.getElementById('note-modal-title').textContent = 'Edit Note';
+      document.getElementById('note-title').value = item.title || '';
+      document.getElementById('note-body').value  = item.content || '';
+      open('note-overlay');
+    } else if (type === 'idea') {
+      const item = ideas.find(n => n.id === id);
+      document.getElementById('idea-modal-title').textContent = 'Edit Idea';
+      document.getElementById('idea-title').value = item.title || '';
+      document.getElementById('idea-body').value  = item.content || '';
+      open('idea-overlay');
+    } else {
+      const item = posts.find(p => p.id === id);
+      document.getElementById('blog-modal-title').textContent = 'Edit Post';
+      document.getElementById('post-title').value = item.title || '';
+      document.getElementById('post-body').value  = item.content || '';
+      open('blog-overlay');
+    }
+  };
+
+  window.delCard = async (e, type, id) => {
+    e.stopPropagation();
+    if (!confirm('Delete this? Cannot be undone.')) return;
+    const tbl = type === 'post' ? 'posts' : type + 's';
+    await db.from(tbl).delete().eq('id', id);
+    loadAll();
+  };
+
+  // Overview
+  function renderOverview() {
+    const all = [
+      ...notes.map(n => ({ ...n, _type: 'Note' })),
+      ...ideas.map(n => ({ ...n, _type: 'Idea' })),
+      ...posts.map(p => ({ ...p, _type: p.published ? 'Post (live)' : 'Post (draft)' })),
+    ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 8);
+
+    const el = document.getElementById('recent-list');
+    if (!all.length) { el.innerHTML = `<div class="empty"><p>Nothing here yet. Add a note or idea to get started.</p></div>`; return; }
+    el.innerHTML = all.map(item => `
+      <div class="recent-row">
+        <span class="recent-name">${esc(item.title || 'Untitled')}</span>
+        <span class="recent-type">${item._type}</span>
+        <span class="recent-date">${fmt(item.created_at)}</span>
+      </div>
+    `).join('');
+  }
+
+  // ── HELPERS ──────────────────────────────────────────
+
+  function card(item, type) {
+    const badge = type === 'post'
+      ? `<span class="badge ${item.published ? 'badge-pub' : 'badge-draft'}">${item.published ? 'Published' : 'Draft'}</span>`
+      : '';
+    return `
+      <div class="card" onclick="editCard('${type}','${item.id}')">
+        <button class="del-btn" onclick="delCard(event,'${type}','${item.id}')">×</button>
+        <div class="card-title">${esc(item.title || 'Untitled')}</div>
+        <div class="card-body">${esc(item.content || '')}</div>
+        ${badge}
+        <div class="card-date">${fmt(item.created_at)}</div>
+      </div>`;
+  }
+
+  function empty(icon, msg) {
+    return `<div class="empty"><div class="empty-icon">${icon}</div><p>${msg}</p></div>`;
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function fmt(iso) {
+    if (!iso) return '';
+    return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  init();
+</script>
+</body>
+</html>
