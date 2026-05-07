@@ -1578,12 +1578,23 @@ function updateLensFlare() {
   // Skip entirely if Sun is far off-screen
   if (sx < -W * 0.6 || sx > W * 1.6 || sy < -H * 0.6 || sy > H * 1.6) return;
 
+  // Occlusion: hide flare when Earth eclipses the Sun.
+  // Cast ray from camera toward Sun; if it passes within Earth's radius, occlude.
+  {
+    const _toSun = _sunWorldFlare.clone().sub(camera.position);
+    const _t     = Math.max(0, Math.min(1, -camera.position.dot(_toSun) / _toSun.dot(_toSun)));
+    const _dist  = camera.position.clone().addScaledVector(_toSun, _t).length();
+    const _occlude = Math.max(0, Math.min(1, (_dist - 1.1) / 0.2)); // soft edge at 1.1 Earth radii
+    if (_occlude < 0.01) return;
+    sf *= _occlude; // fade out as Earth moves over Sun
+  }
+
   // Flare grows as camera zooms toward Earth (telescopic)
   const fs = Math.max(0.25, Math.min(2.2, 80000 / (camDistance + 4000))) * sf;
   const diag = Math.sqrt(W * W + H * H);
 
   // Anamorphic horizontal streak through Sun
-  const sLen = diag * 0.85 * fs;
+  const sLen = diag * 0.40 * fs;
   const sH   = Math.max(1, 2.5 * fs);
   for (const [len, alpha, cr, cg, cb] of [
     [sLen,       0.50, 255, 230, 160],
