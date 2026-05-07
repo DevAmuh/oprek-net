@@ -1,11 +1,3 @@
 {
-  "cleanUrls": true,
-  "redirects": [
-    {
-      "source": "/(.*)",
-      "has": [{ "type": "host", "value": "www.dhiya.id" }],
-      "destination": "https://dhiya.id/$1",
-      "permanent": true
-    }
-  ]
+  "cleanUrls": true
 }
