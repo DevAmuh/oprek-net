@@ -12,62 +12,48 @@
   html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
   canvas { display: block; position: fixed; inset: 0; }
 
-  /* LOADING SCREEN — black void with a fixed wireframe sphere placed
-     EXACTLY where Earth lands at default zoom (screen centre), and
-     "PLEASE STAND BY" placed where the welcome text lands (top: 82%).
-     This keeps visual continuity: when the loading screen fades out
-     and the scene fades in, the sphere → Earth and the loading text
-     → welcome text without anything jumping around the screen. */
+    /* LOADING SCREEN — Synapse, the keeper.
+     Icosphere wireframe driven by REAL asset-load progress. */
   #loading-screen {
     position: fixed;
     inset: 0;
-    background: #000;
+    background: #06070a;
     z-index: 1000;
-    transition: opacity 1s ease;
+    transition: opacity 1.2s ease;
+    overflow: hidden;
   }
   #loading-screen.fade-out {
     opacity: 0;
     pointer-events: none;
   }
-  #loading-sphere {
+  #synapse-canvas {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: clamp(140px, 22vw, 200px);
-    height: clamp(140px, 22vw, 200px);
-    overflow: visible;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
   }
-  /* Wireframe ellipses draw themselves once with stroke-dashoffset, then
-     stay fixed in place — no spin (was disorienting). Staggered delays
-     give the "completing from vertex to vertex" feel. */
-  #wf-rotor ellipse {
-    fill: none;
-    stroke: rgba(255,255,255,0.85);
-    stroke-width: 0.6;
-    stroke-dasharray: 100;
-    stroke-dashoffset: 100;
-    animation: wf-draw 1.6s cubic-bezier(0.45, 0, 0.55, 1) forwards;
-  }
-  #wf-rotor ellipse:nth-child(1) { animation-delay: 0s;    }
-  #wf-rotor ellipse:nth-child(2) { animation-delay: 0.35s; }
-  #wf-rotor ellipse:nth-child(3) { animation-delay: 0.70s; }
   #loading-text {
     position: absolute;
-    top: 82%;
+    bottom: clamp(64px, 12vh, 110px);
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translateX(-50%);
+    z-index: 2;
     font-family: 'Georgia', serif;
     font-size: clamp(11px, 2vw, 15px);
     letter-spacing: 0.4em;
-    color: rgba(255,255,255,0.65);
+    color: rgba(244,243,239,0.7);
     text-transform: uppercase;
     text-align: center;
-    animation: wf-text-pulse 2s ease-in-out infinite;
+    white-space: nowrap;
+    pointer-events: none;
+    user-select: none;
+    animation: loading-text-pulse 2s ease-in-out infinite;
   }
-  @keyframes wf-draw       { to   { stroke-dashoffset: 0; } }
-  @keyframes wf-text-pulse {
-    0%, 100% { opacity: 0.45; }
+  @keyframes loading-text-pulse {
+    0%, 100% { opacity: 0.50; }
+    50%      { opacity: 0.95; }
+  }
     50%      { opacity: 0.90; }
   }
 
@@ -381,21 +367,13 @@
 </head>
 <body>
 
-<!-- LOADING SCREEN — black void with a rotating wireframe sphere that
-     progressively draws itself from vertex to vertex while assets load -->
+<!-- LOADING SCREEN — Synapse, the keeper.
+     Icosphere wireframe driven by real asset-load progress. -->
 <div id="loading-screen" aria-hidden="true">
-  <div id="loading-content">
-    <svg id="loading-sphere" viewBox="-60 -60 120 120">
-      <g id="wf-rotor">
-        <!-- Three orthogonal great circles, drawn in sequence -->
-        <ellipse cx="0" cy="0" rx="50" ry="50" pathLength="100"></ellipse>
-        <ellipse cx="0" cy="0" rx="50" ry="18" pathLength="100"></ellipse>
-        <ellipse cx="0" cy="0" rx="18" ry="50" pathLength="100"></ellipse>
-      </g>
-    </svg>
-    <div id="loading-text">PLEASE STAND BY</div>
-  </div>
+  <canvas id="synapse-canvas"></canvas>
+  <div id="loading-text">PLEASE STAND BY</div>
 </div>
+
 
 <!-- QUOTE -->
 <div id="quote">
@@ -454,6 +432,263 @@
 <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
 
 <script>
+// ============================================================
+// SYNAPSE, THE KEEPER — vanilla-JS port of the Synapse component
+// from the Loading Spheres design. Triangle topology (icosphere)
+// whose edges build up sequentially driven by REAL asset-load
+// progress; firing-vertex bloom on the front edge.
+//
+// Public API (called by the LoadManager below):
+//   window._setSynapseProgress(p)  — drives `reveal` (0..1)
+//   window._synapseLoadEvent()     — no-op (real progress drives reveal)
+// ============================================================
+(function initSynapse() {
+  const cv = document.getElementById('synapse-canvas');
+  if (!cv) return;
+  const ctx = cv.getContext('2d');
+
+  // Tweak defaults straight from the design's __TWEAK_DEFAULTS
+  const ACCENT    = '#f4f3ef';
+  const DENSITY   = 0.03;
+  const INTENSITY = 1.0;
+  const TEMPO     = 1.0;
+  const BLOOM     = 0.4;
+
+  // ── Math helpers (verbatim from the source) ───────────────
+  function rot(p, ax, ay) {
+    let x = p[0], y = p[1], z = p[2];
+    const cy = Math.cos(ax), sy = Math.sin(ax);
+    const ny = y * cy - z * sy;
+    const nz = y * sy + z * cy;
+    y = ny; z = nz;
+    const cx = Math.cos(ay), sx = Math.sin(ay);
+    const nx = x * cx + z * sx;
+    z = -x * sx + z * cx;
+    x = nx;
+    return [x, y, z];
+  }
+  function project(p, R, cx, cy, persp) {
+    persp = persp || 2.5;
+    const z = p[2];
+    const f = persp / (persp - z);
+    return [cx + p[0] * R * f, cy + p[1] * R * f, z];
+  }
+  const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+  const easeOut   = (t) => 1 - Math.pow(1 - t, 3);
+
+  // ── Build the icosphere ───────────────────────────────────
+  function buildIcosphere(subdivisions) {
+    const phi = (1 + Math.sqrt(5)) / 2;
+    let v = [
+      [-1, phi, 0], [1, phi, 0], [-1, -phi, 0], [1, -phi, 0],
+      [0, -1, phi], [0, 1, phi], [0, -1, -phi], [0, 1, -phi],
+      [phi, 0, -1], [phi, 0, 1], [-phi, 0, -1], [-phi, 0, 1],
+    ];
+    const norm = (p) => { const l = Math.hypot(p[0], p[1], p[2]); return [p[0]/l, p[1]/l, p[2]/l]; };
+    v = v.map(norm);
+    let f = [
+      [0,11,5],[0,5,1],[0,1,7],[0,7,10],[0,10,11],
+      [1,5,9],[5,11,4],[11,10,2],[10,7,6],[7,1,8],
+      [3,9,4],[3,4,2],[3,2,6],[3,6,8],[3,8,9],
+      [4,9,5],[2,4,11],[6,2,10],[8,6,7],[9,8,1]
+    ];
+    for (let s = 0; s < subdivisions; s++) {
+      const cache = {};
+      const mid = (a, b) => {
+        const key = a < b ? a + '-' + b : b + '-' + a;
+        if (cache[key] != null) return cache[key];
+        const m = norm([(v[a][0]+v[b][0])/2, (v[a][1]+v[b][1])/2, (v[a][2]+v[b][2])/2]);
+        v.push(m);
+        cache[key] = v.length - 1;
+        return cache[key];
+      };
+      const newF = [];
+      for (const tri of f) {
+        const a = tri[0], b = tri[1], c = tri[2];
+        const ab = mid(a, b), bc = mid(b, c), ca = mid(c, a);
+        newF.push([a, ab, ca], [b, bc, ab], [c, ca, bc], [ab, bc, ca]);
+      }
+      f = newF;
+    }
+    const eSet = new Set();
+    for (const tri of f) {
+      const a = tri[0], b = tri[1], c = tri[2];
+      const pairs = [[a,b],[b,c],[c,a]];
+      for (const pr of pairs) {
+        const x = pr[0], y = pr[1];
+        eSet.add(x < y ? x + '-' + y : y + '-' + x);
+      }
+    }
+    const edges = [...eSet].map(s => s.split('-').map(Number));
+    // Sort top → bottom so reveal sweeps downward (constructive)
+    edges.sort((A, B) => {
+      const yA = (v[A[0]][1] + v[A[1]][1]) / 2;
+      const yB = (v[B[0]][1] + v[B[1]][1]) / 2;
+      return yB - yA;
+    });
+    return { verts: v, edges: edges };
+  }
+
+  const subdivisions = DENSITY <= 0.34 ? 1 : DENSITY <= 0.67 ? 2 : 3;
+  const sphere = buildIcosphere(subdivisions);
+  const VERTS  = sphere.verts;
+  const EDGES  = sphere.edges;
+
+  // ── Canvas sizing (DPR-aware) ─────────────────────────────
+  let W, H, CX, CY, R, dpr;
+  function resize() {
+    dpr = window.devicePixelRatio || 1;
+    W = window.innerWidth;
+    H = window.innerHeight;
+    cv.width  = W * dpr;
+    cv.height = H * dpr;
+    cv.style.width  = W + 'px';
+    cv.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    CX = W / 2;
+    CY = H / 2;
+    // Sphere radius proportional to viewport — matches design's 0.36 × size,
+    // where size in the design is the canvas "stage". Here we anchor to the
+    // smaller viewport dimension and scale up so it reads at fullscreen.
+    R = Math.min(W, H) * 0.22;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // ── Reveal target driven by real load progress.
+  // Smooth ease toward the target so each new asset advances the
+  // build-front gracefully rather than jumping. ──────────────
+  let revealTarget = 0;
+  let reveal       = 0;
+
+  window._setSynapseProgress = function(p) {
+    revealTarget = Math.max(revealTarget, Math.min(1, p));
+  };
+  // Kept for backwards-compat with the LoadManager — real reveal handles it.
+  window._synapseLoadEvent = function() {};
+
+  let rafId  = null;
+  let lastMs = performance.now();
+
+  function frame(now) {
+    if (!document.getElementById('loading-screen')) {
+      cancelAnimationFrame(rafId);
+      return;
+    }
+    rafId = requestAnimationFrame(frame);
+    const dt = Math.min((now - lastMs) / 1000, 0.05);
+    lastMs = now;
+    const clock = now / 1000;
+
+    // Smooth catch-up toward the real-load target (~1.4s time constant)
+    reveal += (revealTarget - reveal) * Math.min(1, dt * 2.2);
+
+    ctx.clearRect(0, 0, W, H);
+
+    const speed = 0.08 + TEMPO * 0.5;
+    const rotY  = clock * speed;
+    const rotX  = -0.3 + Math.sin(clock * speed * 0.4) * 0.05;
+
+    // Rotate every vertex once per frame
+    const rotated = new Array(VERTS.length);
+    for (let i = 0; i < VERTS.length; i++) rotated[i] = rot(VERTS[i], rotX, rotY);
+
+    const rev   = easeInOut(reveal);
+    const total = EDGES.length;
+    const visN  = Math.floor(rev * total);
+
+    // ── Ghost mesh — disabled (0 % visibility) ──────────────
+    // (loop retained for reference; globalAlpha 0 → nothing drawn)
+
+    // Build visible edges with per-edge growth animation
+    const visible = [];
+    for (let i = 0; i < visN; i++) {
+      const a = EDGES[i][0], b = EDGES[i][1];
+      const p1 = rotated[a], p2 = rotated[b];
+      visible.push({
+        p1: p1, p2: p2,
+        z: (p1[2] + p2[2]) / 2,
+        idx: i,
+        localT: Math.min(1, Math.max(0, (rev - i / total) * 22)),
+      });
+    }
+    visible.sort((x, y) => x.z - y.z);
+
+    // Draw edges (back-facing dim, front-facing bright)
+    for (const e of visible) {
+      const a = project(e.p1, R, CX, CY);
+      const b = project(e.p2, R, CX, CY);
+      const x1 = a[0], y1 = a[1];
+      const x2 = b[0], y2 = b[1];
+      const ex = x1 + (x2 - x1) * easeOut(e.localT);
+      const ey = y1 + (y2 - y1) * easeOut(e.localT);
+      const front = e.z > 0;
+      ctx.strokeStyle = ACCENT;
+      ctx.globalAlpha = front ? 0.92 : 0.16;
+      ctx.lineWidth   = front ? 1.1 : 0.65;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(ex, ey);
+      ctx.stroke();
+    }
+
+    // Synapse pulses on the most recently formed edges
+    const pulseCount = Math.max(6, Math.floor(total * (0.04 + INTENSITY * 0.08)));
+    const pulseSpeed = 1 + TEMPO * 2;
+    for (let i = Math.max(0, visN - pulseCount); i < visN; i++) {
+      const a = EDGES[i][0], b = EDGES[i][1];
+      const p1 = rotated[a], p2 = rotated[b];
+      const age    = (visN - i) / pulseCount;
+      const pulseT = (clock * pulseSpeed + i * 0.3) % 1;
+      const pa = project(p1, R, CX, CY);
+      const pb = project(p2, R, CX, CY);
+      const px = pa[0] + (pb[0] - pa[0]) * pulseT;
+      const py = pa[1] + (pb[1] - pa[1]) * pulseT;
+      const z  = (p1[2] + p2[2]) / 2;
+      const front = z > 0;
+      const intens = (1 - age) * (front ? 1 : 0.4) * (0.5 + INTENSITY * 0.7);
+      if (intens < 0.05) continue;
+      ctx.fillStyle = ACCENT;
+      ctx.globalAlpha = Math.min(1, intens);
+      ctx.beginPath();
+      ctx.arc(px, py, 1.5 + INTENSITY * 1.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Active vertex bloom — the firing neuron at the build-front
+    if (visN > 0 && reveal < 1) {
+      const last = EDGES[Math.min(visN, EDGES.length - 1)];
+      const p = rotated[last[1]];
+      const pr = project(p, R, CX, CY);
+      const x = pr[0], y = pr[1];
+      const front   = p[2] > 0;
+      const breathe = 0.7 + Math.sin(clock * (4 + TEMPO * 6)) * 0.3;
+      const bloomR  = 4 + BLOOM * 38;
+
+      const grad = ctx.createRadialGradient(x, y, 0, x, y, bloomR);
+      grad.addColorStop(0,   ACCENT);
+      grad.addColorStop(0.4, 'rgba(244,243,239,0.4)');
+      grad.addColorStop(1,   'rgba(0,0,0,0)');
+      ctx.fillStyle = grad;
+      ctx.globalAlpha = (front ? 0.95 : 0.4) * breathe;
+      ctx.beginPath();
+      ctx.arc(x, y, bloomR, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Hot core
+      ctx.fillStyle = ACCENT;
+      ctx.globalAlpha = (front ? 1 : 0.5) * breathe;
+      ctx.beginPath();
+      ctx.arc(x, y, 2 + INTENSITY * 1.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.globalAlpha = 1;
+  }
+
+  rafId = requestAnimationFrame(frame);
+})();
+
 // ============================================================
 // QUOTES
 // ============================================================
@@ -705,11 +940,31 @@ function startZoomIn() {
   updateCamera();
 }
 
-// Loading-screen flow: wireframe draws for LOADING_MIN_MS, then the text
-// switches to "CLICK TO ENTER". The click IS the user gesture that unlocks
-// audio — so tryStartMusic() succeeds immediately when called from dismiss.
+// ── LoadManager ────────────────────────────────────────────────────────
+// Two conditions must both be met before the screen accepts a click:
+//   1. LOADING_MIN_MS elapsed  (animation has meaningful dwell time)
+//   2. All TOTAL_ASSETS texture slots have resolved
+// reportLoadProgress() is called once per asset slot by the texture code
+// below. It drives the Synapse arc in real time.
+// ─────────────────────────────────────────────────────────────────────────
+const TOTAL_ASSETS   = 13; // Earth×4, Moon×1, 7 planets, Saturn ring×1
 const LOADING_MIN_MS = 2800;
+let _loadDone    = 0;
+let _timerReady  = false;
+let _assetsReady = false;
 let loadingReady = false;
+
+function reportLoadProgress() {
+  _loadDone = Math.min(TOTAL_ASSETS, _loadDone + 1);
+  const p = _loadDone / TOTAL_ASSETS;
+  if (window._setSynapseProgress) window._setSynapseProgress(p);
+  if (window._synapseLoadEvent)   window._synapseLoadEvent();
+  if (_loadDone >= TOTAL_ASSETS) { _assetsReady = true; _checkReady(); }
+}
+
+function _checkReady() {
+  if (_timerReady && _assetsReady) onLoadingReady();
+}
 
 function dismissLoadingScreen() {
   const el = document.getElementById('loading-screen');
@@ -719,20 +974,25 @@ function dismissLoadingScreen() {
     el.remove();
     startZoomIn();
     tryStartMusic();
-  }, 1000); // matches CSS 1s opacity transition
+  }, 1200); // matches CSS 1.2s opacity transition
 }
 
 function onLoadingReady() {
   if (loadingReady) return;
   loadingReady = true;
+  if (window._setSynapseProgress) window._setSynapseProgress(1);
   const textEl = document.getElementById('loading-text');
   if (textEl) textEl.textContent = 'CLICK TO ENTER';
   const screen = document.getElementById('loading-screen');
   if (screen) screen.style.cursor = 'pointer';
 }
 
-window.addEventListener('load', () => { setTimeout(onLoadingReady, LOADING_MIN_MS); });
-if (document.readyState === 'complete') { setTimeout(onLoadingReady, LOADING_MIN_MS); }
+window.addEventListener('load', () => {
+  setTimeout(() => { _timerReady = true; _checkReady(); }, LOADING_MIN_MS);
+});
+if (document.readyState === 'complete') {
+  setTimeout(() => { _timerReady = true; _checkReady(); }, LOADING_MIN_MS);
+}
 
 document.getElementById('loading-screen').addEventListener('click', () => {
   if (!loadingReady) return;
@@ -1111,15 +1371,16 @@ let earthMesh, cloudMesh;
       const t = (await loadTex(HD_DAY_LOCAL))
             || (await loadTex(HD_DAY_CDN))
             || (await loadTex(FALLBACK_DAY));
+      reportLoadProgress(); // slot 1 — Earth day map
       if (t) {
         t.colorSpace = THREE.SRGBColorSpace;
         t.anisotropy = renderer.capabilities.getMaxAnisotropy();
       }
       return t;
     })(),
-    loadTex('https://unpkg.com/three-globe@2.31.1/example/img/earth-topology.png'),
-    loadTex('https://unpkg.com/three-globe@2.31.1/example/img/earth-water.png'),
-    loadTex('https://unpkg.com/three-globe@2.31.1/example/img/earth-clouds.png'),
+    loadTex('https://unpkg.com/three-globe@2.31.1/example/img/earth-topology.png').then(t => { reportLoadProgress(); return t; }), // slot 2
+    loadTex('https://unpkg.com/three-globe@2.31.1/example/img/earth-water.png').then(t => { reportLoadProgress(); return t; }),    // slot 3
+    loadTex('https://unpkg.com/three-globe@2.31.1/example/img/earth-clouds.png').then(t => { reportLoadProgress(); return t; }),   // slot 4
   ]);
 
   const earthMat = new THREE.MeshPhongMaterial({
@@ -1168,6 +1429,7 @@ const MOON_DIST = 60.3;
 
 (async () => {
   const moonMap = await loadTex('https://unpkg.com/three-globe@2.31.1/example/img/moon.jpg');
+  reportLoadProgress(); // slot 5 — Moon
   const moonMat = new THREE.MeshStandardMaterial({
     map: moonMap || undefined,
     color: moonMap ? 0xffffff : 0xaaaaaa,
@@ -1688,6 +1950,7 @@ PLANET_DATA.forEach((p) => {
   // Async-load equirectangular surface texture
   if (p.tex) {
     loadTex(p.tex).then((t) => {
+      reportLoadProgress(); // slots 6–12 — planet textures
       if (!t) return;
       t.colorSpace = THREE.SRGBColorSpace;
       t.anisotropy = renderer.capabilities.getMaxAnisotropy();
@@ -1731,6 +1994,7 @@ PLANET_DATA.forEach((p) => {
     planetGroup.add(ringMesh);
 
     loadTex(TEX_BASE + 'saturnringcolor.jpg').then((t) => {
+      reportLoadProgress(); // slot 13 — Saturn ring
       if (!t) return;
       t.colorSpace = THREE.SRGBColorSpace;
       rMat.map = t;
