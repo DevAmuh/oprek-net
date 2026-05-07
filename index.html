@@ -1254,11 +1254,11 @@ function makeSunTexture(W = 2048, H = 1024) {
   c.width = W; c.height = H;
   const ctx = c.getContext('2d');
 
-  // 1. Base — vertical gradient to fake limb darkening (poles slightly dimmer)
+  // 1. Base — bright warm gradient (limb slightly cooler than centre)
   const base = ctx.createLinearGradient(0, 0, 0, H);
-  base.addColorStop(0,    '#9c2d10');
-  base.addColorStop(0.5,  '#dc6020');
-  base.addColorStop(1,    '#8c2510');
+  base.addColorStop(0,    '#e06018');
+  base.addColorStop(0.5,  '#ffb030');
+  base.addColorStop(1,    '#d05515');
   ctx.fillStyle = base;
   ctx.fillRect(0, 0, W, H);
 
@@ -1530,73 +1530,91 @@ sunMegaBloomSprite.position.copy(SUN_LOCAL);
 sunMegaBloomSprite.scale.setScalar(SUN_RADIUS * 300);
 eclipticGroup.add(sunMegaBloomSprite);
 
-// ── SOLAR FLARES — 4 slowly-rotating prominence arcs emanating from the
-// Sun surface. Each uses the same base canvas (rotated via material.rotation
-// which is the sprite texture's 2-D rotation around its screen-space centre).
-function makeSolarFlareCanvas() {
-  const S = 256;
-  const c = document.createElement('canvas');
-  c.width = S; c.height = S;
-  const ctx = c.getContext('2d');
-  const cx = S / 2, cy = S / 2;
-  ctx.save();
-  ctx.translate(cx, cy);
+// ── SCREEN-SPACE LENS FLARE — 2D canvas overlay drawn each frame.
+// Bokeh circles + anamorphic streak anchored to Sun's projected screen pos.
+// Flare scale grows as camera approaches Earth (telescopic effect).
+const _flareOverlay = document.createElement('canvas');
+_flareOverlay.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:2;';
+document.body.appendChild(_flareOverlay);
 
-  const startX = 0,   startY =  S * 0.08;   // bottom — Sun-surface attachment
-  const cp1X = -S * 0.22, cp1Y = -S * 0.12;
-  const cp2X =  S * 0.16, cp2Y = -S * 0.36;
-  const endX  =  S * 0.06, endY  = -S * 0.44; // tip of arc
+function _syncFlareCv() {
+  _flareOverlay.width  = window.innerWidth;
+  _flareOverlay.height = window.innerHeight;
+}
+_syncFlareCv();
+window.addEventListener('resize', _syncFlareCv);
 
-  // Three passes: wide outer glow → mid glow → bright core
-  const passes = [
-    { w: S * 0.28, a0: 0.06, a1: 0.02 },
-    { w: S * 0.13, a0: 0.22, a1: 0.06 },
-    { w: S * 0.055, a0: 0.65, a1: 0.00 },
-  ];
-  passes.forEach(({ w, a0, a1 }) => {
-    const g = ctx.createLinearGradient(startX, startY, endX, endY);
-    g.addColorStop(0, `rgba(255,230,120,${a0})`);
-    g.addColorStop(0.45, `rgba(255,160,40,${(a0+a1)*0.45})`);
-    g.addColorStop(1,   `rgba(255,80,0,${a1})`);
-    ctx.beginPath();
-    ctx.moveTo(startX, startY);
-    ctx.bezierCurveTo(cp1X, cp1Y, cp2X, cp2Y, endX, endY);
-    ctx.strokeStyle = g;
-    ctx.lineWidth   = w;
-    ctx.lineCap     = 'round';
-    ctx.stroke();
-  });
+const _sunNDC = new THREE.Vector3();
+const _sunWorldFlare = new THREE.Vector3();
 
-  // Hot base glow at the Sun-surface attachment point
-  const bg = ctx.createRadialGradient(startX, startY, 0, startX, startY, S * 0.14);
-  bg.addColorStop(0, 'rgba(255,240,140,0.55)');
-  bg.addColorStop(1, 'rgba(255,140,30,0)');
-  ctx.fillStyle = bg;
-  ctx.beginPath(); ctx.arc(startX, startY, S * 0.14, 0, Math.PI * 2); ctx.fill();
-
-  ctx.restore();
-  return c;
+function _drawBlob(ctx, x, y, r, r0, g0, b0, a) {
+  const grd = ctx.createRadialGradient(x, y, 0, x, y, r);
+  grd.addColorStop(0,    `rgba(${r0},${g0},${b0},${a})`);
+  grd.addColorStop(0.40, `rgba(${r0},${g0},${b0},${(a*0.65).toFixed(3)})`);
+  grd.addColorStop(0.70, `rgba(${r0},${g0},${b0},${(a*0.18).toFixed(3)})`);
+  grd.addColorStop(1,    `rgba(${r0},${g0},${b0},0)`);
+  ctx.fillStyle = grd;
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
 }
 
-const flareTex = new THREE.CanvasTexture(makeSolarFlareCanvas());
-const sunFlares = [];
-[
-  { rot: 0,                  speed:  0.11, scale: SUN_RADIUS * 22 },
-  { rot: Math.PI * 0.52,     speed: -0.07, scale: SUN_RADIUS * 18 },
-  { rot: Math.PI * 1.18,     speed:  0.09, scale: SUN_RADIUS * 25 },
-  { rot: Math.PI * 1.72,     speed: -0.06, scale: SUN_RADIUS * 20 },
-].forEach(({ rot, speed, scale }) => {
-  const mat = new THREE.SpriteMaterial({
-    map: flareTex, transparent: true,
-    blending: THREE.AdditiveBlending, depthWrite: false,
-    rotation: rot,
-  });
-  const sprite = new THREE.Sprite(mat);
-  sprite.position.copy(SUN_LOCAL);
-  sprite.scale.setScalar(scale);
-  eclipticGroup.add(sprite);
-  sunFlares.push({ sprite, speed });
-});
+function updateLensFlare() {
+  const ctx  = _flareOverlay.getContext('2d');
+  const W = _flareOverlay.width, H = _flareOverlay.height;
+  ctx.clearRect(0, 0, W, H);
+
+  // Distance-based visibility (matches the 3D sprite fade)
+  const rawT = (camDistance - 80000) / (500000 - 80000);
+  const sf = Math.max(0, Math.min(1, 1 - rawT));
+  if (sf < 0.01) return;
+
+  // Project Sun to screen coords
+  eclipticGroup.localToWorld(_sunWorldFlare.copy(SUN_LOCAL));
+  _sunNDC.copy(_sunWorldFlare).project(camera);
+  if (_sunNDC.z > 1) return; // behind camera
+
+  const sx = (_sunNDC.x *  0.5 + 0.5) * W;
+  const sy = (_sunNDC.y * -0.5 + 0.5) * H;
+
+  // Skip entirely if Sun is far off-screen
+  if (sx < -W * 0.6 || sx > W * 1.6 || sy < -H * 0.6 || sy > H * 1.6) return;
+
+  // Flare grows as camera zooms toward Earth (telescopic)
+  const fs = Math.max(0.25, Math.min(2.2, 80000 / (camDistance + 4000))) * sf;
+  const diag = Math.sqrt(W * W + H * H);
+
+  // Anamorphic horizontal streak through Sun
+  const sLen = diag * 0.85 * fs;
+  const sH   = Math.max(1, 2.5 * fs);
+  for (const [len, alpha, cr, cg, cb] of [
+    [sLen,       0.50, 255, 230, 160],
+    [sLen * 1.4, 0.18, 180, 200, 255],
+  ]) {
+    const sg = ctx.createLinearGradient(sx - len/2, sy, sx + len/2, sy);
+    sg.addColorStop(0,   `rgba(${cr},${cg},${cb},0)`);
+    sg.addColorStop(0.35,`rgba(${cr},${cg},${cb},${(alpha*sf*0.45).toFixed(3)})`);
+    sg.addColorStop(0.5, `rgba(${cr},${cg},${cb},${(alpha*sf).toFixed(3)})`);
+    sg.addColorStop(0.65,`rgba(${cr},${cg},${cb},${(alpha*sf*0.45).toFixed(3)})`);
+    sg.addColorStop(1,   `rgba(${cr},${cg},${cb},0)`);
+    ctx.fillStyle = sg;
+    ctx.fillRect(sx - len/2, sy - sH/2, len, sH);
+  }
+
+  // Bokeh circles reflected through screen centre
+  const ax = W * 0.5 - sx, ay = H * 0.5 - sy;
+  for (const [t, rFrac, r0, g0, b0, baseA] of [
+    [0.30, 0.028, 255, 185,  55, 0.62],
+    [0.50, 0.048, 255, 220, 110, 0.45],
+    [0.68, 0.022, 180, 195, 255, 0.70],
+    [0.85, 0.065, 255, 155,  40, 0.42],
+    [1.02, 0.034, 200, 215, 255, 0.58],
+    [1.22, 0.052, 255, 195,  70, 0.35],
+    [1.45, 0.028, 210, 175, 255, 0.50],
+    [1.72, 0.070, 255, 165,  45, 0.30],
+    [2.05, 0.022, 255, 235, 145, 0.42],
+  ]) {
+    _drawBlob(ctx, sx + ax*t, sy + ay*t, diag*rFrac*fs, r0, g0, b0, baseA*sf);
+  }
+}
 
 // Compatibility placeholder for any code that still pokes at sunGlowMat
 const sunGlowMat = { uniforms: { time: { value: 0 } } };
@@ -2202,10 +2220,6 @@ function animate() {
     sunInnerHotSprite.material.opacity  = sf;
     sunMegaBloomSprite.material.opacity = sf * 0.65;
     sunCoreMesh.material.opacity        = sf;
-    sunFlares.forEach(({ sprite, speed }) => {
-      sprite.material.rotation += speed * dt;
-      sprite.material.opacity   = sf * 0.80;
-    });
   }
 
   // Moon: natural orbit, no user input.
@@ -2261,6 +2275,7 @@ function animate() {
   celestialSphere.rotation.y = SKY_INITIAL_ROT + elapsedSim * EARTH_ORB_SPEED;
 
   renderer.render(scene, camera);
+  updateLensFlare();
 }
 
 animate();
