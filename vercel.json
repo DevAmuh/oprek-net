@@ -3,8 +3,8 @@
   "redirects": [
     {
       "source": "/(.*)",
-      "has": [{ "type": "host", "value": "www.oprek.net" }],
-      "destination": "https://oprek.net/$1",
+      "has": [{ "type": "host", "value": "www.dhiya.id" }],
+      "destination": "https://dhiya.id/$1",
       "permanent": true
     }
   ]
