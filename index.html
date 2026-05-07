@@ -665,9 +665,12 @@ function startZoomIn() {
   updateCamera();
 }
 
-// Loading-screen flow: minimum visible time so the wireframe can fully
-// draw itself, then fade out, remove from DOM, kick off the zoom-in.
+// Loading-screen flow: wireframe draws for LOADING_MIN_MS, then the text
+// switches to "CLICK TO ENTER". The click IS the user gesture that unlocks
+// audio — so tryStartMusic() succeeds immediately when called from dismiss.
 const LOADING_MIN_MS = 2800;
+let loadingReady = false;
+
 function dismissLoadingScreen() {
   const el = document.getElementById('loading-screen');
   if (!el) return;
@@ -678,13 +681,23 @@ function dismissLoadingScreen() {
     tryStartMusic();
   }, 1000); // matches CSS 1s opacity transition
 }
-window.addEventListener('load', () => {
-  setTimeout(dismissLoadingScreen, LOADING_MIN_MS);
-});
-// Safety net: if the load event has already fired (cached reload), still trigger
-if (document.readyState === 'complete') {
-  setTimeout(dismissLoadingScreen, LOADING_MIN_MS);
+
+function onLoadingReady() {
+  if (loadingReady) return;
+  loadingReady = true;
+  const textEl = document.getElementById('loading-text');
+  if (textEl) textEl.textContent = 'CLICK TO ENTER';
+  const screen = document.getElementById('loading-screen');
+  if (screen) screen.style.cursor = 'pointer';
 }
+
+window.addEventListener('load', () => { setTimeout(onLoadingReady, LOADING_MIN_MS); });
+if (document.readyState === 'complete') { setTimeout(onLoadingReady, LOADING_MIN_MS); }
+
+document.getElementById('loading-screen').addEventListener('click', () => {
+  if (!loadingReady) return;
+  dismissLoadingScreen();
+});
 
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
