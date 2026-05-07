@@ -1342,25 +1342,25 @@ const SUN_ROT_SPEED = (2 * Math.PI) / (25.4 * 24 * 3600);
 
 // Glow sprite (canvas-backed, billboard)
 const sunCanvas = document.createElement('canvas');
-sunCanvas.width = 128; sunCanvas.height = 128;
+sunCanvas.width = 256; sunCanvas.height = 256;
 {
   const ctx = sunCanvas.getContext('2d');
-  const g = ctx.createRadialGradient(64,64,0, 64,64,64);
-  g.addColorStop(0,   'rgba(255,255,180,1)');
-  g.addColorStop(0.15,'rgba(255,220,80,0.9)');
-  g.addColorStop(0.35,'rgba(255,160,30,0.5)');
-  g.addColorStop(0.6, 'rgba(255,120,0,0.15)');
-  g.addColorStop(1,   'rgba(255,80,0,0)');
-  ctx.fillStyle = g; ctx.fillRect(0,0,128,128);
+  const g = ctx.createRadialGradient(128,128,0, 128,128,128);
+  g.addColorStop(0,    'rgba(255,255,200,1)');
+  g.addColorStop(0.12, 'rgba(255,230,100,0.95)');
+  g.addColorStop(0.30, 'rgba(255,180,40,0.75)');
+  g.addColorStop(0.55, 'rgba(255,130,10,0.30)');
+  g.addColorStop(0.80, 'rgba(255,90,0,0.06)');
+  g.addColorStop(1,    'rgba(255,60,0,0.01)');
+  ctx.fillStyle = g; ctx.fillRect(0,0,256,256);
 }
-// Glow sprite — wraps just outside the Sun body (radius 109)
 const sunSprite = new THREE.Sprite(new THREE.SpriteMaterial({
   map: new THREE.CanvasTexture(sunCanvas),
   transparent: true, blending: THREE.AdditiveBlending,
   depthWrite: false,
 }));
 sunSprite.position.copy(SUN_LOCAL);
-sunSprite.scale.setScalar(SUN_RADIUS * 2.5);   // ≈270, lush near-corona
+sunSprite.scale.setScalar(SUN_RADIUS * 8);
 eclipticGroup.add(sunSprite);
 
 // Outer halo
@@ -1369,20 +1369,20 @@ sunHaloCanvas.width = 128; sunHaloCanvas.height = 128;
 {
   const ctx = sunHaloCanvas.getContext('2d');
   const g = ctx.createRadialGradient(64,64,0, 64,64,64);
-  g.addColorStop(0,   'rgba(255,210,80,0.55)');
-  g.addColorStop(0.25,'rgba(255,170,40,0.30)');
-  g.addColorStop(0.5, 'rgba(255,130,20,0.12)');
-  g.addColorStop(1,   'rgba(255,80,0,0)');
+  g.addColorStop(0,    'rgba(255,210,90,0.70)');
+  g.addColorStop(0.20, 'rgba(255,175,50,0.45)');
+  g.addColorStop(0.45, 'rgba(255,140,20,0.18)');
+  g.addColorStop(0.70, 'rgba(255,100,5,0.05)');
+  g.addColorStop(1,    'rgba(255,70,0,0.01)');
   ctx.fillStyle = g; ctx.fillRect(0,0,128,128);
 }
-// Outer halo — broader corona around the body
 const sunHaloSprite = new THREE.Sprite(new THREE.SpriteMaterial({
   map: new THREE.CanvasTexture(sunHaloCanvas),
   transparent: true, blending: THREE.AdditiveBlending,
   depthWrite: false,
 }));
 sunHaloSprite.position.copy(SUN_LOCAL);
-sunHaloSprite.scale.setScalar(SUN_RADIUS * 9);
+sunHaloSprite.scale.setScalar(SUN_RADIUS * 25);
 eclipticGroup.add(sunHaloSprite);
 
 // ── BRIGHT CORE — pure-white sprite right at the body, makes the disc
@@ -1420,15 +1420,15 @@ sunRaysCanvas.width = 512; sunRaysCanvas.height = 512;
   for (let i = 0; i < 16; i++) {
     const ang = (i / 16) * Math.PI * 2;
     const long = (i % 2 === 0);
-    const len = long ? 240 : 130;
-    const width = long ? 3 : 1.6;
+    const len = long ? 240 : 140;
+    const width = long ? 4.5 : 2.2;
     ctx.save();
     ctx.rotate(ang);
     const grad = ctx.createLinearGradient(0, 0, len, 0);
-    grad.addColorStop(0,    'rgba(255,235,160,0.55)');
-    grad.addColorStop(0.30, 'rgba(255,200,100,0.25)');
-    grad.addColorStop(0.70, 'rgba(255,160,60,0.08)');
-    grad.addColorStop(1,    'rgba(255,120,30,0)');
+    grad.addColorStop(0,    'rgba(255,245,180,0.75)');
+    grad.addColorStop(0.25, 'rgba(255,210,110,0.40)');
+    grad.addColorStop(0.60, 'rgba(255,170,60,0.12)');
+    grad.addColorStop(1,    'rgba(255,120,30,0.01)');
     ctx.strokeStyle = grad;
     ctx.lineWidth = width;
     ctx.lineCap = 'round';
@@ -1453,7 +1453,7 @@ const sunRaysSprite = new THREE.Sprite(new THREE.SpriteMaterial({
   depthWrite: false,
 }));
 sunRaysSprite.position.copy(SUN_LOCAL);
-sunRaysSprite.scale.setScalar(SUN_RADIUS * 11);
+sunRaysSprite.scale.setScalar(SUN_RADIUS * 30);
 eclipticGroup.add(sunRaysSprite);
 
 // ── BLOOM LAYER — third radial-gradient sprite, very wide and very dim,
@@ -1465,11 +1465,12 @@ sunBloomCanvas.width = 256; sunBloomCanvas.height = 256;
 {
   const ctx = sunBloomCanvas.getContext('2d');
   const g = ctx.createRadialGradient(128,128,0, 128,128,128);
-  g.addColorStop(0,    'rgba(255,190,60,0.50)');
-  g.addColorStop(0.10, 'rgba(255,160,40,0.28)');
-  g.addColorStop(0.25, 'rgba(255,130,20,0.12)');
-  g.addColorStop(0.50, 'rgba(255,90,10,0.05)');
-  g.addColorStop(1,    'rgba(255,60,0,0)');
+  g.addColorStop(0,    'rgba(255,190,60,0.60)');
+  g.addColorStop(0.10, 'rgba(255,165,40,0.38)');
+  g.addColorStop(0.28, 'rgba(255,135,20,0.18)');
+  g.addColorStop(0.55, 'rgba(255,95,10,0.06)');
+  g.addColorStop(0.80, 'rgba(255,65,0,0.015)');
+  g.addColorStop(1,    'rgba(255,50,0,0.003)');
   ctx.fillStyle = g;
   ctx.fillRect(0,0,256,256);
 }
@@ -1479,7 +1480,7 @@ const sunBloomSprite = new THREE.Sprite(new THREE.SpriteMaterial({
   depthWrite: false,
 }));
 sunBloomSprite.position.copy(SUN_LOCAL);
-sunBloomSprite.scale.setScalar(SUN_RADIUS * 30);
+sunBloomSprite.scale.setScalar(SUN_RADIUS * 100);
 eclipticGroup.add(sunBloomSprite);
 
 // ── INNER WHITE-HOT OVEREXPOSED DISC — blazing tight core that makes the
@@ -1512,10 +1513,12 @@ sunMegaBloomCanvas.width = 256; sunMegaBloomCanvas.height = 256;
 {
   const ctx = sunMegaBloomCanvas.getContext('2d');
   const g = ctx.createRadialGradient(128,128,0, 128,128,128);
-  g.addColorStop(0,    'rgba(255,160,40,0.22)');
-  g.addColorStop(0.15, 'rgba(255,130,20,0.10)');
-  g.addColorStop(0.40, 'rgba(255,100,10,0.04)');
-  g.addColorStop(1,    'rgba(255,60,0,0)');
+  g.addColorStop(0,    'rgba(255,155,35,0.35)');
+  g.addColorStop(0.12, 'rgba(255,130,20,0.18)');
+  g.addColorStop(0.30, 'rgba(255,105,10,0.07)');
+  g.addColorStop(0.55, 'rgba(255,80,5,0.02)');
+  g.addColorStop(0.80, 'rgba(255,60,0,0.006)');
+  g.addColorStop(1,    'rgba(255,40,0,0.002)');
   ctx.fillStyle = g; ctx.fillRect(0,0,256,256);
 }
 const sunMegaBloomSprite = new THREE.Sprite(new THREE.SpriteMaterial({
@@ -1524,7 +1527,7 @@ const sunMegaBloomSprite = new THREE.Sprite(new THREE.SpriteMaterial({
   depthWrite: false,
 }));
 sunMegaBloomSprite.position.copy(SUN_LOCAL);
-sunMegaBloomSprite.scale.setScalar(SUN_RADIUS * 55);
+sunMegaBloomSprite.scale.setScalar(SUN_RADIUS * 300);
 eclipticGroup.add(sunMegaBloomSprite);
 
 // ── SOLAR FLARES — 4 slowly-rotating prominence arcs emanating from the
@@ -1578,10 +1581,10 @@ function makeSolarFlareCanvas() {
 const flareTex = new THREE.CanvasTexture(makeSolarFlareCanvas());
 const sunFlares = [];
 [
-  { rot: 0,                  speed:  0.11, scale: SUN_RADIUS * 3.8 },
-  { rot: Math.PI * 0.52,     speed: -0.07, scale: SUN_RADIUS * 3.2 },
-  { rot: Math.PI * 1.18,     speed:  0.09, scale: SUN_RADIUS * 4.2 },
-  { rot: Math.PI * 1.72,     speed: -0.06, scale: SUN_RADIUS * 3.5 },
+  { rot: 0,                  speed:  0.11, scale: SUN_RADIUS * 22 },
+  { rot: Math.PI * 0.52,     speed: -0.07, scale: SUN_RADIUS * 18 },
+  { rot: Math.PI * 1.18,     speed:  0.09, scale: SUN_RADIUS * 25 },
+  { rot: Math.PI * 1.72,     speed: -0.06, scale: SUN_RADIUS * 20 },
 ].forEach(({ rot, speed, scale }) => {
   const mat = new THREE.SpriteMaterial({
     map: flareTex, transparent: true,
