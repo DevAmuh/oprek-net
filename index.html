@@ -1564,7 +1564,7 @@ function updateLensFlare() {
 
   // Distance-based visibility (matches the 3D sprite fade)
   const rawT = (camDistance - 80000) / (500000 - 80000);
-  const sf = Math.max(0, Math.min(1, 1 - rawT));
+  let sf = Math.max(0, Math.min(1, 1 - rawT));
   if (sf < 0.01) return;
 
   // Project Sun to screen coords
