@@ -593,7 +593,7 @@
 
     const { error } = await db.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.href }
+      options: { redirectTo: 'https://dhiya.id/fireplace' }
     });
 
     if (error) {
