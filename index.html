@@ -191,8 +191,8 @@
      cleanly across browsers). */
   #audio-toggle {
     position: fixed;
-    top: clamp(16px, 4vw, 32px);
-    right: clamp(64px, 10vw, 88px);
+    bottom: clamp(20px, 4vw, 32px);
+    right: clamp(20px, 4vw, 32px);
     z-index: 100;
     background: none;
     border: none;
@@ -646,9 +646,13 @@ const ZOOM_TO         = 7;             // matches the intended welcome framing
 const ZOOM_DURATION   = 3.0;           // seconds
 const AUTO_ROTATE_RAD = (3 * Math.PI / 180);  // 3°/sec — gentle, no motion sickness
 
-let zoomingIn   = false;
-let zoomStartT  = 0;     // performance.now() / 1000 when zoom-in begins
-let autoRotate  = false;
+let zoomingIn       = false;
+let zoomStartT      = 0;
+let autoRotate      = false;
+let zoomingHome     = false;
+let zoomHomeStartT  = 0;
+let zoomHomeStartDist = 0;
+const ZOOM_HOME_DURATION = 6.0;
 
 camDistance = ZOOM_FROM;
 updateCamera();
@@ -657,6 +661,7 @@ function startZoomIn() {
   camDistance = ZOOM_FROM;
   zoomStartT  = performance.now() / 1000;
   zoomingIn   = true;
+  autoRotate  = true;
   updateCamera();
 }
 
@@ -670,6 +675,7 @@ function dismissLoadingScreen() {
   setTimeout(() => {
     el.remove();
     startZoomIn();
+    tryStartMusic();
   }, 1000); // matches CSS 1s opacity transition
 }
 window.addEventListener('load', () => {
@@ -1800,6 +1806,7 @@ const TIME_RATE = 3600;     // 1 real-second = 1 sim-hour (fixed)
 let isDragging = false;
 let lastDragX  = 0;
 let lastDragY  = 0;
+let idleTimer  = null;
 
 // Earth's spin axis in world coords — tilted 23.5° around Z (Polaris-like)
 const EARTH_AXIS = new THREE.Vector3(0, 1, 0).applyEuler(
@@ -1844,8 +1851,9 @@ function onPointerDown(e) {
   if (e.touches && e.touches.length >= 2) return;
   const { x, y } = getXY(e);
 
-  // First user drag stops the cinematic auto-rotate for the rest of the session.
-  autoRotate = false;
+  autoRotate  = false;
+  zoomingHome = false;
+  if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; }
 
   isDragging = true;
   lastDragX = x;
@@ -1883,6 +1891,14 @@ function onPointerMove(e) {
 function onPointerUp() {
   isDragging = false;
   renderer.domElement.style.cursor = 'grab';
+  idleTimer = setTimeout(() => {
+    autoRotate = true;
+    if (Math.abs(camDistance - ZOOM_TO) > 0.5) {
+      zoomingHome     = true;
+      zoomHomeStartT  = performance.now() / 1000;
+      zoomHomeStartDist = camDistance;
+    }
+  }, 5000);
 }
 
 // Hover cursor hint — anywhere on canvas is grabbable
@@ -1909,7 +1925,7 @@ function clampZoom(z) { return Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, z)); }
 
 renderer.domElement.addEventListener('wheel', (e) => {
   e.preventDefault();
-  // deltaY > 0 = scroll-down = zoom out. Exponential step → uniform feel.
+  zoomingHome = false;
   const factor = Math.exp(e.deltaY * 0.001);
   camDistance = clampZoom(camDistance * factor);
   updateCamera();
@@ -1935,6 +1951,7 @@ renderer.domElement.addEventListener('touchstart', (e) => {
 renderer.domElement.addEventListener('touchmove', (e) => {
   if (e.touches.length === 2 && pinchStartDist > 0) {
     e.preventDefault();
+    zoomingHome = false;
     const a = e.touches[0], b = e.touches[1];
     const d = Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY);
     camDistance = clampZoom(pinchStartZ * (pinchStartDist / d));
@@ -1961,25 +1978,32 @@ function animate() {
   const simDt = dt * TIME_RATE;
   elapsedSim += simDt;
 
+  // Auto-rotate — runs even during zoom-in (spin is part of the cinematic intro)
+  if (autoRotate && !isDragging) {
+    camTheta += AUTO_ROTATE_RAD * dt;
+  }
+
   // Cinematic zoom-in — runs ONCE at the start of the session
   if (zoomingIn) {
     const t = (performance.now() / 1000 - zoomStartT) / ZOOM_DURATION;
     if (t >= 1) {
       camDistance = ZOOM_TO;
       zoomingIn   = false;
-      autoRotate  = true;          // begin gentle drift
-      setTimeout(startWelcome, 350); // small pause then the welcome lines
+      setTimeout(startWelcome, 350);
     } else {
       // ease-out quartic — fast at start, soft landing
       const e = 1 - Math.pow(1 - t, 4);
       camDistance = ZOOM_FROM + (ZOOM_TO - ZOOM_FROM) * e;
     }
     updateCamera();
-  }
-
-  // Auto-rotate — gentle 10°/sec drift around Earth, paused on drag
-  if (autoRotate && !isDragging && !zoomingIn) {
-    camTheta += AUTO_ROTATE_RAD * dt;
+  } else if (zoomingHome) {
+    // Idle return — ease-in-out cubic, slower than the cinematic intro
+    const t = Math.min(1, (performance.now() / 1000 - zoomHomeStartT) / ZOOM_HOME_DURATION);
+    const e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    camDistance = zoomHomeStartDist + (ZOOM_TO - zoomHomeStartDist) * e;
+    if (t >= 1) { camDistance = ZOOM_TO; zoomingHome = false; }
+    updateCamera();
+  } else if (autoRotate && !isDragging) {
     updateCamera();
   }
 
