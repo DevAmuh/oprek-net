@@ -432,6 +432,140 @@
     .btn-ghost:hover { border-color: var(--muted); color: var(--text); }
 
     .loading { padding: 40px; text-align: center; color: var(--muted); font-size: 14px; }
+
+    /* ── MOBILE TOP BAR ──────────────────────── */
+
+    .mobile-topbar {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .mobile-topbar h1 {
+      font-size: 17px;
+      font-weight: normal;
+      color: var(--accent);
+    }
+
+    .mobile-signout {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 20px;
+      cursor: pointer;
+      padding: 4px 6px;
+      line-height: 1;
+      transition: color .15s;
+    }
+
+    .mobile-signout:hover { color: var(--red); }
+
+    /* ── MOBILE BOTTOM NAV ───────────────────── */
+
+    .mobile-nav {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      z-index: 100;
+    }
+
+    .mobile-nav-inner {
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0 max(10px, env(safe-area-inset-bottom));
+    }
+
+    .mnav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      padding: 4px 16px;
+      color: var(--muted);
+      font-size: 11px;
+      transition: color .15s;
+      user-select: none;
+    }
+
+    .mnav-item.active { color: var(--accent); }
+    .mnav-item span:first-child { font-size: 20px; }
+
+    /* ── RESPONSIVE ──────────────────────────── */
+
+    @media (max-width: 640px) {
+      body { overflow: hidden; }
+
+      /* Login */
+      .login-box {
+        width: 100%;
+        max-width: 360px;
+        padding: 40px 28px;
+        margin: 16px;
+        border-radius: 16px;
+      }
+
+      /* Dashboard layout */
+      #dashboard { height: 100dvh; }
+
+      .layout { flex-direction: column; height: 100%; }
+
+      /* Hide desktop sidebar, show mobile pieces */
+      .sidebar { display: none; }
+
+      .mobile-topbar { display: flex; }
+      .mobile-nav { display: block; }
+
+      /* Main */
+      .main {
+        flex: 1;
+        padding: 20px 16px 90px;
+        overflow-y: auto;
+      }
+
+      /* Stats — keep 3 cols but compact */
+      .stats-row {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-bottom: 22px;
+      }
+
+      .stat { padding: 14px 12px; }
+      .stat-num { font-size: 24px; }
+      .stat-label { font-size: 10px; }
+
+      /* Cards — single column */
+      .grid { grid-template-columns: 1fr; }
+
+      /* Always show delete btn on touch */
+      .del-btn { opacity: 1; }
+
+      /* Page header */
+      .page-top { margin-bottom: 18px; }
+      .page-top h2 { font-size: 18px; }
+
+      /* Recent rows — hide date on tiny screens */
+      .recent-date { display: none; }
+
+      /* Modal — full screen */
+      .overlay { align-items: flex-end; }
+
+      .modal {
+        width: 100%;
+        max-width: 100%;
+        max-height: 92dvh;
+        border-radius: 16px 16px 0 0;
+        padding: 24px 20px;
+      }
+
+      .modal textarea { min-height: 160px; }
+    }
   </style>
 </head>
 <body>
@@ -447,6 +581,11 @@
       <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.5 6.5 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.5 6.5 29.5 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.3 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8H6.3C9.7 35.7 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.3 5.6l6.2 5.2C41 35.2 44 30 44 24c0-1.3-.1-2.7-.4-3.9z"/></svg>
       Sign in with Google
     </button>
+    <div id="debug-btn-wrap" style="display:none; margin-top:12px;">
+      <button id="debug-btn" style="width:100%;background:transparent;border:1px dashed var(--border);border-radius:8px;padding:11px;color:var(--muted);font-size:12px;cursor:pointer;font-family:inherit;">
+        ⚙ Skip login (localhost debug)
+      </button>
+    </div>
     <div class="err-box" id="login-err"></div>
   </div>
 </div>
@@ -455,8 +594,14 @@
 <div id="dashboard">
   <div class="layout">
 
+    <!-- Mobile top bar -->
+    <div class="mobile-topbar">
+      <h1>🔥 Fireplace</h1>
+      <button class="mobile-signout" id="mobile-signout-btn" title="Sign out">⏻</button>
+    </div>
+
     <!-- Sidebar -->
-    <nav class="sidebar">
+    <nav class="sidebar" id="sidebar">
       <div class="sb-brand">
         <h1>🔥 Fireplace</h1>
         <span>dhiya.id</span>
@@ -519,6 +664,16 @@
 
     </main>
   </div>
+
+  <!-- Mobile bottom nav -->
+  <nav class="mobile-nav">
+    <div class="mobile-nav-inner">
+      <div class="mnav-item active" data-page="overview"><span>⌂</span><span>Home</span></div>
+      <div class="mnav-item" data-page="notes"><span>✎</span><span>Notes</span></div>
+      <div class="mnav-item" data-page="ideas"><span>✦</span><span>Ideas</span></div>
+      <div class="mnav-item" data-page="blog"><span>◈</span><span>Blog</span></div>
+    </div>
+  </nav>
 </div>
 
 <!-- ── NOTE MODAL ─────────────────────────────────────── -->
@@ -582,6 +737,15 @@
 
   // ── AUTH ─────────────────────────────────────────────
 
+  // Show debug bypass only on localhost
+  if (['localhost', '127.0.0.1'].includes(location.hostname)) {
+    document.getElementById('debug-btn-wrap').style.display = 'block';
+    document.getElementById('debug-btn').onclick = () => {
+      user = { email: 'guest@localhost (debug)' };
+      showDash();
+    };
+  }
+
   async function init() {
     const { data: { session } } = await db.auth.getSession();
     if (session) { user = session.user; showDash(); }
@@ -616,13 +780,24 @@
     loadAll();
   }
 
+  // Mobile sign-out
+  document.getElementById('mobile-signout-btn').onclick = async () => {
+    if (confirm('Sign out?')) { await db.auth.signOut(); location.reload(); }
+  };
+
+  function switchPage(page) {
+    document.querySelectorAll('.nav-link, .mnav-item').forEach(l => l.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll(`[data-page="${page}"]`).forEach(l => l.classList.add('active'));
+    document.getElementById('page-' + page).classList.add('active');
+  }
+
   document.querySelectorAll('.nav-link').forEach(link => {
-    link.onclick = () => {
-      document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-      link.classList.add('active');
-      document.getElementById('page-' + link.dataset.page).classList.add('active');
-    };
+    link.onclick = () => switchPage(link.dataset.page);
+  });
+
+  document.querySelectorAll('.mnav-item').forEach(item => {
+    item.onclick = () => switchPage(item.dataset.page);
   });
 
   // ── MODALS ───────────────────────────────────────────
