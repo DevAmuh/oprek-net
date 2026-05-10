@@ -2,66 +2,92 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Graduation — Seat Finder</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Graduation · Seat Finder</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
+/* =============================================
+   ROOT & RESET
+============================================= */
 :root {
   --bg:        #09110d;
-  --surface:   #111c14;
-  --card:      #172019;
+  --card:      #111c14;
+  --card2:     #172019;
   --gold:      #c9a84c;
   --gold-lt:   #f0d080;
   --gold-dim:  #7a6128;
   --green:     #2d5e38;
   --green-lt:  #3d7a4a;
   --text:      #e8dfc8;
-  --muted:     #7a876e;
-  --putri:     #d4a8c7;
-  --putra:     #90c0e0;
-  --highlight: #ffd740;
-  --radius:    12px;
+  --muted:     #6a7a62;
+  --cyan:      #00d4ff;
+  --cyan-dim:  #0a3050;
+  --male-bg:   #1a3a5c;
+  --male-bd:   #234a74;
+  --male-tx:   #90c0ff;
+  --fem-bg:    #3a1a3a;
+  --fem-bd:    #4a2a4a;
+  --fem-tx:    #e0a0d0;
+  --pend-bg:   #0e2e14;
+  --pend-bd:   #2d6e3a;
+  --pend-tx:   #80e090;
+  --r:         12px;
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; }
-body {
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
   background: var(--bg);
   color: var(--text);
   font-family: 'Nunito', sans-serif;
   font-size: 15px;
-  min-height: 100vh;
-  overflow-x: hidden;
 }
 
-/* ===== SCREEN SYSTEM ===== */
-.screen {
-  position: absolute; inset: 0;
-  display: flex; flex-direction: column;
-  opacity: 0; pointer-events: none;
-  transition: opacity .35s ease, transform .35s ease;
-  transform: translateX(30px);
+/* =============================================
+   SLIDE ENGINE
+============================================= */
+#slider-track {
+  display: flex;
+  width: 500vw;
+  height: 100vh;
+  transition: transform .42s cubic-bezier(.65,0,.35,1);
+  will-change: transform;
+}
+.slide {
+  width: 100vw;
+  height: 100vh;
   overflow-y: auto;
-  min-height: 100vh;
+  overflow-x: hidden;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
-.screen.active {
-  opacity: 1; pointer-events: all;
-  transform: translateX(0);
+#slide-result { align-items: stretch; }
+
+.slide-inner {
+  width: 100%;
+  max-width: 480px;
+  padding: 36px 22px 80px;
+  margin: 0 auto;
 }
-.screen.exit {
-  opacity: 0;
-  transform: translateX(-30px);
+.slide-inner.wide {
+  max-width: 1100px;
+  padding: 28px 16px 80px;
 }
 
-/* ===== LAYOUT ===== */
-.page-wrapper {
-  width: 100%; max-width: 480px;
-  margin: 0 auto; padding: 28px 20px 60px;
-  flex: 1;
-}
+/* =============================================
+   PROGRESS DOTS
+============================================= */
+.dots { display: flex; gap: 7px; justify-content: center; margin-bottom: 28px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); transition: all .3s; }
+.dot.on { background: var(--gold); width: 22px; border-radius: 4px; }
 
-/* ===== HERO ===== */
-.hero-badge {
+/* =============================================
+   TYPOGRAPHY
+============================================= */
+.badge {
   display: inline-block;
   font-family: 'Cormorant Garamond', serif;
   font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
@@ -70,787 +96,720 @@ body {
 }
 .hero-title {
   font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(32px, 8vw, 48px);
-  font-weight: 700; line-height: 1.1;
-  color: var(--gold-lt);
-  margin-bottom: 6px;
+  font-size: clamp(34px, 9vw, 52px);
+  font-weight: 700; line-height: 1.08;
+  color: var(--gold-lt); margin-bottom: 6px;
 }
 .hero-sub {
   font-family: 'Cormorant Garamond', serif;
   font-size: 17px; font-style: italic;
   color: var(--muted); margin-bottom: 36px;
 }
-
-/* decorative line */
-.gold-line {
-  width: 48px; height: 2px;
-  background: linear-gradient(90deg, transparent, var(--gold), transparent);
-  margin: 0 auto 32px;
+.step-lbl  { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold-dim); margin-bottom: 6px; }
+.step-title { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 700; color: var(--gold-lt); margin-bottom: 26px; }
+.back-btn {
+  background: none; border: none; cursor: pointer;
+  color: var(--muted); font-family: 'Nunito', sans-serif; font-size: 13px;
+  padding: 0 0 18px; display: flex; align-items: center; gap: 6px; transition: color .2s;
 }
+.back-btn:hover { color: var(--gold); }
 
-/* ===== SEARCH ===== */
-.search-wrap { position: relative; margin-bottom: 16px; }
+/* =============================================
+   SEARCH
+============================================= */
+.search-wrap { position: relative; margin-bottom: 14px; }
 .search-input {
   width: 100%; padding: 16px 20px 16px 48px;
-  background: var(--card); border: 1.5px solid var(--green);
-  border-radius: var(--radius); color: var(--text);
+  background: var(--card2); border: 1.5px solid var(--green);
+  border-radius: var(--r); color: var(--text);
   font-family: 'Nunito', sans-serif; font-size: 15px;
-  outline: none; transition: border-color .2s;
+  outline: none; transition: border-color .2s; -webkit-appearance: none;
 }
 .search-input:focus { border-color: var(--gold); }
 .search-input::placeholder { color: var(--muted); }
-.search-icon {
-  position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
-  width: 20px; height: 20px; color: var(--muted); pointer-events: none;
-}
-.search-results {
-  background: var(--card); border: 1px solid var(--green);
-  border-radius: var(--radius); overflow: hidden; display: none;
-  margin-bottom: 8px;
-}
-.search-results.visible { display: block; }
-.search-result-item {
-  padding: 13px 18px; cursor: pointer;
-  border-bottom: 1px solid #1e2e22;
-  transition: background .15s;
-  display: flex; align-items: center; gap: 12px;
-}
-.search-result-item:last-child { border-bottom: none; }
-.search-result-item:hover { background: #1e2e22; }
-.result-code {
-  font-size: 12px; font-weight: 700; letter-spacing: 1px;
-  color: var(--gold); background: #1e2e22;
-  padding: 3px 8px; border-radius: 6px;
-}
-.result-name { font-weight: 600; }
-.result-class { font-size: 12px; color: var(--muted); }
-.no-results { padding: 14px 18px; color: var(--muted); font-style: italic; }
+.s-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+.search-results { background: var(--card2); border: 1px solid var(--green); border-radius: var(--r); overflow: hidden; display: none; margin-bottom: 8px; }
+.search-results.on { display: block; }
+.s-item { padding: 13px 18px; cursor: pointer; border-bottom: 1px solid #1a2e1e; transition: background .15s; display: flex; align-items: center; gap: 12px; }
+.s-item:last-child { border-bottom: none; }
+.s-item:hover { background: #1a2e1e; }
+.s-code { font-size: 11px; font-weight: 800; letter-spacing: 1px; color: var(--gold); background: #1a2e1e; padding: 3px 8px; border-radius: 6px; }
+.s-name { font-weight: 700; font-size: 14px; }
+.s-cls  { font-size: 12px; color: var(--muted); }
+.s-none { padding: 14px 18px; color: var(--muted); font-style: italic; font-size: 13px; }
 
-/* ===== DIVIDER ===== */
-.or-divider {
-  display: flex; align-items: center; gap: 12px;
-  color: var(--muted); font-size: 12px; letter-spacing: 1px;
-  text-transform: uppercase; margin: 20px 0;
-}
-.or-divider::before, .or-divider::after {
-  content: ''; flex: 1; height: 1px; background: #1e2e22;
-}
+/* =============================================
+   OR DIVIDER
+============================================= */
+.or { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; margin: 18px 0; }
+.or::before, .or::after { content:''; flex:1; height:1px; background:#1a2e1e; }
 
-/* ===== BUTTONS ===== */
-.btn {
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  width: 100%; padding: 15px 20px;
-  border: none; border-radius: var(--radius);
-  font-family: 'Nunito', sans-serif; font-weight: 700;
-  font-size: 15px; cursor: pointer; transition: all .2s;
-  text-decoration: none;
-}
-.btn-outline {
-  background: transparent;
-  border: 1.5px solid var(--green-lt);
-  color: var(--text);
-}
-.btn-outline:hover { background: var(--card); border-color: var(--gold); color: var(--gold-lt); }
-.btn-gold {
-  background: linear-gradient(135deg, #b8922a, #e0b84a);
-  color: #1a1000; font-weight: 800;
-  box-shadow: 0 4px 16px rgba(201,168,76,.3);
-}
-.btn-gold:hover { box-shadow: 0 6px 24px rgba(201,168,76,.5); transform: translateY(-1px); }
+/* =============================================
+   BUTTONS
+============================================= */
+.btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 15px 20px; border: none; border-radius: var(--r); font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 15px; cursor: pointer; transition: all .2s; -webkit-appearance: none; }
+.btn-outline { background: transparent; border: 1.5px solid var(--green-lt); color: var(--text); }
+.btn-outline:hover { background: var(--card2); border-color: var(--gold); color: var(--gold-lt); }
 
-/* ===== STEP HEADER ===== */
-.step-header { margin-bottom: 28px; }
-.back-btn {
-  background: none; border: none; cursor: pointer;
-  color: var(--muted); font-family: 'Nunito', sans-serif;
-  font-size: 13px; padding: 0; display: flex; align-items: center; gap: 6px;
-  margin-bottom: 20px; transition: color .2s;
-}
-.back-btn:hover { color: var(--gold); }
-.step-label {
-  font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
-  color: var(--gold-dim); margin-bottom: 6px;
-}
-.step-title {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 28px; font-weight: 700; color: var(--gold-lt);
-}
+/* =============================================
+   CLASS GRID
+============================================= */
+.class-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.class-card { background: var(--card2); border: 1.5px solid var(--green); border-radius: var(--r); padding: 24px 16px; cursor: pointer; transition: all .2s; text-align: center; -webkit-tap-highlight-color: transparent; }
+.class-card:active, .class-card:hover { border-color: var(--gold); background: #1c2a1f; transform: scale(.97); }
+.cc-label { font-family: 'Cormorant Garamond', serif; font-size: 38px; font-weight: 700; color: var(--gold-lt); line-height: 1; }
+.cc-sub   { font-size: 12px; color: var(--muted); margin-top: 4px; }
 
-/* ===== CLASS GRID ===== */
-.class-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
-}
-.class-card {
-  background: var(--card); border: 1.5px solid var(--green);
-  border-radius: var(--radius); padding: 22px 16px;
-  cursor: pointer; transition: all .2s; text-align: center;
-}
-.class-card:hover {
-  border-color: var(--gold); background: #1c2a1f;
-  transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,.3);
-}
-.class-card-label {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 34px; font-weight: 700; color: var(--gold-lt);
-  line-height: 1;
-}
-.class-card-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+/* =============================================
+   GENDER CARDS
+============================================= */
+.gender-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.gender-card { background: var(--card2); border: 2px solid var(--green); border-radius: var(--r); padding: 32px 16px; cursor: pointer; transition: all .2s; text-align: center; -webkit-tap-highlight-color: transparent; }
+.gender-card:active, .gender-card:hover { transform: scale(.97); }
+.gender-card.putra:hover { border-color: var(--male-tx); }
+.gender-card.putri:hover { border-color: var(--fem-tx); }
+.g-icon  { font-size: 40px; margin-bottom: 8px; }
+.g-label { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 700; }
+.gender-card.putra .g-label { color: var(--male-tx); }
+.gender-card.putri .g-label { color: var(--fem-tx); }
+.g-sub   { font-size: 12px; color: var(--muted); margin-top: 3px; }
 
-/* ===== GENDER CARDS ===== */
-.gender-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.gender-card {
-  background: var(--card); border: 2px solid var(--green);
-  border-radius: var(--radius); padding: 28px 20px;
-  cursor: pointer; transition: all .2s; text-align: center;
-}
-.gender-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.4); }
-.gender-card.putri:hover { border-color: var(--putri); }
-.gender-card.putra:hover { border-color: var(--putra); }
-.gender-icon { font-size: 36px; margin-bottom: 8px; }
-.gender-label {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 22px; font-weight: 700;
-}
-.gender-card.putri .gender-label { color: var(--putri); }
-.gender-card.putra .gender-label { color: var(--putra); }
-.gender-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
-
-/* ===== NAME LIST ===== */
+/* =============================================
+   NAME LIST
+============================================= */
 .name-list { display: flex; flex-direction: column; gap: 8px; }
-.name-item {
-  background: var(--card); border: 1.5px solid var(--green);
-  border-radius: var(--radius); padding: 14px 18px;
-  cursor: pointer; transition: all .2s;
-  display: flex; align-items: center; gap: 12px;
-}
-.name-item:hover {
-  border-color: var(--gold); background: #1c2a1f;
-  transform: translateX(4px);
-}
-.name-item-no {
-  font-size: 11px; color: var(--gold); font-weight: 700;
-  background: #1e2e22; padding: 3px 8px; border-radius: 6px;
-  min-width: 40px; text-align: center; flex-shrink: 0;
-}
-.name-item-name { font-weight: 600; flex: 1; }
-.name-item-arrow { color: var(--muted); flex-shrink: 0; }
+.name-item { background: var(--card2); border: 1.5px solid var(--green); border-radius: var(--r); padding: 14px 18px; cursor: pointer; transition: all .2s; display: flex; align-items: center; gap: 12px; -webkit-tap-highlight-color: transparent; }
+.name-item:active, .name-item:hover { border-color: var(--gold); background: #1c2a1f; transform: translateX(4px); }
+.ni-no   { font-size: 11px; color: var(--gold); font-weight: 800; background: #1a2e1e; padding: 3px 8px; border-radius: 6px; min-width: 44px; text-align: center; flex-shrink: 0; }
+.ni-name { font-weight: 700; flex: 1; }
+.ni-arr  { color: var(--muted); flex-shrink: 0; }
 
-/* ===== RESULT SCREEN ===== */
-.result-card {
-  background: var(--card); border: 1.5px solid var(--gold-dim);
-  border-radius: 16px; padding: 28px 24px; margin-bottom: 28px;
-  text-align: center;
-  box-shadow: 0 8px 32px rgba(201,168,76,.12);
-}
-.result-emoji { font-size: 48px; margin-bottom: 12px; }
-.result-student-name {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 26px; font-weight: 700; color: var(--gold-lt);
-  margin-bottom: 4px;
-}
-.result-student-info { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
-.result-seat-box {
-  background: linear-gradient(135deg, #1a2a1c, #0f1c10);
-  border: 1.5px solid var(--green-lt); border-radius: 10px;
-  padding: 16px; margin-bottom: 20px;
-}
-.result-seat-row {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 42px; font-weight: 700; color: var(--gold);
-  line-height: 1;
-}
-.result-seat-label { font-size: 12px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
-.result-seat-pos { font-size: 14px; color: var(--text); margin-top: 8px; }
-.result-message {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 16px; font-style: italic; color: var(--muted);
-  line-height: 1.6;
-}
+/* =============================================
+   RESULT SCREEN
+============================================= */
+.result-card { background: var(--card2); border: 1.5px solid var(--gold-dim); border-radius: 16px; padding: 24px 20px; margin-bottom: 20px; box-shadow: 0 8px 32px rgba(201,168,76,.1); }
+.rc-emoji  { font-size: 44px; margin-bottom: 10px; text-align:center; }
+.rc-forlbl { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); text-align:center; margin-bottom: 2px; }
+.rc-sname  { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 700; color: var(--gold-lt); text-align:center; margin-bottom: 2px; }
+.rc-sinfo  { font-size: 12px; color: var(--muted); text-align:center; margin-bottom: 20px; }
 
-/* ===== SEATING CHART ===== */
-.chart-section-title {
-  font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
-  color: var(--muted); margin-bottom: 12px; text-align: center;
-}
-.chart-outer {
-  overflow-x: auto; padding-bottom: 12px;
-  border: 1px solid var(--green); border-radius: var(--radius);
-  background: #0d180f;
-}
-.chart-inner {
-  min-width: 640px; padding: 16px 12px;
-}
+.parent-box { background: linear-gradient(135deg,#060f18,#081a28); border: 2px solid var(--cyan); border-radius: 12px; padding: 18px 16px; margin-bottom: 14px; box-shadow: 0 0 24px rgba(0,212,255,.15); }
+.pb-badge  { display: inline-block; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--cyan); background: rgba(0,212,255,.08); border: 1px solid rgba(0,212,255,.25); border-radius: 20px; padding: 3px 12px; margin-bottom: 8px; }
+.pb-code   { font-family: 'Cormorant Garamond', serif; font-size: 42px; font-weight: 700; color: var(--cyan); line-height: 1; text-shadow: 0 0 18px rgba(0,212,255,.4); }
+.pb-desc   { font-size: 12px; color: #80c8d8; margin-top: 3px; }
+.pb-count  { display: inline-flex; align-items: center; gap: 6px; background: rgba(0,212,255,.07); border: 1px solid rgba(0,212,255,.2); border-radius: 20px; padding: 4px 12px; margin-top: 10px; font-size: 12px; color: var(--cyan); }
+.stu-ref   { background: #0e1a10; border: 1px solid var(--green); border-radius: 10px; padding: 12px 14px; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; }
+.sr-icon   { font-size: 20px; flex-shrink: 0; }
+.sr-lbl    { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+.sr-val    { font-size: 14px; font-weight: 700; color: var(--text); }
+.rc-msg    { font-family: 'Cormorant Garamond', serif; font-size: 15px; font-style: italic; color: var(--muted); line-height: 1.6; text-align: center; }
+
+/* =============================================
+   SEATING CHART
+============================================= */
+.chart-ttl   { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); text-align: center; margin-bottom: 8px; }
+.chart-outer { overflow-x: auto; border: 1px solid var(--green); border-radius: var(--r); background: #0b160d; }
+.chart-inner { min-width: 900px; padding: 14px 12px; }
+
 .chart-stage {
-  text-align: center; padding: 10px 0;
+  text-align: center; padding: 9px 0;
   background: linear-gradient(90deg, transparent 5%, var(--green) 20%, var(--green-lt) 50%, var(--green) 80%, transparent 95%);
-  color: var(--gold-lt); font-weight: 800; letter-spacing: 4px; font-size: 12px;
-  text-transform: uppercase; border-radius: 6px; margin-bottom: 14px;
+  color: var(--gold-lt); font-weight: 800; letter-spacing: 4px; font-size: 11px;
+  text-transform: uppercase; border-radius: 5px; margin-bottom: 10px;
   font-family: 'Cormorant Garamond', serif;
 }
-.chart-body { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.chart-half { display: flex; flex-direction: column; gap: 3px; }
-.chart-section-bar {
-  border-radius: 4px; padding: 5px 8px; text-align: center;
-  font-size: 10px; font-weight: 700; letter-spacing: 1px;
-  margin-bottom: 2px;
+
+/* Three-column layout: left | aisle | right */
+.chart-body {
+  display: grid;
+  grid-template-columns: 1fr 48px 1fr;
+  gap: 0;
+  align-items: start;
 }
-.bar-vip { background: #2a3d60; color: #90c0ff; }
-.bar-tamu { background: #5a2090; color: #d0a0ff; }
-.bar-guru { background: #1a5c2a; color: #80e090; }
-.chart-row {
-  display: flex; align-items: center; gap: 4px;
-  padding: 2px 0;
+
+/* Aisle column — contains all 8 Pendamping cells stacked */
+.chart-aisle {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: center;
+  padding-top: calc(4 * (24px + 2px)); /* offset down past the 4 header bars */
 }
-.row-label {
-  font-size: 9px; font-weight: 800; color: #fff; letter-spacing: .5px;
-  background: #8b5e1a; border-radius: 3px;
-  padding: 2px 5px; min-width: 22px; text-align: center; flex-shrink: 0;
+.aisle-label {
+  font-size: 7px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: #2a3d2c; writing-mode: vertical-rl; margin-bottom: 4px;
 }
-.seats-wrap { display: flex; gap: 2px; flex-wrap: nowrap; flex: 1; }
+
+.chart-half { display: flex; flex-direction: column; gap: 2px; }
+
+/* section bars */
+.bar { border-radius: 3px; padding: 4px 8px; text-align: center; font-size: 9px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 1px; }
+.bar-vip    { background: #2a3d60; color: #90c0ff; }
+.bar-guests { background: #5a2090; color: #d0a0ff; }
+.bar-teach  { background: #1a5c2a; color: #80e090; }
+.bar-stu    { background: #2a2010; color: var(--gold); font-size: 8px; }
+
+/* student row */
+.stu-row { display: flex; align-items: center; gap: 2px; padding: 1px 0; }
+
+/* Guru Pendamping cell — green, lives in aisle column */
+.pend-cell {
+  width: 36px; height: 22px; border-radius: 3px;
+  background: var(--pend-bg); border: 1.5px solid var(--pend-bd);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 7.5px; font-weight: 800; color: var(--pend-tx);
+  flex-shrink: 0; letter-spacing: 0.5px;
+}
+
+/* student seats */
+.seats-wrap { display: flex; gap: 2px; flex: 1; }
 .seat {
-  width: 22px; height: 22px; border-radius: 3px;
+  width: 30px; height: 22px; border-radius: 3px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 7px; font-weight: 700; cursor: default;
-  transition: all .3s; flex-shrink: 0;
-  border: 1.5px solid transparent;
-  position: relative; overflow: hidden;
+  font-size: 5.5px; font-weight: 800; flex-shrink: 0;
+  border: 1.5px solid transparent; transition: all .3s; cursor: default;
+  letter-spacing: -0.3px; white-space: nowrap;
 }
-.seat.male { background: #1a3a5c; color: #90c0ff; border-color: #234a74; }
-.seat.female { background: #3a1a3a; color: #e0a0d0; border-color: #4a2a4a; }
-.seat.found {
-  background: var(--highlight) !important;
-  color: #1a0800 !important;
-  border-color: #fff !important;
-  box-shadow: 0 0 0 3px rgba(255,215,64,.5), 0 0 12px rgba(255,215,64,.7);
-  animation: pulse-seat 1.4s infinite ease-in-out;
-  z-index: 2; transform: scale(1.15);
-}
-@keyframes pulse-seat {
-  0%, 100% { box-shadow: 0 0 0 3px rgba(255,215,64,.4), 0 0 10px rgba(255,215,64,.6); }
-  50% { box-shadow: 0 0 0 6px rgba(255,215,64,.2), 0 0 22px rgba(255,215,64,.8); }
-}
-.seats-spacer { flex: 1; }
+.seat.male   { background: var(--male-bg); color: var(--male-tx); border-color: var(--male-bd); }
+.seat.female { background: var(--fem-bg);  color: var(--fem-tx);  border-color: var(--fem-bd); }
 
-/* ===== ORANG TUA (decorative) ===== */
-.ot-section { margin-top: 10px; }
-.ot-grid {
-  display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px;
+/* ★ BREATHING GOLD BLOOM for found student seat */
+.seat.stu-hl {
+  background: #3a2800 !important;
+  color: var(--gold-lt) !important;
+  border-color: var(--gold) !important;
+  animation: bloom-gold 1.5s infinite ease-in-out;
 }
-.ot-group { display: flex; flex-direction: column; gap: 2px; }
-.ot-pair { display: flex; gap: 2px; }
-.ot-seat {
-  width: 18px; height: 18px; background: #0a3050; border: 1px solid #1a5080;
-  border-radius: 2px; font-size: 6px; color: #5090b0; font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
+@keyframes bloom-gold {
+  0%,100% { box-shadow: 0 0 0 2px rgba(201,168,76,.35), 0 0 8px rgba(201,168,76,.5); }
+  50%      { box-shadow: 0 0 0 5px rgba(201,168,76,.15), 0 0 20px rgba(201,168,76,.8); }
 }
 
-/* ===== SCROLL CUE ===== */
-.scroll-cue {
-  text-align: center; font-size: 11px; color: var(--muted);
-  padding: 8px; letter-spacing: 1px;
+.seats-spacer { flex: 1; min-width: 0; }
+
+/* =============================================
+   ORANG TUA
+============================================= */
+.ot-sep { border-top: 1px dashed #1e2e22; margin: 8px 0 6px; font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; text-align: center; padding-top: 6px; }
+.ot-classes { display: flex; gap: 5px; width: 100%; }
+.ot-block   { flex: 1; min-width: 0; }
+.ot-cls-lbl { font-size: 8px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: #5090b0; text-align: center; padding: 3px 0; margin-bottom: 3px; border: 1px solid #1a3a5c; border-radius: 3px; background: #060f18; }
+.ot-cols    { display: flex; gap: 2px; width: 100%; }
+.ot-col     { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ot-pair    { display: flex; gap: 1px; transition: all .3s; }
+.ot-seat    { flex: 1; height: 15px; background: var(--cyan-dim); border: 1px solid #1a5080; border-radius: 2px; font-size: 5px; color: #4a88a8; font-weight: 700; display: flex; align-items: center; justify-content: center; transition: all .3s; text-align: center; line-height: 1; min-width: 0; letter-spacing: -0.3px; white-space: nowrap; }
+
+/* ★ BREATHING CYAN BLOOM for found parent seat */
+.ot-pair.ot-found .ot-seat {
+  background: rgba(0,212,255,.28) !important;
+  border-color: var(--cyan) !important;
+  color: var(--cyan) !important;
+  animation: bloom-cyan 1.5s infinite ease-in-out;
+}
+@keyframes bloom-cyan {
+  0%,100% { box-shadow: 0 0 0 2px rgba(0,212,255,.25), 0 0 6px rgba(0,212,255,.4); }
+  50%      { box-shadow: 0 0 0 4px rgba(0,212,255,.1), 0 0 16px rgba(0,212,255,.75); }
 }
 
-/* ===== PROGRESS DOTS ===== */
-.progress { display: flex; justify-content: center; gap: 6px; margin-bottom: 28px; }
-.dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--green); transition: all .3s;
-}
-.dot.active { background: var(--gold); width: 18px; border-radius: 3px; }
-
-/* ===== FOUND INDICATOR ON CHART ===== */
-.found-arrow {
-  text-align: center; padding: 10px 0 4px;
-  font-size: 12px; color: var(--gold);
-  animation: bob 1.2s infinite ease-in-out;
-  letter-spacing: 1px;
-}
-@keyframes bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
-
-/* ===== MISC ===== */
-.spacer-sm { height: 12px; }
-.spacer { height: 24px; }
-.text-center { text-align: center; }
-.text-muted { color: var(--muted); font-size: 13px; }
-
-/* grain overlay */
-body::before {
-  content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
-  opacity: 0.025;
-}
-.screen, .page-wrapper { position: relative; z-index:1; }
+/* legend */
+.legend   { display: flex; gap: 12px; flex-wrap: wrap; padding: 10px 12px; border-top: 1px solid #1a2e1e; font-size: 10px; color: var(--muted); }
+.leg-i    { display: flex; align-items: center; gap: 5px; }
+.leg-d    { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+.scroll-cue { text-align: center; font-size: 10px; color: var(--muted); padding: 8px; letter-spacing: 1px; }
 </style>
 </head>
 <body>
 
-<!-- SCREEN 1: WELCOME / SEARCH -->
-<div class="screen active" id="screen-welcome">
-<div class="page-wrapper">
-  <div class="gold-line" style="margin:0 0 40px;width:32px;"></div>
-  <div class="hero-badge">Graduation Ceremony · 2026</div>
-  <h1 class="hero-title">Find Your<br>Seat</h1>
-  <p class="hero-sub">Temukan posisi duduk siswa Anda hari ini</p>
+<div id="slider-track">
 
-  <div class="search-wrap">
-    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-    </svg>
-    <input class="search-input" id="searchInput" type="text"
-      placeholder="Ketik nama siswa atau nomor (mis. 9A01)…"
-      autocomplete="off" autocorrect="off" spellcheck="false">
-  </div>
-  <div class="search-results" id="searchResults"></div>
+  <!-- ===== SLIDE 0: WELCOME ===== -->
+  <div class="slide" id="slide-0">
+  <div class="slide-inner">
+    <div style="height:12px"></div>
+    <div class="badge">Graduation Ceremony · 2026</div>
+    <h1 class="hero-title">Temukan<br>Kursi Anda</h1>
+    <p class="hero-sub">Masukkan nama atau nomor absen putra/putri Anda</p>
 
-  <div class="or-divider">atau</div>
+    <div class="search-wrap">
+      <svg class="s-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input class="search-input" id="searchInput" type="search"
+        placeholder="Nama siswa atau kode (mis. 9A03)…"
+        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    </div>
+    <div class="search-results" id="searchResults"></div>
 
-  <button class="btn btn-outline" onclick="goTo('screen-class')">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-    </svg>
-    Tidak ingat? Pilih kelas dulu
-  </button>
-
-  <div class="spacer"></div>
-  <p class="text-center text-muted">Sekolah Anda · Upacara Kelulusan 2026</p>
-</div>
-</div>
-
-<!-- SCREEN 2: CLASS PICKER -->
-<div class="screen" id="screen-class">
-<div class="page-wrapper">
-  <div class="progress">
-    <div class="dot active"></div><div class="dot"></div><div class="dot"></div>
-  </div>
-  <div class="step-header">
-    <button class="back-btn" onclick="goTo('screen-welcome')">
-      ← Kembali
+    <div class="or">atau</div>
+    <button class="btn btn-outline" onclick="goSlide(1)">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+      Tidak ingat kodenya? Telusuri kelas
     </button>
-    <div class="step-label">Langkah 1 dari 3</div>
-    <h2 class="step-title">Dari kelas<br>mana siswanya?</h2>
   </div>
-  <div class="class-grid">
-    <div class="class-card" onclick="selectClass('9A')">
-      <div class="class-card-label">9A</div>
-      <div class="class-card-sub">27 siswa</div>
-    </div>
-    <div class="class-card" onclick="selectClass('9B')">
-      <div class="class-card-label">9B</div>
-      <div class="class-card-sub">27 siswa</div>
-    </div>
-    <div class="class-card" onclick="selectClass('9C')">
-      <div class="class-card-label">9C</div>
-      <div class="class-card-sub">27 siswa</div>
-    </div>
-    <div class="class-card" onclick="selectClass('9D')">
-      <div class="class-card-label">9D</div>
-      <div class="class-card-sub">27 siswa</div>
-    </div>
-  </div>
-</div>
-</div>
-
-<!-- SCREEN 3: GENDER PICKER -->
-<div class="screen" id="screen-gender">
-<div class="page-wrapper">
-  <div class="progress">
-    <div class="dot"></div><div class="dot active"></div><div class="dot"></div>
-  </div>
-  <div class="step-header">
-    <button class="back-btn" onclick="goTo('screen-class')">← Kembali</button>
-    <div class="step-label">Langkah 2 dari 3</div>
-    <h2 class="step-title">Laki-laki atau<br>perempuan?</h2>
-  </div>
-  <div class="gender-grid">
-    <div class="gender-card putra" onclick="selectGender('M')">
-      <div class="gender-icon">👦</div>
-      <div class="gender-label">Putra</div>
-      <div class="gender-sub">Laki-laki</div>
-    </div>
-    <div class="gender-card putri" onclick="selectGender('F')">
-      <div class="gender-icon">👧</div>
-      <div class="gender-label">Putri</div>
-      <div class="gender-sub">Perempuan</div>
-    </div>
-  </div>
-</div>
-</div>
-
-<!-- SCREEN 4: NAME LIST -->
-<div class="screen" id="screen-names">
-<div class="page-wrapper">
-  <div class="progress">
-    <div class="dot"></div><div class="dot"></div><div class="dot active"></div>
-  </div>
-  <div class="step-header">
-    <button class="back-btn" onclick="goTo('screen-gender')">← Kembali</button>
-    <div class="step-label">Langkah 3 dari 3</div>
-    <h2 class="step-title" id="nameListTitle">Pilih nama siswa</h2>
-  </div>
-  <div class="name-list" id="nameList"></div>
-</div>
-</div>
-
-<!-- SCREEN 5: RESULT + CHART -->
-<div class="screen" id="screen-result">
-<div class="page-wrapper" style="max-width:700px;">
-  <button class="back-btn" onclick="goTo('screen-welcome')" style="margin-bottom:20px;">
-    ← Cari lagi
-  </button>
-
-  <!-- Result card -->
-  <div class="result-card">
-    <div class="result-emoji">🎓</div>
-    <div class="result-student-name" id="resultName">Nama Siswa</div>
-    <div class="result-student-info" id="resultInfo">Kelas 9A · Putra · No. 01</div>
-    <div class="result-seat-box">
-      <div class="result-seat-label">Baris / Row</div>
-      <div class="result-seat-row" id="resultRow">P1</div>
-      <div class="result-seat-pos" id="resultPos">Kursi ke-1 dari kiri</div>
-    </div>
-    <div class="result-message">
-      "Here is your seat. We're so proud of you —<br>enjoy this wonderful day. 🌟"
-    </div>
   </div>
 
-  <!-- Seating chart -->
-  <div class="chart-section-title">↓ Posisi di denah kursi</div>
-  <div class="found-arrow" id="foundArrow"></div>
-  <div class="chart-outer">
-    <div class="chart-inner">
-      <div class="chart-stage">— PANGGUNG —</div>
-      <div class="chart-body">
-        <div class="chart-half" id="chartLeft"></div>
-        <div class="chart-half" id="chartRight"></div>
+  <!-- ===== SLIDE 1: CLASS ===== -->
+  <div class="slide" id="slide-1">
+  <div class="slide-inner">
+    <div style="height:12px"></div>
+    <div class="dots">
+      <div class="dot on"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+    <button class="back-btn" onclick="goSlide(0)">← Kembali</button>
+    <div class="step-lbl">Langkah 1 dari 3</div>
+    <div class="step-title">Putra/putri Anda<br>dari kelas mana?</div>
+    <div class="class-grid">
+      <div class="class-card" onclick="pickClass('9A')">
+        <div class="cc-label">9A</div><div class="cc-sub">27 siswa</div>
+      </div>
+      <div class="class-card" onclick="pickClass('9B')">
+        <div class="cc-label">9B</div><div class="cc-sub">27 siswa</div>
+      </div>
+      <div class="class-card" onclick="pickClass('9C')">
+        <div class="cc-label">9C</div><div class="cc-sub">27 siswa</div>
+      </div>
+      <div class="class-card" onclick="pickClass('9D')">
+        <div class="cc-label">9D</div><div class="cc-sub">27 siswa</div>
       </div>
     </div>
   </div>
-  <div class="scroll-cue">← geser untuk melihat seluruh denah →</div>
-</div>
-</div>
+  </div>
+
+  <!-- ===== SLIDE 2: GENDER ===== -->
+  <div class="slide" id="slide-2">
+  <div class="slide-inner">
+    <div style="height:12px"></div>
+    <div class="dots">
+      <div class="dot"></div><div class="dot on"></div><div class="dot"></div>
+    </div>
+    <button class="back-btn" onclick="goSlide(1)">← Kembali</button>
+    <div class="step-lbl">Langkah 2 dari 3</div>
+    <div class="step-title">Putra atau<br>putri?</div>
+    <div class="gender-grid">
+      <div class="gender-card putra" onclick="pickGender('M')">
+        <div class="g-icon">👦</div>
+        <div class="g-label">Putra</div>
+        <div class="g-sub">Laki-laki</div>
+      </div>
+      <div class="gender-card putri" onclick="pickGender('F')">
+        <div class="g-icon">👧</div>
+        <div class="g-label">Putri</div>
+        <div class="g-sub">Perempuan</div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <!-- ===== SLIDE 3: NAMES ===== -->
+  <div class="slide" id="slide-3">
+  <div class="slide-inner">
+    <div style="height:12px"></div>
+    <div class="dots">
+      <div class="dot"></div><div class="dot"></div><div class="dot on"></div>
+    </div>
+    <button class="back-btn" onclick="goSlide(2)">← Kembali</button>
+    <div class="step-lbl">Langkah 3 dari 3</div>
+    <div class="step-title" id="nameTtl">Pilih nama</div>
+    <div class="name-list" id="nameList"></div>
+  </div>
+  </div>
+
+  <!-- ===== SLIDE 4: RESULT ===== -->
+  <div class="slide" id="slide-result">
+  <div class="slide-inner wide">
+    <button class="back-btn" onclick="goSlide(0)">← Cari lagi</button>
+
+    <div class="result-card">
+      <div class="rc-emoji">🎉</div>
+      <div class="rc-forlbl">Orang tua / wali dari</div>
+      <div class="rc-sname" id="rcName">—</div>
+      <div class="rc-sinfo" id="rcInfo">Kelas 9A · No. 01</div>
+
+      <div class="parent-box">
+        <div class="pb-badge">Kursi Anda · Orang Tua</div>
+        <div class="pb-code" id="pbCode">9A01</div>
+        <div class="pb-desc" id="pbDesc">Blok 9A · Kolom 1 · Baris 1</div>
+        <div class="pb-count">🪑 2 kursi tersedia untuk Anda</div>
+      </div>
+
+      <div class="stu-ref">
+        <div class="sr-icon">🎓</div>
+        <div>
+          <div class="sr-lbl">Putra/putri Anda duduk di</div>
+          <div class="sr-val" id="srVal">Pendamping P1 · Kursi ke-1</div>
+        </div>
+      </div>
+
+      <div class="rc-msg">"Here are your seats. So glad you could be here —<br>enjoy this wonderful day. 🌸"</div>
+    </div>
+
+    <div class="chart-ttl">↓ Posisi Anda di denah kursi</div>
+    <div class="chart-outer">
+      <div class="chart-inner" id="chartInner"></div>
+      <div class="legend" id="chartLegend"></div>
+    </div>
+    <div class="scroll-cue">← geser untuk melihat seluruh denah →</div>
+    <div style="height:20px;"></div>
+  </div>
+  </div>
+
+</div><!-- /slider-track -->
 
 <script>
-// ===== DATA =====
-const STUDENTS = {
-  "9A01":{"name":"Student","cls":"9A","gender":"M","no":"01"},
-  "9A02":{"name":"Student","cls":"9A","gender":"M","no":"02"},
-  "9A03":{"name":"Student","cls":"9A","gender":"F","no":"03"},
-  "9A04":{"name":"Student","cls":"9A","gender":"F","no":"04"},
-  "9A05":{"name":"Student","cls":"9A","gender":"F","no":"05"},
-  "9A06":{"name":"Student","cls":"9A","gender":"F","no":"06"},
-  "9A07":{"name":"Student","cls":"9A","gender":"M","no":"07"},
-  "9A08":{"name":"Student","cls":"9A","gender":"F","no":"08"},
-  "9A09":{"name":"Student","cls":"9A","gender":"F","no":"09"},
-  "9A10":{"name":"Student","cls":"9A","gender":"M","no":"10"},
-  "9A11":{"name":"Student","cls":"9A","gender":"F","no":"11"},
-  "9A12":{"name":"Student","cls":"9A","gender":"F","no":"12"},
-  "9A13":{"name":"Student","cls":"9A","gender":"F","no":"13"},
-  "9A14":{"name":"Student","cls":"9A","gender":"F","no":"14"},
-  "9A15":{"name":"Student","cls":"9A","gender":"F","no":"15"},
-  "9A16":{"name":"Student","cls":"9A","gender":"M","no":"16"},
-  "9A17":{"name":"Student","cls":"9A","gender":"M","no":"17"},
-  "9A18":{"name":"Student","cls":"9A","gender":"M","no":"18"},
-  "9A19":{"name":"Student","cls":"9A","gender":"M","no":"19"},
-  "9A20":{"name":"Student","cls":"9A","gender":"F","no":"20"},
-  "9A21":{"name":"Student","cls":"9A","gender":"F","no":"21"},
-  "9A22":{"name":"Student","cls":"9A","gender":"F","no":"22"},
-  "9A23":{"name":"Student","cls":"9A","gender":"M","no":"23"},
-  "9A24":{"name":"Student","cls":"9A","gender":"F","no":"24"},
-  "9A25":{"name":"Student","cls":"9A","gender":"F","no":"25"},
-  "9A26":{"name":"Student","cls":"9A","gender":"F","no":"26"},
-  "9A27":{"name":"Student","cls":"9A","gender":"F","no":"27"},
-  "9B01":{"name":"Student","cls":"9B","gender":"M","no":"01"},
-  "9B02":{"name":"Student","cls":"9B","gender":"F","no":"02"},
-  "9B03":{"name":"Student","cls":"9B","gender":"F","no":"03"},
-  "9B04":{"name":"Student","cls":"9B","gender":"F","no":"04"},
-  "9B05":{"name":"Student","cls":"9B","gender":"F","no":"05"},
-  "9B06":{"name":"Student","cls":"9B","gender":"F","no":"06"},
-  "9B07":{"name":"Student","cls":"9B","gender":"M","no":"07"},
-  "9B08":{"name":"Student","cls":"9B","gender":"F","no":"08"},
-  "9B09":{"name":"Student","cls":"9B","gender":"F","no":"09"},
-  "9B10":{"name":"Student","cls":"9B","gender":"F","no":"10"},
-  "9B11":{"name":"Student","cls":"9B","gender":"F","no":"11"},
-  "9B12":{"name":"Student","cls":"9B","gender":"M","no":"12"},
-  "9B13":{"name":"Student","cls":"9B","gender":"F","no":"13"},
-  "9B14":{"name":"Student","cls":"9B","gender":"M","no":"14"},
-  "9B15":{"name":"Student","cls":"9B","gender":"F","no":"15"},
-  "9B16":{"name":"Student","cls":"9B","gender":"F","no":"16"},
-  "9B17":{"name":"Student","cls":"9B","gender":"F","no":"17"},
-  "9B18":{"name":"Student","cls":"9B","gender":"M","no":"18"},
-  "9B19":{"name":"Student","cls":"9B","gender":"M","no":"19"},
-  "9B20":{"name":"Student","cls":"9B","gender":"M","no":"20"},
-  "9B21":{"name":"Student","cls":"9B","gender":"M","no":"21"},
-  "9B22":{"name":"Student","cls":"9B","gender":"F","no":"22"},
-  "9B23":{"name":"Student","cls":"9B","gender":"F","no":"23"},
-  "9B24":{"name":"Student","cls":"9B","gender":"F","no":"24"},
-  "9B25":{"name":"Student","cls":"9B","gender":"F","no":"25"},
-  "9B26":{"name":"Student","cls":"9B","gender":"F","no":"26"},
-  "9B27":{"name":"Student","cls":"9B","gender":"F","no":"27"},
-  "9C01":{"name":"Student","cls":"9C","gender":"F","no":"01"},
-  "9C02":{"name":"Student","cls":"9C","gender":"M","no":"02"},
-  "9C03":{"name":"Student","cls":"9C","gender":"F","no":"03"},
-  "9C04":{"name":"Student","cls":"9C","gender":"F","no":"04"},
-  "9C05":{"name":"Student","cls":"9C","gender":"F","no":"05"},
-  "9C06":{"name":"Student","cls":"9C","gender":"F","no":"06"},
-  "9C07":{"name":"Student","cls":"9C","gender":"F","no":"07"},
-  "9C08":{"name":"Student","cls":"9C","gender":"F","no":"08"},
-  "9C09":{"name":"Student","cls":"9C","gender":"M","no":"09"},
-  "9C10":{"name":"Student","cls":"9C","gender":"M","no":"10"},
-  "9C11":{"name":"Student","cls":"9C","gender":"M","no":"11"},
-  "9C12":{"name":"Student","cls":"9C","gender":"M","no":"12"},
-  "9C13":{"name":"Student","cls":"9C","gender":"F","no":"13"},
-  "9C14":{"name":"Student","cls":"9C","gender":"F","no":"14"},
-  "9C15":{"name":"Student","cls":"9C","gender":"F","no":"15"},
-  "9C16":{"name":"Student","cls":"9C","gender":"F","no":"16"},
-  "9C17":{"name":"Student","cls":"9C","gender":"F","no":"17"},
-  "9C18":{"name":"Student","cls":"9C","gender":"F","no":"18"},
-  "9C19":{"name":"Student","cls":"9C","gender":"M","no":"19"},
-  "9C20":{"name":"Student","cls":"9C","gender":"M","no":"20"},
-  "9C21":{"name":"Student","cls":"9C","gender":"M","no":"21"},
-  "9C22":{"name":"Student","cls":"9C","gender":"F","no":"22"},
-  "9C23":{"name":"Student","cls":"9C","gender":"F","no":"23"},
-  "9C24":{"name":"Student","cls":"9C","gender":"F","no":"24"},
-  "9C25":{"name":"Student","cls":"9C","gender":"F","no":"25"},
-  "9C26":{"name":"Student","cls":"9C","gender":"F","no":"26"},
-  "9C27":{"name":"Student","cls":"9C","gender":"F","no":"27"},
-  "9D01":{"name":"Student","cls":"9D","gender":"F","no":"01"},
-  "9D02":{"name":"Student","cls":"9D","gender":"M","no":"02"},
-  "9D03":{"name":"Student","cls":"9D","gender":"F","no":"03"},
-  "9D04":{"name":"Student","cls":"9D","gender":"F","no":"04"},
-  "9D05":{"name":"Student","cls":"9D","gender":"F","no":"05"},
-  "9D06":{"name":"Student","cls":"9D","gender":"F","no":"06"},
-  "9D07":{"name":"Student","cls":"9D","gender":"F","no":"07"},
-  "9D08":{"name":"Student","cls":"9D","gender":"F","no":"08"},
-  "9D09":{"name":"Student","cls":"9D","gender":"F","no":"09"},
-  "9D10":{"name":"Student","cls":"9D","gender":"M","no":"10"},
-  "9D11":{"name":"Student","cls":"9D","gender":"F","no":"11"},
-  "9D12":{"name":"Student","cls":"9D","gender":"M","no":"12"},
-  "9D13":{"name":"Student","cls":"9D","gender":"M","no":"13"},
-  "9D14":{"name":"Student","cls":"9D","gender":"F","no":"14"},
-  "9D15":{"name":"Student","cls":"9D","gender":"F","no":"15"},
-  "9D16":{"name":"Student","cls":"9D","gender":"F","no":"16"},
-  "9D17":{"name":"Student","cls":"9D","gender":"F","no":"17"},
-  "9D18":{"name":"Student","cls":"9D","gender":"M","no":"18"},
-  "9D19":{"name":"Student","cls":"9D","gender":"M","no":"19"},
-  "9D20":{"name":"Student","cls":"9D","gender":"M","no":"20"},
-  "9D21":{"name":"Student","cls":"9D","gender":"F","no":"21"},
-  "9D22":{"name":"Student","cls":"9D","gender":"F","no":"22"},
-  "9D23":{"name":"Student","cls":"9D","gender":"F","no":"23"},
-  "9D24":{"name":"Student","cls":"9D","gender":"F","no":"24"},
-  "9D25":{"name":"Student","cls":"9D","gender":"F","no":"25"},
-  "9D26":{"name":"Student","cls":"9D","gender":"M","no":"26"},
-  "9D27":{"name":"Student","cls":"9D","gender":"F","no":"27"},
+// =============================================
+// STUDENT DATABASE
+// =============================================
+const S = {
+  "9A01":{"n":"Student","cls":"9A","g":"M","no":"01"},
+  "9A02":{"n":"Student","cls":"9A","g":"M","no":"02"},
+  "9A03":{"n":"Student","cls":"9A","g":"F","no":"03"},
+  "9A04":{"n":"Student","cls":"9A","g":"F","no":"04"},
+  "9A05":{"n":"Student","cls":"9A","g":"F","no":"05"},
+  "9A06":{"n":"Student","cls":"9A","g":"F","no":"06"},
+  "9A07":{"n":"Student","cls":"9A","g":"M","no":"07"},
+  "9A08":{"n":"Student","cls":"9A","g":"F","no":"08"},
+  "9A09":{"n":"Student","cls":"9A","g":"F","no":"09"},
+  "9A10":{"n":"Student","cls":"9A","g":"M","no":"10"},
+  "9A11":{"n":"Student","cls":"9A","g":"F","no":"11"},
+  "9A12":{"n":"Student","cls":"9A","g":"F","no":"12"},
+  "9A13":{"n":"Student","cls":"9A","g":"F","no":"13"},
+  "9A14":{"n":"Student","cls":"9A","g":"F","no":"14"},
+  "9A15":{"n":"Student","cls":"9A","g":"F","no":"15"},
+  "9A16":{"n":"Student","cls":"9A","g":"M","no":"16"},
+  "9A17":{"n":"Student","cls":"9A","g":"M","no":"17"},
+  "9A18":{"n":"Student","cls":"9A","g":"M","no":"18"},
+  "9A19":{"n":"Student","cls":"9A","g":"M","no":"19"},
+  "9A20":{"n":"Student","cls":"9A","g":"F","no":"20"},
+  "9A21":{"n":"Student","cls":"9A","g":"F","no":"21"},
+  "9A22":{"n":"Student","cls":"9A","g":"F","no":"22"},
+  "9A23":{"n":"Student","cls":"9A","g":"M","no":"23"},
+  "9A24":{"n":"Student","cls":"9A","g":"F","no":"24"},
+  "9A25":{"n":"Student","cls":"9A","g":"F","no":"25"},
+  "9A26":{"n":"Student","cls":"9A","g":"F","no":"26"},
+  "9A27":{"n":"Student","cls":"9A","g":"F","no":"27"},
+  "9B01":{"n":"Student","cls":"9B","g":"M","no":"01"},
+  "9B02":{"n":"Student","cls":"9B","g":"F","no":"02"},
+  "9B03":{"n":"Student","cls":"9B","g":"F","no":"03"},
+  "9B04":{"n":"Student","cls":"9B","g":"F","no":"04"},
+  "9B05":{"n":"Student","cls":"9B","g":"F","no":"05"},
+  "9B06":{"n":"Student","cls":"9B","g":"F","no":"06"},
+  "9B07":{"n":"Student","cls":"9B","g":"M","no":"07"},
+  "9B08":{"n":"Student","cls":"9B","g":"F","no":"08"},
+  "9B09":{"n":"Student","cls":"9B","g":"F","no":"09"},
+  "9B10":{"n":"Student","cls":"9B","g":"F","no":"10"},
+  "9B11":{"n":"Student","cls":"9B","g":"F","no":"11"},
+  "9B12":{"n":"Student","cls":"9B","g":"M","no":"12"},
+  "9B13":{"n":"Student","cls":"9B","g":"F","no":"13"},
+  "9B14":{"n":"Student","cls":"9B","g":"M","no":"14"},
+  "9B15":{"n":"Student","cls":"9B","g":"F","no":"15"},
+  "9B16":{"n":"Student","cls":"9B","g":"F","no":"16"},
+  "9B17":{"n":"Student","cls":"9B","g":"F","no":"17"},
+  "9B18":{"n":"Student","cls":"9B","g":"M","no":"18"},
+  "9B19":{"n":"Student","cls":"9B","g":"M","no":"19"},
+  "9B20":{"n":"Student","cls":"9B","g":"M","no":"20"},
+  "9B21":{"n":"Student","cls":"9B","g":"M","no":"21"},
+  "9B22":{"n":"Student","cls":"9B","g":"F","no":"22"},
+  "9B23":{"n":"Student","cls":"9B","g":"F","no":"23"},
+  "9B24":{"n":"Student","cls":"9B","g":"F","no":"24"},
+  "9B25":{"n":"Student","cls":"9B","g":"F","no":"25"},
+  "9B26":{"n":"Student","cls":"9B","g":"F","no":"26"},
+  "9B27":{"n":"Student","cls":"9B","g":"F","no":"27"},
+  "9C01":{"n":"Student","cls":"9C","g":"F","no":"01"},
+  "9C02":{"n":"Student","cls":"9C","g":"M","no":"02"},
+  "9C03":{"n":"Student","cls":"9C","g":"F","no":"03"},
+  "9C04":{"n":"Student","cls":"9C","g":"F","no":"04"},
+  "9C05":{"n":"Student","cls":"9C","g":"F","no":"05"},
+  "9C06":{"n":"Student","cls":"9C","g":"F","no":"06"},
+  "9C07":{"n":"Student","cls":"9C","g":"F","no":"07"},
+  "9C08":{"n":"Student","cls":"9C","g":"F","no":"08"},
+  "9C09":{"n":"Student","cls":"9C","g":"M","no":"09"},
+  "9C10":{"n":"Student","cls":"9C","g":"M","no":"10"},
+  "9C11":{"n":"Student","cls":"9C","g":"M","no":"11"},
+  "9C12":{"n":"Student","cls":"9C","g":"M","no":"12"},
+  "9C13":{"n":"Student","cls":"9C","g":"F","no":"13"},
+  "9C14":{"n":"Student","cls":"9C","g":"F","no":"14"},
+  "9C15":{"n":"Student","cls":"9C","g":"F","no":"15"},
+  "9C16":{"n":"Student","cls":"9C","g":"F","no":"16"},
+  "9C17":{"n":"Student","cls":"9C","g":"F","no":"17"},
+  "9C18":{"n":"Student","cls":"9C","g":"F","no":"18"},
+  "9C19":{"n":"Student","cls":"9C","g":"M","no":"19"},
+  "9C20":{"n":"Student","cls":"9C","g":"M","no":"20"},
+  "9C21":{"n":"Student","cls":"9C","g":"M","no":"21"},
+  "9C22":{"n":"Student","cls":"9C","g":"F","no":"22"},
+  "9C23":{"n":"Student","cls":"9C","g":"F","no":"23"},
+  "9C24":{"n":"Student","cls":"9C","g":"F","no":"24"},
+  "9C25":{"n":"Student","cls":"9C","g":"F","no":"25"},
+  "9C26":{"n":"Student","cls":"9C","g":"F","no":"26"},
+  "9C27":{"n":"Student","cls":"9C","g":"F","no":"27"},
+  "9D01":{"n":"Student","cls":"9D","g":"F","no":"01"},
+  "9D02":{"n":"Student","cls":"9D","g":"M","no":"02"},
+  "9D03":{"n":"Student","cls":"9D","g":"F","no":"03"},
+  "9D04":{"n":"Student","cls":"9D","g":"F","no":"04"},
+  "9D05":{"n":"Student","cls":"9D","g":"F","no":"05"},
+  "9D06":{"n":"Student","cls":"9D","g":"F","no":"06"},
+  "9D07":{"n":"Student","cls":"9D","g":"F","no":"07"},
+  "9D08":{"n":"Student","cls":"9D","g":"F","no":"08"},
+  "9D09":{"n":"Student","cls":"9D","g":"F","no":"09"},
+  "9D10":{"n":"Student","cls":"9D","g":"M","no":"10"},
+  "9D11":{"n":"Student","cls":"9D","g":"F","no":"11"},
+  "9D12":{"n":"Student","cls":"9D","g":"M","no":"12"},
+  "9D13":{"n":"Student","cls":"9D","g":"M","no":"13"},
+  "9D14":{"n":"Student","cls":"9D","g":"F","no":"14"},
+  "9D15":{"n":"Student","cls":"9D","g":"F","no":"15"},
+  "9D16":{"n":"Student","cls":"9D","g":"F","no":"16"},
+  "9D17":{"n":"Student","cls":"9D","g":"F","no":"17"},
+  "9D18":{"n":"Student","cls":"9D","g":"M","no":"18"},
+  "9D19":{"n":"Student","cls":"9D","g":"M","no":"19"},
+  "9D20":{"n":"Student","cls":"9D","g":"M","no":"20"},
+  "9D21":{"n":"Student","cls":"9D","g":"F","no":"21"},
+  "9D22":{"n":"Student","cls":"9D","g":"F","no":"22"},
+  "9D23":{"n":"Student","cls":"9D","g":"F","no":"23"},
+  "9D24":{"n":"Student","cls":"9D","g":"F","no":"24"},
+  "9D25":{"n":"Student","cls":"9D","g":"F","no":"25"},
+  "9D26":{"n":"Student","cls":"9D","g":"M","no":"26"},
+  "9D27":{"n":"Student","cls":"9D","g":"F","no":"27"},
 };
 
-const ROWS = {
-  P1:{side:"left", seats:["9A01","9A02","9A07","9A10","9A16","9A17","9A18","9A19","9A23","9B01","9B07","9B12","9B14","9B18","9B19","9B20","9B21"]},
-  P2:{side:"left", seats:["9A03","9A04","9A05","9A06","9A08","9A09","9A11","9A12","9A13","9A14","9A15","9A20","9A21","9A22","9A24","9A25","9A26"]},
-  P3:{side:"left", seats:["9B25","9B26","9B27","9C01","9C03","9C04","9C05","9C06","9C07","9C08","9C13","9C14","9C15","9C16","9C17","9C18","9C22"]},
-  P4:{side:"left", seats:["9D17","9D21","9D22"], offset:true},
-  P5:{side:"right", seats:["9C02","9C09","9C10","9C11","9C12","9C19","9C20","9C21","9D02","9D10","9D12","9D13","9D18","9D19","9D20","9D26"]},
-  P6:{side:"right", seats:["9A27","9B02","9B03","9B04","9B05","9B06","9B08","9B09","9B10","9B11","9B13","9B15","9B16","9B17","9B22","9B23","9B24"]},
-  P7:{side:"right", seats:["9C23","9C24","9C25","9C26","9C27","9D01","9D03","9D04","9D05","9D06","9D07","9D08","9D09","9D11","9D14","9D15","9D16"]},
-  P8:{side:"right", seats:["9D23","9D24","9D25","9D27"], offset:true},
-};
+// =============================================
+// SEATING ROWS
+// Left half: seats fill left→right, Pendamping at RIGHT edge (aisle side)
+// Right half: Pendamping at LEFT edge (aisle side), seats fill left→right
+// Offset rows (P4/P8): seats hug the aisle (Pendamping) side
+// =============================================
+const ROWS_LEFT = [
+  { pend:"P1", type:"male",   seats:["9A01","9A02","9A07","9A10","9A16","9A17","9A18","9A19","9A23","9B01","9B07","9B12","9B14","9B18","9B19","9B20","9B21"] },
+  { pend:"P2", type:"female", seats:["9A03","9A04","9A05","9A06","9A08","9A09","9A11","9A12","9A13","9A14","9A15","9A20","9A21","9A22","9A24","9A25","9A26"] },
+  { pend:"P3", type:"female", seats:["9B25","9B26","9B27","9C01","9C03","9C04","9C05","9C06","9C07","9C08","9C13","9C14","9C15","9C16","9C17","9C18","9C22"] },
+  // P4 offset: seats pushed RIGHT (toward aisle), spacer on left
+  { pend:"P4", type:"female", seats:["9D17","9D21","9D22"], offsetLeft:true },
+];
+const ROWS_RIGHT = [
+  { pend:"P5", type:"male",   seats:["9C02","9C09","9C10","9C11","9C12","9C19","9C20","9C21","9D02","9D10","9D12","9D13","9D18","9D19","9D20","9D26"] },
+  { pend:"P6", type:"female", seats:["9A27","9B02","9B03","9B04","9B05","9B06","9B08","9B09","9B10","9B11","9B13","9B15","9B16","9B17","9B22","9B23","9B24"] },
+  { pend:"P7", type:"female", seats:["9C23","9C24","9C25","9C26","9C27","9D01","9D03","9D04","9D05","9D06","9D07","9D08","9D09","9D11","9D14","9D15","9D16"] },
+  // P8 offset: seats start at LEFT (right after Pendamping), spacer on right
+  { pend:"P8", type:"female", seats:["9D23","9D24","9D25","9D27"], offsetRight:true },
+];
 
-// Build reverse seat lookup
-const SEAT_LOOKUP = {};
-for (const [row, data] of Object.entries(ROWS)) {
-  data.seats.forEach((code, idx) => {
-    SEAT_LOOKUP[code] = { row, pos: idx + 1, side: data.side, offset: data.offset || false };
+// Build reverse lookup
+const STU_SEAT = {};
+[...ROWS_LEFT, ...ROWS_RIGHT].forEach(r => {
+  r.seats.forEach((code, i) => {
+    STU_SEAT[code] = { pend: r.pend, pos: i+1 };
   });
+});
+
+function parentInfo(code) {
+  const cls = code.slice(0,2);
+  const num = parseInt(code.slice(2));
+  let col, row;
+  if (num <= 10)      { col = 1; row = num; }
+  else if (num <= 20) { col = 2; row = num - 10; }
+  else                { col = 3; row = num - 20; }
+  return { cls, col, row, desc: `Blok ${cls} · Kolom ${col} · Baris ${row}` };
 }
 
-// ===== STATE =====
-let state = { cls: null, gender: null };
-let currentScreen = 'screen-welcome';
+// =============================================
+// NAVIGATION
+// =============================================
+const SLIDES = ['slide-0','slide-1','slide-2','slide-3','slide-result'];
+let curSlide = 0;
 
-// ===== NAVIGATION =====
-function goTo(id) {
-  const cur = document.getElementById(currentScreen);
-  const next = document.getElementById(id);
-  cur.classList.add('exit');
+function goSlide(idx) {
+  document.getElementById('slider-track').style.transform = `translateX(-${idx * 100}vw)`;
+  curSlide = idx;
   setTimeout(() => {
-    cur.classList.remove('active', 'exit');
-    next.classList.add('active');
-    next.scrollTop = 0;
-    currentScreen = id;
-  }, 320);
+    const el = document.getElementById(SLIDES[idx]);
+    if (el) el.scrollTop = 0;
+  }, 420);
 }
 
-function selectClass(cls) {
-  state.cls = cls;
-  goTo('screen-gender');
+let sel = { cls: null, gender: null };
+
+function pickClass(cls) { sel.cls = cls; goSlide(2); }
+
+function pickGender(g) {
+  sel.gender = g;
+  buildNames();
+  goSlide(3);
 }
 
-function selectGender(gender) {
-  state.gender = gender;
-  buildNameList();
-  goTo('screen-names');
-}
-
-// ===== NAME LIST =====
-function buildNameList() {
-  const { cls, gender } = state;
-  const title = document.getElementById('nameListTitle');
-  const gLabel = gender === 'M' ? 'Putra' : 'Putri';
-  title.textContent = `Kelas ${cls} — ${gLabel}`;
-
+function buildNames() {
+  const { cls, gender } = sel;
+  document.getElementById('nameTtl').textContent =
+    `Kelas ${cls} — ${gender==='M'?'Putra':'Putri'}`;
   const list = document.getElementById('nameList');
   list.innerHTML = '';
-
-  const filtered = Object.entries(STUDENTS)
-    .filter(([, s]) => s.cls === cls && s.gender === gender)
-    .sort((a, b) => a[0].localeCompare(b[0]));
-
-  filtered.forEach(([code, s]) => {
-    const item = document.createElement('div');
-    item.className = 'name-item';
-    item.innerHTML = `
-      <span class="name-item-no">No. ${s.no}</span>
-      <span class="name-item-name">${s.name === 'Student' ? '— Siswa No. ' + s.no + ' —' : s.name}</span>
-      <span class="name-item-arrow">›</span>
-    `;
-    item.onclick = () => showResult(code);
-    list.appendChild(item);
-  });
+  Object.entries(S)
+    .filter(([,s]) => s.cls===cls && s.g===gender)
+    .sort((a,b) => a[0].localeCompare(b[0]))
+    .forEach(([code, s]) => {
+      const el = document.createElement('div');
+      el.className = 'name-item';
+      const disp = s.n==='Student' ? `— Siswa No. ${s.no} —` : s.n;
+      el.innerHTML = `<span class="ni-no">No.&nbsp;${s.no}</span>
+        <span class="ni-name">${disp}</span>
+        <span class="ni-arr">›</span>`;
+      el.onclick = () => showResult(code);
+      list.appendChild(el);
+    });
 }
 
-// ===== RESULT =====
 function showResult(code) {
-  const s = STUDENTS[code];
-  const seat = SEAT_LOOKUP[code];
-  const gLabel = s.gender === 'M' ? 'Putra' : 'Putri';
-  const sideLabel = seat.side === 'left' ? 'Sisi kiri (Putri)' : 'Sisi kanan (Putra)';
+  const s    = S[code];
+  const seat = STU_SEAT[code];
+  const par  = parentInfo(code);
+  const gLbl = s.g==='M' ? 'Putra' : 'Putri';
 
-  document.getElementById('resultName').textContent =
-    s.name === 'Student' ? `Siswa ${code}` : s.name;
-  document.getElementById('resultInfo').textContent =
-    `Kelas ${s.cls} · ${gLabel} · No. Absen ${s.no}`;
-  document.getElementById('resultRow').textContent = seat.row;
-  document.getElementById('resultPos').textContent =
-    `Kursi ke-${seat.pos} dari kiri · ${sideLabel}`;
+  document.getElementById('rcName').textContent = s.n==='Student' ? `Siswa ${code}` : s.n;
+  document.getElementById('rcInfo').textContent = `Kelas ${s.cls} · ${gLbl} · No. Absen ${s.no}`;
+  document.getElementById('pbCode').textContent = code;
+  document.getElementById('pbDesc').textContent = par.desc;
+  document.getElementById('srVal').textContent  = `Guru ${seat.pend} · Kursi ke-${seat.pos}`;
 
   buildChart(code);
-  goTo('screen-result');
+  goSlide(4);
 
-  // After transition, scroll to chart and focus seat
   setTimeout(() => {
-    const el = document.querySelector('.seat.found');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-    }
+    const found = document.querySelector('.ot-pair.ot-found');
+    if (found) found.scrollIntoView({ behavior:'smooth', block:'center', inline:'center' });
   }, 600);
 }
 
-// ===== CHART BUILDER =====
-function buildChart(highlightCode) {
-  const leftEl = document.getElementById('chartLeft');
-  const rightEl = document.getElementById('chartRight');
-  leftEl.innerHTML = '';
-  rightEl.innerHTML = '';
+// =============================================
+// CHART BUILDER
+// =============================================
+function buildChart(hlCode) {
 
-  // decorative bars
-  function makeBars(el) {
-    el.innerHTML += `<div class="chart-section-bar bar-vip">VIP</div>`;
-    el.innerHTML += `<div class="chart-section-bar bar-tamu">Tamu Undangan</div>`;
-    el.innerHTML += `<div class="chart-section-bar bar-guru">Guru</div>`;
-  }
-  makeBars(leftEl);
-  makeBars(rightEl);
+  function renderRows(rows, side) {
+    let h = `
+      <div class="bar bar-vip">VIP</div>
+      <div class="bar bar-guests">Invited Guests</div>
+      <div class="bar bar-teach">Teachers</div>
+      <div class="bar bar-stu">Students</div>`;
 
-  // section header
-  leftEl.innerHTML += `<div style="font-size:10px;text-align:center;color:var(--putri);letter-spacing:1px;padding:4px 0;font-weight:700;">PUTRI</div>`;
-  rightEl.innerHTML += `<div style="font-size:10px;text-align:center;color:var(--putra);letter-spacing:1px;padding:4px 0;font-weight:700;">PUTRA</div>`;
+    rows.forEach(r => {
+      const gc = r.type==='male' ? 'male' : 'female';
+      h += `<div class="stu-row">`;
 
-  const rowOrder = ['P1','P2','P3','P4','P5','P6','P7','P8'];
-  for (const rowId of rowOrder) {
-    const rowData = ROWS[rowId];
-    const targetEl = rowData.side === 'left' ? leftEl : rightEl;
-    const rowDiv = document.createElement('div');
-    rowDiv.className = 'chart-row';
-
-    const lbl = document.createElement('span');
-    lbl.className = 'row-label';
-    lbl.textContent = rowId;
-    rowDiv.appendChild(lbl);
-
-    const wrap = document.createElement('div');
-    wrap.className = 'seats-wrap';
-
-    // offset empty spaces (P4 and P8 start from right-ish)
-    if (rowData.offset) {
-      const spacer = document.createElement('div');
-      spacer.className = 'seats-spacer';
-      wrap.appendChild(spacer);
-    }
-
-    rowData.seats.forEach((code, idx) => {
-      const s = STUDENTS[code];
-      const seat = document.createElement('div');
-      seat.className = 'seat ' + (s.gender === 'M' ? 'male' : 'female');
-      seat.id = 'seat-' + code;
-      // show just number within row
-      seat.textContent = (idx + 1).toString();
-      seat.title = `${code} · ${s.name === 'Student' ? 'Siswa' : s.name}`;
-      if (code === highlightCode) {
-        seat.classList.add('found');
+      if (side === 'left') {
+        // seats first, then Pendamping on the right (aisle side)
+        h += `<div class="seats-wrap">`;
+        if (r.offsetLeft) h += `<div class="seats-spacer"></div>`; // push seats right
+        r.seats.forEach(code => {
+          const hl = code===hlCode ? ' stu-hl' : '';
+          h += `<div class="seat ${gc}${hl}" title="${code}">${code}</div>`;
+        });
+        h += `</div>`;
+        h += `<div class="pend-cell">${r.pend}</div>`;
+      } else {
+        // Pendamping first (aisle side), then seats
+        h += `<div class="pend-cell">${r.pend}</div>`;
+        h += `<div class="seats-wrap">`;
+        r.seats.forEach(code => {
+          const hl = code===hlCode ? ' stu-hl' : '';
+          h += `<div class="seat ${gc}${hl}" title="${code}">${code}</div>`;
+        });
+        if (r.offsetRight) h += `<div class="seats-spacer"></div>`; // push seats left
+        h += `</div>`;
       }
-      wrap.appendChild(seat);
+
+      h += `</div>`;
     });
 
-    rowDiv.appendChild(wrap);
-    targetEl.appendChild(rowDiv);
+    return h;
   }
 
-  // Arrow indicator
-  const seat = SEAT_LOOKUP[highlightCode];
-  const arrowEl = document.getElementById('foundArrow');
-  arrowEl.textContent = `▼ ${highlightCode} ada di baris ${seat.row}, kursi ke-${seat.pos}`;
+  function renderOT(classes) {
+    let h = `<div class="ot-classes">`;
+    classes.forEach(cls => {
+      h += `<div class="ot-block">
+        <div class="ot-cls-lbl">${cls}</div>
+        <div class="ot-cols">`;
+      [[1,10],[11,20],[21,27]].forEach(([a,b]) => {
+        h += `<div class="ot-col">`;
+        for (let n=a; n<=b; n++) {
+          const code = cls + String(n).padStart(2,'0');
+          const isFound = code===hlCode;
+          h += `<div class="ot-pair${isFound?' ot-found':''}" id="otp-${code}">
+            <div class="ot-seat">${code}</div>
+            <div class="ot-seat">${code}</div>
+          </div>`;
+        }
+        h += `</div>`;
+      });
+      h += `</div></div>`;
+    });
+    h += `</div>`;
+    return h;
+  }
+
+  document.getElementById('chartInner').innerHTML = `
+    <div class="chart-stage">— PANGGUNG —</div>
+    <div class="chart-body">
+
+      <div class="chart-half">
+        ${renderRows(ROWS_LEFT, 'left')}
+        <div class="ot-sep">Orang Tua</div>
+        ${renderOT(['9A','9B'])}
+      </div>
+
+      <div class="chart-aisle">
+        <div class="aisle-label">AISLE</div>
+      </div>
+
+      <div class="chart-half">
+        ${renderRows(ROWS_RIGHT, 'right')}
+        <div class="ot-sep">Orang Tua</div>
+        ${renderOT(['9C','9D'])}
+      </div>
+
+    </div>`;
+
+  document.getElementById('chartLegend').innerHTML = `
+    <div class="leg-i"><div class="leg-d" style="background:var(--male-bg);border:1px solid var(--male-bd)"></div>Siswa putra</div>
+    <div class="leg-i"><div class="leg-d" style="background:var(--fem-bg);border:1px solid var(--fem-bd)"></div>Siswa putri</div>
+    <div class="leg-i"><div class="leg-d" style="background:var(--pend-bg);border:1px solid var(--pend-bd)"></div>Guru Pendamping (P1–P8)</div>
+    <div class="leg-i"><div class="leg-d" style="background:#3a2800;border:1px solid var(--gold)"></div>Kursi siswa Anda ✦</div>
+    <div class="leg-i"><div class="leg-d" style="background:rgba(0,212,255,.28);border:1px solid var(--cyan)"></div>Kursi Anda (orang tua) ✦</div>`;
 }
 
-// ===== SEARCH =====
-const searchInput = document.getElementById('searchInput');
-const searchResults = document.getElementById('searchResults');
+// =============================================
+// SEARCH
+// =============================================
+const inp = document.getElementById('searchInput');
+const res = document.getElementById('searchResults');
 
-searchInput.addEventListener('input', () => {
-  const q = searchInput.value.trim().toLowerCase();
-  if (q.length < 2) { searchResults.classList.remove('visible'); return; }
-
-  const matches = Object.entries(STUDENTS).filter(([code, s]) => {
-    const nameMatch = s.name.toLowerCase().includes(q);
-    const codeMatch = code.toLowerCase().includes(q);
-    const noMatch = s.no.includes(q);
-    return nameMatch || codeMatch || noMatch;
-  }).slice(0, 8);
-
-  if (matches.length === 0) {
-    searchResults.innerHTML = `<div class="no-results">Tidak ditemukan. Coba pilih kelas di bawah.</div>`;
-    searchResults.classList.add('visible');
-    return;
+inp.addEventListener('input', () => {
+  const q = inp.value.trim().toLowerCase();
+  if (q.length < 2) { res.classList.remove('on'); return; }
+  const hits = Object.entries(S).filter(([code, s]) =>
+    s.n.toLowerCase().includes(q) || code.toLowerCase().includes(q) || s.no.includes(q)
+  ).slice(0, 8);
+  if (!hits.length) {
+    res.innerHTML = `<div class="s-none">Tidak ditemukan — coba telusuri lewat kelas.</div>`;
+    res.classList.add('on'); return;
   }
-
-  searchResults.innerHTML = matches.map(([code, s]) => {
-    const gLabel = s.gender === 'M' ? 'Putra' : 'Putri';
-    const displayName = s.name === 'Student' ? `Siswa No. ${s.no}` : s.name;
-    return `
-      <div class="search-result-item" onclick="showResult('${code}')">
-        <span class="result-code">${code}</span>
-        <div>
-          <div class="result-name">${displayName}</div>
-          <div class="result-class">Kelas ${s.cls} · ${gLabel}</div>
-        </div>
-      </div>`;
+  res.innerHTML = hits.map(([code, s]) => {
+    const nm = s.n==='Student' ? `Siswa No. ${s.no}` : s.n;
+    const g  = s.g==='M' ? 'Putra' : 'Putri';
+    return `<div class="s-item" onclick="showResult('${code}')">
+      <span class="s-code">${code}</span>
+      <div><div class="s-name">${nm}</div>
+      <div class="s-cls">Kelas ${s.cls} · ${g}</div></div>
+    </div>`;
   }).join('');
-  searchResults.classList.add('visible');
+  res.classList.add('on');
 });
 
-// Close search on outside click
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('.search-wrap') && !e.target.closest('.search-results')) {
-    searchResults.classList.remove('visible');
-  }
+document.addEventListener('click', e => {
+  if (!e.target.closest('#searchInput') && !e.target.closest('#searchResults'))
+    res.classList.remove('on');
 });
 </script>
 </body>
