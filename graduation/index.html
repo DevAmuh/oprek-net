@@ -212,10 +212,11 @@ html, body {
 .chart-inner { min-width: 900px; padding: 14px 12px; }
 
 .chart-stage {
+  grid-column: 1 / -1;
   text-align: center; padding: 9px 0;
   background: linear-gradient(90deg, transparent 5%, var(--green) 20%, var(--green-lt) 50%, var(--green) 80%, transparent 95%);
   color: var(--gold-lt); font-weight: 800; letter-spacing: 4px; font-size: 11px;
-  text-transform: uppercase; border-radius: 5px; margin-bottom: 10px;
+  text-transform: uppercase; border-radius: 5px; margin-bottom: 20px;
   font-family: 'Cormorant Garamond', serif;
 }
 
@@ -226,6 +227,7 @@ html, body {
   gap: 0;
   align-items: start;
 }
+
 
 /* Aisle column — contains all 8 Pendamping cells stacked */
 .chart-aisle {
@@ -241,13 +243,15 @@ html, body {
 }
 
 .chart-half { display: flex; flex-direction: column; gap: 2px; }
+.chart-half:first-of-type { grid-column: 1; }
+.chart-half:last-of-type  { grid-column: 3; }
+.chart-aisle               { grid-column: 2; }
 
 /* section bars */
 .bar { border-radius: 3px; padding: 4px 8px; text-align: center; font-size: 9px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 1px; }
 .bar-vip    { background: #2a3d60; color: #90c0ff; }
 .bar-guests { background: #5a2090; color: #d0a0ff; }
 .bar-teach  { background: #1a5c2a; color: #80e090; }
-.bar-stu    { background: #2a2010; color: var(--gold); font-size: 8px; }
 
 /* student row */
 .stu-row { display: flex; align-items: center; gap: 2px; padding: 1px 0; }
@@ -291,6 +295,7 @@ html, body {
    ORANG TUA
 ============================================= */
 .ot-sep { border-top: 1px dashed #1e2e22; margin: 8px 0 6px; font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; text-align: center; padding-top: 6px; }
+.stu-section-lbl { border-top: 1px dashed #1e2e22; margin: 8px 0 2px; font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; text-align: center; padding-top: 6px; }
 .ot-classes { display: flex; gap: 5px; width: 100%; }
 .ot-block   { flex: 1; min-width: 0; }
 .ot-cls-lbl { font-size: 8px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: #5090b0; text-align: center; padding: 3px 0; margin-bottom: 3px; border: 1px solid #1a3a5c; border-radius: 3px; background: #060f18; }
@@ -465,114 +470,114 @@ html, body {
 // STUDENT DATABASE
 // =============================================
 const S = {
-  "9A01":{"n":"Student","cls":"9A","g":"M","no":"01"},
-  "9A02":{"n":"Student","cls":"9A","g":"M","no":"02"},
-  "9A03":{"n":"Student","cls":"9A","g":"F","no":"03"},
-  "9A04":{"n":"Student","cls":"9A","g":"F","no":"04"},
-  "9A05":{"n":"Student","cls":"9A","g":"F","no":"05"},
-  "9A06":{"n":"Student","cls":"9A","g":"F","no":"06"},
-  "9A07":{"n":"Student","cls":"9A","g":"M","no":"07"},
-  "9A08":{"n":"Student","cls":"9A","g":"F","no":"08"},
-  "9A09":{"n":"Student","cls":"9A","g":"F","no":"09"},
-  "9A10":{"n":"Student","cls":"9A","g":"M","no":"10"},
-  "9A11":{"n":"Student","cls":"9A","g":"F","no":"11"},
-  "9A12":{"n":"Student","cls":"9A","g":"F","no":"12"},
-  "9A13":{"n":"Student","cls":"9A","g":"F","no":"13"},
-  "9A14":{"n":"Student","cls":"9A","g":"F","no":"14"},
-  "9A15":{"n":"Student","cls":"9A","g":"F","no":"15"},
-  "9A16":{"n":"Student","cls":"9A","g":"M","no":"16"},
-  "9A17":{"n":"Student","cls":"9A","g":"M","no":"17"},
-  "9A18":{"n":"Student","cls":"9A","g":"M","no":"18"},
-  "9A19":{"n":"Student","cls":"9A","g":"M","no":"19"},
-  "9A20":{"n":"Student","cls":"9A","g":"F","no":"20"},
-  "9A21":{"n":"Student","cls":"9A","g":"F","no":"21"},
-  "9A22":{"n":"Student","cls":"9A","g":"F","no":"22"},
-  "9A23":{"n":"Student","cls":"9A","g":"M","no":"23"},
-  "9A24":{"n":"Student","cls":"9A","g":"F","no":"24"},
-  "9A25":{"n":"Student","cls":"9A","g":"F","no":"25"},
-  "9A26":{"n":"Student","cls":"9A","g":"F","no":"26"},
-  "9A27":{"n":"Student","cls":"9A","g":"F","no":"27"},
-  "9B01":{"n":"Student","cls":"9B","g":"M","no":"01"},
-  "9B02":{"n":"Student","cls":"9B","g":"F","no":"02"},
-  "9B03":{"n":"Student","cls":"9B","g":"F","no":"03"},
-  "9B04":{"n":"Student","cls":"9B","g":"F","no":"04"},
-  "9B05":{"n":"Student","cls":"9B","g":"F","no":"05"},
-  "9B06":{"n":"Student","cls":"9B","g":"F","no":"06"},
-  "9B07":{"n":"Student","cls":"9B","g":"M","no":"07"},
-  "9B08":{"n":"Student","cls":"9B","g":"F","no":"08"},
-  "9B09":{"n":"Student","cls":"9B","g":"F","no":"09"},
-  "9B10":{"n":"Student","cls":"9B","g":"F","no":"10"},
-  "9B11":{"n":"Student","cls":"9B","g":"F","no":"11"},
-  "9B12":{"n":"Student","cls":"9B","g":"M","no":"12"},
-  "9B13":{"n":"Student","cls":"9B","g":"F","no":"13"},
-  "9B14":{"n":"Student","cls":"9B","g":"M","no":"14"},
-  "9B15":{"n":"Student","cls":"9B","g":"F","no":"15"},
-  "9B16":{"n":"Student","cls":"9B","g":"F","no":"16"},
-  "9B17":{"n":"Student","cls":"9B","g":"F","no":"17"},
-  "9B18":{"n":"Student","cls":"9B","g":"M","no":"18"},
-  "9B19":{"n":"Student","cls":"9B","g":"M","no":"19"},
-  "9B20":{"n":"Student","cls":"9B","g":"M","no":"20"},
-  "9B21":{"n":"Student","cls":"9B","g":"M","no":"21"},
-  "9B22":{"n":"Student","cls":"9B","g":"F","no":"22"},
-  "9B23":{"n":"Student","cls":"9B","g":"F","no":"23"},
-  "9B24":{"n":"Student","cls":"9B","g":"F","no":"24"},
-  "9B25":{"n":"Student","cls":"9B","g":"F","no":"25"},
-  "9B26":{"n":"Student","cls":"9B","g":"F","no":"26"},
-  "9B27":{"n":"Student","cls":"9B","g":"F","no":"27"},
-  "9C01":{"n":"Student","cls":"9C","g":"F","no":"01"},
-  "9C02":{"n":"Student","cls":"9C","g":"M","no":"02"},
-  "9C03":{"n":"Student","cls":"9C","g":"F","no":"03"},
-  "9C04":{"n":"Student","cls":"9C","g":"F","no":"04"},
-  "9C05":{"n":"Student","cls":"9C","g":"F","no":"05"},
-  "9C06":{"n":"Student","cls":"9C","g":"F","no":"06"},
-  "9C07":{"n":"Student","cls":"9C","g":"F","no":"07"},
-  "9C08":{"n":"Student","cls":"9C","g":"F","no":"08"},
-  "9C09":{"n":"Student","cls":"9C","g":"M","no":"09"},
-  "9C10":{"n":"Student","cls":"9C","g":"M","no":"10"},
-  "9C11":{"n":"Student","cls":"9C","g":"M","no":"11"},
-  "9C12":{"n":"Student","cls":"9C","g":"M","no":"12"},
-  "9C13":{"n":"Student","cls":"9C","g":"F","no":"13"},
-  "9C14":{"n":"Student","cls":"9C","g":"F","no":"14"},
-  "9C15":{"n":"Student","cls":"9C","g":"F","no":"15"},
-  "9C16":{"n":"Student","cls":"9C","g":"F","no":"16"},
-  "9C17":{"n":"Student","cls":"9C","g":"F","no":"17"},
-  "9C18":{"n":"Student","cls":"9C","g":"F","no":"18"},
-  "9C19":{"n":"Student","cls":"9C","g":"M","no":"19"},
-  "9C20":{"n":"Student","cls":"9C","g":"M","no":"20"},
-  "9C21":{"n":"Student","cls":"9C","g":"M","no":"21"},
-  "9C22":{"n":"Student","cls":"9C","g":"F","no":"22"},
-  "9C23":{"n":"Student","cls":"9C","g":"F","no":"23"},
-  "9C24":{"n":"Student","cls":"9C","g":"F","no":"24"},
-  "9C25":{"n":"Student","cls":"9C","g":"F","no":"25"},
-  "9C26":{"n":"Student","cls":"9C","g":"F","no":"26"},
-  "9C27":{"n":"Student","cls":"9C","g":"F","no":"27"},
-  "9D01":{"n":"Student","cls":"9D","g":"F","no":"01"},
-  "9D02":{"n":"Student","cls":"9D","g":"M","no":"02"},
-  "9D03":{"n":"Student","cls":"9D","g":"F","no":"03"},
-  "9D04":{"n":"Student","cls":"9D","g":"F","no":"04"},
-  "9D05":{"n":"Student","cls":"9D","g":"F","no":"05"},
-  "9D06":{"n":"Student","cls":"9D","g":"F","no":"06"},
-  "9D07":{"n":"Student","cls":"9D","g":"F","no":"07"},
-  "9D08":{"n":"Student","cls":"9D","g":"F","no":"08"},
-  "9D09":{"n":"Student","cls":"9D","g":"F","no":"09"},
-  "9D10":{"n":"Student","cls":"9D","g":"M","no":"10"},
-  "9D11":{"n":"Student","cls":"9D","g":"F","no":"11"},
-  "9D12":{"n":"Student","cls":"9D","g":"M","no":"12"},
-  "9D13":{"n":"Student","cls":"9D","g":"M","no":"13"},
-  "9D14":{"n":"Student","cls":"9D","g":"F","no":"14"},
-  "9D15":{"n":"Student","cls":"9D","g":"F","no":"15"},
-  "9D16":{"n":"Student","cls":"9D","g":"F","no":"16"},
-  "9D17":{"n":"Student","cls":"9D","g":"F","no":"17"},
-  "9D18":{"n":"Student","cls":"9D","g":"M","no":"18"},
-  "9D19":{"n":"Student","cls":"9D","g":"M","no":"19"},
-  "9D20":{"n":"Student","cls":"9D","g":"M","no":"20"},
-  "9D21":{"n":"Student","cls":"9D","g":"F","no":"21"},
-  "9D22":{"n":"Student","cls":"9D","g":"F","no":"22"},
-  "9D23":{"n":"Student","cls":"9D","g":"F","no":"23"},
-  "9D24":{"n":"Student","cls":"9D","g":"F","no":"24"},
-  "9D25":{"n":"Student","cls":"9D","g":"F","no":"25"},
-  "9D26":{"n":"Student","cls":"9D","g":"M","no":"26"},
-  "9D27":{"n":"Student","cls":"9D","g":"F","no":"27"},
+  "9A01":{"n":"Abimanyu Putra Priandana","cls":"9A","g":"M","no":"01"},
+  "9A02":{"n":"Alfin Aqsani","cls":"9A","g":"M","no":"02"},
+  "9A03":{"n":"Almaira Zivanna Valueta","cls":"9A","g":"F","no":"03"},
+  "9A04":{"n":"Almira Vanya Putri","cls":"9A","g":"F","no":"04"},
+  "9A05":{"n":"Amabel Feodora Zenechka Tanggawana","cls":"9A","g":"F","no":"05"},
+  "9A06":{"n":"Anindita Elevenia Kiswoyo","cls":"9A","g":"F","no":"06"},
+  "9A07":{"n":"Arga Radinka Maulana","cls":"9A","g":"M","no":"07"},
+  "9A08":{"n":"Aurelia Prima Pelawi","cls":"9A","g":"F","no":"08"},
+  "9A09":{"n":"Azyyati Tsabita Darmawan","cls":"9A","g":"F","no":"09"},
+  "9A10":{"n":"Azziham Fathi Albanna","cls":"9A","g":"M","no":"10"},
+  "9A11":{"n":"Bilqis Salsabila Putri Budiono","cls":"9A","g":"F","no":"11"},
+  "9A12":{"n":"Fathia Meiliani Rukadi","cls":"9A","g":"F","no":"12"},
+  "9A13":{"n":"Hayra Rachmeida Malikha Nugroho","cls":"9A","g":"F","no":"13"},
+  "9A14":{"n":"Idea Farras Sahwahita","cls":"9A","g":"F","no":"14"},
+  "9A15":{"n":"Inayah Almaira Aninta","cls":"9A","g":"F","no":"15"},
+  "9A16":{"n":"Kevin Kaysan Akbari","cls":"9A","g":"M","no":"16"},
+  "9A17":{"n":"Muhammad Nabil","cls":"9A","g":"M","no":"17"},
+  "9A18":{"n":"Nadhir Muhammad Ghani Sugianto","cls":"9A","g":"M","no":"18"},
+  "9A19":{"n":"Pringgadi Valdiero Alazizy Santoso","cls":"9A","g":"M","no":"19"},
+  "9A20":{"n":"Queen Arsy El Hakim","cls":"9A","g":"F","no":"20"},
+  "9A21":{"n":"Raida Nayyara Rahiyan","cls":"9A","g":"F","no":"21"},
+  "9A22":{"n":"Raisya Ghina Zunaira","cls":"9A","g":"F","no":"22"},
+  "9A23":{"n":"Rofid Haris Athallah","cls":"9A","g":"M","no":"23"},
+  "9A24":{"n":"Ryanti Nur Syahmina","cls":"9A","g":"F","no":"24"},
+  "9A25":{"n":"Sufiya Nudju Insankamil","cls":"9A","g":"F","no":"25"},
+  "9A26":{"n":"Varra Hannifa Prichsetyo","cls":"9A","g":"F","no":"26"},
+  "9A27":{"n":"Zahira Qibtiya","cls":"9A","g":"F","no":"27"},
+  "9B01":{"n":"Aero Muhammad Anders","cls":"9B","g":"M","no":"01"},
+  "9B02":{"n":"Alifya Claresta Daniel","cls":"9B","g":"F","no":"02"},
+  "9B03":{"n":"Almira Fatimah Bagus Rahmatunisa","cls":"9B","g":"F","no":"03"},
+  "9B04":{"n":"Amanda Amelia Putri","cls":"9B","g":"F","no":"04"},
+  "9B05":{"n":"Amira Mumtazah Putri Aryadi","cls":"9B","g":"F","no":"05"},
+  "9B06":{"n":"Amirah Rizqa Lestaluhu","cls":"9B","g":"F","no":"06"},
+  "9B07":{"n":"Arifin Baihaqi Utomo","cls":"9B","g":"M","no":"07"},
+  "9B08":{"n":"Arissa Izzati Zamzami","cls":"9B","g":"F","no":"08"},
+  "9B09":{"n":"Dinda Nadhira Putri Umaternate","cls":"9B","g":"F","no":"09"},
+  "9B10":{"n":"Felita Raissa Putri","cls":"9B","g":"F","no":"10"},
+  "9B11":{"n":"Fitria Syakila Lovesya","cls":"9B","g":"F","no":"11"},
+  "9B12":{"n":"Ghiyas Putra Ginanjar","cls":"9B","g":"M","no":"12"},
+  "9B13":{"n":"Jihan Audrey Carrisha","cls":"9B","g":"F","no":"13"},
+  "9B14":{"n":"Kevin Athallah Maliq Matulessy","cls":"9B","g":"M","no":"14"},
+  "9B15":{"n":"Marisa Gustiani Putri","cls":"9B","g":"F","no":"15"},
+  "9B16":{"n":"Maritza Inas Dwianaya","cls":"9B","g":"F","no":"16"},
+  "9B17":{"n":"Melita Tsania Putri","cls":"9B","g":"F","no":"17"},
+  "9B18":{"n":"Muhammad Arkan Hiroshi","cls":"9B","g":"M","no":"18"},
+  "9B19":{"n":"Muhammad Rifqi Abqary","cls":"9B","g":"M","no":"19"},
+  "9B20":{"n":"Muhammad Sabian Giriandra","cls":"9B","g":"M","no":"20"},
+  "9B21":{"n":"Muhammad Thirza Nizam Kenzie","cls":"9B","g":"M","no":"21"},
+  "9B22":{"n":"Nadine Latisha Zara","cls":"9B","g":"F","no":"22"},
+  "9B23":{"n":"Nadya Tasyirifiah Arafah","cls":"9B","g":"F","no":"23"},
+  "9B24":{"n":"Raisha Nazneen Azkadina","cls":"9B","g":"F","no":"24"},
+  "9B25":{"n":"Raisya Priyanka","cls":"9B","g":"F","no":"25"},
+  "9B26":{"n":"Rania Delisha Ridwan","cls":"9B","g":"F","no":"26"},
+  "9B27":{"n":"Vanya Aurelia Thurseena","cls":"9B","g":"F","no":"27"},
+  "9C01":{"n":"Aisya Ayu Azizia Nugroho","cls":"9C","g":"F","no":"01"},
+  "9C02":{"n":"Aflahal Bilal Pasha","cls":"9C","g":"M","no":"02"},
+  "9C03":{"n":"Anindya Putri Grinika","cls":"9C","g":"F","no":"03"},
+  "9C04":{"n":"Ardhiana Shafa Artanti","cls":"9C","g":"F","no":"04"},
+  "9C05":{"n":"Areta Callysta Sachi","cls":"9C","g":"F","no":"05"},
+  "9C06":{"n":"Azzahra Sheela Nadira","cls":"9C","g":"F","no":"06"},
+  "9C07":{"n":"Callista Aila Husna","cls":"9C","g":"F","no":"07"},
+  "9C08":{"n":"Cyra Rakhshinda Rayes","cls":"9C","g":"F","no":"08"},
+  "9C09":{"n":"Dipa Aradhana Putra Wibowo","cls":"9C","g":"M","no":"09"},
+  "9C10":{"n":"Faiyaz Rausan Fikri","cls":"9C","g":"M","no":"10"},
+  "9C11":{"n":"Ilham Pramoedya Hadi","cls":"9C","g":"M","no":"11"},
+  "9C12":{"n":"Irza Raza Rayhan","cls":"9C","g":"M","no":"12"},
+  "9C13":{"n":"Kaniya Putri Naura","cls":"9C","g":"F","no":"13"},
+  "9C14":{"n":"Nada Shalha Almahyra","cls":"9C","g":"F","no":"14"},
+  "9C15":{"n":"Nadia Azaria","cls":"9C","g":"F","no":"15"},
+  "9C16":{"n":"Nadya Shamara Raihanah","cls":"9C","g":"F","no":"16"},
+  "9C17":{"n":"Naila Azka Rachmania","cls":"9C","g":"F","no":"17"},
+  "9C18":{"n":"Naomi Raissa Syahada","cls":"9C","g":"F","no":"18"},
+  "9C19":{"n":"Nazwan Baflah","cls":"9C","g":"M","no":"19"},
+  "9C20":{"n":"Rafif Daris Adli","cls":"9C","g":"M","no":"20"},
+  "9C21":{"n":"Rafif Fatiin Kusya","cls":"9C","g":"M","no":"21"},
+  "9C22":{"n":"Regina Kayla Imani Setiawan","cls":"9C","g":"F","no":"22"},
+  "9C23":{"n":"Sabrina Alycia Putri","cls":"9C","g":"F","no":"23"},
+  "9C24":{"n":"Shakila Farah Alfiya","cls":"9C","g":"F","no":"24"},
+  "9C25":{"n":"Shera Queena Azzahra","cls":"9C","g":"F","no":"25"},
+  "9C26":{"n":"Syathra Fachira Rizky","cls":"9C","g":"F","no":"26"},
+  "9C27":{"n":"Thalita Nadya Saputra","cls":"9C","g":"F","no":"27"},
+  "9D01":{"n":"Aisyahrani Farsyah","cls":"9D","g":"F","no":"01"},
+  "9D02":{"n":"Ahmad Farrel Dhanurendra","cls":"9D","g":"M","no":"02"},
+  "9D03":{"n":"Alifia Aqila Ramadani","cls":"9D","g":"F","no":"03"},
+  "9D04":{"n":"Alma Imania Farzana Putri","cls":"9D","g":"F","no":"04"},
+  "9D05":{"n":"Anindhira Nayla Putri","cls":"9D","g":"F","no":"05"},
+  "9D06":{"n":"Anindya Chesta Fakhira","cls":"9D","g":"F","no":"06"},
+  "9D07":{"n":"Ashalina Putri Sanjaya","cls":"9D","g":"F","no":"07"},
+  "9D08":{"n":"Audra Myiesha Kirana","cls":"9D","g":"F","no":"08"},
+  "9D09":{"n":"Azzalea Delisha Yuniar","cls":"9D","g":"F","no":"09"},
+  "9D10":{"n":"Belvadeo Islami Faza","cls":"9D","g":"M","no":"10"},
+  "9D11":{"n":"Cordelia Decosta","cls":"9D","g":"F","no":"11"},
+  "9D12":{"n":"Dzaka Lintang Prasetyo","cls":"9D","g":"M","no":"12"},
+  "9D13":{"n":"Hanif Satria Bintang","cls":"9D","g":"M","no":"13"},
+  "9D14":{"n":"Hillary Fatihah Shidiqiya","cls":"9D","g":"F","no":"14"},
+  "9D15":{"n":"Khalissa Nur Aida Ramadhani","cls":"9D","g":"F","no":"15"},
+  "9D16":{"n":"Kyara Lintang Adavi","cls":"9D","g":"F","no":"16"},
+  "9D17":{"n":"Lareina Isaura Dentha","cls":"9D","g":"F","no":"17"},
+  "9D18":{"n":"Muhammad Khalid Ramdhani","cls":"9D","g":"M","no":"18"},
+  "9D19":{"n":"Muhammad Raki Kuswardana","cls":"9D","g":"M","no":"19"},
+  "9D20":{"n":"Muhammad Rasyid Ilham","cls":"9D","g":"M","no":"20"},
+  "9D21":{"n":"Nafisa Azalia","cls":"9D","g":"F","no":"21"},
+  "9D22":{"n":"Nahla Dhiya","cls":"9D","g":"F","no":"22"},
+  "9D23":{"n":"Namira Firosya An' Amta Achjari","cls":"9D","g":"F","no":"23"},
+  "9D24":{"n":"Nayla Puteri Gunawan","cls":"9D","g":"F","no":"24"},
+  "9D25":{"n":"Queensha Fawnia Sakhi Widjaya","cls":"9D","g":"F","no":"25"},
+  "9D26":{"n":"Rasya Aldiano Naufal","cls":"9D","g":"M","no":"26"},
+  "9D27":{"n":"Razita Anjani Cinantya","cls":"9D","g":"F","no":"27"},
 };
 
 // =============================================
@@ -607,10 +612,10 @@ const STU_SEAT = {};
 function parentInfo(code) {
   const cls = code.slice(0,2);
   const num = parseInt(code.slice(2));
-  let col, row;
-  if (num <= 10)      { col = 1; row = num; }
-  else if (num <= 20) { col = 2; row = num - 10; }
-  else                { col = 3; row = num - 20; }
+  // New layout: numbers go ACROSS 3 columns per row
+  // Row 1: 01,02,03 | Row 2: 04,05,06 | ... | Row 9: 25,26,27
+  const col = ((num - 1) % 3) + 1;
+  const row = Math.floor((num - 1) / 3) + 1;
   return { cls, col, row, desc: `Blok ${cls} · Kolom ${col} · Baris ${row}` };
 }
 
@@ -691,7 +696,7 @@ function buildChart(hlCode) {
       <div class="bar bar-vip">VIP</div>
       <div class="bar bar-guests">Invited Guests</div>
       <div class="bar bar-teach">Teachers</div>
-      <div class="bar bar-stu">Students</div>`;
+      <div class="stu-section-lbl">Students</div>`;
 
     rows.forEach(r => {
       const gc = r.type==='male' ? 'male' : 'female';
@@ -731,9 +736,11 @@ function buildChart(hlCode) {
       h += `<div class="ot-block">
         <div class="ot-cls-lbl">${cls}</div>
         <div class="ot-cols">`;
-      [[1,10],[11,20],[21,27]].forEach(([a,b]) => {
+      // 3 columns, each col gets students: col0→1,4,7,10... col1→2,5,8,11... col2→3,6,9,12...
+      [0,1,2].forEach(colIdx => {
         h += `<div class="ot-col">`;
-        for (let n=a; n<=b; n++) {
+        for (let rowIdx = 0; rowIdx < 9; rowIdx++) {
+          const n = rowIdx * 3 + colIdx + 1;
           const code = cls + String(n).padStart(2,'0');
           const isFound = code===hlCode;
           h += `<div class="ot-pair${isFound?' ot-found':''}" id="otp-${code}">
@@ -750,12 +757,12 @@ function buildChart(hlCode) {
   }
 
   document.getElementById('chartInner').innerHTML = `
-    <div class="chart-stage">— PANGGUNG —</div>
     <div class="chart-body">
+      <div class="chart-stage">— PANGGUNG —</div>
 
       <div class="chart-half">
         ${renderRows(ROWS_LEFT, 'left')}
-        <div class="ot-sep">Orang Tua</div>
+        <div class="ot-sep">Parents</div>
         ${renderOT(['9A','9B'])}
       </div>
 
@@ -765,7 +772,7 @@ function buildChart(hlCode) {
 
       <div class="chart-half">
         ${renderRows(ROWS_RIGHT, 'right')}
-        <div class="ot-sep">Orang Tua</div>
+        <div class="ot-sep">Parents</div>
         ${renderOT(['9C','9D'])}
       </div>
 
