@@ -746,9 +746,21 @@
     };
   }
 
+  const OWNER = 'amuhsejati@gmail.com';
+
+  async function kick(session) {
+    await db.auth.signOut();
+    const errEl = document.getElementById('login-err');
+    errEl.textContent = 'This is a private space. Access denied.';
+    errEl.style.display = 'block';
+  }
+
   async function init() {
     const { data: { session } } = await db.auth.getSession();
-    if (session) { user = session.user; showDash(); }
+    if (!session) return;
+    if (session.user.email !== OWNER) { kick(session); return; }
+    user = session.user;
+    showDash();
   }
 
   document.getElementById('login-btn').onclick = async () => {
@@ -773,7 +785,11 @@
 
   // ── NAVIGATION ───────────────────────────────────────
 
-  function showDash() {
+  async function showDash() {
+    if (user.email !== OWNER) {
+      await kick();
+      return;
+    }
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('dashboard').style.display   = 'block';
     document.getElementById('sb-email').textContent = user.email;
