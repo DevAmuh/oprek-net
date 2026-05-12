@@ -748,17 +748,23 @@
 
   const OWNER = 'amuhsejati@gmail.com';
 
-  async function kick(session) {
+  async function kick() {
     await db.auth.signOut();
     const errEl = document.getElementById('login-err');
-    errEl.textContent = 'This is a private space. Access denied.';
+    errEl.textContent = 'Access denied. You need permission to enter.';
     errEl.style.display = 'block';
+  }
+
+  async function isAllowed(email) {
+    if (email === OWNER) return true;
+    const { data } = await db.from('allowed_users').select('email').eq('email', email).maybeSingle();
+    return !!data;
   }
 
   async function init() {
     const { data: { session } } = await db.auth.getSession();
     if (!session) return;
-    if (session.user.email !== OWNER) { kick(session); return; }
+    if (!await isAllowed(session.user.email)) { await kick(); return; }
     user = session.user;
     showDash();
   }
@@ -786,7 +792,7 @@
   // ── NAVIGATION ───────────────────────────────────────
 
   async function showDash() {
-    if (user.email !== OWNER) {
+    if (!await isAllowed(user.email)) {
       await kick();
       return;
     }
