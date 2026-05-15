@@ -350,10 +350,11 @@
   }
 
   async function signIn() {
+    sessionStorage.setItem('lab_return', '1');
     bumpActivity();
     await db.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.href },
+      options: { redirectTo: window.location.origin + '/' },
     });
   }
 
@@ -380,9 +381,21 @@
 
   async function init() {
     renderPublic();
+
+    // Catch the OAuth callback — ?code= in URL means we just returned from Google.
+    // Supabase processes it async; onAuthStateChange fires when done.
+    db.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session && session.user.email === OWNER_EMAIL && !isAdmin) {
+        bumpActivity();
+        setAdminUI(true);
+      } else if (event === 'SIGNED_OUT') {
+        setAdminUI(false);
+      }
+    });
+
+    // Also check for an existing session on normal page loads.
     const { data: { session } } = await db.auth.getSession();
     if (session && session.user.email === OWNER_EMAIL) {
-      // If they've been idle longer than the threshold, kick them out instead.
       if (isIdle()) {
         await db.auth.signOut();
         localStorage.removeItem(ACTIVITY_KEY);
