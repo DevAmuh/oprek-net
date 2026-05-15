@@ -271,6 +271,11 @@
       desc: "A private dashboard for notes, ideas, and blog posts. Built around warmth and focus, gated to a single owner.",
       href: "/fireplace/",
     },
+    {
+      title: "Sound Memory Game",
+      desc: "A memory game where you listen and repeat. Built for a campus project at Unindra.",
+      href: "/unindra/smg/",
+    },
   ];
 
   // Admin-only projects — data never touches the DOM until authenticated
@@ -345,12 +350,10 @@
   }
 
   async function signIn() {
-    // Tell the landing page bouncer where to send us once OAuth completes.
-    localStorage.setItem('post_oauth_return', '/lab/');
     bumpActivity();
     await db.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin + '/' },
+      options: { redirectTo: window.location.href },
     });
   }
 

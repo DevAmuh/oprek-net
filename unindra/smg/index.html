@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sound Memory Game – English Phonology</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0D0B2A;
+      --surface:  #181440;
+      --surface2: #25205C;
+      --card-back:#1E1A55;
+      --gold:     #FFD166;
+      --orange:   #FF6B35;
+      --pink:     #FF3E9D;
+      --teal:     #00CCA3;
+      --text:     #F2EEFF;
+      --muted:    rgba(242,238,255,0.52);
+      --radius:   16px;
+    }
+
+    body { font-family:'Nunito',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
+
+    /* ── SCREENS ────────────────────────────── */
+    .screen { display:none; min-height:100vh; flex-direction:column; align-items:center; }
+    .screen.active { display:flex; animation:scrn-in .35s ease forwards; }
+    @keyframes scrn-in { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
+
+    /* ── OVERLAYS ────────────────────────────── */
+    .overlay { display:none; position:fixed; inset:0; background:rgba(10,8,32,.88); backdrop-filter:blur(10px); z-index:300; align-items:center; justify-content:center; padding:20px; }
+    .overlay.show { display:flex; animation:scrn-in .3s ease; }
+    .obox { background:var(--surface); border:1px solid rgba(255,255,255,.09); border-radius:24px; padding:30px 26px; width:100%; max-width:460px; max-height:90vh; overflow-y:auto; position:relative; box-shadow:0 28px 80px rgba(0,0,0,.55); }
+    .obox-close { position:absolute; top:14px; right:16px; background:transparent; border:none; color:var(--muted); font-size:20px; cursor:pointer; padding:4px 6px; border-radius:6px; transition:color .15s; }
+    .obox-close:hover { color:var(--text); }
+    .obox-title { font-family:'Fredoka One',cursive; font-size:1.75rem; color:var(--gold); text-align:center; margin-bottom:22px; }
+
+    /* ── SHARED BUTTONS ─────────────────────── */
+    .btn { font-family:'Nunito',sans-serif; font-weight:900; border:none; cursor:pointer; border-radius:14px; transition:transform .12s,box-shadow .12s,filter .12s; }
+    .btn:hover { transform:translateY(-2px); filter:brightness(1.08); }
+    .btn:active { transform:scale(.96); }
+
+    /* ════════════ TITLE SCREEN ════════════ */
+    #title-screen { justify-content:center; padding:40px 24px; position:relative; }
+    #star-canvas { position:fixed; inset:0; pointer-events:none; z-index:0; }
+
+    .title-wrap { position:relative; z-index:1; text-align:center; width:100%; max-width:420px; }
+
+    .title-badge { display:inline-block; background:rgba(255,209,102,.12); border:1px solid rgba(255,209,102,.28); color:var(--gold); font-size:10.5px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; padding:5px 14px; border-radius:999px; margin-bottom:30px; animation:badge-glow 2.5s ease infinite; }
+    @keyframes badge-glow { 0%,100%{box-shadow:0 0 8px rgba(255,209,102,.15);} 50%{box-shadow:0 0 22px rgba(255,209,102,.45);} }
+
+    .title-icon { font-size:3.8rem; display:block; margin-bottom:10px; animation:float 3.2s ease-in-out infinite; }
+    @keyframes float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-14px);} }
+
+    .title-h1 { font-family:'Fredoka One',cursive; font-size:clamp(2.4rem,9vw,3.8rem); line-height:1.05; margin-bottom:10px; text-shadow:0 0 60px rgba(255,209,102,.25); }
+    .title-h1 em { font-style:normal; color:var(--gold); }
+    .title-sub { color:var(--muted); font-size:14px; font-weight:700; margin-bottom:48px; line-height:1.6; }
+
+    .title-btns { display:flex; flex-direction:column; gap:13px; width:100%; max-width:290px; margin:0 auto; }
+
+    .btn-play { background:linear-gradient(135deg,#FF6B35,#FF3E9D); color:#fff; font-size:20px; padding:18px 28px; letter-spacing:.06em; box-shadow:0 8px 30px rgba(255,107,53,.4); animation:play-pulse 2.4s ease-in-out infinite; position:relative; overflow:hidden; }
+    .btn-play::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(255,255,255,.16) 0%,transparent 55%); }
+    @keyframes play-pulse { 0%,100%{box-shadow:0 8px 30px rgba(255,107,53,.4);} 50%{box-shadow:0 10px 44px rgba(255,107,53,.7),0 0 20px rgba(255,62,157,.3);} }
+
+    .btn-learn { background:linear-gradient(135deg,#00CCA3,#009688); color:#fff; font-size:16px; padding:14px 28px; box-shadow:0 6px 20px rgba(0,204,163,.28); }
+    .btn-more { background:transparent; color:var(--muted); border:2px solid rgba(255,255,255,.14); font-size:14px; padding:12px 28px; }
+    .btn-more:hover { border-color:rgba(255,255,255,.38); color:var(--text); }
+
+    .title-footer { position:relative; z-index:1; margin-top:56px; font-size:10.5px; color:var(--muted); text-align:center; line-height:2; }
+
+    /* ════════════ HOW TO PLAY OVERLAY ════════════ */
+    .how-steps { display:flex; flex-direction:column; gap:12px; margin-bottom:26px; }
+    .how-step { display:flex; align-items:flex-start; gap:14px; background:rgba(255,255,255,.05); border-radius:12px; padding:13px 14px; }
+    .how-step-icon { font-size:1.9rem; flex-shrink:0; line-height:1; }
+    .how-step-text strong { display:block; font-size:14.5px; margin-bottom:2px; }
+    .how-step-text span { font-size:12.5px; color:var(--muted); font-weight:700; line-height:1.5; }
+
+    .diff-label { text-align:center; font-size:11.5px; font-weight:900; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:11px; }
+    .diff-row { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    .diff-card { background:var(--surface2); border:2px solid transparent; border-radius:14px; padding:16px 8px; text-align:center; cursor:pointer; transition:border-color .15s,transform .12s,background .15s; }
+    .diff-card:hover { border-color:var(--gold); transform:translateY(-3px); background:rgba(255,209,102,.08); }
+    .diff-card:active { transform:scale(.96); }
+    .diff-icon { font-size:1.8rem; display:block; margin-bottom:5px; }
+    .diff-name { font-family:'Fredoka One',cursive; font-size:1.1rem; display:block; margin-bottom:1px; }
+    .diff-meta { font-size:10px; color:var(--muted); font-weight:800; }
+
+    /* ════════════ LEARN SCREEN ════════════ */
+    #learn-screen { padding:0; }
+
+    .top-bar { width:100%; background:var(--surface); border-bottom:1px solid rgba(255,255,255,.07); padding:13px 20px; display:flex; align-items:center; gap:14px; position:sticky; top:0; z-index:10; }
+    .back-btn { width:36px; height:36px; border-radius:10px; border:none; background:rgba(255,255,255,.08); color:var(--text); font-size:17px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:background .15s; }
+    .back-btn:hover { background:rgba(255,255,255,.16); }
+    .top-bar-title { font-family:'Fredoka One',cursive; font-size:1.25rem; flex:1; }
+
+    .learn-body { width:100%; max-width:660px; padding:24px 18px 110px; margin:0 auto; }
+    .learn-intro { text-align:center; margin-bottom:24px; }
+    .learn-intro h2 { font-family:'Fredoka One',cursive; font-size:1.7rem; margin-bottom:7px; }
+    .learn-intro p { color:var(--muted); font-size:13.5px; font-weight:700; line-height:1.6; }
+
+    .tabs { display:flex; gap:7px; margin-bottom:22px; background:var(--surface); padding:5px; border-radius:14px; }
+    .tab-btn { flex:1; background:transparent; border:none; color:var(--muted); font-family:'Nunito',sans-serif; font-weight:800; font-size:13px; padding:9px 6px; border-radius:10px; cursor:pointer; transition:all .18s; }
+    .tab-btn.active { background:var(--surface2); color:var(--text); box-shadow:0 2px 8px rgba(0,0,0,.3); }
+
+    .tab-panel { display:none; }
+    .tab-panel.active { display:block; animation:scrn-in .22s ease; }
+
+    .snd-grid { display:grid; grid-template-columns:1fr 1fr; gap:13px; }
+    @media(max-width:440px){ .snd-grid{grid-template-columns:1fr;} }
+
+    .snd-card { background:var(--surface); border:1px solid rgba(255,255,255,.07); border-radius:16px; padding:16px; position:relative; overflow:hidden; }
+    .snd-card::before { content:''; position:absolute; top:0;left:0;right:0; height:3px; background:var(--clr,var(--gold)); border-radius:16px 16px 0 0; }
+    .snd-ipa { font-family:'Fredoka One',cursive; font-size:2rem; color:var(--clr,var(--gold)); display:block; margin-bottom:1px; }
+    .snd-name { font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:9px; }
+    .snd-tip { font-size:12.5px; font-weight:700; color:var(--text); margin-bottom:11px; line-height:1.55; }
+    .snd-exs { display:flex; flex-wrap:wrap; gap:6px; }
+
+    .ex-btn { background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.11); border-radius:8px; color:var(--text); font-family:'Nunito',sans-serif; font-weight:800; font-size:12.5px; padding:5px 10px; cursor:pointer; transition:background .13s,transform .1s; }
+    .ex-btn:hover { background:rgba(255,255,255,.14); transform:scale(1.04); }
+    .ex-btn:active { transform:scale(.97); }
+
+    .learn-cta-bar { position:fixed; bottom:0;left:0;right:0; background:linear-gradient(transparent,var(--bg) 28%); padding:28px 24px 22px; display:flex; justify-content:center; z-index:20; }
+    .btn-go { background:linear-gradient(135deg,#FF6B35,#FF3E9D); color:#fff; font-size:15px; padding:13px 34px; letter-spacing:.04em; box-shadow:0 8px 26px rgba(255,107,53,.4); }
+
+    /* ════════════ GAME SCREEN ════════════ */
+    #game-screen { padding:0; }
+
+    .stat-row { display:flex; justify-content:center; gap:11px; padding:11px 18px; width:100%; }
+    .stat-chip { background:var(--surface); border-radius:10px; padding:8px 14px; text-align:center; min-width:76px; }
+    .stat-chip-lbl { font-size:9px; font-weight:900; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); }
+    .stat-chip-val { font-family:'Fredoka One',cursive; font-size:1.45rem; line-height:1.1; }
+
+    .demo-strip { background:linear-gradient(135deg,rgba(255,209,102,.13),rgba(255,107,53,.13)); border:1px solid rgba(255,209,102,.28); border-radius:12px; padding:9px 16px; margin:0 18px 12px; font-size:13px; font-weight:800; color:var(--gold); text-align:center; }
+
+    .demo-tip { background:var(--gold); color:#12082A; font-weight:900; font-size:14px; padding:10px 18px; border-radius:12px; margin:0 18px 14px; text-align:center; animation:tip-bob 1.6s ease-in-out infinite; }
+    @keyframes tip-bob { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-5px);} }
+
+    .demo-done { background:linear-gradient(135deg,var(--surface2),var(--surface)); border:1px solid rgba(255,209,102,.28); border-radius:20px; padding:26px 22px; text-align:center; margin:0 18px; }
+    .demo-done h3 { font-family:'Fredoka One',cursive; font-size:1.55rem; color:var(--gold); margin-bottom:7px; }
+    .demo-done p { color:var(--muted); font-size:13.5px; font-weight:700; margin-bottom:18px; line-height:1.5; }
+
+    /* ── CARD GRID ────────────────────────────── */
+    #card-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:11px; padding:0 14px 32px; width:100%; max-width:630px; margin:0 auto; }
+
+    /* ── CARD ────────────────────────────────── */
+    .card { aspect-ratio:3/4; perspective:900px; cursor:pointer; }
+    .card-inner { width:100%; height:100%; position:relative; transform-style:preserve-3d; transition:transform .42s cubic-bezier(.4,0,.2,1); border-radius:var(--radius); }
+    .card.flipped .card-inner, .card.matched .card-inner { transform:rotateY(180deg); }
+
+    .card-back, .card-face { position:absolute; inset:0; border-radius:var(--radius); backface-visibility:hidden; -webkit-backface-visibility:hidden; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+
+    .card-back { background:var(--card-back); overflow:hidden; box-shadow:0 5px 18px rgba(0,0,0,.45); }
+    .card-back::before { content:''; position:absolute; inset:0; background:repeating-linear-gradient(-45deg,rgba(255,255,255,.03) 0,rgba(255,255,255,.03) 1px,transparent 1px,transparent 10px); }
+    .card-glyph { font-size:1.7rem; color:var(--gold); opacity:.75; text-shadow:0 0 18px rgba(255,209,102,.5); user-select:none; position:relative; }
+
+    .card-face { transform:rotateY(180deg); padding:7px 5px; gap:3px; box-shadow:0 5px 18px rgba(0,0,0,.35); }
+    .card-emoji { font-size:1.95rem; line-height:1; }
+    .card-word { font-family:'Fredoka One',cursive; font-size:1.05rem; text-align:center; color:#12082A; line-height:1.1; }
+    .card-word .hi { border-radius:3px; padding:0 2px; }
+    .card-ipa { font-size:9.5px; font-weight:800; color:rgba(18,8,42,.55); }
+    .card-tag { font-size:9px; font-weight:900; color:#fff; padding:2px 7px; border-radius:999px; margin-top:2px; }
+
+    /* demo hint pulse */
+    .card.demo-hint .card-back { box-shadow:0 0 0 2.5px var(--gold),0 5px 18px rgba(0,0,0,.45); animation:hint-ring 1.1s ease-in-out infinite; }
+    @keyframes hint-ring { 0%,100%{box-shadow:0 0 0 2px var(--gold),0 5px 18px rgba(0,0,0,.45);} 50%{box-shadow:0 0 0 6px rgba(255,209,102,.35),0 5px 18px rgba(0,0,0,.45);} }
+
+    /* match bump on outer .card */
+    .card.matched { animation:card-bump .52s cubic-bezier(.36,.07,.19,.97) forwards; }
+    @keyframes card-bump { 0%{transform:scale(1);} 20%{transform:scale(1.18);} 50%{transform:scale(.96);} 75%{transform:scale(1.09);} 100%{transform:scale(1);} }
+
+    /* ── EFFECTS ──────────────────────────────── */
+    .match-ring { position:fixed; border-radius:50%; pointer-events:none; z-index:500; border:3.5px solid var(--gold); transform:translate(-50%,-50%); animation:ring-pop .62s ease forwards; }
+    @keyframes ring-pop { 0%{width:30px;height:30px;opacity:1;} 100%{width:110px;height:110px;opacity:0;} }
+
+    .particle { position:fixed; border-radius:50%; pointer-events:none; z-index:501; animation:ptcl .7s ease forwards; }
+    @keyframes ptcl { 0%{transform:translate(0,0) scale(1);opacity:1;} 100%{transform:translate(var(--tx),var(--ty)) scale(0);opacity:0;} }
+
+    .match-pop { position:fixed; pointer-events:none; z-index:502; font-family:'Fredoka One',cursive; font-size:1.35rem; color:var(--gold); text-shadow:0 2px 8px rgba(0,0,0,.5); transform:translate(-50%,-50%); animation:pop-up .9s ease forwards; }
+    @keyframes pop-up { 0%{opacity:0;transform:translate(-50%,-50%) scale(.5);} 28%{opacity:1;transform:translate(-50%,-80%) scale(1.2);} 60%{opacity:1;transform:translate(-50%,-115%) scale(1);} 100%{opacity:0;transform:translate(-50%,-160%) scale(.8);} }
+
+    /* ════════════ WIN OVERLAY ════════════ */
+    .win-wrap { text-align:center; }
+    .win-trophy { font-size:3.8rem; display:block; margin-bottom:6px; animation:trophy-wobble .65s ease infinite alternate; }
+    @keyframes trophy-wobble { from{transform:translateY(0) rotate(-4deg);} to{transform:translateY(-10px) rotate(4deg);} }
+    .win-title { font-family:'Fredoka One',cursive; font-size:2rem; color:var(--gold); margin-bottom:14px; }
+    .stars-row { display:flex; justify-content:center; gap:5px; margin-bottom:14px; font-size:2.1rem; }
+    .star { animation:star-pop .38s ease backwards; }
+    .star:nth-child(2){animation-delay:.14s;} .star:nth-child(3){animation-delay:.28s;}
+    @keyframes star-pop { 0%{transform:scale(0) rotate(-30deg);} 70%{transform:scale(1.3) rotate(5deg);} 100%{transform:scale(1) rotate(0);} }
+    .win-stats { font-size:14.5px; font-weight:700; color:var(--muted); line-height:2.1; margin-bottom:22px; }
+    .win-stats strong { color:var(--text); }
+    .win-btns { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+    .btn-again { background:linear-gradient(135deg,#FF6B35,#FF3E9D); color:#fff; font-size:14.5px; padding:12px 22px; }
+    .btn-menu  { background:var(--surface2); color:var(--text); font-size:14.5px; padding:12px 22px; }
+
+    .hidden { display:none !important; }
+
+    @media(max-width:400px){ #card-grid{gap:8px;padding:0 10px 24px;} .card-emoji{font-size:1.6rem;} .card-word{font-size:.9rem;} }
+  </style>
+</head>
+<body>
+
+<canvas id="star-canvas"></canvas>
+
+<!-- ══ TITLE SCREEN ══ -->
+<div id="title-screen" class="screen active">
+  <div class="title-wrap">
+    <div class="title-badge">🎓 UNINDRA &nbsp;·&nbsp; English Education Dept.</div>
+    <span class="title-icon">🔊</span>
+    <h1 class="title-h1">Sound<br><em>Memory</em> Game</h1>
+    <p class="title-sub">Match English sounds · Learn IPA symbols<br>Master pronunciation — one card at a time</p>
+    <div class="title-btns">
+      <button class="btn btn-play"  onclick="UI.howToPlay()">▶&nbsp;&nbsp;PLAY!</button>
+      <button class="btn btn-learn" onclick="UI.go('learn')">📖&nbsp; LEARN</button>
+      <button class="btn btn-more"  onclick="window.open('https://dhiya.id/labs','_blank')">🔗&nbsp; More Projects ↗</button>
+    </div>
+  </div>
+  <div class="title-footer">
+    Sound Memory Game &nbsp;·&nbsp; English Phonology &nbsp;·&nbsp; UNINDRA<br>
+    Student: _________________ &nbsp;·&nbsp; Lecturer: _________________<br>
+    Built with HTML · CSS · JavaScript · Web Speech API
+  </div>
+</div>
+
+<!-- ══ LEARN SCREEN ══ -->
+<div id="learn-screen" class="screen">
+  <div class="top-bar">
+    <button class="back-btn" onclick="UI.go('title')">←</button>
+    <div class="top-bar-title">📖 English Sounds Guide</div>
+  </div>
+  <div class="learn-body">
+    <div class="learn-intro">
+      <h2>Know Your Sounds</h2>
+      <p>These are the sounds you'll match in the game.<br>Tap any word to hear it spoken aloud!</p>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active"  onclick="switchTab('consonants',this)">🗣️ Consonants</button>
+      <button class="tab-btn"         onclick="switchTab('vowels',this)">🌊 Vowels</button>
+      <button class="tab-btn"         onclick="switchTab('diphthongs',this)">✨ Diphthong</button>
+    </div>
+    <div id="tab-consonants" class="tab-panel active"><div class="snd-grid" id="lrn-consonants"></div></div>
+    <div id="tab-vowels"     class="tab-panel">        <div class="snd-grid" id="lrn-vowels"></div></div>
+    <div id="tab-diphthongs" class="tab-panel">        <div class="snd-grid" id="lrn-diphthongs"></div></div>
+  </div>
+  <div class="learn-cta-bar">
+    <button class="btn btn-go" onclick="UI.howToPlay()">Ready? Play Now! →</button>
+  </div>
+</div>
+
+<!-- ══ GAME SCREEN ══ -->
+<div id="game-screen" class="screen">
+  <div class="top-bar">
+    <button class="back-btn" onclick="UI.backFromGame()">←</button>
+    <div class="top-bar-title">🔊 Sound Memory</div>
+    <div style="width:36px"></div>
+  </div>
+  <div class="stat-row">
+    <div class="stat-chip"><div class="stat-chip-lbl">Matches</div><div class="stat-chip-val" id="s-match">0</div></div>
+    <div class="stat-chip"><div class="stat-chip-lbl">Moves</div>  <div class="stat-chip-val" id="s-moves">0</div></div>
+    <div class="stat-chip"><div class="stat-chip-lbl">Time</div>   <div class="stat-chip-val" id="s-time">0:00</div></div>
+  </div>
+  <div class="demo-strip hidden" id="demo-strip">🎮 DEMO MODE — Practice round, no score pressure!</div>
+  <div class="demo-tip   hidden" id="demo-tip">👆 Click any card to flip it and hear the sound!</div>
+  <div id="card-grid"></div>
+  <div class="demo-done  hidden" id="demo-done">
+    <h3>🎉 Great job!</h3>
+    <p>You matched all the demo cards!<br>Now let's play the real game.</p>
+    <button class="btn btn-go" onclick="Game.startReal()">Start Playing! →</button>
+  </div>
+</div>
+
+<!-- ══ OVERLAY: HOW TO PLAY + DIFFICULTY ══ -->
+<div id="ov-howtoplay" class="overlay">
+  <div class="obox">
+    <button class="obox-close" onclick="UI.closeOv('ov-howtoplay')">✕</button>
+    <div class="obox-title">🃏 How to Play</div>
+    <div class="how-steps">
+      <div class="how-step">
+        <div class="how-step-icon">🔊</div>
+        <div class="how-step-text">
+          <strong>Flip a card</strong>
+          <span>Click any face-down card. It flips over and reads the word aloud!</span>
+        </div>
+      </div>
+      <div class="how-step">
+        <div class="how-step-icon">👂</div>
+        <div class="how-step-text">
+          <strong>Listen &amp; look</strong>
+          <span>Notice the highlighted letters — they show the target sound (e.g. <b>sh</b>ip = /ʃ/).</span>
+        </div>
+      </div>
+      <div class="how-step">
+        <div class="how-step-icon">🎯</div>
+        <div class="how-step-text">
+          <strong>Find the match</strong>
+          <span>Pick a second card with the <em>same</em> highlighted sound. Match all pairs to win!</span>
+        </div>
+      </div>
+    </div>
+    <div class="diff-label">Choose your level to begin</div>
+    <div class="diff-row">
+      <div class="diff-card" onclick="Game.startDemo('easy')">
+        <span class="diff-icon">🌱</span>
+        <span class="diff-name">Easy</span>
+        <span class="diff-meta">4 pairs · 8 cards</span>
+      </div>
+      <div class="diff-card" onclick="Game.startDemo('medium')">
+        <span class="diff-icon">⚡</span>
+        <span class="diff-name">Medium</span>
+        <span class="diff-meta">6 pairs · 12 cards</span>
+      </div>
+      <div class="diff-card" onclick="Game.startDemo('hard')">
+        <span class="diff-icon">🔥</span>
+        <span class="diff-name">Hard</span>
+        <span class="diff-meta">8 pairs · 16 cards</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ OVERLAY: WIN SCREEN ══ -->
+<div id="ov-win" class="overlay">
+  <div class="obox win-wrap">
+    <span class="win-trophy">🏆</span>
+    <div class="win-title">You nailed it!</div>
+    <div class="stars-row" id="win-stars"></div>
+    <div class="win-stats"  id="win-stats"></div>
+    <div class="win-btns">
+      <button class="btn btn-again" onclick="Game.replay()">🔄 Play Again</button>
+      <button class="btn btn-menu"  onclick="UI.goMenu()">🏠 Main Menu</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════
+   DATA
+═══════════════════════════════════════ */
+const SOUNDS = [
+  { id:'sh', label:'/ʃ/', name:'SH Sound',       color:'#D94F4F', category:'consonants',
+    tip:'Round your lips and push air out — like telling someone "shhhh!" Your tongue stays back.',
+    words:[
+      {word:'ship', parts:[{t:'sh',hi:1},{t:'ip',hi:0}],  ipa:'/ʃɪp/',  emoji:'🚢'},
+      {word:'shoe', parts:[{t:'sh',hi:1},{t:'oe',hi:0}],  ipa:'/ʃuː/',  emoji:'👟'},
+      {word:'shell',parts:[{t:'sh',hi:1},{t:'ell',hi:0}], ipa:'/ʃɛl/',  emoji:'🐚'},
+      {word:'shark',parts:[{t:'sh',hi:1},{t:'ark',hi:0}], ipa:'/ʃɑːk/', emoji:'🦈'},
+    ]},
+  { id:'ch', label:'/tʃ/', name:'CH Sound',       color:'#C07800', category:'consonants',
+    tip:'Touch the roof of your mouth, then release — a /t/ that becomes a rush of air: "ch!"',
+    words:[
+      {word:'chair', parts:[{t:'ch',hi:1},{t:'air',hi:0}],  ipa:'/tʃɛr/',  emoji:'🪑'},
+      {word:'cheese',parts:[{t:'ch',hi:1},{t:'eese',hi:0}], ipa:'/tʃiːz/', emoji:'🧀'},
+      {word:'chick', parts:[{t:'ch',hi:1},{t:'ick',hi:0}],  ipa:'/tʃɪk/',  emoji:'🐥'},
+      {word:'chain', parts:[{t:'ch',hi:1},{t:'ain',hi:0}],  ipa:'/tʃeɪn/', emoji:'⛓️'},
+    ]},
+  { id:'th', label:'/θ/', name:'TH (voiceless)',  color:'#2780B5', category:'consonants',
+    tip:'Gently poke your tongue between your teeth and blow — no voice, just air. Like "think."',
+    words:[
+      {word:'thumb',parts:[{t:'th',hi:1},{t:'umb',hi:0}], ipa:'/θʌm/',   emoji:'👍'},
+      {word:'three',parts:[{t:'thr',hi:1},{t:'ee',hi:0}], ipa:'/θriː/',  emoji:'3️⃣'},
+      {word:'thin', parts:[{t:'th',hi:1},{t:'in',hi:0}],  ipa:'/θɪn/',   emoji:'📏'},
+      {word:'think',parts:[{t:'th',hi:1},{t:'ink',hi:0}], ipa:'/θɪŋk/',  emoji:'💭'},
+    ]},
+  { id:'dj', label:'/dʒ/', name:'J Sound',        color:'#1A9970', category:'consonants',
+    tip:'Same position as /tʃ/ but voiced — feel your throat hum when you say "jump!"',
+    words:[
+      {word:'jump',  parts:[{t:'j',hi:1},{t:'ump',hi:0}],   ipa:'/dʒʌmp/',  emoji:'🦘'},
+      {word:'jungle',parts:[{t:'j',hi:1},{t:'ungle',hi:0}], ipa:'/dʒʌŋɡl/',emoji:'🌿'},
+      {word:'jet',   parts:[{t:'j',hi:1},{t:'et',hi:0}],    ipa:'/dʒɛt/',   emoji:'✈️'},
+      {word:'jug',   parts:[{t:'j',hi:1},{t:'ug',hi:0}],    ipa:'/dʒʌɡ/',   emoji:'🫙'},
+    ]},
+  { id:'ae', label:'/æ/', name:'Short A',          color:'#7B3FA0', category:'vowels',
+    tip:'Open your mouth wide, drop your jaw, spread your lips flat. Short and snappy — "cat!"',
+    words:[
+      {word:'cat',parts:[{t:'c',hi:0},{t:'a',hi:1},{t:'t',hi:0}], ipa:'/kæt/', emoji:'🐱'},
+      {word:'hat',parts:[{t:'h',hi:0},{t:'a',hi:1},{t:'t',hi:0}], ipa:'/hæt/', emoji:'🎩'},
+      {word:'bag',parts:[{t:'b',hi:0},{t:'a',hi:1},{t:'g',hi:0}], ipa:'/bæɡ/', emoji:'👜'},
+      {word:'map',parts:[{t:'m',hi:0},{t:'a',hi:1},{t:'p',hi:0}], ipa:'/mæp/', emoji:'🗺️'},
+    ]},
+  { id:'ii', label:'/iː/', name:'Long E',           color:'#148A74', category:'vowels',
+    tip:'Stretch your lips wide into a big smile and hold the sound nice and long — "eeeeee!"',
+    words:[
+      {word:'sheep',parts:[{t:'sh',hi:0},{t:'ee',hi:1},{t:'p',hi:0}], ipa:'/ʃiːp/', emoji:'🐑'},
+      {word:'feet', parts:[{t:'f',hi:0}, {t:'ee',hi:1},{t:'t',hi:0}], ipa:'/fiːt/', emoji:'🦶'},
+      {word:'tree', parts:[{t:'tr',hi:0},{t:'ee',hi:1}],               ipa:'/triː/', emoji:'🌳'},
+      {word:'bee',  parts:[{t:'b',hi:0}, {t:'ee',hi:1}],               ipa:'/biː/',  emoji:'🐝'},
+    ]},
+  { id:'uu', label:'/uː/', name:'Long OO',          color:'#2C3E50', category:'vowels',
+    tip:'Pucker your lips into a small circle and push them forward — like blowing out a candle.',
+    words:[
+      {word:'moon', parts:[{t:'m',hi:0}, {t:'oo',hi:1},{t:'n',hi:0}], ipa:'/muːn/',  emoji:'🌙'},
+      {word:'spoon',parts:[{t:'sp',hi:0},{t:'oo',hi:1},{t:'n',hi:0}], ipa:'/spuːn/', emoji:'🥄'},
+      {word:'zoo',  parts:[{t:'z',hi:0}, {t:'oo',hi:1}],              ipa:'/zuː/',   emoji:'🦁'},
+      {word:'boot', parts:[{t:'b',hi:0}, {t:'oo',hi:1},{t:'t',hi:0}], ipa:'/buːt/',  emoji:'👢'},
+    ]},
+  { id:'ai', label:'/aɪ/', name:'Diphthong AI',    color:'#B03030', category:'diphthongs',
+    tip:'Start open "ah" then glide closed to "ee." Your jaw rises naturally as you say it.',
+    words:[
+      {word:'kite', parts:[{t:'k',hi:0}, {t:'i',hi:1},  {t:'te',hi:0}], ipa:'/kaɪt/', emoji:'🪁'},
+      {word:'night',parts:[{t:'n',hi:0}, {t:'igh',hi:1},{t:'t',hi:0}],  ipa:'/naɪt/', emoji:'🌙'},
+      {word:'fly',  parts:[{t:'fl',hi:0},{t:'y',hi:1}],                  ipa:'/flaɪ/', emoji:'🪰'},
+      {word:'pie',  parts:[{t:'p',hi:0}, {t:'ie',hi:1}],                 ipa:'/paɪ/',  emoji:'🥧'},
+    ]},
+];
+
+const PAIR_COUNT = {easy:4,medium:6,hard:8};
+
+const DEMO_PAIRS = [
+  {...SOUNDS[0].words[0], soundId:'sh', soundLabel:'/ʃ/', color:'#D94F4F'},
+  {...SOUNDS[0].words[1], soundId:'sh', soundLabel:'/ʃ/', color:'#D94F4F'},
+  {...SOUNDS[4].words[0], soundId:'ae', soundLabel:'/æ/', color:'#7B3FA0'},
+  {...SOUNDS[4].words[1], soundId:'ae', soundLabel:'/æ/', color:'#7B3FA0'},
+];
+
+/* ═══════════════════════════════════════
+   STAR CANVAS
+═══════════════════════════════════════ */
+(function(){
+  const cv=document.getElementById('star-canvas');
+  const cx=cv.getContext('2d');
+  let stars=[],t=0;
+  function resize(){ cv.width=innerWidth;cv.height=innerHeight;cv.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:0;'; }
+  function make(){ stars=Array.from({length:150},()=>({x:Math.random()*cv.width,y:Math.random()*cv.height,r:Math.random()*1.35+.3,phase:Math.random()*Math.PI*2,spd:Math.random()*.6+.25})); }
+  resize();make();addEventListener('resize',()=>{resize();make();});
+  function draw(){
+    cx.clearRect(0,0,cv.width,cv.height);
+    stars.forEach(s=>{const a=.28+.58*(.5+.5*Math.sin(t*s.spd+s.phase));cx.beginPath();cx.arc(s.x,s.y,s.r,0,Math.PI*2);cx.fillStyle=`rgba(210,200,255,${a})`;cx.fill();});
+    t+=.016;requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ═══════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════ */
+const $=id=>document.getElementById(id);
+const shuffle=a=>[...a].sort(()=>Math.random()-.5);
+
+function parts2html(parts,color){
+  return parts.map(p=>p.hi?`<span class="hi" style="background:${color};color:#fff">${p.t}</span>`:p.t).join('');
+}
+function lighten(hex){
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},.15)`;
+}
+function speak(word){
+  if(!window.speechSynthesis)return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(word);u.lang='en-US';u.rate=.82;u.pitch=1.05;
+  speechSynthesis.speak(u);
+}
+
+/* ═══════════════════════════════════════
+   UI NAVIGATION
+═══════════════════════════════════════ */
+const UI={
+  go(id){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    $(`${id}-screen`).classList.add('active');
+    if(id==='learn')Learn.build();
+  },
+  howToPlay(){$('ov-howtoplay').classList.add('show');},
+  closeOv(id){$(id).classList.remove('show');},
+  goMenu(){this.closeOv('ov-win');Game.stop();this.go('title');},
+  backFromGame(){if(confirm('Leave the game? Progress will be lost.')){Game.stop();this.closeOv('ov-win');this.go('title');}}
+};
+
+/* ═══════════════════════════════════════
+   LEARN
+═══════════════════════════════════════ */
+const Learn={
+  built:false,
+  build(){
+    if(this.built)return;this.built=true;
+    ['consonants','vowels','diphthongs'].forEach(cat=>{
+      $('lrn-'+cat).innerHTML=SOUNDS.filter(s=>s.category===cat).map(s=>`
+        <div class="snd-card" style="--clr:${s.color}">
+          <span class="snd-ipa">${s.label}</span>
+          <div class="snd-name">${s.name}</div>
+          <div class="snd-tip">${s.tip}</div>
+          <div class="snd-exs">
+            ${s.words.slice(0,3).map(w=>`<button class="ex-btn" onclick="speak('${w.word}')">🔊 ${parts2html(w.parts,s.color)}</button>`).join('')}
+          </div>
+        </div>`).join('');
+    });
+  }
+};
+
+function switchTab(id,btn){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');$('tab-'+id).classList.add('active');
+}
+
+/* ═══════════════════════════════════════
+   GAME ENGINE
+═══════════════════════════════════════ */
+const Game={
+  mode:'demo', difficulty:'medium',
+  cards:[], flipped:[], matched:0, moves:0, canFlip:true,
+  timer:null, secs:0,
+
+  startDemo(diff){
+    this.difficulty=diff;
+    UI.closeOv('ov-howtoplay');UI.go('game');
+    this.mode='demo';this._reset();
+    $('demo-strip').classList.remove('hidden');
+    $('demo-tip').classList.remove('hidden');
+    $('demo-tip').textContent='👆 Click any card to flip it and hear the sound!';
+    $('demo-done').classList.add('hidden');
+    this.cards=shuffle(DEMO_PAIRS).map((c,i)=>({...c,idx:i}));
+    this._render(true);
+  },
+
+  startReal(){
+    this.mode='play';this._reset();this._startTimer();
+    $('demo-strip').classList.add('hidden');
+    $('demo-tip').classList.add('hidden');
+    $('demo-done').classList.add('hidden');
+    const n=PAIR_COUNT[this.difficulty];
+    const picked=shuffle(SOUNDS).slice(0,n);
+    let raw=[];
+    picked.forEach(s=>{const ws=shuffle(s.words);[0,1].forEach(i=>raw.push({...ws[i],soundId:s.id,soundLabel:s.label,color:s.color}));});
+    this.cards=shuffle(raw).map((c,i)=>({...c,idx:i}));
+    this._render(false);
+  },
+
+  replay(){ UI.closeOv('ov-win');this.startDemo(this.difficulty); },
+  stop(){ clearInterval(this.timer);this.timer=null; },
+
+  _reset(){
+    this.flipped=[];this.matched=0;this.moves=0;this.canFlip=true;
+    this.stop();this.secs=0;this._updateStats();this._updateTimer();
+  },
+  _startTimer(){ this.timer=setInterval(()=>{this.secs++;this._updateTimer();},1000); },
+  _updateTimer(){ const m=Math.floor(this.secs/60),s=String(this.secs%60).padStart(2,'0');$('s-time').textContent=`${m}:${s}`; },
+  _updateStats(){ $('s-match').textContent=this.matched;$('s-moves').textContent=this.moves; },
+
+  _render(isDemo){
+    $('card-grid').innerHTML=this.cards.map((c,i)=>`
+      <div class="card${isDemo?' demo-hint':''}" data-idx="${i}" onclick="Game.flip(${i})">
+        <div class="card-inner">
+          <div class="card-back"><div class="card-glyph">🔊</div></div>
+          <div class="card-face" style="background:${lighten(c.color)}">
+            <div class="card-emoji">${c.emoji}</div>
+            <div class="card-word">${parts2html(c.parts,c.color)}</div>
+            <div class="card-ipa">${c.ipa}</div>
+            <div class="card-tag" style="background:${c.color}">${c.soundLabel}</div>
+          </div>
+        </div>
+      </div>`).join('');
+  },
+
+  flip(i){
+    if(!this.canFlip)return;
+    const el=document.querySelector(`.card[data-idx="${i}"]`);
+    if(!el||el.classList.contains('flipped')||el.classList.contains('matched'))return;
+    el.classList.remove('demo-hint');el.classList.add('flipped');
+    speak(this.cards[i].word);
+    this.flipped.push(i);
+
+    if(this.mode==='demo'&&this.flipped.length===1){
+      $('demo-tip').textContent=`Now find another ${this.cards[i].soundLabel} card!`;
+      document.querySelectorAll('.card:not(.flipped):not(.matched)').forEach(e=>e.classList.add('demo-hint'));
+    }
+
+    if(this.flipped.length===2){
+      this.moves++;this._updateStats();this.canFlip=false;
+      const [a,b]=this.flipped;
+
+      if(this.cards[a].soundId===this.cards[b].soundId){
+        // MATCH
+        setTimeout(()=>{
+          const eA=document.querySelector(`.card[data-idx="${a}"]`);
+          const eB=document.querySelector(`.card[data-idx="${b}"]`);
+          eA.classList.replace('flipped','matched');
+          eB.classList.replace('flipped','matched');
+          FX.match(eA);FX.match(eB);
+          this.matched++;this._updateStats();
+          this.flipped=[];this.canFlip=true;
+          const total=this.mode==='demo'?2:PAIR_COUNT[this.difficulty];
+          if(this.matched===total){
+            if(this.mode==='demo'){$('demo-tip').classList.add('hidden');$('demo-done').classList.remove('hidden');}
+            else{setTimeout(()=>this._win(),600);}
+          } else if(this.mode==='demo'){
+            $('demo-tip').textContent='✅ Match! Find the next pair!';
+            document.querySelectorAll('.card:not(.matched)').forEach(e=>e.classList.add('demo-hint'));
+          }
+        },380);
+      } else {
+        // NO MATCH
+        if(this.mode==='demo')$('demo-tip').textContent='❌ Not a match — try again!';
+        setTimeout(()=>{
+          document.querySelector(`.card[data-idx="${a}"]`).classList.remove('flipped');
+          document.querySelector(`.card[data-idx="${b}"]`).classList.remove('flipped');
+          if(this.mode==='demo'){
+            document.querySelectorAll('.card:not(.matched)').forEach(e=>e.classList.add('demo-hint'));
+            $('demo-tip').textContent='👆 Same sound = a match! Keep trying!';
+          }
+          this.flipped=[];this.canFlip=true;
+        },960);
+      }
+    }
+  },
+
+  _win(){
+    this.stop();
+    const total=PAIR_COUNT[this.difficulty];
+    let stars=3;
+    if(this.moves>total*3.5)stars=2;
+    if(this.moves>total*5.5)stars=1;
+    $('win-stars').innerHTML=[0,1,2].map(i=>`<span class="star">${i<stars?'⭐':'🌑'}</span>`).join('');
+    const m=Math.floor(this.secs/60),s=String(this.secs%60).padStart(2,'0');
+    $('win-stats').innerHTML=`<strong>${this.matched}</strong> pairs matched<br><strong>${this.moves}</strong> moves taken<br>Time: <strong>${m}:${s}</strong>`;
+    $('ov-win').classList.add('show');
+  }
+};
+
+/* ═══════════════════════════════════════
+   MATCH EFFECTS
+═══════════════════════════════════════ */
+const FX={
+  colors:['#FFD166','#FF6B35','#00CCA3','#FF4081','#A78BFA','#60EFFF','#fff'],
+  match(el){
+    const r=el.getBoundingClientRect();
+    const cx=r.left+r.width/2,cy=r.top+r.height/2;
+    // Ring
+    const ring=document.createElement('div');
+    ring.className='match-ring';ring.style.left=cx+'px';ring.style.top=cy+'px';
+    document.body.appendChild(ring);setTimeout(()=>ring.remove(),680);
+    // Particles
+    for(let i=0;i<16;i++){
+      const p=document.createElement('div');p.className='particle';
+      const ang=(i/16)*Math.PI*2,dist=52+Math.random()*52;
+      p.style.left=cx+'px';p.style.top=cy+'px';
+      p.style.setProperty('--tx',Math.cos(ang)*dist+'px');
+      p.style.setProperty('--ty',Math.sin(ang)*dist+'px');
+      p.style.background=this.colors[i%this.colors.length];
+      const sz=6+Math.random()*6;p.style.width=sz+'px';p.style.height=sz+'px';
+      p.style.animationDuration=(.48+Math.random()*.3)+'s';
+      document.body.appendChild(p);setTimeout(()=>p.remove(),950);
+    }
+    // "MATCH!" pop
+    const pop=document.createElement('div');pop.className='match-pop';
+    pop.textContent='✨ MATCH!';pop.style.left=cx+'px';pop.style.top=cy+'px';
+    document.body.appendChild(pop);setTimeout(()=>pop.remove(),950);
+  }
+};
+</script>
+</body>
+</html>
