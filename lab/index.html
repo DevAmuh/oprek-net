@@ -283,6 +283,8 @@
   ];
 
   const OWNER_EMAIL = 'amuhsejati@gmail.com';
+  const IDLE_MS = 60 * 1000; // 1 minute of inactivity → auto sign-out
+  const ACTIVITY_KEY = 'lab_last_activity';
 
   const grid       = document.getElementById('grid');
   const countEl    = document.getElementById('count');
@@ -343,21 +345,49 @@
   }
 
   async function signIn() {
+    // Tell the landing page bouncer where to send us once OAuth completes.
+    localStorage.setItem('post_oauth_return', '/lab/');
+    bumpActivity();
     await db.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.href },
+      options: { redirectTo: window.location.origin + '/' },
     });
   }
 
   async function signOut() {
     await db.auth.signOut();
+    localStorage.removeItem(ACTIVITY_KEY);
     setAdminUI(false);
   }
+
+  // ---- Idle tracking ----
+  function bumpActivity() {
+    localStorage.setItem(ACTIVITY_KEY, String(Date.now()));
+  }
+  function isIdle() {
+    const last = parseInt(localStorage.getItem(ACTIVITY_KEY) || '0', 10);
+    return last > 0 && (Date.now() - last) > IDLE_MS;
+  }
+  ['mousemove', 'keydown', 'click', 'touchstart', 'scroll'].forEach(evt => {
+    window.addEventListener(evt, () => { if (isAdmin) bumpActivity(); }, { passive: true });
+  });
+  setInterval(() => {
+    if (isAdmin && isIdle()) signOut();
+  }, 5000);
 
   async function init() {
     renderPublic();
     const { data: { session } } = await db.auth.getSession();
-    if (session && session.user.email === OWNER_EMAIL) setAdminUI(true);
+    if (session && session.user.email === OWNER_EMAIL) {
+      // If they've been idle longer than the threshold, kick them out instead.
+      if (isIdle()) {
+        await db.auth.signOut();
+        localStorage.removeItem(ACTIVITY_KEY);
+      } else {
+        bumpActivity();
+        setAdminUI(true);
+      }
+    }
   }
 
   lockBtn.addEventListener('click', () => { if (!isAdmin) signIn(); });
