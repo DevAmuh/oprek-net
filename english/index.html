@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>English Class · Mr.D</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='10' y='8' width='34' height='44' rx='3' fill='none' stroke='%2380c8ff' stroke-width='2.5' opacity='0.9'/%3E%3Cline x1='18' y1='22' x2='36' y2='22' stroke='%2380c8ff' stroke-width='2' opacity='0.7'/%3E%3Cline x1='18' y1='30' x2='36' y2='30' stroke='%2380c8ff' stroke-width='2' opacity='0.7'/%3E%3Cline x1='18' y1='38' x2='28' y2='38' stroke='%2380c8ff' stroke-width='2' opacity='0.7'/%3E%3Ccircle cx='46' cy='46' r='10' fill='%2306070a' stroke='%2380c8ff' stroke-width='2'/%3E%3Ctext x='46' y='50' text-anchor='middle' font-size='11' fill='%2380c8ff' font-family='Georgia'>E%3C/text%3E%3C/svg%3E"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #06070a;
+    font-family: 'Georgia', 'Times New Roman', serif;
+    color: rgba(244, 243, 239, 0.75);
+  }
+
+  /* Starfield canvas */
+  canvas {
+    display: block;
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  /* Center stage */
+  .stage {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(20px, 4vh, 36px);
+    text-align: center;
+    padding: clamp(24px, 6vw, 80px);
+    z-index: 10;
+  }
+
+  /* Thin decorative rule above */
+  .rule {
+    width: clamp(40px, 8vw, 80px);
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(128, 200, 255, 0.4), transparent);
+  }
+
+  .eyebrow {
+    font-size: clamp(9px, 1.6vw, 11px);
+    letter-spacing: 0.38em;
+    text-transform: uppercase;
+    color: rgba(128, 200, 255, 0.55);
+    user-select: none;
+  }
+
+  h1 {
+    font-size: clamp(28px, 6vw, 60px);
+    letter-spacing: 0.06em;
+    font-weight: normal;
+    color: rgba(244, 243, 239, 0.88);
+    line-height: 1.15;
+    text-shadow: 0 0 40px rgba(128, 200, 255, 0.12);
+  }
+
+  h1 span {
+    color: rgba(128, 200, 255, 0.75);
+  }
+
+  .body-text {
+    max-width: 420px;
+    font-size: clamp(13px, 2vw, 15px);
+    line-height: 1.75;
+    color: rgba(244, 243, 239, 0.42);
+    font-style: italic;
+    letter-spacing: 0.01em;
+  }
+
+  /* Pulsing dot indicator */
+  .status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: clamp(9px, 1.5vw, 11px);
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: rgba(244, 243, 239, 0.28);
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(128, 200, 255, 0.6);
+    animation: pulse 2.8s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50%       { opacity: 1;   transform: scale(1.25); }
+  }
+
+  /* Back link — bottom left, matches main nav style */
+  #back {
+    position: fixed;
+    bottom: clamp(20px, 4vw, 32px);
+    left: clamp(20px, 4vw, 32px);
+    z-index: 100;
+    font-family: 'Georgia', serif;
+    font-size: clamp(11px, 2.5vw, 13px);
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.38);
+    text-decoration: none;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.85);
+    transition: color 0.25s, transform 0.25s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #back:hover {
+    color: rgba(255, 255, 255, 0.82);
+    transform: translateX(-4px);
+  }
+
+  #back svg {
+    width: 14px;
+    height: 14px;
+    opacity: 0.7;
+  }
+
+  /* Fade-in entrance */
+  .stage { opacity: 0; animation: enter 1.6s ease forwards 0.3s; }
+  #back  { opacity: 0; animation: enter 1.6s ease forwards 0.7s; }
+
+  @keyframes enter {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0);   }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+
+<div class="stage">
+  <div class="rule"></div>
+  <p class="eyebrow">Mr.D · English Class</p>
+  <h1>Something's<br><span>Coming.</span></h1>
+  <p class="body-text">
+    This classroom is still being set up.<br>
+    Check back soon — we're working on it.
+  </p>
+  <div class="status">
+    <span class="dot"></span>
+    <span>Under construction</span>
+  </div>
+  <div class="rule"></div>
+</div>
+
+<a href="/" id="back">
+  <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="9,2 4,7 9,12"/>
+  </svg>
+  Back
+</a>
+
+<script>
+  // Minimal starfield — same spirit as the main site
+  const canvas = document.getElementById('stars');
+  const ctx = canvas.getContext('2d');
+  let stars = [];
+
+  function resize() {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+
+  function init() {
+    stars = [];
+    const count = Math.floor((canvas.width * canvas.height) / 5000);
+    for (let i = 0; i < count; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 1.1 + 0.2,
+        a: Math.random(),
+        speed: Math.random() * 0.004 + 0.001,
+        phase: Math.random() * Math.PI * 2
+      });
+    }
+  }
+
+  function draw(t) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (const s of stars) {
+      const alpha = (Math.sin(t * s.speed + s.phase) * 0.5 + 0.5) * 0.65 + 0.1;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(200, 225, 255, ${alpha})`;
+      ctx.fill();
+    }
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', () => { resize(); init(); });
+  resize();
+  init();
+  requestAnimationFrame(draw);
+</script>
+</body>
+</html>
