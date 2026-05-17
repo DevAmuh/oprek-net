@@ -161,6 +161,15 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 .ci-input{flex:1;background:var(--s2);border:2px solid rgba(255,255,255,.12);border-radius:10px;color:var(--text);font-family:'Fredoka One',cursive;font-size:1.3rem;padding:10px 14px;letter-spacing:.1em;outline:none;text-transform:uppercase}
 .ci-input:focus{border-color:var(--gold)}
 .ci-btn{font-size:14px;padding:10px 18px}
+/* ─── Now Calling panel ─── */
+.nc-panel{margin-bottom:14px;border-radius:14px;padding:14px 18px;border:1px solid;text-align:center}
+.nc-panel:not(.hidden){animation:ncPop .4s cubic-bezier(.2,.8,.3,1.2) forwards}
+@keyframes ncPop{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+.nc-label{font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.12em;margin-bottom:6px;opacity:.65;color:var(--muted)}
+.nc-word{font-family:'Fredoka One',cursive;font-size:2.2rem;line-height:1.1;margin-bottom:8px}
+.nc-tags{display:flex;gap:8px;justify-content:center;align-items:center}
+.nc-ipa-tag{font-family:'Fredoka One',cursive;font-size:1rem;padding:4px 12px;border-radius:20px;border:1px solid}
+.nc-cat-tag{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;padding:4px 10px;border-radius:20px;background:rgba(255,255,255,.08);color:var(--muted)}
 
 /* bingo grid */
 .bingo-grid{display:grid;gap:8px;margin-bottom:20px}
@@ -489,6 +498,14 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
     👀 Watch the projector — mark sounds as the teacher calls them
   </div>
   <div class="card-wrap">
+    <div id="now-calling" class="nc-panel hidden">
+      <div class="nc-label">Now Calling</div>
+      <div id="nc-word" class="nc-word"></div>
+      <div class="nc-tags">
+        <span id="nc-ipa" class="nc-ipa-tag"></span>
+        <span id="nc-cat" class="nc-cat-tag"></span>
+      </div>
+    </div>
     <div class="code-input-wrap" id="code-input-wrap">
       <div class="ci-label">Enter the 4-digit code from your teacher's screen</div>
       <div class="ci-row">
@@ -1055,9 +1072,8 @@ const UI={
   },
   goCard(){
     this.go('card-screen');
+    $('now-calling').classList.add('hidden');
     $('code-input-wrap').classList.remove('hidden');
-    Player.currentDiff=St.difficulty;
-    Player.buildCard();
   }
 };
 
@@ -1119,6 +1135,15 @@ const SUPABASE_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const _sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON);
 
 const Net={
+  _bch:null,_bchRoom:null,
+  async _ensureBC(roomId){
+    if(this._bch&&this._bchRoom===roomId)return this._bch;
+    if(this._bch)_sb.removeChannel(this._bch);
+    const ch=_sb.channel('room:'+roomId);
+    await new Promise(r=>ch.subscribe(s=>{if(s==='SUBSCRIBED')r();}));
+    this._bch=ch;this._bchRoom=roomId;
+    return ch;
+  },
   async createRoom(roomId,difficulty,winCondition,enabledCats){
     const{error}=await _sb.from('rooms').insert({id:roomId,difficulty,win_condition:winCondition,enabled_cats:[...enabledCats]});
     if(error)console.error('[Net.createRoom]',error.message);
@@ -1127,19 +1152,21 @@ const Net={
   async joinRoom(code){
     const{data,error}=await _sb.from('rooms').select('difficulty,win_condition').eq('id',code).maybeSingle();
     if(error)console.error('[Net.joinRoom]',error.message);
-    if(data)return{found:true,difficulty:data.difficulty,winCondition:data.win_condition};
-    return{found:false,difficulty:parseCode(code)};
+    if(!data)return{found:false};
+    const{data:calls}=await _sb.from('calls').select('sound_id,word,sound_label').eq('room_id',code).order('created_at',{ascending:true});
+    return{found:true,difficulty:data.difficulty,winCondition:data.win_condition,recentCalls:calls||[]};
   },
 
   async pushCall(roomId,word,sound){
+    const ch=await this._ensureBC(roomId);
+    ch.send({type:'broadcast',event:'call',payload:{word,soundId:sound.id,soundLabel:sound.label}});
     const{error}=await _sb.from('calls').insert({room_id:roomId,word,sound_id:sound.id,sound_label:sound.label});
     if(error)console.error('[Net.pushCall]',error.message);
   },
 
   subscribeCalls(roomId,cb){
-    const ch=_sb.channel('calls:'+roomId)
-      .on('postgres_changes',{event:'INSERT',schema:'public',table:'calls',filter:`room_id=eq.${roomId}`},
-        ({new:r})=>cb({word:r.word,soundId:r.sound_id,soundLabel:r.sound_label}))
+    const ch=_sb.channel('room:'+roomId)
+      .on('broadcast',{event:'call'},({payload})=>cb({word:payload.word,soundId:payload.soundId,soundLabel:payload.soundLabel}))
       .subscribe();
     return()=>_sb.removeChannel(ch);
   },
@@ -1336,18 +1363,21 @@ const Player={
 
   async applyCode(){
     const raw=$('session-input').value.trim();
-    if(raw.length===4&&/^\d+$/.test(raw)){
-      const room=await Net.joinRoom(raw);
-      this.currentDiff=room.difficulty;
-      this._roomId=raw;
-    }else if(raw.length>0){
-      alert('Enter the 4-digit code from the teacher\'s screen (numbers only).');
-      return;
-    }
+    if(!raw){alert('Please enter the 4-digit code from your teacher.');return;}
+    if(raw.length!==4||!/^\d+$/.test(raw)){alert('Enter the 4-digit code (4 numbers only).');return;}
+    const room=await Net.joinRoom(raw);
+    if(!room.found){alert('Room not found. Check the code with your teacher.');return;}
+    this.currentDiff=room.difficulty;
+    this._roomId=raw;
     $('code-input-wrap').classList.add('hidden');
     if(this._unsubCalls){this._unsubCalls();this._unsubCalls=null;}
-    if(this._roomId)this._unsubCalls=Net.subscribeCalls(this._roomId,({soundId})=>Player.autoMarkCalledSound(soundId));
-    WinDemo.show(()=>Player.buildCard());
+    this._unsubCalls=Net.subscribeCalls(this._roomId,(ev)=>Player.onCallReceived(ev));
+    const pastCalls=room.recentCalls||[];
+    WinDemo.show(()=>{
+      Player.buildCard();
+      for(const c of pastCalls)Player.autoMarkCalledSound(c.sound_id);
+      if(pastCalls.length){const last=pastCalls[pastCalls.length-1];Player.showCalledPanel({word:last.word,soundId:last.sound_id,soundLabel:last.sound_label});}
+    });
   },
 
   buildCard(){
@@ -1430,6 +1460,25 @@ const Player={
       const el=document.querySelector(`#player-grid .bsq[data-i="${i}"]`);
       if(el){el.classList.add('marked','stamped');FX.pop(el);}
     }
+  },
+
+  onCallReceived({word,soundId,soundLabel}){
+    this.showCalledPanel({word,soundId,soundLabel});
+    this.autoMarkCalledSound(soundId);
+  },
+
+  showCalledPanel({word,soundId,soundLabel}){
+    const s=SOUNDS.find(x=>x.id===soundId);
+    const clr=s?CAT_COLORS[s.category]:'#888';
+    const catName=s?s.category.replace(/_/g,' '):'';
+    const p=$('now-calling');
+    p.style.background=clr+'22';p.style.borderColor=clr+'66';
+    p.style.animation='none';void p.offsetHeight;p.style.animation='';
+    $('nc-word').textContent=word;$('nc-word').style.color=clr;
+    $('nc-ipa').textContent=soundLabel;
+    $('nc-ipa').style.background=clr+'33';$('nc-ipa').style.borderColor=clr+'88';$('nc-ipa').style.color=clr;
+    $('nc-cat').textContent=catName;
+    p.classList.remove('hidden');
   },
 
   newCard(){this.buildCard();}
