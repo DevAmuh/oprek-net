@@ -170,6 +170,30 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 .nc-tags{display:flex;gap:8px;justify-content:center;align-items:center}
 .nc-ipa-tag{font-family:'Fredoka One',cursive;font-size:1rem;padding:4px 12px;border-radius:20px;border:1px solid}
 .nc-cat-tag{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;padding:4px 10px;border-radius:20px;background:rgba(255,255,255,.08);color:var(--muted)}
+/* ─── Waiting-for-teacher panel ─── */
+.wp-panel{margin-bottom:14px;border-radius:14px;padding:18px;border:1px dashed rgba(255,209,102,.4);background:rgba(255,209,102,.08);text-align:center}
+.wp-title{font-family:'Fredoka One',cursive;font-size:1.2rem;color:var(--gold);margin-bottom:4px}
+.wp-sub{font-size:12px;color:var(--muted);font-weight:600}
+.wp-pulse{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--gold);margin-right:6px;animation:wpPulse 1.4s ease-in-out infinite}
+@keyframes wpPulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
+/* ─── Armed / disabled cell states (multiplayer) ─── */
+.bsq.disabled{opacity:.35;pointer-events:none;filter:saturate(.4)}
+.bsq.armed{box-shadow:0 0 0 3px var(--clr),0 0 18px 2px var(--clr);animation:armedPulse 1.4s ease-in-out infinite;cursor:pointer}
+@keyframes armedPulse{0%,100%{box-shadow:0 0 0 3px var(--clr),0 0 12px 1px var(--clr)}50%{box-shadow:0 0 0 4px var(--clr),0 0 24px 4px var(--clr)}}
+.bsq.shake{animation:bsqShake .35s ease}
+@keyframes bsqShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+/* ─── Teacher lobby ─── */
+#lobby-screen{padding:0}
+.lobby-wrap{width:100%;max-width:520px;padding:24px 18px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:16px}
+.lobby-card{width:100%;background:linear-gradient(135deg,rgba(255,209,102,.12),rgba(255,107,53,.08));border:1px solid rgba(255,209,102,.3);border-radius:18px;padding:22px 18px;text-align:center}
+.lobby-label{font-size:10px;font-weight:900;letter-spacing:.14em;color:var(--muted);margin-bottom:8px}
+.lobby-code{font-family:'Fredoka One',cursive;font-size:4rem;color:var(--gold);letter-spacing:.15em;line-height:1}
+.lobby-hint{font-size:12px;color:var(--muted);margin-top:8px;font-weight:600}
+.lobby-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%}
+.lobby-stat{background:var(--surface);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:12px 8px;text-align:center}
+.lobby-stat-num{font-family:'Fredoka One',cursive;font-size:1.4rem;color:var(--text);line-height:1.1;margin-bottom:4px}
+.lobby-stat-lbl{font-size:9px;font-weight:900;letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+.lobby-waiting{font-size:12px;color:var(--muted);font-weight:600;margin-top:4px;text-align:center}
 
 /* bingo grid */
 .bingo-grid{display:grid;gap:8px;margin-bottom:20px}
@@ -453,6 +477,28 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
   </div>
 </div>
 
+<!-- ╔═══ TEACHER LOBBY ═══╗ -->
+<div id="lobby-screen" class="scr">
+  <div class="topbar">
+    <button class="backbtn" onclick="LobbyT.exit()">←</button>
+    <div class="topbar-title">📻 Game Lobby</div>
+  </div>
+  <div class="lobby-wrap">
+    <div class="lobby-card">
+      <div class="lobby-label">SESSION CODE</div>
+      <div class="lobby-code" id="lobby-code-display">—</div>
+      <div class="lobby-hint">Have your students enter this code on their phones</div>
+    </div>
+    <div class="lobby-stats">
+      <div class="lobby-stat"><div class="lobby-stat-num" id="lobby-joined-count">0</div><div class="lobby-stat-lbl">Joined</div></div>
+      <div class="lobby-stat"><div class="lobby-stat-num" id="lobby-mode-grid">4×4</div><div class="lobby-stat-lbl" id="lobby-mode-diff">Normal</div></div>
+      <div class="lobby-stat"><div class="lobby-stat-num" id="lobby-strict-state">Forgiving</div><div class="lobby-stat-lbl">Marking</div></div>
+    </div>
+    <button class="btn btn-grad" onclick="LobbyT.start()" style="width:100%;max-width:340px;font-size:18px;padding:16px;margin-top:8px">▶ Start Calling</button>
+    <div class="lobby-waiting" id="lobby-waiting-msg">Waiting for students to join…</div>
+  </div>
+</div>
+
 <!-- ╔═══ CALLER ═══╗ -->
 <div id="caller-screen" class="scr">
   <div class="topbar">
@@ -494,10 +540,14 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
     <div class="topbar-title">📱 My BINGO Card</div>
     <button class="icon-btn" onclick="Player.newCard()" title="New Card">🔄</button>
   </div>
-  <div style="background:rgba(0,204,163,.1);border-bottom:1px solid rgba(0,204,163,.25);padding:8px 18px;font-size:11px;font-weight:800;color:var(--teal);text-align:center;letter-spacing:.04em">
-    👀 Watch the projector — mark sounds as the teacher calls them
+  <div id="card-banner" style="background:rgba(0,204,163,.1);border-bottom:1px solid rgba(0,204,163,.25);padding:8px 18px;font-size:11px;font-weight:800;color:var(--teal);text-align:center;letter-spacing:.04em">
+    👂 Listen for the sound, then tap it on your card
   </div>
   <div class="card-wrap">
+    <div id="waiting-panel" class="wp-panel hidden">
+      <div class="wp-title"><span class="wp-pulse"></span>Waiting for your teacher</div>
+      <div class="wp-sub">The game will begin when the teacher hits Start. Your card is ready below.</div>
+    </div>
     <div id="now-calling" class="nc-panel hidden">
       <div class="nc-label">Now Calling</div>
       <div id="nc-word" class="nc-word"></div>
@@ -743,6 +793,16 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
         <label class="tog"><input type="checkbox" id="tog-autoreveal" onchange="Opts.save()"><span class="tog-slider"></span></label>
       </div>
     </div>
+    <div class="opt-section" id="opt-strict-section">
+      <div class="opt-title">Marking Mode</div>
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-lbl">🔒 Strict marking</div>
+          <div class="toggle-sub">Students must tap the called sound before the next call — miss it and it's gone. Off (default) = any called sound stays tappable until marked.</div>
+        </div>
+        <label class="tog"><input type="checkbox" id="tog-strict" onchange="Opts.save()"><span class="tog-slider"></span></label>
+      </div>
+    </div>
     <div class="opt-section" id="opt-autocall-section">
       <div class="opt-title">Time Pressure Mode</div>
       <div class="toggle-row">
@@ -986,6 +1046,7 @@ const St={
   winCondition:'line',
   autoReveal:false,
   autoCall:false,
+  strictMarking:false,
   soloDifficulty:'normal',
   calledHistory:[],
 };
@@ -1073,6 +1134,7 @@ const UI={
   goCard(){
     this.go('card-screen');
     $('now-calling').classList.add('hidden');
+    $('waiting-panel').classList.add('hidden');
     $('code-input-wrap').classList.remove('hidden');
   }
 };
@@ -1095,6 +1157,8 @@ const Opts={
     vis('opt-win-section',    isSetup);
     // IPA reveal — teacher screens only
     vis('opt-ipareveal-section', isSetup||isCaller);
+    // Strict marking — pre-game multiplayer setup only
+    vis('opt-strict-section',    isSetup);
     // Time pressure — solo only
     vis('opt-autocall-section',  isSolo);
 
@@ -1115,6 +1179,7 @@ const Opts={
     });
     St.autoReveal=$('tog-autoreveal').checked;
     St.autoCall=$('tog-autocall').checked;
+    St.strictMarking=$('tog-strict').checked;
     checkWarning();
   },
   setSpeed(s,btn){
@@ -1144,17 +1209,24 @@ const Net={
     this._bch=ch;this._bchRoom=roomId;
     return ch;
   },
-  async createRoom(roomId,difficulty,winCondition,enabledCats){
-    const{error}=await _sb.from('rooms').insert({id:roomId,difficulty,win_condition:winCondition,enabled_cats:[...enabledCats]});
+  async createRoom(roomId,difficulty,winCondition,enabledCats,strictMarking){
+    const{error}=await _sb.from('rooms').insert({id:roomId,difficulty,win_condition:winCondition,enabled_cats:[...enabledCats],strict_marking:!!strictMarking,status:'lobby'});
     if(error)console.error('[Net.createRoom]',error.message);
   },
 
+  async startGame(roomId){
+    const{error}=await _sb.from('rooms').update({status:'playing',started_at:new Date().toISOString()}).eq('id',roomId);
+    if(error)console.error('[Net.startGame]',error.message);
+    const ch=await this._ensureBC(roomId);
+    ch.send({type:'broadcast',event:'start',payload:{}});
+  },
+
   async joinRoom(code){
-    const{data,error}=await _sb.from('rooms').select('difficulty,win_condition').eq('id',code).maybeSingle();
+    const{data,error}=await _sb.from('rooms').select('difficulty,win_condition,status,strict_marking,enabled_cats').eq('id',code).maybeSingle();
     if(error)console.error('[Net.joinRoom]',error.message);
     if(!data)return{found:false};
     const{data:calls}=await _sb.from('calls').select('sound_id,word,sound_label').eq('room_id',code).order('created_at',{ascending:true});
-    return{found:true,difficulty:data.difficulty,winCondition:data.win_condition,recentCalls:calls||[]};
+    return{found:true,difficulty:data.difficulty,winCondition:data.win_condition,status:data.status||'lobby',strictMarking:!!data.strict_marking,enabledCats:data.enabled_cats||[],recentCalls:calls||[]};
   },
 
   async pushCall(roomId,word,sound){
@@ -1164,9 +1236,10 @@ const Net={
     if(error)console.error('[Net.pushCall]',error.message);
   },
 
-  subscribeCalls(roomId,cb){
+  subscribeRoomEvents(roomId,{onCall,onStart}){
     const ch=_sb.channel('room:'+roomId)
-      .on('broadcast',{event:'call'},({payload})=>cb({word:payload.word,soundId:payload.soundId,soundLabel:payload.soundLabel}))
+      .on('broadcast',{event:'call'},({payload})=>onCall&&onCall({word:payload.word,soundId:payload.soundId,soundLabel:payload.soundLabel}))
+      .on('broadcast',{event:'start'},()=>onStart&&onStart())
       .subscribe();
     return()=>_sb.removeChannel(ch);
   },
@@ -1212,18 +1285,49 @@ const Teacher={
       return;
     }
     St.sessionCode=genCode(St.difficulty);
-    Net.createRoom(St.sessionCode,St.difficulty,St.winCondition,St.enabledCats);
+    Net.createRoom(St.sessionCode,St.difficulty,St.winCondition,St.enabledCats,St.strictMarking);
     if(St.teacherMode==='print'){
       UI.go('print-screen');Print.gen();
     }else{
-      WinDemo.show(()=>{
-        Caller.init(sounds);
-        UI.go('caller-screen');
-        if(!St.autoReveal){
-          setTimeout(()=>showVignette('caller-gear-btn','IPA reveal is <strong>off</strong> by default.<br>Tap ⚙️ to change call speed, auto-reveal &amp; more.','bingo_caller_hint'),900);
-        }
-      });
+      WinDemo.show(()=>LobbyT.enter());
     }
+  }
+};
+
+/* ════════════ TEACHER LOBBY ════════════ */
+const LobbyT={
+  _pollTimer:null,
+  enter(){
+    UI.go('lobby-screen');
+    $('lobby-code-display').textContent=St.sessionCode;
+    const gs=GRID_SIZE[St.difficulty];
+    $('lobby-mode-grid').textContent=gs+'×'+gs;
+    $('lobby-mode-diff').textContent=St.difficulty.charAt(0).toUpperCase()+St.difficulty.slice(1);
+    $('lobby-strict-state').textContent=St.strictMarking?'Strict':'Forgiving';
+    $('lobby-joined-count').textContent='0';
+    this._poll();
+    clearInterval(this._pollTimer);
+    this._pollTimer=setInterval(()=>this._poll(),2500);
+  },
+  async _poll(){
+    const{count}=await _sb.from('cards').select('*',{count:'exact',head:true}).eq('room_id',St.sessionCode);
+    const n=count||0;
+    $('lobby-joined-count').textContent=n;
+    $('lobby-waiting-msg').textContent=n===0?'Waiting for students to join…':`${n} student${n===1?'':'s'} ready. Tap Start when everyone's in.`;
+  },
+  async start(){
+    clearInterval(this._pollTimer);this._pollTimer=null;
+    await Net.startGame(St.sessionCode);
+    const sounds=soundsForDiff(St.difficulty);
+    Caller.init(sounds);
+    UI.go('caller-screen');
+    if(!St.autoReveal){
+      setTimeout(()=>showVignette('caller-gear-btn','IPA reveal is <strong>off</strong> by default.<br>Tap ⚙️ to change call speed, auto-reveal &amp; more.','bingo_caller_hint'),900);
+    }
+  },
+  exit(){
+    clearInterval(this._pollTimer);this._pollTimer=null;
+    UI.go('setup-screen');
   }
 };
 
@@ -1359,7 +1463,10 @@ const Player={
   cardId:'',
   currentDiff:'normal',
   _roomId:'',
-  _unsubCalls:null,
+  _unsubRoom:null,
+  strictMarking:false,
+  armed:new Set(),
+  _roomEnabledCats:null,
 
   async applyCode(){
     const raw=$('session-input').value.trim();
@@ -1368,21 +1475,43 @@ const Player={
     const room=await Net.joinRoom(raw);
     if(!room.found){alert('Room not found. Check the code with your teacher.');return;}
     this.currentDiff=room.difficulty;
+    this.strictMarking=!!room.strictMarking;
+    this._roomEnabledCats=(room.enabledCats&&room.enabledCats.length)?new Set(room.enabledCats):null;
     this._roomId=raw;
+    this.armed=new Set();
     $('code-input-wrap').classList.add('hidden');
-    if(this._unsubCalls){this._unsubCalls();this._unsubCalls=null;}
-    this._unsubCalls=Net.subscribeCalls(this._roomId,(ev)=>Player.onCallReceived(ev));
+    if(this._unsubRoom){this._unsubRoom();this._unsubRoom=null;}
+    this._unsubRoom=Net.subscribeRoomEvents(this._roomId,{
+      onCall:(ev)=>Player.onCallReceived(ev),
+      onStart:()=>Player.onGameStart(),
+    });
     const pastCalls=room.recentCalls||[];
+    const isLobby=room.status==='lobby';
     WinDemo.show(()=>{
       Player.buildCard();
-      for(const c of pastCalls)Player.autoMarkCalledSound(c.sound_id);
+      for(const c of pastCalls)Player._autoMark(c.sound_id);
       if(pastCalls.length){const last=pastCalls[pastCalls.length-1];Player.showCalledPanel({word:last.word,soundId:last.sound_id,soundLabel:last.sound_label});}
+      if(isLobby)Player.showWaitingPanel();
+      else Player.hideWaitingPanel();
+      Player._refreshArmedState();
     });
+  },
+
+  showWaitingPanel(){$('waiting-panel').classList.remove('hidden');},
+  hideWaitingPanel(){$('waiting-panel').classList.add('hidden');},
+
+  onGameStart(){
+    this.hideWaitingPanel();
+    if(typeof toast==='function')toast('🎮 Game started! Listen for the first sound.');
   },
 
   buildCard(){
     const diff=this.currentDiff||St.difficulty;
-    const sounds=soundsForDiff(diff);
+    let sounds=soundsForDiff(diff);
+    if(this._roomEnabledCats){
+      const filtered=SOUNDS.filter(s=>this._roomEnabledCats.has(s.category));
+      if(filtered.length>=GRID_COUNT[diff])sounds=filtered;
+    }
     const gs=GRID_SIZE[diff];
     const needed=gs*gs-(diff==='hard'?1:0);
     const picked=shuffle(sounds).slice(0,needed);
@@ -1411,11 +1540,18 @@ const Player={
   },
 
   mark(i){
-    if(!this.card[i])return;
-    this.marked[i]=!this.marked[i];
+    const s=this.card[i];
+    if(!s)return;
+    if(this.marked[i])return;
     const el=document.querySelector(`#player-grid .bsq[data-i="${i}"]`);
-    if(this.marked[i]){el.classList.add('marked','stamped');FX.pop(el);}
-    else{el.classList.remove('marked','stamped');}
+    if(!this.armed.has(s.id)){
+      if(el){el.classList.add('shake');setTimeout(()=>el.classList.remove('shake'),400);}
+      return;
+    }
+    this.marked[i]=true;
+    this.armed.delete(s.id);
+    if(el){el.classList.add('marked','stamped');FX.pop(el);}
+    this._refreshArmedState();
   },
 
   callBingo(){
@@ -1453,7 +1589,7 @@ const Player={
     return null;
   },
 
-  autoMarkCalledSound(soundId){
+  _autoMark(soundId){
     const i=this.card.findIndex(s=>s&&s.id===soundId);
     if(i!==-1&&!this.marked[i]){
       this.marked[i]=true;
@@ -1462,9 +1598,23 @@ const Player={
     }
   },
 
+  _refreshArmedState(){
+    document.querySelectorAll('#player-grid .bsq').forEach(el=>{
+      const i=+el.dataset.i;
+      const s=this.card[i];
+      if(!s){el.classList.remove('armed','disabled');return;}
+      if(this.marked[i]){el.classList.remove('armed','disabled');return;}
+      if(this.armed.has(s.id)){el.classList.add('armed');el.classList.remove('disabled');}
+      else{el.classList.remove('armed');el.classList.add('disabled');}
+    });
+  },
+
   onCallReceived({word,soundId,soundLabel}){
+    this.hideWaitingPanel();
     this.showCalledPanel({word,soundId,soundLabel});
-    this.autoMarkCalledSound(soundId);
+    if(this.strictMarking)this.armed=new Set([soundId]);
+    else this.armed.add(soundId);
+    this._refreshArmedState();
   },
 
   showCalledPanel({word,soundId,soundLabel}){
