@@ -176,12 +176,32 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 .wp-sub{font-size:12px;color:var(--muted);font-weight:600}
 .wp-pulse{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--gold);margin-right:6px;animation:wpPulse 1.4s ease-in-out infinite}
 @keyframes wpPulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
-/* ─── Armed / disabled cell states (multiplayer) ─── */
-.bsq.disabled{opacity:.35;pointer-events:none;filter:saturate(.4)}
-.bsq.armed{box-shadow:0 0 0 3px var(--clr),0 0 18px 2px var(--clr);animation:armedPulse 1.4s ease-in-out infinite;cursor:pointer}
-@keyframes armedPulse{0%,100%{box-shadow:0 0 0 3px var(--clr),0 0 12px 1px var(--clr)}50%{box-shadow:0 0 0 4px var(--clr),0 0 24px 4px var(--clr)}}
+/* ─── Armed / dimmed cell states (multiplayer, gated by highlight toggle) ─── */
+.bsq.dimmed{opacity:.55;filter:saturate(.55)}
+.bsq.armed{box-shadow:0 0 0 3px var(--gold),0 0 18px 2px rgba(255,209,102,.6);animation:armedPulse 1.4s ease-in-out infinite;cursor:pointer}
+@keyframes armedPulse{0%,100%{box-shadow:0 0 0 3px var(--gold),0 0 12px 1px rgba(255,209,102,.5)}50%{box-shadow:0 0 0 4px var(--gold),0 0 24px 4px rgba(255,209,102,.75)}}
 .bsq.shake{animation:bsqShake .35s ease}
 @keyframes bsqShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+/* ─── Student history strip ─── */
+.player-history{margin-top:16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:10px 8px}
+.ph-header{font-size:10px;font-weight:900;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;text-align:center;margin-bottom:8px}
+.ph-legend{display:flex;gap:10px;justify-content:center;font-size:9px;font-weight:700;color:var(--muted);margin-top:6px;flex-wrap:wrap}
+.ph-legend span{display:inline-flex;align-items:center;gap:3px}
+.ph-legend i{display:inline-block;width:8px;height:8px;border-radius:2px}
+.ph-chip{background:var(--s2);border-radius:8px;padding:6px 9px;text-align:center;min-width:46px;border:1px solid transparent;transition:all .2s}
+.ph-chip-ipa{font-family:'Fredoka One',cursive;font-size:.95rem;line-height:1.1}
+.ph-chip-sub{font-size:8px;font-weight:800;color:var(--muted);margin-top:2px;letter-spacing:.04em;text-transform:uppercase}
+.ph-chip-marked{background:var(--gold);border-color:var(--gold);box-shadow:0 0 10px rgba(255,209,102,.4)}
+.ph-chip-marked .ph-chip-ipa{color:#1a1430}
+.ph-chip-marked .ph-chip-sub{color:#1a1430;opacity:.7}
+.ph-chip-armed{background:rgba(0,0,0,.35);border-color:var(--clr);animation:phPulse 1.4s ease-in-out infinite}
+.ph-chip-armed .ph-chip-ipa{color:var(--clr)}
+.ph-chip-oncard{background:rgba(0,0,0,.35);border-color:var(--clr);opacity:.85}
+.ph-chip-oncard .ph-chip-ipa{color:var(--clr)}
+.ph-chip-notmine{opacity:.42}
+.ph-chip-notmine .ph-chip-ipa{color:var(--muted)}
+@keyframes phPulse{0%,100%{box-shadow:0 0 0 1px var(--clr),0 0 6px var(--clr)}50%{box-shadow:0 0 0 2px var(--clr),0 0 16px var(--clr)}}
+.nc-notmine{font-size:11px;font-weight:800;color:var(--muted);margin-top:8px;letter-spacing:.04em;font-style:italic}
 /* ─── Teacher lobby ─── */
 #lobby-screen{padding:0}
 .lobby-wrap{width:100%;max-width:520px;padding:24px 18px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:16px}
@@ -206,9 +226,9 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 .bsq:active{transform:scale(.97)}
 .bsq.free{background:rgba(255,209,102,.15);border-color:rgba(255,209,102,.35);cursor:default}
 .bsq.free .sq-ipa{color:var(--gold)}
-.bsq.marked{border-color:var(--clr,var(--gold));background:var(--clr,var(--gold))}
-.bsq.marked .sq-ipa,.bsq.marked .sq-name,.bsq.marked .sq-cat{color:#fff}
-.bsq.marked::after{content:'✓';position:absolute;top:4px;right:6px;font-size:1.1rem;color:rgba(255,255,255,.9);font-weight:900}
+.bsq.marked{border-color:var(--gold);background:var(--gold);box-shadow:0 0 0 2px var(--gold),0 0 18px 4px rgba(255,209,102,.55)}
+.bsq.marked .sq-ipa,.bsq.marked .sq-name,.bsq.marked .sq-cat{color:#1a1430}
+.bsq.marked::after{content:'✓';position:absolute;top:4px;right:6px;font-size:1.1rem;color:#1a1430;font-weight:900}
 .bsq.winner{animation:winner-glow .5s ease-in-out infinite alternate}
 @keyframes winner-glow{from{box-shadow:0 0 8px var(--gold),0 0 20px rgba(255,209,102,.4)}to{box-shadow:0 0 16px var(--gold),0 0 40px rgba(255,209,102,.7)}}
 .bsq.stamped{animation:stamp-in .3s cubic-bezier(.34,1.56,.64,1)}
@@ -421,6 +441,8 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
     <button class="btn btn-ghost hbtn" style="width:100%;max-width:340px;margin:6px auto 0;display:block;font-size:13px;padding:10px;border-color:rgba(0,204,163,.3);color:var(--teal)" onclick="UI.showOv('ov-glossary')">📖 Sound Guide</button>
   </div>
   <div class="home-footer">
+    🎲 A game of luck — random cards, random calls. No money, no prizes. Just practice.<br>
+    <br>
     Sound BINGO &nbsp;·&nbsp; English Phonology &nbsp;·&nbsp; UNINDRA<br>
     Student: _________________ &nbsp;·&nbsp; Lecturer: _________________<br>
     Built with HTML · CSS · JavaScript · Web Speech API
@@ -555,6 +577,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
         <span id="nc-ipa" class="nc-ipa-tag"></span>
         <span id="nc-cat" class="nc-cat-tag"></span>
       </div>
+      <div id="nc-notmine" class="nc-notmine hidden">📍 Not on your card — listen for the next one!</div>
     </div>
     <div class="code-input-wrap" id="code-input-wrap">
       <div class="ci-label">Enter the 4-digit code from your teacher's screen</div>
@@ -570,6 +593,15 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
       <div class="card-diff" id="card-diff-label">Normal · 4×4</div>
     </div>
     <div class="bingo-grid g4" id="player-grid"></div>
+    <div class="player-history hidden" id="player-history-wrap">
+      <div class="ph-header">📜 Sounds Called So Far</div>
+      <div class="called-history"><div class="history-chips" id="player-history-chips"></div></div>
+      <div class="ph-legend">
+        <span><i style="background:var(--gold)"></i>Marked</span>
+        <span><i style="background:#888;border:1px solid #aaa"></i>On your card</span>
+        <span><i style="background:rgba(255,255,255,.15)"></i>Not on your card</span>
+      </div>
+    </div>
   </div>
   <div class="card-fixed-bottom">
     <button class="btn btn-grad card-bingo-btn" onclick="Player.callBingo()">🎰 BINGO!</button>
@@ -740,6 +772,11 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
         <span class="hm-desc">Paper bingo cards + digital caller, mark with pencil</span>
       </div>
     </div>
+
+    <div style="background:rgba(255,209,102,.08);border:1px solid rgba(255,209,102,.22);border-radius:12px;padding:13px 15px;margin-top:18px;font-size:12.5px;font-weight:600;line-height:1.65;color:var(--text)">
+      🎲 <strong>A note on luck:</strong> BINGO is a game of chance — sounds are called randomly and every card is shuffled differently. Listening sharp and recognising sounds quickly is the <em>skill</em> part. Winning a round, though, is the <em>luck</em> part. Practice the sounds, enjoy the game, and don't take a loss personally — the draw decides each round.<br><br>
+      <span style="color:var(--muted);font-size:11px">No money, no prizes, no stakes — just sound practice with a playful twist.</span>
+    </div>
   </div>
 </div>
 
@@ -789,8 +826,16 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
     <div class="opt-section" id="opt-ipareveal-section">
       <div class="opt-title">IPA Reveal</div>
       <div class="toggle-row">
-        <div><div class="toggle-lbl">Auto-reveal IPA</div><div class="toggle-sub">Shows the sound symbol 2.5s after calling the word</div></div>
-        <label class="tog"><input type="checkbox" id="tog-autoreveal" onchange="Opts.save()"><span class="tog-slider"></span></label>
+        <div><div class="toggle-lbl">Auto-reveal IPA</div><div class="toggle-sub">Shows the sound symbol after the teacher calls the word</div></div>
+        <label class="tog"><input type="checkbox" id="tog-autoreveal" checked onchange="Opts.save()"><span class="tog-slider"></span></label>
+      </div>
+      <div id="autoreveal-delay-row" style="margin-top:10px">
+        <div class="toggle-sub" style="margin-bottom:6px">Reveal delay</div>
+        <div class="speed-row">
+          <button class="speed-btn" data-ardly="1.5" onclick="Opts.setRevealDelay(1.5,this)">⚡ Quick (1.5s)</button>
+          <button class="speed-btn sel" data-ardly="2.5" onclick="Opts.setRevealDelay(2.5,this)">⏱ Normal (2.5s)</button>
+          <button class="speed-btn" data-ardly="4" onclick="Opts.setRevealDelay(4,this)">🐢 Patient (4s)</button>
+        </div>
       </div>
     </div>
     <div class="opt-section" id="opt-strict-section">
@@ -798,9 +843,16 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
       <div class="toggle-row">
         <div>
           <div class="toggle-lbl">🔒 Strict marking</div>
-          <div class="toggle-sub">Students must tap the called sound before the next call — miss it and it's gone. Off (default) = any called sound stays tappable until marked.</div>
+          <div class="toggle-sub">Students must tap the called sound before the next call — miss it and it's gone. Off = any called sound stays tappable until marked.</div>
         </div>
-        <label class="tog"><input type="checkbox" id="tog-strict" onchange="Opts.save()"><span class="tog-slider"></span></label>
+        <label class="tog"><input type="checkbox" id="tog-strict" checked onchange="Opts.save()"><span class="tog-slider"></span></label>
+      </div>
+      <div class="toggle-row" style="margin-top:10px">
+        <div>
+          <div class="toggle-lbl">💡 Highlight tappable cell</div>
+          <div class="toggle-sub">Glows the matching cell on the student's card so they know where to tap. Off = students must identify the sound on their own (harder, better practice).</div>
+        </div>
+        <label class="tog"><input type="checkbox" id="tog-highlight" checked onchange="Opts.save()"><span class="tog-slider"></span></label>
       </div>
     </div>
     <div class="opt-section" id="opt-autocall-section">
@@ -1044,9 +1096,11 @@ const St={
   enabledCats:new Set(['consonant','short_vowel','long_vowel','diphthong']),
   callSpeed:5,
   winCondition:'line',
-  autoReveal:false,
+  autoReveal:true,
+  autoRevealDelay:2.5,
   autoCall:false,
-  strictMarking:false,
+  strictMarking:true,
+  highlightTappable:true,
   soloDifficulty:'normal',
   calledHistory:[],
 };
@@ -1180,11 +1234,17 @@ const Opts={
     St.autoReveal=$('tog-autoreveal').checked;
     St.autoCall=$('tog-autocall').checked;
     St.strictMarking=$('tog-strict').checked;
+    St.highlightTappable=$('tog-highlight').checked;
     checkWarning();
   },
   setSpeed(s,btn){
     St.callSpeed=s;
-    document.querySelectorAll('.speed-btn').forEach(b=>b.classList.remove('sel'));
+    btn.parentElement.querySelectorAll('.speed-btn').forEach(b=>b.classList.remove('sel'));
+    btn.classList.add('sel');
+  },
+  setRevealDelay(d,btn){
+    St.autoRevealDelay=d;
+    btn.parentElement.querySelectorAll('.speed-btn').forEach(b=>b.classList.remove('sel'));
     btn.classList.add('sel');
   },
   setWin(w,btn){
@@ -1322,7 +1382,7 @@ const LobbyT={
     Caller.init(sounds);
     UI.go('caller-screen');
     if(!St.autoReveal){
-      setTimeout(()=>showVignette('caller-gear-btn','IPA reveal is <strong>off</strong> by default.<br>Tap ⚙️ to change call speed, auto-reveal &amp; more.','bingo_caller_hint'),900);
+      setTimeout(()=>showVignette('caller-gear-btn','IPA reveal is currently <strong>off</strong>.<br>Tap ⚙️ to change call speed, reveal delay &amp; more.','bingo_caller_hint'),900);
     }
   },
   exit(){
@@ -1400,7 +1460,7 @@ const Caller={
     this._updateProgress();
     $('done-banner').classList.add('hidden');
     if(St.autoReveal){
-      setTimeout(()=>{if(!this.revealed)this.reveal();},2500);
+      setTimeout(()=>{if(!this.revealed)this.reveal();},Math.round((St.autoRevealDelay||2.5)*1000));
     }
   },
 
@@ -1466,6 +1526,7 @@ const Player={
   _unsubRoom:null,
   strictMarking:false,
   armed:new Set(),
+  calledLog:[],
   _roomEnabledCats:null,
 
   async applyCode(){
@@ -1479,6 +1540,7 @@ const Player={
     this._roomEnabledCats=(room.enabledCats&&room.enabledCats.length)?new Set(room.enabledCats):null;
     this._roomId=raw;
     this.armed=new Set();
+    this.calledLog=[];
     $('code-input-wrap').classList.add('hidden');
     if(this._unsubRoom){this._unsubRoom();this._unsubRoom=null;}
     this._unsubRoom=Net.subscribeRoomEvents(this._roomId,{
@@ -1489,11 +1551,15 @@ const Player={
     const isLobby=room.status==='lobby';
     WinDemo.show(()=>{
       Player.buildCard();
-      for(const c of pastCalls)Player._autoMark(c.sound_id);
+      for(const c of pastCalls){
+        Player._logCall({word:c.word,soundId:c.sound_id,soundLabel:c.sound_label});
+        Player._autoMark(c.sound_id);
+      }
       if(pastCalls.length){const last=pastCalls[pastCalls.length-1];Player.showCalledPanel({word:last.word,soundId:last.sound_id,soundLabel:last.sound_label});}
       if(isLobby)Player.showWaitingPanel();
       else Player.hideWaitingPanel();
       Player._refreshArmedState();
+      Player._renderHistory();
     });
   },
 
@@ -1552,6 +1618,7 @@ const Player={
     this.armed.delete(s.id);
     if(el){el.classList.add('marked','stamped');FX.pop(el);}
     this._refreshArmedState();
+    this._renderHistory();
   },
 
   callBingo(){
@@ -1559,15 +1626,14 @@ const Player={
     const win=this._checkWin(gs);
     if(win){
       if(this._roomId)Net.submitClaim(this._roomId,this.cardId,this.card.map(s=>s?s.id:null),[...this.marked]);
-      win.forEach(i=>{
+      win.cells.forEach(i=>{
         const el=document.querySelector(`#player-grid .bsq[data-i="${i}"]`);
         if(el)el.classList.add('winner');
       });
-      FX._timers.push(setTimeout(()=>FX.bingoLine(win,'player-grid'),100));
-      FX.bigBingo();
+      FX.celebrate(win,'player-grid');
       $('win-card-id').textContent='Card #'+this.cardId;
       $('win-sub').textContent='Show this card to your teacher to verify!';
-      FX._timers.push(setTimeout(()=>UI.showOv('ov-win'),550));
+      FX._timers.push(setTimeout(()=>UI.showOv('ov-win'),win.type==='fullhouse'?1100:650));
     }else{
       const el=document.querySelector('.card-bingo-btn');
       el.textContent='❌ No BINGO yet — keep going!';
@@ -1583,9 +1649,9 @@ const Player={
     lines.push(Array.from({length:n},(_,i)=>i*n+i));
     lines.push(Array.from({length:n},(_,i)=>i*n+(n-1-i)));
     const wins=lines.filter(l=>l.every(i=>m[i]));
-    if(St.winCondition==='line'&&wins.length>=1)return wins[0];
-    if(St.winCondition==='twolines'&&wins.length>=2)return wins.flat();
-    if(St.winCondition==='fullhouse'&&m.every(x=>x))return m.map((_,i)=>i);
+    if(St.winCondition==='line'&&wins.length>=1)return{type:'line',lines:[wins[0]],cells:[...new Set(wins[0])]};
+    if(St.winCondition==='twolines'&&wins.length>=2)return{type:'twolines',lines:[wins[0],wins[1]],cells:[...new Set([...wins[0],...wins[1]])]};
+    if(St.winCondition==='fullhouse'&&m.every(x=>x))return{type:'fullhouse',lines:[],cells:m.map((_,i)=>i)};
     return null;
   },
 
@@ -1599,28 +1665,61 @@ const Player={
   },
 
   _refreshArmedState(){
+    const showHint=St.highlightTappable!==false;
     document.querySelectorAll('#player-grid .bsq').forEach(el=>{
       const i=+el.dataset.i;
       const s=this.card[i];
-      if(!s){el.classList.remove('armed','disabled');return;}
-      if(this.marked[i]){el.classList.remove('armed','disabled');return;}
-      if(this.armed.has(s.id)){el.classList.add('armed');el.classList.remove('disabled');}
-      else{el.classList.remove('armed');el.classList.add('disabled');}
+      if(!s){el.classList.remove('armed','dimmed');return;}
+      if(this.marked[i]){el.classList.remove('armed','dimmed');return;}
+      if(showHint&&this.armed.has(s.id)){el.classList.add('armed');el.classList.remove('dimmed');}
+      else if(showHint){el.classList.remove('armed');el.classList.add('dimmed');}
+      else{el.classList.remove('armed','dimmed');}
     });
   },
 
   onCallReceived({word,soundId,soundLabel}){
     this.hideWaitingPanel();
+    this._logCall({word,soundId,soundLabel});
     this.showCalledPanel({word,soundId,soundLabel});
     if(this.strictMarking)this.armed=new Set([soundId]);
     else this.armed.add(soundId);
     this._refreshArmedState();
+    this._renderHistory();
+  },
+
+  _logCall({word,soundId,soundLabel}){
+    if(!this.calledLog.some(c=>c.soundId===soundId)){
+      this.calledLog.push({word:word||'',soundId,soundLabel:soundLabel||''});
+    }
+  },
+
+  _renderHistory(){
+    const wrap=$('player-history-wrap');
+    const chips=$('player-history-chips');
+    if(!wrap||!chips)return;
+    if(!this.calledLog.length){wrap.classList.add('hidden');return;}
+    wrap.classList.remove('hidden');
+    chips.innerHTML=this.calledLog.map(c=>{
+      const cardIdx=this.card.findIndex(s=>s&&s.id===c.soundId);
+      const onCard=cardIdx!==-1;
+      const marked=onCard&&this.marked[cardIdx];
+      const armed=this.armed.has(c.soundId);
+      let state='notmine';
+      if(marked)state='marked';
+      else if(armed)state='armed';
+      else if(onCard)state='oncard';
+      const sound=SOUNDS.find(s=>s.id===c.soundId);
+      const clr=sound?CAT_COLORS[sound.category]:'#888';
+      const sub=state==='notmine'?'<div class="ph-chip-sub">not yours</div>':(state==='marked'?'<div class="ph-chip-sub">✓</div>':'');
+      return`<div class="ph-chip ph-chip-${state}" style="--clr:${clr}"><div class="ph-chip-ipa">${c.soundLabel||''}</div>${sub}</div>`;
+    }).join('');
   },
 
   showCalledPanel({word,soundId,soundLabel}){
     const s=SOUNDS.find(x=>x.id===soundId);
     const clr=s?CAT_COLORS[s.category]:'#888';
     const catName=s?s.category.replace(/_/g,' '):'';
+    const onCard=this.card.some(c=>c&&c.id===soundId);
     const p=$('now-calling');
     p.style.background=clr+'22';p.style.borderColor=clr+'66';
     p.style.animation='none';void p.offsetHeight;p.style.animation='';
@@ -1628,6 +1727,7 @@ const Player={
     $('nc-ipa').textContent=soundLabel;
     $('nc-ipa').style.background=clr+'33';$('nc-ipa').style.borderColor=clr+'88';$('nc-ipa').style.color=clr;
     $('nc-cat').textContent=catName;
+    $('nc-notmine').classList.toggle('hidden',onCard);
     p.classList.remove('hidden');
   },
 
@@ -1781,12 +1881,11 @@ const Solo={
         if(win){
           clearTimeout(this.cdTimer);this.paused=true;
           $('solo-pause-btn').textContent='▶';
-          win.forEach(wi=>{const we=document.querySelector(`#solo-grid .bsq[data-i="${wi}"]`);if(we)we.classList.add('winner');});
-          FX._timers.push(setTimeout(()=>FX.bingoLine(win,'solo-grid'),100));
-          FX.bigBingo();
+          win.cells.forEach(wi=>{const we=document.querySelector(`#solo-grid .bsq[data-i="${wi}"]`);if(we)we.classList.add('winner');});
+          FX.celebrate(win,'solo-grid');
           $('win-card-id').textContent='Card #'+this.cardId;
           $('win-sub').textContent='🎉 Solo BINGO! You correctly identified every sound!';
-          FX._timers.push(setTimeout(()=>UI.showOv('ov-win'),550));
+          FX._timers.push(setTimeout(()=>UI.showOv('ov-win'),win.type==='fullhouse'?1100:650));
           return;
         }
       }
@@ -1808,9 +1907,9 @@ const Solo={
     lines.push(Array.from({length:n},(_,i)=>i*n+i));
     lines.push(Array.from({length:n},(_,i)=>i*n+(n-1-i)));
     const wins=lines.filter(l=>l.every(i=>m[i]));
-    if(St.winCondition==='line'&&wins.length>=1)return wins[0];
-    if(St.winCondition==='twolines'&&wins.length>=2)return wins.flat();
-    if(St.winCondition==='fullhouse'&&m.every(x=>x))return m.map((_,i)=>i);
+    if(St.winCondition==='line'&&wins.length>=1)return{type:'line',lines:[wins[0]],cells:[...new Set(wins[0])]};
+    if(St.winCondition==='twolines'&&wins.length>=2)return{type:'twolines',lines:[wins[0],wins[1]],cells:[...new Set([...wins[0],...wins[1]])]};
+    if(St.winCondition==='fullhouse'&&m.every(x=>x))return{type:'fullhouse',lines:[],cells:m.map((_,i)=>i)};
     return null;
   },
 
@@ -1890,6 +1989,58 @@ const FX={
       p.style.animationDuration=(.45+Math.random()*.25)+'s';
       this._add(p,850);
     }
+  },
+
+  celebrate(win,gridId){
+    // win = {type, lines, cells}
+    this.bigBingo();
+    if(win.type==='fullhouse'){
+      this._timers.push(setTimeout(()=>this.bingoFullHouse(gridId),100));
+      return;
+    }
+    // line or twolines: draw 1 or 2 SVG lines, staggered
+    win.lines.forEach((ln,idx)=>{
+      this._timers.push(setTimeout(()=>this.bingoLine(ln,gridId),100+idx*220));
+    });
+  },
+
+  bingoFullHouse(gridId){
+    const grid=document.getElementById(gridId);
+    if(!grid)return;
+    const r=grid.getBoundingClientRect();
+    const ns='http://www.w3.org/2000/svg';
+    const svg=document.createElementNS(ns,'svg');
+    svg.style.cssText='position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:599;overflow:visible';
+    const rect=document.createElementNS(ns,'rect');
+    rect.setAttribute('x',r.left-4);rect.setAttribute('y',r.top-4);
+    rect.setAttribute('width',r.width+8);rect.setAttribute('height',r.height+8);
+    rect.setAttribute('rx',16);rect.setAttribute('ry',16);
+    rect.setAttribute('fill','none');
+    rect.setAttribute('stroke','#FFD166');
+    rect.setAttribute('stroke-width','6');
+    rect.style.filter='drop-shadow(0 0 14px #FFD166)';
+    const perim=2*((r.width+8)+(r.height+8));
+    rect.style.strokeDasharray=perim;rect.style.strokeDashoffset=perim;
+    rect.style.animation='bingo-line .55s cubic-bezier(.4,0,.2,1) forwards';
+    svg.appendChild(rect);
+    this._add(svg,1000);
+    // Burst sparkles across the whole grid
+    for(let i=0;i<24;i++){
+      const tid=setTimeout(()=>{
+        const sp=document.createElement('div');sp.className='bingo-sparkle';
+        sp.style.left=(r.left+Math.random()*r.width)+'px';
+        sp.style.top=(r.top+Math.random()*r.height)+'px';
+        sp.textContent=['✨','⭐','💫','🌟','🎉'][Math.floor(Math.random()*5)];
+        this._add(sp,500);
+      },80+i*22);
+      this._timers.push(tid);
+    }
+    // "FULL HOUSE!" word pop above the grid
+    const word=document.createElement('div');
+    word.className='bingo-word-pop';
+    word.style.top=Math.max(20,r.top-40)+'px';
+    word.textContent='🎰 FULL HOUSE!';
+    this._add(word,900);
   },
 
   bingoLine(winIndices, gridId){
@@ -2081,33 +2232,45 @@ function showVignette(btnId,msg,storeKey,duration=4500){
   const r=btn.getBoundingClientRect();
   const pad=8;
 
+  // Any interaction = permanent dismiss (overlay click, tip click, "Got it" link)
+  function dismissPermanent(e){
+    if(e)e.stopPropagation();
+    if(storeKey){_seenVignettes.add(storeKey);_lsSet(storeKey);}
+    cleanup();
+  }
+
   const overlay=document.createElement('div');
   overlay.style.cssText='position:fixed;inset:0;z-index:799;cursor:pointer';
-  overlay.onclick=cleanup;document.body.appendChild(overlay);
+  overlay.onclick=dismissPermanent;document.body.appendChild(overlay);
 
   const hole=document.createElement('div');
   hole.className='spotlight-hole spotlight-pulse';
-  hole.style.cssText=`left:${r.left-pad}px;top:${r.top-pad}px;width:${r.width+pad*2}px;height:${r.height+pad*2}px`;
+  hole.style.cssText=`left:${r.left-pad}px;top:${r.top-pad}px;width:${r.width+pad*2}px;height:${r.height+pad*2}px;cursor:pointer`;
+  hole.onclick=dismissPermanent;
   document.body.appendChild(hole);
 
   const tip=document.createElement('div');
   tip.className='spotlight-tip';
+  tip.style.cursor='pointer';
   tip.innerHTML=msg;
+  // Tiny X close in the corner
+  const xclose=document.createElement('div');
+  xclose.style.cssText='position:absolute;top:6px;right:9px;font-size:14px;line-height:1;opacity:.6;cursor:pointer;font-weight:900';
+  xclose.textContent='✕';
+  xclose.onclick=dismissPermanent;
+  tip.appendChild(xclose);
   const dismiss=document.createElement('div');
-  dismiss.style.cssText='margin-top:8px;font-size:10px;cursor:pointer;text-decoration:underline;opacity:.7';
+  dismiss.style.cssText='margin-top:10px;font-size:11px;cursor:pointer;text-decoration:underline;opacity:.85;font-weight:700';
   dismiss.textContent="Got it — don't show this again";
-  dismiss.onclick=e=>{
-    e.stopPropagation();
-    if(storeKey){_seenVignettes.add(storeKey);_lsSet(storeKey);}
-    cleanup();
-  };
+  dismiss.onclick=dismissPermanent;
   tip.appendChild(dismiss);
+  tip.onclick=dismissPermanent;
   const tipRight=window.innerWidth-r.right-pad;
   tip.style.top=(r.bottom+12)+'px';
   tip.style.right=Math.max(8,tipRight)+'px';
   document.body.appendChild(tip);
 
-  const t=setTimeout(cleanup,duration);
+  const t=setTimeout(dismissPermanent,duration);
   function cleanup(){clearTimeout(t);[overlay,hole,tip].forEach(e=>e.remove());}
 }
 
