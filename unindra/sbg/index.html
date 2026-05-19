@@ -1183,6 +1183,27 @@ function soundsForDiff(diff){
   return ordered;
 }
 
+// Caller-side sound pool: guarantees forced in, random fillers from enabled categories
+// to reach grid_count. Used by both digital (multiplayer) and print flows so every
+// session honors guaranteed sounds in BOTH cards and caller queue.
+function callerSoundsFor(diff){
+  const d=diff||St.difficulty;
+  const need=GRID_COUNT[d];
+  const guar=St.guaranteedSounds||[];
+  if(guar.length===0)return soundsForDiff(d);
+  const guarSet=new Set(guar);
+  const guarSounds=SOUNDS.filter(s=>guarSet.has(s.id)).slice(0,need);
+  const fillerPool=SOUNDS.filter(s=>St.enabledCats.has(s.category)&&!guarSet.has(s.id));
+  const fillers=shuffle(fillerPool).slice(0,need-guarSounds.length);
+  let result=[...guarSounds,...fillers];
+  if(result.length<need){
+    const have=new Set(result.map(s=>s.id));
+    const extras=shuffle(SOUNDS.filter(s=>!have.has(s.id))).slice(0,need-result.length);
+    result=[...result,...extras];
+  }
+  return result;
+}
+
 function checkWarning(){
   const n=activeSounds().length;
   const need=GRID_COUNT[St.difficulty];
@@ -1372,6 +1393,13 @@ const Teacher={
     el.classList.add('sel');
   },
   setDiff(d,el){
+    const newMax=GRID_COUNT[d]-(d==='hard'?1:0);
+    const oldCount=(St.guaranteedSounds||[]).length;
+    if(oldCount>newMax){
+      St.guaranteedSounds=[];
+      const label=d.charAt(0).toUpperCase()+d.slice(1);
+      alert(`Switched to ${label} mode — your ${oldCount} guaranteed sounds were cleared because ${label} only fits ${newMax}. Re-pick from "Guaranteed Sounds" if needed.`);
+    }
     St.difficulty=d;
     document.querySelectorAll('.diff-card').forEach(c=>c.classList.remove('sel'));
     el.classList.add('sel');
@@ -1432,7 +1460,7 @@ const Teacher={
     const sEl=$('guar-status');if(sEl)sEl.textContent=`${n} selected · room for up to ${max} in ${St.difficulty} mode`;
   },
   launch(){
-    const sounds=soundsForDiff(St.difficulty);
+    const sounds=callerSoundsFor(St.difficulty);
     if(sounds.length<GRID_COUNT[St.difficulty]){
       alert(`Not enough sounds enabled! Need ${GRID_COUNT[St.difficulty]} but only ${sounds.length} active. Go to ⚙️ Options and enable more categories.`);
       return;
@@ -1471,7 +1499,7 @@ const LobbyT={
   async start(){
     clearInterval(this._pollTimer);this._pollTimer=null;
     await Net.startGame(St.sessionCode);
-    const sounds=soundsForDiff(St.difficulty);
+    const sounds=callerSoundsFor(St.difficulty);
     Caller.init(sounds);
     UI.go('caller-screen');
     if(!St.autoReveal){
@@ -1604,7 +1632,7 @@ const Caller={
   exit(){clearInterval(this.autoTimer);this._stopCountdown();speechSynthesis.cancel();UI.go('setup-screen');},
 
   launchAfterPrint(){
-    const sounds=soundsForDiff();
+    const sounds=callerSoundsFor(St.difficulty);
     this.init(sounds);UI.go('caller-screen');
   }
 };

@@ -19,8 +19,7 @@
 
   body::before {
     content: '';
-    position: fixed;
-    inset: 0;
+    position: fixed; inset: 0;
     background-image:
       radial-gradient(1px 1px at 15% 22%, rgba(255,255,255,0.35) 0%, transparent 100%),
       radial-gradient(1px 1px at 72% 8%,  rgba(255,255,255,0.25) 0%, transparent 100%),
@@ -32,114 +31,87 @@
       radial-gradient(1px 1px at 48% 60%, rgba(255,255,255,0.18) 0%, transparent 100%),
       radial-gradient(1.5px 1.5px at 25% 50%, rgba(180,220,255,0.25) 0%, transparent 100%),
       radial-gradient(1.5px 1.5px at 80% 30%, rgba(180,220,255,0.20) 0%, transparent 100%);
-    pointer-events: none;
-    z-index: 0;
+    pointer-events: none; z-index: 0;
   }
 
+  /* ── Header ── */
   header {
-    position: relative;
-    z-index: 10;
-    padding: clamp(48px, 8vw, 80px) clamp(24px, 6vw, 80px) clamp(24px, 4vw, 40px);
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 16px;
+    position: relative; z-index: 10;
+    padding: clamp(48px,8vw,80px) clamp(24px,6vw,80px) clamp(24px,4vw,40px);
+    display: flex; align-items: flex-end; justify-content: space-between;
+    flex-wrap: wrap; gap: 16px;
     border-bottom: 1px solid rgba(255,255,255,0.06);
   }
-
   .header-left h1 {
-    font-size: clamp(28px, 5vw, 52px);
-    font-weight: normal;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    font-size: clamp(28px,5vw,52px); font-weight: normal;
+    letter-spacing: 0.12em; text-transform: uppercase;
     color: rgba(244,243,239,0.92);
   }
-
   .header-left p {
-    margin-top: 8px;
-    font-size: clamp(11px, 1.4vw, 14px);
-    font-style: italic;
-    color: rgba(255,255,255,0.38);
-    letter-spacing: 0.04em;
-    line-height: 1.6;
+    margin-top: 8px; font-size: clamp(11px,1.4vw,14px);
+    font-style: italic; color: rgba(255,255,255,0.38);
+    letter-spacing: 0.04em; line-height: 1.6;
   }
-
   .header-right {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    padding-bottom: 4px;
+    display: flex; align-items: center; gap: 16px; padding-bottom: 4px;
   }
-
   .back-link {
-    font-size: clamp(10px, 1.2vw, 13px);
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.35);
-    text-decoration: none;
-    transition: color 0.25s ease;
-    white-space: nowrap;
+    font-size: clamp(10px,1.2vw,13px); letter-spacing: 0.3em;
+    text-transform: uppercase; color: rgba(255,255,255,0.35);
+    text-decoration: none; transition: color 0.25s ease; white-space: nowrap;
   }
   .back-link:hover { color: rgba(255,255,255,0.72); }
 
-  /* Lock button — subtle, tucked in header */
+  /* Lock button */
   #lock-btn {
-    background: none;
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 4px;
-    padding: 6px 10px;
-    cursor: pointer;
-    color: rgba(255,255,255,0.28);
-    font-size: 13px;
-    line-height: 1;
-    transition: color 0.2s ease, border-color 0.2s ease;
-    display: flex;
-    align-items: center;
-    gap: 6px;
+    background: none; border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 4px; padding: 6px 10px; cursor: pointer;
+    color: rgba(255,255,255,0.28); font-size: 13px; line-height: 1;
+    transition: color 0.2s, border-color 0.2s;
+    display: flex; align-items: center; gap: 6px;
   }
   #lock-btn:hover { color: rgba(255,255,255,0.65); border-color: rgba(255,255,255,0.25); }
   #lock-btn.unlocked { color: rgba(160,220,160,0.6); border-color: rgba(160,220,160,0.25); }
   #lock-btn svg { width: 13px; height: 13px; fill: currentColor; }
 
-  /* Sign out notice */
-  #signout-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-family: 'Georgia', serif;
-    font-size: 11px;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.22);
-    padding: 0;
-    transition: color 0.2s ease;
+  /* Sign out + Add */
+  .hdr-text-btn {
+    background: none; border: none; cursor: pointer;
+    font-family: 'Georgia', serif; font-size: 11px;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: rgba(255,255,255,0.22); padding: 0;
+    transition: color 0.2s;
   }
   #signout-btn:hover { color: rgba(255,120,100,0.7); }
+  #add-btn { color: rgba(160,220,160,0.5); }
+  #add-btn:hover { color: rgba(160,220,160,0.9); }
 
+  /* ── Main ── */
   main {
-    position: relative;
-    z-index: 10;
-    padding: clamp(32px, 5vw, 60px) clamp(24px, 6vw, 80px) clamp(48px, 8vw, 100px);
+    position: relative; z-index: 10;
+    padding: clamp(32px,5vw,60px) clamp(24px,6vw,80px) clamp(48px,8vw,100px);
   }
-
+  .count {
+    font-size: clamp(10px,1.1vw,12px); letter-spacing: 0.25em;
+    text-transform: uppercase; color: rgba(255,255,255,0.22);
+    margin-bottom: clamp(20px,3vw,32px);
+  }
   .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
-    gap: clamp(20px, 3vw, 36px);
+    grid-template-columns: repeat(auto-fill, minmax(min(320px,100%), 1fr));
+    gap: clamp(20px,3vw,36px);
   }
 
+  /* ── Card wrap ── */
+  .card-wrap { position: relative; }
+
   .card {
-    display: flex;
-    flex-direction: column;
+    display: flex; flex-direction: column;
     background: rgba(255,255,255,0.03);
     border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 6px;
-    overflow: hidden;
-    cursor: pointer;
-    text-decoration: none;
-    color: inherit;
-    transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    border-radius: 6px; overflow: hidden;
+    text-decoration: none; color: inherit;
+    transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
     will-change: transform;
   }
   .card:hover {
@@ -147,85 +119,160 @@
     transform: translateY(-4px);
     box-shadow: 0 16px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
   }
+  .card.private { border-color: rgba(255,200,80,0.15); }
 
   .thumb {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    overflow: hidden;
-    background: #0a0b10;
+    position: relative; width: 100%; aspect-ratio: 16/9;
+    overflow: hidden; background: #0a0b10;
     border-bottom: 1px solid rgba(255,255,255,0.06);
   }
-
   .thumb iframe {
-    position: absolute;
-    top: 0; left: 0;
-    width: 1280px;
-    height: 720px;
-    transform-origin: top left;
-    border: none;
-    pointer-events: none;
+    position: absolute; top: 0; left: 0;
+    width: 1280px; height: 720px;
+    transform-origin: top left; border: none; pointer-events: none;
   }
-
   .thumb::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: rgba(255,255,255,0);
-    transition: background 0.3s ease;
+    content: ''; position: absolute; inset: 0;
+    background: rgba(255,255,255,0); transition: background 0.3s;
   }
   .card:hover .thumb::after { background: rgba(255,255,255,0.03); }
 
+  /* Private badge */
+  .badge {
+    position: absolute; top: 8px; left: 8px; z-index: 5;
+    font-family: 'Georgia', serif; font-size: 9px;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: rgba(255,200,80,0.8);
+    background: rgba(0,0,0,0.55); border: 1px solid rgba(255,200,80,0.3);
+    border-radius: 3px; padding: 3px 7px; pointer-events: none;
+  }
+
   .card-body {
-    padding: clamp(16px, 2.5vw, 24px);
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    flex: 1;
+    padding: clamp(16px,2.5vw,24px);
+    display: flex; flex-direction: column; gap: 8px; flex: 1;
   }
-
   .card-title {
-    font-size: clamp(13px, 1.6vw, 17px);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: rgba(244,243,239,0.88);
+    font-size: clamp(13px,1.6vw,17px); letter-spacing: 0.08em;
+    text-transform: uppercase; color: rgba(244,243,239,0.88);
   }
-
   .card-desc {
-    font-size: clamp(11px, 1.2vw, 13px);
-    font-style: italic;
-    color: rgba(255,255,255,0.42);
-    line-height: 1.65;
-    letter-spacing: 0.015em;
+    font-size: clamp(11px,1.2vw,13px); font-style: italic;
+    color: rgba(255,255,255,0.42); line-height: 1.65; letter-spacing: 0.015em;
   }
-
   .card-arrow {
-    margin-top: auto;
-    padding-top: 14px;
-    font-size: 11px;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.22);
-    transition: color 0.25s ease;
+    margin-top: auto; padding-top: 14px; font-size: 11px;
+    letter-spacing: 0.25em; text-transform: uppercase;
+    color: rgba(255,255,255,0.22); transition: color 0.25s;
   }
   .card:hover .card-arrow { color: rgba(255,255,255,0.55); }
 
-  .count {
-    font-size: clamp(10px, 1.1vw, 12px);
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.22);
-    margin-bottom: clamp(20px, 3vw, 32px);
+  /* Edit pencil — floats over top-right of card */
+  .edit-btn {
+    position: absolute; top: 8px; right: 8px; z-index: 20;
+    background: rgba(10,11,16,0.85); border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 4px; padding: 5px 8px; cursor: pointer;
+    font-size: 13px; color: rgba(255,255,255,0.5);
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
+    line-height: 1;
+  }
+  .edit-btn:hover {
+    color: rgba(255,255,255,0.9); border-color: rgba(255,255,255,0.35);
+    background: rgba(20,22,30,0.95);
   }
 
-  /* Hidden cards animate in */
-  .card.reveal {
-    animation: card-in 0.4s ease forwards;
-    opacity: 0;
-  }
+  /* Animate-in for private cards */
+  .card.reveal { animation: card-in 0.4s ease forwards; opacity: 0; }
   @keyframes card-in {
     from { opacity: 0; transform: translateY(10px); }
     to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Edit / Add modal ── */
+  #ep-backdrop {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.72); backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 300; align-items: center; justify-content: center;
+  }
+  #ep-backdrop.open { display: flex; }
+
+  #ep-panel {
+    background: #0e0f15; border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px; padding: 32px 28px 28px;
+    width: min(440px, calc(100vw - 40px));
+    box-shadow: 0 32px 80px rgba(0,0,0,0.7);
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  #ep-panel h2 {
+    font-size: 13px; letter-spacing: 0.22em; text-transform: uppercase;
+    font-weight: normal; color: rgba(244,243,239,0.65);
+  }
+
+  .ep-field { display: flex; flex-direction: column; gap: 6px; }
+  .ep-field label {
+    font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+  }
+  .ep-field input, .ep-field textarea {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 4px; padding: 9px 12px;
+    font-family: 'Georgia', serif; font-size: 13px;
+    color: rgba(244,243,239,0.88); outline: none; resize: vertical;
+    transition: border-color 0.2s;
+  }
+  .ep-field input:focus, .ep-field textarea:focus {
+    border-color: rgba(255,255,255,0.28);
+  }
+  .ep-field textarea { min-height: 72px; }
+
+  /* Toggle row */
+  .ep-toggle {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 4px;
+  }
+  .ep-toggle span {
+    font-size: 12px; letter-spacing: 0.08em; color: rgba(255,255,255,0.5);
+  }
+  .ep-toggle input[type="checkbox"] {
+    width: 36px; height: 20px; appearance: none;
+    background: rgba(255,255,255,0.1); border-radius: 10px;
+    cursor: pointer; transition: background 0.2s; position: relative;
+  }
+  .ep-toggle input[type="checkbox"]::after {
+    content: ''; position: absolute;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: rgba(255,255,255,0.5); top: 3px; left: 3px;
+    transition: left 0.2s, background 0.2s;
+  }
+  .ep-toggle input[type="checkbox"]:checked {
+    background: rgba(255,200,80,0.35);
+  }
+  .ep-toggle input[type="checkbox"]:checked::after {
+    left: 19px; background: rgba(255,200,80,0.9);
+  }
+
+  .ep-actions {
+    display: flex; gap: 8px; margin-top: 4px; align-items: center;
+  }
+  .ep-actions .spacer { flex: 1; }
+  .ep-btn {
+    padding: 9px 16px; border-radius: 4px; border: none; cursor: pointer;
+    font-family: 'Georgia', serif; font-size: 11px;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    transition: opacity 0.2s;
+  }
+  .ep-btn:hover { opacity: 0.75; }
+  .ep-btn-save { background: rgba(255,255,255,0.1); color: rgba(244,243,239,0.9); }
+  .ep-btn-cancel { background: transparent; border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.4); }
+  .ep-btn-delete { background: transparent; color: rgba(255,100,80,0.6); font-size: 10px; padding: 9px 12px; }
+  .ep-btn-delete:hover { color: rgba(255,100,80,1); opacity: 1; }
+  .ep-btn.loading { pointer-events: none; opacity: 0.5; }
+
+  #ep-error {
+    font-size: 11px; color: rgba(255,120,100,0.8);
+    font-style: italic; min-height: 16px;
   }
 </style>
 </head>
@@ -237,16 +284,45 @@
     <p>Things built with Claude, one experiment at a time.</p>
   </div>
   <div class="header-right">
-    <button id="signout-btn" style="display:none">Sign out</button>
+    <button id="add-btn" class="hdr-text-btn" style="display:none">+ Add</button>
+    <button id="signout-btn" class="hdr-text-btn" style="display:none">Sign out</button>
     <button id="lock-btn" title="Admin access">
-      <!-- locked icon -->
-      <svg id="icon-locked" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M18 8h-1V6A5 5 0 0 0 7 6v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zm-6 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm3.1-9H8.9V6a3.1 3.1 0 0 1 6.2 0v2z"/></svg>
-      <!-- unlocked icon (hidden by default) -->
-      <svg id="icon-unlocked" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="display:none"><path d="M18 8h-1V6A5 5 0 0 0 7 6v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zm-6 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4zM8.9 8V6a3.1 3.1 0 0 1 6.2 0v2H8.9z" opacity="0.4"/><path d="M18 8H8.9V6a3.1 3.1 0 0 1 5.4-2.1" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+      <svg id="icon-locked" viewBox="0 0 24 24"><path d="M18 8h-1V6A5 5 0 0 0 7 6v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zm-6 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm3.1-9H8.9V6a3.1 3.1 0 0 1 6.2 0v2z"/></svg>
+      <svg id="icon-unlocked" viewBox="0 0 24 24" style="display:none"><path d="M18 8h-1V6A5 5 0 0 0 7 6v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zm-6 9a2 2 0 1 1 0-4 2 2 0 0 1 0 4zM8.9 8V6a3.1 3.1 0 0 1 6.2 0v2H8.9z" opacity="0.4"/><path d="M18 8H8.9V6a3.1 3.1 0 0 1 5.4-2.1" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
     </button>
     <a href="/" class="back-link">&#8592; Home</a>
   </div>
 </header>
+
+<!-- Edit / Add panel -->
+<div id="ep-backdrop">
+  <div id="ep-panel">
+    <h2 id="ep-title-label">Edit Project</h2>
+    <div class="ep-field">
+      <label>Title</label>
+      <input id="ep-title" type="text" placeholder="My Project"/>
+    </div>
+    <div class="ep-field">
+      <label>Description</label>
+      <textarea id="ep-desc" placeholder="A short description…"></textarea>
+    </div>
+    <div class="ep-field">
+      <label>URL path</label>
+      <input id="ep-href" type="text" placeholder="/unindra/smg/"/>
+    </div>
+    <div class="ep-toggle">
+      <span>Private (admin only)</span>
+      <input id="ep-private" type="checkbox"/>
+    </div>
+    <div id="ep-error"></div>
+    <div class="ep-actions">
+      <button class="ep-btn ep-btn-delete" id="ep-delete" style="display:none">Delete</button>
+      <div class="spacer"></div>
+      <button class="ep-btn ep-btn-cancel" id="ep-cancel">Cancel</button>
+      <button class="ep-btn ep-btn-save" id="ep-save">Save</button>
+    </div>
+  </div>
+</div>
 
 <main>
   <p class="count" id="count"></p>
@@ -259,172 +335,211 @@
   const { createClient } = supabase;
   const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  // Public projects — always visible
-  const PUBLIC = [
-    {
-      title: "Expanse of The Universe",
-      desc: "An immersive 3D starfield with drifting particles, orbital mechanics, and rotating quotes — a living canvas for contemplation.",
-      href: "/",
-    },
-    {
-      title: "Fireplace",
-      desc: "A private dashboard for notes, ideas, and blog posts. Built around warmth and focus, gated to a single owner.",
-      href: "/fireplace/",
-    },
-    {
-      title: "Sound Memory Game",
-      desc: "A memory card game where you listen and match sounds — tap your ear, trust your memory.",
-      href: "/unindra/smg/",
-    },
-    {
-      title: "Sound Bingo",
-      desc: "English phonology bingo — match sounds to symbols in a classroom-ready multiplayer game.",
-      href: "/unindra/sbg/",
-    },
-  ];
-
-  // Admin-only projects — data never touches the DOM until authenticated
-  const PRIVATE = [
-    {
-      title: "Graduation Seat Finder",
-      desc: "Interactive seating chart for a graduation ceremony — find your seat and your family's seat in seconds.",
-      href: "/graduation/",
-    },
-  ];
-
-  const OWNER_EMAIL = 'amuhsejati@gmail.com';
-  const IDLE_MS = 60 * 1000; // 1 minute of inactivity → auto sign-out
+  const OWNER_EMAIL  = 'amuhsejati@gmail.com';
+  const IDLE_MS      = 60 * 1000;
   const ACTIVITY_KEY = 'lab_last_activity';
 
-  const grid       = document.getElementById('grid');
-  const countEl    = document.getElementById('count');
-  const lockBtn    = document.getElementById('lock-btn');
-  const signoutBtn = document.getElementById('signout-btn');
-  const iconLocked   = document.getElementById('icon-locked');
-  const iconUnlocked = document.getElementById('icon-unlocked');
+  const grid        = document.getElementById('grid');
+  const countEl     = document.getElementById('count');
+  const lockBtn     = document.getElementById('lock-btn');
+  const signoutBtn  = document.getElementById('signout-btn');
+  const addBtn      = document.getElementById('add-btn');
+  const iconLocked  = document.getElementById('icon-locked');
+  const iconUnlocked= document.getElementById('icon-unlocked');
 
   let isAdmin = false;
 
-  function buildCard(p, animate) {
+  // ── Card rendering ──────────────────────────────────────────
+  function buildCard(p) {
+    const wrap = document.createElement('div');
+    wrap.className = 'card-wrap';
+
     const a = document.createElement('a');
     a.href = p.href;
-    a.className = 'card' + (animate ? ' reveal' : '');
+    a.className = 'card' + (p.is_private ? ' private reveal' : '');
+
     a.innerHTML = `
       <div class="thumb">
+        ${p.is_private ? '<div class="badge">Private</div>' : ''}
         <iframe src="${p.href}" scrolling="no" tabindex="-1"
-          sandbox="allow-scripts allow-same-origin"
-          loading="lazy"></iframe>
+          sandbox="allow-scripts allow-same-origin" loading="lazy"></iframe>
       </div>
       <div class="card-body">
         <div class="card-title">${p.title}</div>
-        <div class="card-desc">${p.desc}</div>
+        <div class="card-desc">${p.description || ''}</div>
         <div class="card-arrow">Visit &rarr;</div>
       </div>`;
-    return a;
+    wrap.appendChild(a);
+
+    if (isAdmin) {
+      const btn = document.createElement('button');
+      btn.className = 'edit-btn';
+      btn.textContent = '✏';
+      btn.title = 'Edit';
+      btn.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); openPanel(p); });
+      wrap.appendChild(btn);
+    }
+    return wrap;
   }
 
   function updateCount() {
-    const n = grid.querySelectorAll('.card').length;
+    const n = grid.querySelectorAll('.card-wrap').length;
     countEl.textContent = n + (n === 1 ? ' project' : ' projects');
   }
 
-  function renderPublic() {
-    PUBLIC.forEach(p => grid.appendChild(buildCard(p, false)));
+  async function loadProjects() {
+    grid.innerHTML = '';
+    countEl.textContent = '…';
+
+    let q = db.from('lab_projects').select('*').order('sort_order');
+    if (!isAdmin) q = q.eq('is_private', false);
+
+    const { data, error } = await q;
+    if (error) { console.error(error); countEl.textContent = ''; return; }
+
+    data.forEach(p => grid.appendChild(buildCard(p)));
     updateCount();
     scaleIframes();
   }
 
-  function renderPrivate() {
-    PRIVATE.forEach(p => grid.appendChild(buildCard(p, true)));
-    updateCount();
-    scaleIframes();
-  }
-
-  function removePrivate() {
-    grid.querySelectorAll('.card.reveal').forEach(c => c.remove());
-    updateCount();
-  }
-
+  // ── Admin state ─────────────────────────────────────────────
   function setAdminUI(on) {
-    if (isAdmin === on) return; // already in this state — don't re-render
+    if (isAdmin === on) return;
     isAdmin = on;
     lockBtn.classList.toggle('unlocked', on);
-    iconLocked.style.display   = on ? 'none' : '';
-    iconUnlocked.style.display = on ? ''     : 'none';
-    signoutBtn.style.display   = on ? ''     : 'none';
-    if (on) renderPrivate(); else removePrivate();
+    iconLocked.style.display  = on ? 'none' : '';
+    iconUnlocked.style.display= on ? '' : 'none';
+    signoutBtn.style.display  = on ? '' : 'none';
+    addBtn.style.display      = on ? '' : 'none';
+    loadProjects();
   }
 
+  // ── Auth ─────────────────────────────────────────────────────
   async function signIn() {
     sessionStorage.setItem('lab_return', '1');
     bumpActivity();
-    await db.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: window.location.origin + '/' },
-    });
+    await db.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + '/' } });
   }
-
   async function signOut() {
     await db.auth.signOut();
     localStorage.removeItem(ACTIVITY_KEY);
     setAdminUI(false);
   }
 
-  // ---- Idle tracking ----
-  function bumpActivity() {
-    localStorage.setItem(ACTIVITY_KEY, String(Date.now()));
-  }
+  // ── Idle tracking ────────────────────────────────────────────
+  function bumpActivity() { localStorage.setItem(ACTIVITY_KEY, String(Date.now())); }
   function isIdle() {
     const last = parseInt(localStorage.getItem(ACTIVITY_KEY) || '0', 10);
     return last > 0 && (Date.now() - last) > IDLE_MS;
   }
-  ['mousemove', 'keydown', 'click', 'touchstart', 'scroll'].forEach(evt => {
-    window.addEventListener(evt, () => { if (isAdmin) bumpActivity(); }, { passive: true });
-  });
-  setInterval(() => {
-    if (isAdmin && isIdle()) signOut();
-  }, 5000);
+  ['mousemove','keydown','click','touchstart','scroll'].forEach(evt =>
+    window.addEventListener(evt, () => { if (isAdmin) bumpActivity(); }, { passive: true })
+  );
+  setInterval(() => { if (isAdmin && isIdle()) signOut(); }, 5000);
 
+  // ── Edit / Add panel ─────────────────────────────────────────
+  const backdrop  = document.getElementById('ep-backdrop');
+  const panelHead = document.getElementById('ep-title-label');
+  const inpTitle  = document.getElementById('ep-title');
+  const inpDesc   = document.getElementById('ep-desc');
+  const inpHref   = document.getElementById('ep-href');
+  const inpPrivate= document.getElementById('ep-private');
+  const epError   = document.getElementById('ep-error');
+  const btnSave   = document.getElementById('ep-save');
+  const btnCancel = document.getElementById('ep-cancel');
+  const btnDelete = document.getElementById('ep-delete');
+
+  let editingId = null; // null = adding new
+
+  function openPanel(p) {
+    editingId = p ? p.id : null;
+    panelHead.textContent = p ? 'Edit Project' : 'Add Project';
+    inpTitle.value   = p ? p.title       : '';
+    inpDesc.value    = p ? (p.description || '') : '';
+    inpHref.value    = p ? p.href        : '/';
+    inpPrivate.checked = p ? p.is_private : false;
+    epError.textContent = '';
+    btnDelete.style.display = p ? '' : 'none';
+    backdrop.classList.add('open');
+    setTimeout(() => inpTitle.focus(), 60);
+  }
+  function closePanel() { backdrop.classList.remove('open'); }
+
+  async function savePanel() {
+    const title = inpTitle.value.trim();
+    const href  = inpHref.value.trim();
+    if (!title || !href) { epError.textContent = 'Title and URL are required.'; return; }
+    epError.textContent = '';
+    btnSave.textContent = '…'; btnSave.classList.add('loading');
+
+    const payload = {
+      title,
+      description: inpDesc.value.trim(),
+      href,
+      is_private: inpPrivate.checked,
+    };
+
+    let error;
+    if (editingId) {
+      ({ error } = await db.from('lab_projects').update(payload).eq('id', editingId));
+    } else {
+      // Put new projects at the end
+      const { data: last } = await db.from('lab_projects').select('sort_order').order('sort_order', { ascending: false }).limit(1);
+      payload.sort_order = last && last.length ? last[0].sort_order + 1 : 0;
+      ({ error } = await db.from('lab_projects').insert(payload));
+    }
+
+    btnSave.textContent = 'Save'; btnSave.classList.remove('loading');
+    if (error) { epError.textContent = error.message; return; }
+    closePanel();
+    loadProjects();
+  }
+
+  async function deleteProject() {
+    if (!editingId) return;
+    if (!confirm('Remove this project from the list?')) return;
+    const { error } = await db.from('lab_projects').delete().eq('id', editingId);
+    if (error) { epError.textContent = error.message; return; }
+    closePanel();
+    loadProjects();
+  }
+
+  addBtn.addEventListener('click', () => openPanel(null));
+  btnSave.addEventListener('click', savePanel);
+  btnCancel.addEventListener('click', closePanel);
+  btnDelete.addEventListener('click', deleteProject);
+  backdrop.addEventListener('click', e => { if (e.target === backdrop) closePanel(); });
+  lockBtn.addEventListener('click', () => { if (!isAdmin) signIn(); });
+  signoutBtn.addEventListener('click', signOut);
+
+  // ── Iframe scaling ───────────────────────────────────────────
+  function scaleIframes() {
+    document.querySelectorAll('.thumb').forEach(thumb => {
+      const iframe = thumb.querySelector('iframe');
+      if (!iframe) return;
+      iframe.style.transform = `scale(${thumb.clientWidth / 1280})`;
+    });
+  }
+  window.addEventListener('resize', scaleIframes);
+
+  // ── Init ─────────────────────────────────────────────────────
   async function init() {
-    renderPublic();
-
-    // Catch the OAuth callback — ?code= in URL means we just returned from Google.
-    // Supabase processes it async; onAuthStateChange fires when done.
     db.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session && session.user.email === OWNER_EMAIL && !isAdmin) {
-        bumpActivity();
-        setAdminUI(true);
+      if (event === 'SIGNED_IN' && session?.user.email === OWNER_EMAIL) {
+        bumpActivity(); setAdminUI(true);
       } else if (event === 'SIGNED_OUT') {
         setAdminUI(false);
       }
     });
 
-    // Also check for an existing session on normal page loads.
     const { data: { session } } = await db.auth.getSession();
-    if (session && session.user.email === OWNER_EMAIL) {
-      if (isIdle()) {
-        await db.auth.signOut();
-        localStorage.removeItem(ACTIVITY_KEY);
-      } else {
-        bumpActivity();
-        setAdminUI(true);
-      }
+    if (session?.user.email === OWNER_EMAIL) {
+      if (isIdle()) { await db.auth.signOut(); localStorage.removeItem(ACTIVITY_KEY); }
+      else { bumpActivity(); setAdminUI(true); }
+    } else {
+      loadProjects();
     }
   }
-
-  lockBtn.addEventListener('click', () => { if (!isAdmin) signIn(); });
-  signoutBtn.addEventListener('click', signOut);
-
-  // Scale iframe thumbnails to fill their containers
-  function scaleIframes() {
-    document.querySelectorAll('.thumb').forEach(thumb => {
-      const iframe = thumb.querySelector('iframe');
-      if (!iframe) return;
-      const scale = thumb.clientWidth / 1280;
-      iframe.style.transform = `scale(${scale})`;
-    });
-  }
-  window.addEventListener('resize', scaleIframes);
 
   init();
 </script>
