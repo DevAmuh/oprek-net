@@ -224,11 +224,11 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 .print-guar-banner .pgb-note{color:var(--muted);font-size:11px;font-weight:600;margin-top:6px;font-style:italic}
 @media print{.print-guar-banner{display:none!important}}
 /* ─── Live Dashboard Sidebar ─── */
-.dash-sidebar{position:fixed;right:0;top:0;bottom:0;width:340px;background:var(--surface);border-left:1px solid rgba(255,255,255,.09);z-index:200;display:flex;transition:transform .3s cubic-bezier(.4,0,.2,1);box-shadow:-6px 0 30px rgba(0,0,0,.4)}
-.dash-sidebar.collapsed{transform:translateX(calc(100% - 44px))}
-.dash-tab{position:absolute;left:0;top:50%;transform:translateY(-50%);width:44px;height:120px;border-radius:14px 0 0 14px;border:none;background:linear-gradient(135deg,var(--gold),#FF6B35);color:#1a1430;cursor:pointer;font-size:18px;font-weight:900;writing-mode:vertical-rl;text-orientation:mixed;letter-spacing:.18em;box-shadow:-3px 0 16px rgba(0,0,0,.4)}
+.dash-sidebar{position:fixed;right:0;top:0;bottom:0;width:340px;background:var(--surface);border-left:1px solid rgba(255,255,255,.09);z-index:200;display:flex;transition:transform .3s cubic-bezier(.4,0,.2,1),background .3s ease,border-left-color .3s ease,box-shadow .3s ease;box-shadow:-6px 0 30px rgba(0,0,0,.4)}
+.dash-sidebar.collapsed{transform:translateX(100%);background:transparent;border-left-color:transparent;box-shadow:none}
+.dash-tab{position:absolute;left:-44px;top:50%;transform:translateY(-50%);width:44px;height:120px;border-radius:14px 0 0 14px;border:none;background:linear-gradient(135deg,var(--gold),#FF6B35);color:#1a1430;cursor:pointer;font-size:18px;font-weight:900;writing-mode:vertical-rl;text-orientation:mixed;letter-spacing:.18em;box-shadow:-4px 0 18px rgba(0,0,0,.5)}
 .dash-tab:hover{filter:brightness(1.08)}
-.dash-panel{flex:1;display:flex;flex-direction:column;margin-left:44px;min-width:0}
+.dash-panel{flex:1;display:flex;flex-direction:column;min-width:0}
 .dash-header{padding:14px 14px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:space-between;gap:8px}
 .dash-title{font-family:'Fredoka One',cursive;font-size:1rem;color:var(--text);display:flex;align-items:center;gap:6px}
 .dash-count-pill{background:rgba(0,204,163,.18);color:var(--teal);padding:2px 9px;border-radius:999px;font-size:10px;font-weight:900;font-family:'Nunito',sans-serif;letter-spacing:.05em}
@@ -1450,12 +1450,12 @@ const Net={
 
   async broadcastProgress(roomId,payload){
     const ch=await this._ensureBC(roomId);
-    ch.send({type:'broadcast',event:'progress',payload});
+    const res=await ch.send({type:'broadcast',event:'progress',payload});
+    if(res!=='ok')console.warn('[Net.broadcastProgress] send result:',res,payload);
   },
 
-  async updateMarked(roomId,cardId,markedIds){
-    const{error}=await _sb.from('cards').update({marked:markedIds}).eq('id',cardId).eq('room_id',roomId);
-    if(error)console.error('[Net.updateMarked]',error.message);
+  async upsertCardProgress(roomId,cardId,displayName,layout,markedIds){
+    return this._queuedCardUpsert({id:cardId,room_id:roomId,display_name:displayName||null,layout,marked:markedIds||[]});
   },
 
   async listCards(roomId){
@@ -1464,9 +1464,19 @@ const Net={
     return data||[];
   },
 
+  // All card writes (initial register + every mark) go through this serialized chain
+  // to prevent the "registerCard arrives after updateMarked → marks lost" race.
+  _cardWriteQ:Promise.resolve(),
+  _queuedCardUpsert(payload){
+    this._cardWriteQ=this._cardWriteQ.then(async()=>{
+      const{error}=await _sb.from('cards').upsert(payload);
+      if(error)console.error('[Net.cardUpsert]',error.message,payload);
+    }).catch(e=>console.error('[Net.cardUpsert chain]',e));
+    return this._cardWriteQ;
+  },
+
   async registerCard(roomId,cardId,layout,displayName,marked){
-    const{error}=await _sb.from('cards').upsert({id:cardId,room_id:roomId,layout,display_name:displayName||null,marked:marked||[]});
-    if(error)console.error('[Net.registerCard]',error.message);
+    return this._queuedCardUpsert({id:cardId,room_id:roomId,layout,display_name:displayName||null,marked:marked||[]});
   },
 
   async submitClaim(roomId,cardId,layout,marked){
@@ -1795,6 +1805,7 @@ const Player={
     this._roomEnabledCats=(room.enabledCats&&room.enabledCats.length)?new Set(room.enabledCats):null;
     this._roomGuaranteed=room.guaranteedSounds||[];
     this._roomId=raw;
+    this.cardId='';  // fresh session = fresh cardId (newCard within session reuses it)
     this.armed=new Set();
     this.calledLog=[];
     this._initEmit();
@@ -1853,7 +1864,7 @@ const Player={
     if(diff==='hard'){this.card.splice(Math.floor(gs*gs/2),0,null);}
     this.marked=new Array(gs*gs).fill(false);
     if(diff==='hard')this.marked[Math.floor(gs*gs/2)]=true;
-    this.cardId=cardId();
+    if(!this.cardId)this.cardId=cardId();
     $('card-id-label').textContent='Card #'+this.cardId;
     $('card-diff-label').textContent=diff.charAt(0).toUpperCase()+diff.slice(1)+' · '+gs+'×'+gs;
     this._render(diff,gs);
@@ -1878,8 +1889,10 @@ const Player={
     this._emitProgress=throttle(()=>{
       if(!this._roomId||!this.cardId)return;
       const ids=this._markedSoundIds();
-      Net.broadcastProgress(this._roomId,{cardId:this.cardId,name:this.displayName||'(anonymous)',layout:this.card.map(s=>s?s.id:null),markedIds:ids});
-      Net.updateMarked(this._roomId,this.cardId,ids);
+      const layout=this.card.map(s=>s?s.id:null);
+      const name=this.displayName||'(anonymous)';
+      Net.broadcastProgress(this._roomId,{cardId:this.cardId,name,layout,markedIds:ids});
+      Net.upsertCardProgress(this._roomId,this.cardId,name,layout,ids);
     },300);
     this._emitProgress.__installed=true;
   },
