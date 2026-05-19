@@ -216,6 +216,55 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 .guar-chip-ipa{font-family:'Fredoka One',cursive;font-size:1.05rem;line-height:1.1}
 .guar-chip-name{font-size:9px;font-weight:800;color:var(--muted);margin-top:2px;letter-spacing:.04em}
 .guar-chip.sel .guar-chip-name{color:var(--gold)}
+/* ─── Print guarantee banner ─── */
+.print-guar-banner{margin:14px auto;max-width:920px;background:linear-gradient(135deg,rgba(255,209,102,.12),rgba(255,107,53,.08));border:1px solid rgba(255,209,102,.32);border-radius:14px;padding:14px 18px;font-size:13px;line-height:1.55;color:var(--text);font-weight:600}
+.print-guar-banner strong{color:var(--gold);font-family:'Fredoka One',cursive;font-size:15px;letter-spacing:.02em}
+.print-guar-banner .pgb-row{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-top:8px}
+.print-guar-banner .pgb-tag{background:rgba(255,209,102,.18);border:1px solid rgba(255,209,102,.35);color:var(--gold);font-family:'Fredoka One',cursive;font-size:13px;padding:3px 9px;border-radius:7px}
+.print-guar-banner .pgb-note{color:var(--muted);font-size:11px;font-weight:600;margin-top:6px;font-style:italic}
+@media print{.print-guar-banner{display:none!important}}
+/* ─── Live Dashboard Sidebar ─── */
+.dash-sidebar{position:fixed;right:0;top:0;bottom:0;width:340px;background:var(--surface);border-left:1px solid rgba(255,255,255,.09);z-index:200;display:flex;transition:transform .3s cubic-bezier(.4,0,.2,1);box-shadow:-6px 0 30px rgba(0,0,0,.4)}
+.dash-sidebar.collapsed{transform:translateX(calc(100% - 44px))}
+.dash-tab{position:absolute;left:0;top:50%;transform:translateY(-50%);width:44px;height:120px;border-radius:14px 0 0 14px;border:none;background:linear-gradient(135deg,var(--gold),#FF6B35);color:#1a1430;cursor:pointer;font-size:18px;font-weight:900;writing-mode:vertical-rl;text-orientation:mixed;letter-spacing:.18em;box-shadow:-3px 0 16px rgba(0,0,0,.4)}
+.dash-tab:hover{filter:brightness(1.08)}
+.dash-panel{flex:1;display:flex;flex-direction:column;margin-left:44px;min-width:0}
+.dash-header{padding:14px 14px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:space-between;gap:8px}
+.dash-title{font-family:'Fredoka One',cursive;font-size:1rem;color:var(--text);display:flex;align-items:center;gap:6px}
+.dash-count-pill{background:rgba(0,204,163,.18);color:var(--teal);padding:2px 9px;border-radius:999px;font-size:10px;font-weight:900;font-family:'Nunito',sans-serif;letter-spacing:.05em}
+.dash-actions{display:flex;gap:4px}
+.dash-iconbtn{background:rgba(255,255,255,.08);border:none;color:var(--text);width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:900;transition:background .15s}
+.dash-iconbtn:hover{background:rgba(255,255,255,.18)}
+.dash-body{flex:1;overflow-y:auto;padding:10px 12px}
+.dash-empty{color:var(--muted);font-size:12px;font-weight:600;text-align:center;padding:30px 12px;font-style:italic;line-height:1.6}
+.dash-row{background:var(--s2);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:9px 11px;margin-bottom:7px;display:flex;align-items:center;gap:10px;transition:background .15s,border-color .15s;animation:dashRowIn .25s ease}
+@keyframes dashRowIn{from{opacity:0;transform:translateX(8px)}to{opacity:1;transform:translateX(0)}}
+.dash-row.leader{border-color:rgba(255,209,102,.4);background:rgba(255,209,102,.07);box-shadow:0 0 0 1px rgba(255,209,102,.15)}
+.dash-rank{font-size:11px;font-weight:900;color:var(--muted);min-width:18px;text-align:right}
+.dash-row.leader .dash-rank{color:var(--gold)}
+.dash-name{flex:1;font-weight:800;font-size:12.5px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.dash-mini-grid{display:grid;gap:2px;flex-shrink:0}
+.dash-mini-grid.dg-3{grid-template-columns:repeat(3,1fr);width:42px}
+.dash-mini-grid.dg-4{grid-template-columns:repeat(4,1fr);width:54px}
+.dash-mini-grid.dg-5{grid-template-columns:repeat(5,1fr);width:66px}
+.dg-cell{aspect-ratio:1;border-radius:2px;background:rgba(255,255,255,.13);transition:background .25s}
+.dg-cell.dg-marked{background:var(--gold);box-shadow:0 0 4px rgba(255,209,102,.6)}
+.dg-cell.dg-free{background:rgba(0,204,163,.55)}
+.dash-count{font-family:'Fredoka One',cursive;font-size:13px;color:var(--gold);min-width:36px;text-align:right;letter-spacing:.02em}
+@media (max-width:720px){.dash-sidebar{width:92vw}}
+/* Dashboard-only pop-out mode */
+body.dashboard-only > *:not(.dash-sidebar){display:none!important}
+body.dashboard-only .dash-sidebar{position:static;width:100%;height:100vh;border-left:none;transform:none!important;box-shadow:none}
+body.dashboard-only .dash-sidebar.collapsed{transform:none!important}
+body.dashboard-only .dash-tab{display:none}
+body.dashboard-only .dash-panel{margin-left:0}
+body.dashboard-only .dash-row{padding:12px 14px}
+body.dashboard-only .dash-mini-grid.dg-3{width:60px}
+body.dashboard-only .dash-mini-grid.dg-4{width:80px}
+body.dashboard-only .dash-mini-grid.dg-5{width:100px}
+body.dashboard-only .dash-name{font-size:15px}
+body.dashboard-only .dash-count{font-size:16px}
+body.dashboard-only .dash-title{font-size:1.3rem}
 /* ─── Teacher lobby ─── */
 #lobby-screen{padding:0}
 .lobby-wrap{width:100%;max-width:520px;padding:24px 18px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:16px}
@@ -601,6 +650,13 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
       <div id="nc-notmine" class="nc-notmine hidden">📍 Not on your card — listen for the next one!</div>
     </div>
     <div class="code-input-wrap" id="code-input-wrap">
+      <div class="ci-label">Your name</div>
+      <div class="ci-row" style="margin-bottom:10px">
+        <input class="ci-input" id="player-name-input" placeholder="Type your name or roll the dice →" maxlength="28"
+               style="font-family:'Nunito',sans-serif;font-size:1.05rem;letter-spacing:0;text-transform:none"
+               oninput="Player.onNameInput()"/>
+        <button class="btn btn-navy" style="font-size:1.4rem;padding:8px 14px" onclick="Player.randomName()" title="Random pseudonym">🎲</button>
+      </div>
       <div class="ci-label">Enter the 4-digit code from your teacher's screen</div>
       <div class="ci-row">
         <input class="ci-input" id="session-input" placeholder="e.g. 2847" maxlength="4"
@@ -669,9 +725,11 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
                oninput="Print.gen()"
                style="width:70px;background:transparent;border:none;color:var(--text);font-family:'Fredoka One',cursive;font-size:1.3rem;outline:none;text-align:center"/>
       </div>
+      <button class="btn btn-navy" style="font-size:14px;padding:10px 18px" onclick="Print.gen()">🎲 Shuffle positions</button>
       <button class="btn btn-teal" style="font-size:14px;padding:10px 20px" onclick="window.print()">🖨️ Print Now</button>
       <button class="btn btn-grad" style="font-size:14px;padding:10px 20px" onclick="Caller.launchAfterPrint()">▶ Start Caller</button>
     </div>
+    <div id="print-guar-banner" class="print-guar-banner hidden"></div>
     <div class="print-grid-preview" id="print-preview"></div>
   </div>
 </div>
@@ -963,6 +1021,23 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
   </div>
 </div>
 
+<!-- ╔═══ LIVE DASHBOARD SIDEBAR ═══╗ -->
+<div id="dashboard-sidebar" class="dash-sidebar collapsed" style="display:none">
+  <button class="dash-tab" onclick="Dashboard.toggle()">📊 LIVE</button>
+  <div class="dash-panel">
+    <div class="dash-header">
+      <div class="dash-title">📊 Live Board <span class="dash-count-pill" id="dash-count">0</span></div>
+      <div class="dash-actions">
+        <button class="dash-iconbtn" onclick="Dashboard.popout()" title="Open in a separate window">↗</button>
+        <button class="dash-iconbtn" onclick="Dashboard.toggle()" title="Collapse">✕</button>
+      </div>
+    </div>
+    <div class="dash-body" id="dash-list">
+      <div class="dash-empty">Waiting for students to join…<br><br>As they tap sounds on their cards, you'll see their progress here in real time.</div>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ════════════════════════════════════════════════════
    DATA  —  24 sounds in pedagogical order
@@ -1126,6 +1201,13 @@ const SOUNDS=[
 const GRID_SIZE={easy:3,normal:4,hard:5};
 const GRID_COUNT={easy:9,normal:16,hard:24};
 
+/* ════════════ PSEUDONYM GENERATOR ════════════ */
+const PSEUDO_ADJ=['Cosmic','Sleepy','Brave','Sunny','Misty','Quiet','Lucky','Bouncy','Curious','Gentle','Witty','Snappy','Jolly','Mellow','Swift','Cheerful','Dreamy','Sparkly','Cozy','Plucky'];
+const PSEUDO_NOUN=['Otter','Comet','Tiger','Falcon','Panda','Dolphin','Nebula','Star','Meteor','Galaxy','Robin','Fox','Owl','Penguin','Seal','Crane','Eagle','Lynx','Wolf','Bear','Koala','Quokka','Heron','Lemur'];
+function pseudonym(){return PSEUDO_ADJ[Math.floor(Math.random()*PSEUDO_ADJ.length)]+' '+PSEUDO_NOUN[Math.floor(Math.random()*PSEUDO_NOUN.length)];}
+function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function throttle(fn,ms){let last=0,sched=null,lastArgs=null;return function(...a){lastArgs=a;const now=Date.now();const wait=ms-(now-last);if(wait<=0){last=now;clearTimeout(sched);sched=null;fn.apply(this,lastArgs);}else if(!sched){sched=setTimeout(()=>{last=Date.now();sched=null;fn.apply(this,lastArgs);},wait);}};}
+
 /* ════════════ STATE ════════════ */
 const St={
   teacherMode:'digital',
@@ -1250,6 +1332,7 @@ const UI={
     $('now-calling').classList.add('hidden');
     $('waiting-panel').classList.add('hidden');
     $('code-input-wrap').classList.remove('hidden');
+    Player.loadSavedName();
   }
 };
 
@@ -1356,16 +1439,33 @@ const Net={
     if(error)console.error('[Net.pushCall]',error.message);
   },
 
-  subscribeRoomEvents(roomId,{onCall,onStart}){
+  subscribeRoomEvents(roomId,{onCall,onStart,onProgress}){
     const ch=_sb.channel('room:'+roomId)
       .on('broadcast',{event:'call'},({payload})=>onCall&&onCall({word:payload.word,soundId:payload.soundId,soundLabel:payload.soundLabel}))
       .on('broadcast',{event:'start'},()=>onStart&&onStart())
+      .on('broadcast',{event:'progress'},({payload})=>onProgress&&onProgress(payload))
       .subscribe();
     return()=>_sb.removeChannel(ch);
   },
 
-  async registerCard(roomId,cardId,layout){
-    const{error}=await _sb.from('cards').upsert({id:cardId,room_id:roomId,layout});
+  async broadcastProgress(roomId,payload){
+    const ch=await this._ensureBC(roomId);
+    ch.send({type:'broadcast',event:'progress',payload});
+  },
+
+  async updateMarked(roomId,cardId,markedIds){
+    const{error}=await _sb.from('cards').update({marked:markedIds}).eq('id',cardId).eq('room_id',roomId);
+    if(error)console.error('[Net.updateMarked]',error.message);
+  },
+
+  async listCards(roomId){
+    const{data,error}=await _sb.from('cards').select('id,display_name,layout,marked').eq('room_id',roomId);
+    if(error){console.error('[Net.listCards]',error.message);return[];}
+    return data||[];
+  },
+
+  async registerCard(roomId,cardId,layout,displayName,marked){
+    const{error}=await _sb.from('cards').upsert({id:cardId,room_id:roomId,layout,display_name:displayName||null,marked:marked||[]});
     if(error)console.error('[Net.registerCard]',error.message);
   },
 
@@ -1502,6 +1602,7 @@ const LobbyT={
     const sounds=callerSoundsFor(St.difficulty);
     Caller.init(sounds);
     UI.go('caller-screen');
+    Dashboard.open(St.sessionCode);
     if(!St.autoReveal){
       setTimeout(()=>showVignette('caller-gear-btn','IPA reveal is currently <strong>off</strong>.<br>Tap ⚙️ to change call speed, reveal delay &amp; more.','bingo_caller_hint'),900);
     }
@@ -1629,11 +1730,12 @@ const Caller={
     $('cd-fill').style.transition='none';$('cd-fill').style.width='0%';
   },
 
-  exit(){clearInterval(this.autoTimer);this._stopCountdown();speechSynthesis.cancel();UI.go('setup-screen');},
+  exit(){clearInterval(this.autoTimer);this._stopCountdown();speechSynthesis.cancel();Dashboard.close();UI.go('setup-screen');},
 
   launchAfterPrint(){
     const sounds=callerSoundsFor(St.difficulty);
     this.init(sounds);UI.go('caller-screen');
+    if(St.sessionCode)Dashboard.open(St.sessionCode);
   }
 };
 
@@ -1650,13 +1752,40 @@ const Player={
   winCondition:'line',
   armed:new Set(),
   calledLog:[],
+  displayName:'',
   _roomEnabledCats:null,
   _roomGuaranteed:[],
+
+  randomName(){
+    const n=pseudonym();
+    $('player-name-input').value=n;
+    this.displayName=n;
+    _lsSave('sbg.playerName',n);
+  },
+
+  onNameInput(){
+    const v=$('player-name-input').value.trim();
+    this.displayName=v;
+    if(v)_lsSave('sbg.playerName',v);
+  },
+
+  loadSavedName(){
+    const saved=_lsLoad('sbg.playerName');
+    if(saved){
+      $('player-name-input').value=saved;
+      this.displayName=saved;
+    }
+  },
 
   async applyCode(){
     const raw=$('session-input').value.trim();
     if(!raw){alert('Please enter the 4-digit code from your teacher.');return;}
     if(raw.length!==4||!/^\d+$/.test(raw)){alert('Enter the 4-digit code (4 numbers only).');return;}
+    // Default to a pseudonym if the student didn't pick one
+    const nameRaw=($('player-name-input').value||'').trim();
+    this.displayName=nameRaw||pseudonym();
+    if(!nameRaw)$('player-name-input').value=this.displayName;
+    _lsSave('sbg.playerName',this.displayName);
     const room=await Net.joinRoom(raw);
     if(!room.found){alert('Room not found. Check the code with your teacher.');return;}
     this.currentDiff=room.difficulty;
@@ -1668,6 +1797,7 @@ const Player={
     this._roomId=raw;
     this.armed=new Set();
     this.calledLog=[];
+    this._initEmit();
     $('code-input-wrap').classList.add('hidden');
     if(this._unsubRoom){this._unsubRoom();this._unsubRoom=null;}
     this._unsubRoom=Net.subscribeRoomEvents(this._roomId,{
@@ -1727,7 +1857,31 @@ const Player={
     $('card-id-label').textContent='Card #'+this.cardId;
     $('card-diff-label').textContent=diff.charAt(0).toUpperCase()+diff.slice(1)+' · '+gs+'×'+gs;
     this._render(diff,gs);
-    if(this._roomId)Net.registerCard(this._roomId,this.cardId,this.card.map(s=>s?s.id:null));
+    if(this._roomId)Net.registerCard(this._roomId,this.cardId,this.card.map(s=>s?s.id:null),this.displayName,this._markedSoundIds());
+  },
+
+  _markedSoundIds(){
+    const out=[];
+    for(let i=0;i<this.card.length;i++){
+      const s=this.card[i];
+      if(s&&this.marked[i])out.push(s.id);
+    }
+    return out;
+  },
+
+  // Throttled progress emit — broadcasts live update + persists to cards.marked.
+  // Both fire on the same throttle so a teacher dashboard reconnecting at any
+  // moment can rebuild state from cards table.
+  _emitProgress:null,  // installed by _initEmit()
+  _initEmit(){
+    if(this._emitProgress&&this._emitProgress.__installed)return;
+    this._emitProgress=throttle(()=>{
+      if(!this._roomId||!this.cardId)return;
+      const ids=this._markedSoundIds();
+      Net.broadcastProgress(this._roomId,{cardId:this.cardId,name:this.displayName||'(anonymous)',layout:this.card.map(s=>s?s.id:null),markedIds:ids});
+      Net.updateMarked(this._roomId,this.cardId,ids);
+    },300);
+    this._emitProgress.__installed=true;
   },
 
   _render(diff,gs){
@@ -1757,6 +1911,7 @@ const Player={
     if(el){el.classList.add('marked','stamped');FX.pop(el);}
     this._refreshArmedState();
     this._renderHistory();
+    this._emitProgress();
   },
 
   callBingo(){
@@ -1800,6 +1955,7 @@ const Player={
       this.marked[i]=true;
       const el=document.querySelector(`#player-grid .bsq[data-i="${i}"]`);
       if(el){el.classList.add('marked','stamped');FX.pop(el);}
+      this._emitProgress();
     }
   },
 
@@ -2068,6 +2224,8 @@ const Print={
     const guarSounds=SOUNDS.filter(s=>guarSet.has(s.id)).slice(0,needed);
     const guarIds=new Set(guarSounds.map(s=>s.id));
     const fillerPool=enabled.filter(s=>!guarIds.has(s.id));
+    // Transparency banner — tells teacher exactly what's locked in BEFORE wasting paper
+    this._renderBanner(guarSounds,needed);
     const preview=$('print-preview');
     preview.innerHTML='';
     for(let c=0;c<count;c++){
@@ -2095,6 +2253,21 @@ const Print={
         ).join('')}</div>`;
       preview.appendChild(div);
     }
+  },
+  _renderBanner(guarSounds,needed){
+    const banner=$('print-guar-banner');if(!banner)return;
+    if(!guarSounds.length){
+      banner.innerHTML=`<strong>🎲 Fully random cards</strong><div class="pgb-note">No guaranteed sounds picked. Every card draws ${needed} random sounds from the enabled categories. Cards will vary widely. Pick guaranteed sounds in Setup to force specific sounds onto every card.</div>`;
+      banner.classList.remove('hidden');
+      return;
+    }
+    const tags=guarSounds.map(s=>`<span class="pgb-tag">${s.label} <span style="color:var(--muted);font-size:10px;font-weight:700">${s.name}</span></span>`).join('');
+    const fillerCount=needed-guarSounds.length;
+    const fillerLine=fillerCount===0
+      ?`Every card has <strong style="font-size:13px">exactly these ${guarSounds.length} sounds</strong> in shuffled positions. Cards look the same — that's intended.`
+      :`Plus <strong style="font-size:13px">${fillerCount} random filler${fillerCount===1?'':'s'}</strong> per card from your enabled categories (cards will differ in those slots).`;
+    banner.innerHTML=`<strong>📌 Locked-in sounds on every card (${guarSounds.length}):</strong><div class="pgb-row">${tags}</div><div class="pgb-note">${fillerLine}</div>`;
+    banner.classList.remove('hidden');
   }
 };
 
@@ -2370,6 +2543,107 @@ const WinDemo={
   }
 };
 
+/* ════════════ LIVE DASHBOARD ════════════ */
+const Dashboard={
+  students:{},
+  _unsub:null,
+  _pollTimer:null,
+  _roomId:null,
+
+  open(roomId){
+    this.close();
+    this._roomId=roomId;
+    const el=$('dashboard-sidebar');
+    if(el)el.style.display='flex';
+    this._loadInitial();
+    this._pollTimer=setInterval(()=>this._loadInitial(),8000);
+    this._unsub=Net.subscribeRoomEvents(roomId,{
+      onProgress:(p)=>this._onProgress(p),
+    });
+  },
+
+  close(){
+    if(this._unsub){this._unsub();this._unsub=null;}
+    if(this._pollTimer){clearInterval(this._pollTimer);this._pollTimer=null;}
+    this.students={};
+    this._roomId=null;
+    const el=$('dashboard-sidebar');
+    if(el&&!document.body.classList.contains('dashboard-only'))el.style.display='none';
+  },
+
+  async _loadInitial(){
+    if(!this._roomId)return;
+    const cards=await Net.listCards(this._roomId);
+    for(const c of cards){
+      const existing=this.students[c.id];
+      // Recent broadcast wins over stale DB read
+      if(existing&&existing.lastUpdate>Date.now()-2500)continue;
+      this.students[c.id]={name:c.display_name||'(anonymous)',layout:c.layout||[],marked:new Set(c.marked||[]),lastUpdate:Date.now()};
+    }
+    this.render();
+  },
+
+  _onProgress({cardId,name,layout,markedIds}){
+    const prev=this.students[cardId];
+    this.students[cardId]={
+      name:name||(prev?prev.name:'(anonymous)'),
+      layout:layout||(prev?prev.layout:[]),
+      marked:new Set(markedIds||[]),
+      lastUpdate:Date.now(),
+    };
+    this.render();
+  },
+
+  render(){
+    const list=Object.entries(this.students).map(([id,s])=>{
+      const total=s.layout.filter(x=>x).length;
+      return{id,name:s.name,layout:s.layout,marked:s.marked,count:s.marked.size,total};
+    }).sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name));
+
+    const cEl=$('dash-count');if(cEl)cEl.textContent=list.length;
+    const body=$('dash-list');if(!body)return;
+
+    if(!list.length){
+      body.innerHTML='<div class="dash-empty">Waiting for students to join…<br><br>As they tap sounds on their cards, you\'ll see their progress here in real time.</div>';
+      return;
+    }
+    body.innerHTML=list.map((s,idx)=>{
+      const gs=Math.round(Math.sqrt(s.layout.length))||3;
+      const cells=s.layout.map(sid=>{
+        if(!sid)return'<div class="dg-cell dg-free"></div>';
+        return`<div class="dg-cell ${s.marked.has(sid)?'dg-marked':''}"></div>`;
+      }).join('');
+      const isLeader=idx===0&&s.count>0;
+      const totalCells=s.total||(gs*gs);
+      return`<div class="dash-row ${isLeader?'leader':''}"><div class="dash-rank">${idx+1}</div><div class="dash-name" title="${escapeHtml(s.name)}">${escapeHtml(s.name)}</div><div class="dash-mini-grid dg-${gs}">${cells}</div><div class="dash-count">${s.count}/${totalCells}</div></div>`;
+    }).join('');
+  },
+
+  toggle(){
+    const el=$('dashboard-sidebar');
+    if(!el)return;
+    el.classList.toggle('collapsed');
+  },
+
+  popout(){
+    if(!this._roomId){alert('No active session.');return;}
+    const url=window.location.pathname+'?dashboard='+encodeURIComponent(this._roomId);
+    const win=window.open(url,'sbg_dash_'+this._roomId,'width=560,height=920,resizable=yes,scrollbars=yes');
+    if(!win)alert('Pop-out blocked by browser. Allow popups for this site and try again.');
+  },
+
+  bootStandalone(roomId){
+    document.body.classList.add('dashboard-only');
+    const el=$('dashboard-sidebar');
+    if(el){
+      el.style.display='flex';
+      el.classList.remove('collapsed');
+    }
+    document.title='📊 Dashboard · Room '+roomId+' · Sound BINGO';
+    this.open(roomId);
+  }
+};
+
 /* ════════════ SPOTLIGHT VIGNETTE ════════════ */
 const _seenVignettes=new Set();
 function _lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
@@ -2492,6 +2766,17 @@ UI.showOv=function(id){
     Glossary.build('consonant');
   }
 };
+
+/* ════════════ POP-OUT DASHBOARD BOOT ════════════ */
+// If URL has ?dashboard=ROOMID, boot directly into the dashboard-only view.
+// This is what Dashboard.popout() opens in a new window for the teacher.
+(function(){
+  try{
+    const params=new URLSearchParams(window.location.search);
+    const dashRoom=params.get('dashboard');
+    if(dashRoom&&typeof Dashboard!=='undefined')Dashboard.bootStandalone(dashRoom);
+  }catch(e){console.error('[dashboard bootstrap]',e);}
+})();
 </script>
 
 </body>
