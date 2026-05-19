@@ -2060,12 +2060,25 @@ const Print={
   gen(){
     const count=parseInt($('print-count-sel').value)||6;
     const diff=St.difficulty;const gs=GRID_SIZE[diff];
-    const sounds=soundsForDiff(diff);
+    const enabled=soundsForDiff(diff);
     const needed=gs*gs-(diff==='hard'?1:0);
+    // Guarantee logic: every card forces the guaranteed sounds in, then fills with random
+    // from enabled categories (excluding guarantees) so each card stays unique.
+    const guarSet=new Set(St.guaranteedSounds||[]);
+    const guarSounds=SOUNDS.filter(s=>guarSet.has(s.id)).slice(0,needed);
+    const guarIds=new Set(guarSounds.map(s=>s.id));
+    const fillerPool=enabled.filter(s=>!guarIds.has(s.id));
     const preview=$('print-preview');
     preview.innerHTML='';
     for(let c=0;c<count;c++){
-      const picked=shuffle(sounds).slice(0,needed);
+      const fillers=shuffle(fillerPool).slice(0,needed-guarSounds.length);
+      let picked=[...guarSounds,...fillers];
+      // Safety net: if filters + guarantees leave too few sounds, top up from full SOUNDS
+      if(picked.length<needed){
+        const have=new Set(picked.map(s=>s.id));
+        const extras=shuffle(SOUNDS.filter(s=>!have.has(s.id))).slice(0,needed-picked.length);
+        picked=[...picked,...extras];
+      }
       let card=shuffle(picked);
       if(diff==='hard')card.splice(Math.floor(gs*gs/2),0,null);
       const id=cardId();
