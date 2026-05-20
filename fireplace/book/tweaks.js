@@ -24,6 +24,8 @@ const INKS = [
 ];
 
 function render() {
+  const info = (window.__getSpreadInfo && window.__getSpreadInfo()) || { current: 0, total: 1 };
+  const wetness = (window.__book && typeof window.__book.inkMs === 'number') ? window.__book.inkMs : 80;
   Panel.innerHTML = `
     <h3>Tweaks</h3>
     <div class="panel-sub">The Book · vol. iii</div>
@@ -41,6 +43,20 @@ function render() {
     <div class="tweak-row">
       <div class="tweak-label">Quill size <b><span id="tw-size-val">${window.__book.size}</span> pt</b></div>
       <input type="range" min="18" max="44" step="1" value="${window.__book.size}" id="tw-size">
+    </div>
+
+    <div class="tweak-row">
+      <div class="tweak-label">Ink wetness <b><span id="tw-wet-val">${wetness}</span> ms</b></div>
+      <input type="range" min="60" max="150" step="5" value="${wetness}" id="tw-wet">
+    </div>
+
+    <div class="tweak-row">
+      <div class="tweak-label">Spread <b><span id="tw-spread-val">${info.current + 1}</span> / <span id="tw-spread-max">${info.total}</span></b></div>
+      <input type="range" min="1" max="${Math.max(1, info.total)}" step="1" value="${info.current + 1}" id="tw-spread">
+    </div>
+
+    <div class="tweak-row">
+      <button class="font-btn danger" id="tw-clear-data">Erase the book…</button>
     </div>
   `;
 
@@ -82,8 +98,68 @@ function render() {
     const v = +sizeEl.value;
     window.__book.setSize(v);
     Panel.querySelector('#tw-size-val').textContent = v;
+    refreshSpreadRange();
   });
+
+  // ink wetness (animation duration — picked up by Phase D's stroke trace)
+  const wetEl = Panel.querySelector('#tw-wet');
+  if (wetEl) {
+    wetEl.addEventListener('input', () => {
+      const v = +wetEl.value;
+      if (window.__book) window.__book.inkMs = v;
+      Panel.querySelector('#tw-wet-val').textContent = v;
+    });
+  }
+
+  // spread selector — jumps to spread N
+  const spreadEl = Panel.querySelector('#tw-spread');
+  if (spreadEl) {
+    spreadEl.addEventListener('input', () => {
+      const target = +spreadEl.value - 1;
+      if (window.__goToSpread) window.__goToSpread(target);
+      Panel.querySelector('#tw-spread-val').textContent = target + 1;
+    });
+  }
+
+  // Erase the book — two-step confirm
+  const clearBtn = Panel.querySelector('#tw-clear-data');
+  if (clearBtn) {
+    let armed = false;
+    let armedTimer = null;
+    clearBtn.addEventListener('click', () => {
+      if (!armed) {
+        armed = true;
+        clearBtn.textContent = 'really? (click again)';
+        clearBtn.classList.add('armed');
+        armedTimer = setTimeout(() => {
+          armed = false;
+          clearBtn.textContent = 'Erase the book…';
+          clearBtn.classList.remove('armed');
+        }, 3000);
+      } else {
+        clearTimeout(armedTimer);
+        if (window.__eraseBook) window.__eraseBook();
+      }
+    });
+  }
 }
+
+function refreshSpreadRange() {
+  if (!window.__getSpreadInfo) return;
+  const info = window.__getSpreadInfo();
+  const slider = Panel && Panel.querySelector('#tw-spread');
+  const valLbl = Panel && Panel.querySelector('#tw-spread-val');
+  const maxLbl = Panel && Panel.querySelector('#tw-spread-max');
+  if (slider) {
+    slider.max = Math.max(1, info.total);
+    slider.value = info.current + 1;
+  }
+  if (valLbl) valLbl.textContent = info.current + 1;
+  if (maxLbl) maxLbl.textContent = info.total;
+}
+
+// Keep the spread slider in sync when prev/next or live overflow updates state.
+window.addEventListener('book:spread-changed', refreshSpreadRange);
 
 function currentInkName() {
   const ink = INKS.find(i => i.value.toLowerCase() === window.__book.ink.toLowerCase());

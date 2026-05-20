@@ -209,6 +209,8 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 .guar-cat{margin-bottom:14px}
 .guar-cat-title{font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
 .guar-cat-title i{display:inline-block;width:9px;height:9px;border-radius:50%}
+.guar-cat-all{margin-left:auto;background:transparent;border:1px solid rgba(255,209,102,.3);color:var(--gold);font-family:'Nunito',sans-serif;font-size:10px;font-weight:800;letter-spacing:.04em;padding:3px 8px;border-radius:6px;cursor:pointer;text-transform:none}
+.guar-cat-all:hover{background:rgba(255,209,102,.12);border-color:var(--gold)}
 .guar-chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:7px}
 .guar-chip{background:var(--s2);border:2px solid transparent;border-radius:10px;padding:8px 6px;text-align:center;cursor:pointer;transition:all .15s}
 .guar-chip:hover{background:var(--s3)}
@@ -488,6 +490,9 @@ body.dashboard-only .dash-title{font-size:1.3rem}
 .re-banner-title{font-family:'Fredoka One',cursive;font-size:1.3rem;color:#FF8855;margin-bottom:4px}
 .re-banner-sub{font-size:12px;color:var(--muted);font-weight:600}
 .bsq.frozen{opacity:.5;pointer-events:none;filter:grayscale(.5)}
+/* Player win-count badge (streak across "New Card" within a session) */
+.player-wins{display:inline-flex;align-items:center;gap:5px;font-family:'Fredoka One',cursive;font-size:.9rem;color:var(--gold);background:linear-gradient(135deg,rgba(255,209,102,.15),rgba(255,107,53,.1));border:1px solid rgba(255,209,102,.4);border-radius:9px;padding:3px 10px;animation:winsPop .35s cubic-bezier(.2,.8,.3,1.2)}
+@keyframes winsPop{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
 /* Dashboard winner badge */
 .dash-row.winner{background:linear-gradient(90deg,rgba(255,209,102,.18),rgba(255,209,102,.06));border:1px solid rgba(255,209,102,.5);box-shadow:0 0 18px rgba(255,209,102,.18)}
 .dash-row.winner .dash-rank{background:linear-gradient(135deg,#FFD166,#FF6B35);color:#1a1430}
@@ -497,8 +502,12 @@ body.dashboard-only .dash-title{font-size:1.3rem}
 /* Reconnect toast */
 .net-toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:rgba(20,16,55,.95);border:1px solid rgba(255,107,53,.4);border-radius:12px;padding:9px 16px;font-size:12px;font-weight:800;color:var(--text);z-index:500;box-shadow:0 8px 30px rgba(0,0,0,.5);display:flex;align-items:center;gap:8px;animation:ntIn .25s ease}
 .net-toast.ok{border-color:rgba(0,204,163,.4);color:var(--teal)}
+.net-toast.ended{border-color:rgba(255,107,53,.55);color:#FF8855;background:rgba(40,16,30,.96)}
 .net-toast .nt-dot{width:8px;height:8px;border-radius:50%;background:#FF6B35;animation:ntPulse 1.2s ease-in-out infinite}
 .net-toast.ok .nt-dot{background:var(--teal);animation:none}
+.net-toast.ended .nt-dot{background:#FF8855;animation:none}
+.net-toast .nt-act{background:rgba(255,107,53,.18);border:1px solid rgba(255,107,53,.35);color:#FF8855;font-family:'Nunito',sans-serif;font-weight:900;font-size:11px;padding:4px 10px;border-radius:7px;cursor:pointer;margin-left:6px}
+.net-toast .nt-act:hover{background:rgba(255,107,53,.28)}
 @keyframes ntIn{from{opacity:0;transform:translate(-50%,-12px)}to{opacity:1;transform:translate(-50%,0)}}
 @keyframes ntPulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
 /* Resume-as-teacher prompt */
@@ -579,7 +588,6 @@ body.dashboard-only .dash-title{font-size:1.3rem}
   <div class="topbar">
     <button class="backbtn" onclick="UI.go('home')">←</button>
     <div class="topbar-title">🎓 Teacher Setup</div>
-    <button class="icon-btn" onclick="UI.showOv('ov-options')" title="Advanced Options">⚙️</button>
   </div>
   <div class="setup-body">
     <div class="setup-section">
@@ -619,7 +627,7 @@ body.dashboard-only .dash-title{font-size:1.3rem}
     </div>
     <div class="setup-section">
       <div class="setup-lbl">Guaranteed Sounds<sup class="help-mark" onclick="Teacher.guarHelp()" title="What is this?">?</sup></div>
-      <button class="btn btn-navy" style="width:100%;font-size:14px;padding:12px;display:flex;align-items:center;justify-content:space-between" onclick="Teacher.openGuaranteed()">
+      <button id="guarantee-pick-btn" class="btn btn-navy" style="width:100%;font-size:14px;padding:12px;display:flex;align-items:center;justify-content:space-between" onclick="Teacher.openGuaranteed()">
         <span>📌 Pick guaranteed sounds</span>
         <span style="background:rgba(255,209,102,.18);color:var(--gold);padding:3px 10px;border-radius:999px;font-size:12px"><span id="guar-count">0</span> selected</span>
       </button>
@@ -734,6 +742,7 @@ body.dashboard-only .dash-title{font-size:1.3rem}
     </div>
     <div class="card-meta">
       <div class="card-id" id="card-id-label">Card #—</div>
+      <div class="player-wins hidden" id="player-wins">🏆 0 wins</div>
       <div class="card-diff" id="card-diff-label">Normal · 4×4</div>
     </div>
     <div class="bingo-grid g4" id="player-grid"></div>
@@ -757,6 +766,7 @@ body.dashboard-only .dash-title{font-size:1.3rem}
   <div class="topbar">
     <button class="backbtn" onclick="Solo.exit()">←</button>
     <div class="topbar-title">🎮 Solo BINGO</div>
+    <div id="solo-streak" class="player-wins hidden" style="margin-right:6px">🏆 0 wins</div>
     <button class="icon-btn" onclick="UI.showOv('ov-options')">⚙️</button>
   </div>
   <div class="solo-caller-bar">
@@ -1011,6 +1021,17 @@ body.dashboard-only .dash-title{font-size:1.3rem}
         <label class="tog"><input type="checkbox" id="tog-autocall" onchange="Opts.save()"><span class="tog-slider"></span></label>
       </div>
     </div>
+    <div class="opt-section" id="opt-tips-section" style="border-top:1px dashed rgba(255,255,255,.08);padding-top:14px;margin-top:6px">
+      <div class="opt-title">💡 Tips &amp; Hints <span style="font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--muted);margin-left:4px;text-transform:none">(applies everywhere)</span></div>
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-lbl">Show one-time tips</div>
+          <div class="toggle-sub">The little spotlight hints that explain features the first time you see them.</div>
+        </div>
+        <label class="tog"><input type="checkbox" id="tog-tips" checked onchange="Opts.save()"><span class="tog-slider"></span></label>
+      </div>
+      <button class="btn btn-ghost" style="width:100%;font-size:12px;padding:9px;margin-top:10px" onclick="Opts.resetTips()">🔁 Show dismissed tips again</button>
+    </div>
     <div id="opts-warning" class="hidden" style="background:rgba(255,107,53,.15);border:1px solid rgba(255,107,53,.3);border-radius:10px;padding:10px 14px;font-size:12px;font-weight:700;color:#FF6B35;margin-top:8px"></div>
     <button class="btn btn-grad" style="width:100%;font-size:15px;padding:13px;margin-top:14px" onclick="UI.closeOv('ov-options')">Done</button>
   </div>
@@ -1028,6 +1049,7 @@ body.dashboard-only .dash-title{font-size:1.3rem}
     <div id="guar-list"></div>
     <div style="display:flex;gap:8px;margin-top:14px">
       <button class="btn btn-ghost" style="flex:1;font-size:13px;padding:11px" onclick="Teacher.clearGuar()">Clear all</button>
+      <button class="btn btn-navy" style="flex:1;font-size:13px;padding:11px" onclick="Teacher.selectAllGuar()">Select max</button>
       <button class="btn btn-grad" style="flex:2;font-size:14px;padding:11px" onclick="UI.closeOv('ov-guaranteed')">Done</button>
     </div>
   </div>
@@ -1035,7 +1057,7 @@ body.dashboard-only .dash-title{font-size:1.3rem}
 
 <!-- ╔═══ OV: SOLO SETUP ═══╗ -->
 <div id="ov-solo-setup" class="ov">
-  <div class="obox">
+  <div class="obox" style="max-width:520px">
     <button class="ox" onclick="UI.closeOv('ov-solo-setup')">✕</button>
     <div class="otitle">🎮 Solo BINGO</div>
     <div class="setup-lbl" style="margin-bottom:14px">Choose your difficulty</div>
@@ -1056,7 +1078,18 @@ body.dashboard-only .dash-title{font-size:1.3rem}
         <span class="dc-grid">5×5 · 24 sounds</span>
       </div>
     </div>
-    <button class="btn btn-grad" style="width:100%;font-size:16px;padding:16px;margin-top:24px"
+    <div class="setup-lbl" style="margin:18px 0 8px">Win condition</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px">
+      <button class="win-btn sel" id="solo-win-line" onclick="Solo.pickWin('line',this)">📏 Any Line</button>
+      <button class="win-btn" id="solo-win-twolines" onclick="Solo.pickWin('twolines',this)">📏📏 Two Lines</button>
+      <button class="win-btn" id="solo-win-fullhouse" onclick="Solo.pickWin('fullhouse',this)">🏠 Full House</button>
+    </div>
+    <div class="setup-lbl" style="margin:18px 0 8px">Guaranteed sounds <span style="font-size:9.5px;font-weight:700;letter-spacing:.04em;color:var(--muted);text-transform:none;margin-left:3px">— focus practice on specific phonemes</span></div>
+    <button class="btn btn-navy" style="width:100%;font-size:13px;padding:11px;display:flex;align-items:center;justify-content:space-between" onclick="Solo.openGuaranteed()">
+      <span>📌 Pick guaranteed sounds</span>
+      <span style="background:rgba(255,209,102,.18);color:var(--gold);padding:3px 10px;border-radius:999px;font-size:11.5px"><span id="solo-guar-count">0</span> selected</span>
+    </button>
+    <button class="btn btn-grad" style="width:100%;font-size:16px;padding:16px;margin-top:18px"
             onclick="UI.closeOv('ov-solo-setup');WinDemo.show(()=>{UI.go('solo-screen');Solo.init();})">
       ▶ Start Solo Game
     </button>
@@ -1138,7 +1171,7 @@ body.dashboard-only .dash-title{font-size:1.3rem}
     <div class="win-sub" id="win-sub">Show your card to the teacher to verify!</div>
     <div class="win-card-id" id="win-card-id">Card #A1B2</div>
     <div class="win-btns">
-      <button class="btn btn-grad wbtn" onclick="Player.newCard();UI.closeOv('ov-win')">🔄 New Card</button>
+      <button class="btn btn-grad wbtn" onclick="winNewCard()">🔄 New Card</button>
       <button class="btn btn-navy wbtn" onclick="UI.closeOv('ov-win')">Back to Card</button>
     </div>
   </div>
@@ -1329,6 +1362,12 @@ const PSEUDO_ADJ=['Cosmic','Sleepy','Brave','Sunny','Misty','Quiet','Lucky','Bou
 const PSEUDO_NOUN=['Otter','Comet','Tiger','Falcon','Panda','Dolphin','Nebula','Star','Meteor','Galaxy','Robin','Fox','Owl','Penguin','Seal','Crane','Eagle','Lynx','Wolf','Bear','Koala','Quokka','Heron','Lemur'];
 function pseudonym(){return PSEUDO_ADJ[Math.floor(Math.random()*PSEUDO_ADJ.length)]+' '+PSEUDO_NOUN[Math.floor(Math.random()*PSEUDO_NOUN.length)];}
 function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+// Routes the win modal's "New Card" action based on which screen the player is on
+function winNewCard(){
+  UI.closeOv('ov-win');
+  if(document.querySelector('#solo-screen.on'))Solo.newCard();
+  else Player.newCard();
+}
 function throttle(fn,ms){let last=0,sched=null,lastArgs=null;return function(...a){lastArgs=a;const now=Date.now();const wait=ms-(now-last);if(wait<=0){last=now;clearTimeout(sched);sched=null;fn.apply(this,lastArgs);}else if(!sched){sched=setTimeout(()=>{last=Date.now();sched=null;fn.apply(this,lastArgs);},wait);}};}
 
 /* ════════════ STATE ════════════ */
@@ -1345,7 +1384,11 @@ const St={
   strictMarking:true,
   highlightTappable:true,
   guaranteedSounds:[],
+  showTips:true,
   soloDifficulty:'normal',
+  soloWinCondition:'line',
+  soloGuaranteedSounds:[],
+  soloWinCount:0,
   calledHistory:[],
 };
 
@@ -1470,10 +1513,24 @@ const UI={
     else console.error('[UI.go] no screen found with id:',id);
     if(id==='setup-screen'){
       setTimeout(()=>showVignette('setup-opt-btn','Configure sound categories,<br>win conditions &amp; call speed here.','bingo_setup_hint'),700);
+      // Second vignette: pitch the value of picking guarantees. Only fires after the setup-hint is dismissed
+      // (chained delay so they don't overlap) and only if no guarantees are picked yet.
+      setTimeout(()=>{
+        if(!St.guaranteedSounds||St.guaranteedSounds.length===0){
+          showVignette('guarantee-pick-btn','📌 <strong>Picking some is recommended.</strong><br>When more students win, motivation stays high — and they\'ll re-engage round after round.','bingo_guarantee_hint',5500);
+        }
+      },5200);
     }
   },
   showOv(id){
     if(id==='ov-options') Opts.adapt();
+    if(id==='ov-solo-setup'){
+      // Reflect current solo settings in the picker
+      const w=St.soloWinCondition||'line';
+      document.querySelectorAll('#ov-solo-setup .win-btn').forEach(b=>b.classList.remove('sel'));
+      const wEl=$(`solo-win-${w}`);if(wEl)wEl.classList.add('sel');
+      const c=$('solo-guar-count');if(c)c.textContent=(St.soloGuaranteedSounds||[]).length;
+    }
     $(id).classList.add('on');
   },
   closeOv(id){
@@ -1511,6 +1568,10 @@ const Opts={
     vis('opt-strict-section',    isSetup);
     // Time pressure — solo only
     vis('opt-autocall-section',  isSolo);
+    // Tips & Hints — global, always visible
+    vis('opt-tips-section', true);
+    // Sync the tips toggle with current St.showTips (which may have been loaded from localStorage)
+    const tT=$('tog-tips');if(tT)tT.checked=St.showTips!==false;
 
     // Relabel speed section to match context
     const lbl=$('opt-speed-lbl');
@@ -1531,7 +1592,19 @@ const Opts={
     St.autoCall=$('tog-autocall').checked;
     St.strictMarking=$('tog-strict').checked;
     St.highlightTappable=$('tog-highlight').checked;
+    const tT=$('tog-tips');if(tT)St.showTips=tT.checked;
+    _lsSave('sbg.showTips',St.showTips?'1':'0');
     checkWarning();
+  },
+  resetTips(){
+    // Wipe all bingo_*_hint flags and the in-memory seen-set so vignettes can show again
+    try{
+      const ks=[];
+      for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('bingo_')&&k.endsWith('_hint'))ks.push(k);}
+      for(const k of ks)localStorage.removeItem(k);
+    }catch(e){}
+    if(typeof _seenVignettes!=='undefined')_seenVignettes.clear();
+    if(typeof toast==='function')toast('💡 Tips reset — they\'ll show again as you encounter each feature.');
   },
   setSpeed(s,btn){
     St.callSpeed=s;
@@ -1653,10 +1726,11 @@ const Net={
       .on('broadcast',{event:'end'},()=>onEnd&&onEnd())
       .on('broadcast',{event:'reset'},()=>onReset&&onReset())
       .subscribe(status=>{
-        // Surface connection issues for the user
+        // Surface connection issues for the user.
+        // CLOSED fires on deliberate removeChannel() — that's a user-initiated teardown, not an error.
         if(typeof NetUI==='undefined')return;
         if(status==='SUBSCRIBED')NetUI.flashOk();
-        else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED')NetUI.flashError();
+        else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT')NetUI.flashError();
       });
     return()=>_sb.removeChannel(ch);
   },
@@ -1732,10 +1806,31 @@ const Teacher={
     alert('📌 Guaranteed Sounds\n\nPick sounds here and they will appear on EVERY student\'s card. The remaining cells are filled randomly.\n\n• More guarantees → more students will likely win each round, and the game runs faster.\n• Fewer guarantees → more luck-of-the-draw, longer games, harder wins.\n• Zero guarantees → 100% random (default behavior).\n\nUse this to ensure the sounds you\'re teaching today land on every card.');
   },
   openGuaranteed(){
+    this._guarCtx='teacher';
     this._buildGuarList();
     this._updateGuarCount();
     UI.showOv('ov-guaranteed');
   },
+  _guarCtx:'teacher',
+  _guarStore(){
+    // Returns {get, set, max, diffName} for the active context (teacher vs solo).
+    // Solo's modal calls Solo.openGuaranteed which flips _guarCtx to 'solo' before opening.
+    if(this._guarCtx==='solo'){
+      return{
+        get:()=>St.soloGuaranteedSounds||[],
+        set:(v)=>{St.soloGuaranteedSounds=v;const c=$('solo-guar-count');if(c)c.textContent=v.length;},
+        max:()=>GRID_COUNT[St.soloDifficulty]-(St.soloDifficulty==='hard'?1:0),
+        diffName:St.soloDifficulty
+      };
+    }
+    return{
+      get:()=>St.guaranteedSounds||[],
+      set:(v)=>{St.guaranteedSounds=v;},
+      max:()=>GRID_COUNT[St.difficulty]-(St.difficulty==='hard'?1:0),
+      diffName:St.difficulty
+    };
+  },
+
   _buildGuarList(){
     const cats=[
       ['consonant','Consonants'],
@@ -1743,7 +1838,7 @@ const Teacher={
       ['long_vowel','Long Vowels'],
       ['diphthong','Diphthongs'],
     ];
-    const selected=new Set(St.guaranteedSounds||[]);
+    const selected=new Set(this._guarStore().get());
     const html=cats.map(([cat,lbl])=>{
       const sounds=SOUNDS.filter(s=>s.category===cat);
       const clr=CAT_COLORS[cat];
@@ -1754,32 +1849,59 @@ const Teacher={
           <div class="guar-chip-name">${s.name}</div>
         </div>`;
       }).join('');
-      return`<div class="guar-cat"><div class="guar-cat-title"><i style="background:${clr}"></i>${lbl}</div><div class="guar-chips">${chips}</div></div>`;
+      return`<div class="guar-cat"><div class="guar-cat-title"><i style="background:${clr}"></i>${lbl} <button class="guar-cat-all" onclick="Teacher.selectAllInCat('${cat}')" title="Select all in this category">+ all</button></div><div class="guar-chips">${chips}</div></div>`;
     }).join('');
     $('guar-list').innerHTML=html;
   },
+
+  selectAllGuar(){
+    const st=this._guarStore(),max=st.max();
+    const current=new Set(st.get());
+    for(const s of SOUNDS){
+      if(current.size>=max)break;
+      current.add(s.id);
+    }
+    st.set(Array.from(current));
+    this._buildGuarList();
+    this._updateGuarCount();
+  },
+  selectAllInCat(cat){
+    const st=this._guarStore(),max=st.max();
+    const current=new Set(st.get());
+    let hitCap=false;
+    for(const s of SOUNDS.filter(x=>x.category===cat)){
+      if(current.size>=max){hitCap=true;break;}
+      current.add(s.id);
+    }
+    st.set(Array.from(current));
+    this._buildGuarList();
+    this._updateGuarCount();
+    if(hitCap)toast(`Cap reached: ${st.diffName} mode fits ${max} guaranteed sounds.`);
+  },
   toggleGuar(soundId,btn){
-    const set=new Set(St.guaranteedSounds||[]);
-    const max=GRID_COUNT[St.difficulty]-(St.difficulty==='hard'?1:0);
+    const st=this._guarStore(),max=st.max();
+    const set=new Set(st.get());
     if(set.has(soundId)){
       set.delete(soundId);btn.classList.remove('sel');
     }else{
-      if(set.size>=max){alert(`Can't pick more than ${max} guaranteed sounds for ${St.difficulty} mode (grid only has room for that many).`);return;}
+      if(set.size>=max){alert(`Can't pick more than ${max} guaranteed sounds for ${st.diffName} mode (grid only has room for that many).`);return;}
       set.add(soundId);btn.classList.add('sel');
     }
-    St.guaranteedSounds=Array.from(set);
+    st.set(Array.from(set));
     this._updateGuarCount();
   },
   clearGuar(){
-    St.guaranteedSounds=[];
+    const st=this._guarStore();
+    st.set([]);
     document.querySelectorAll('.guar-chip.sel').forEach(c=>c.classList.remove('sel'));
     this._updateGuarCount();
   },
   _updateGuarCount(){
-    const n=(St.guaranteedSounds||[]).length;
-    const max=GRID_COUNT[St.difficulty]-(St.difficulty==='hard'?1:0);
-    const cEl=$('guar-count');if(cEl)cEl.textContent=n;
-    const sEl=$('guar-status');if(sEl)sEl.textContent=`${n} selected · room for up to ${max} in ${St.difficulty} mode`;
+    const st=this._guarStore();
+    const n=st.get().length,max=st.max();
+    const cEl=$('guar-count');if(cEl&&this._guarCtx==='teacher')cEl.textContent=n;
+    const scEl=$('solo-guar-count');if(scEl&&this._guarCtx==='solo')scEl.textContent=n;
+    const sEl=$('guar-status');if(sEl)sEl.textContent=`${n} selected · room for up to ${max} in ${st.diffName} mode`;
   },
   async launch(){
     const sounds=callerSoundsFor(St.difficulty);
@@ -1975,6 +2097,7 @@ const Caller={
   _doExit(){
     clearInterval(this.autoTimer);this._stopCountdown();speechSynthesis.cancel();
     Dashboard.close();
+    if(typeof NetUI!=='undefined')NetUI.dismiss();
     if(typeof Persist!=='undefined')Persist.clearTeacher();
     UI.go('setup-screen');
   },
@@ -2169,15 +2292,18 @@ const Player={
     this._roomId=raw;
     this.armed=new Set();
     this.calledLog=[];
+    this.winCount=0; // reset; restored below if a saved card has prior wins this session
     // Try to restore a previous card for this (room, name) so refresh mid-game is non-destructive
     const saved=Persist.loadCard(raw,this.displayName);
     if(saved&&saved.cardId&&Array.isArray(saved.layout)){
       this.cardId=saved.cardId;
       this._restored=saved;
+      this.winCount=saved.winCount||0;
     }else{
       this.cardId='';
       this._restored=null;
     }
+    this._renderWinBadge();
     this._initEmit();
     $('code-input-wrap').classList.add('hidden');
     $('round-ended-banner').classList.add('hidden');
@@ -2255,7 +2381,7 @@ const Player={
     this._render(diff,gs);
     if(this._roomId){
       Net.registerCard(this._roomId,this.cardId,this.card.map(s=>s?s.id:null),this.displayName,this._markedSoundIds());
-      Persist.saveCard(this._roomId,this.displayName,{cardId:this.cardId,layout:this.card.map(s=>s?s.id:null),marked:this._markedSoundIds()});
+      Persist.saveCard(this._roomId,this.displayName,{cardId:this.cardId,layout:this.card.map(s=>s?s.id:null),marked:this._markedSoundIds(),winCount:this.winCount||0});
     }
   },
 
@@ -2281,6 +2407,7 @@ const Player={
     UI.closeOv('ov-student-roundend');
     if(this._unsubRoom){this._unsubRoom();this._unsubRoom=null;}
     Persist.clearCard(this._roomId,this.displayName);
+    if(typeof NetUI!=='undefined')NetUI.dismiss();
     this._roomId='';
     this.cardId='';
     this._frozen=false;
@@ -2289,6 +2416,7 @@ const Player={
     this.card=[];
     this.calledLog=[];
     this._restored=null;
+    this.winCount=0;
     // Blank the name so it's a truly fresh entry per the user's call
     this.displayName='';
     const ni=$('player-name-input');if(ni)ni.value='';
@@ -2296,6 +2424,7 @@ const Player={
     $('player-grid').innerHTML='';
     $('round-ended-banner').classList.add('hidden');
     $('now-calling').classList.add('hidden');
+    const pw=$('player-wins');if(pw)pw.classList.add('hidden');
     UI.goCard(); // re-shows code-input-wrap
   },
 
@@ -2306,6 +2435,8 @@ const Player={
     this.calledLog=[];
     this.cardId='';  // force a fresh layout for the new round
     this._restored=null;
+    this.winCount=0;
+    this._renderWinBadge();
     Persist.clearCard(this._roomId,this.displayName);
     UI.closeOv('ov-student-roundend');
     $('round-ended-banner').classList.add('hidden');
@@ -2381,19 +2512,30 @@ const Player={
     const win=this._checkWin(gs);
     if(win){
       if(this._roomId)Net.submitClaim(this._roomId,this.cardId,this.card.map(s=>s?s.id:null),[...this.marked]);
+      this.winCount=(this.winCount||0)+1;
+      this._renderWinBadge();
       win.cells.forEach(i=>{
         const el=document.querySelector(`#player-grid .bsq[data-i="${i}"]`);
         if(el)el.classList.add('winner');
       });
       FX.celebrate(win,'player-grid');
       $('win-card-id').textContent='Card #'+this.cardId;
-      $('win-sub').textContent='Show this card to your teacher to verify!';
+      $('win-sub').textContent=this.winCount>1
+        ?`🔥 That's win #${this.winCount} this session! Show your teacher.`
+        :'Show this card to your teacher to verify!';
       FX._timers.push(setTimeout(()=>UI.showOv('ov-win'),win.type==='fullhouse'?1100:650));
     }else{
       const el=document.querySelector('.card-bingo-btn');
       el.textContent='❌ No BINGO yet — keep going!';
       setTimeout(()=>{el.textContent='🎰 BINGO!';},1800);
     }
+  },
+
+  _renderWinBadge(){
+    const el=$('player-wins');if(!el)return;
+    if(!this.winCount||this.winCount<=0){el.classList.add('hidden');return;}
+    el.classList.remove('hidden');
+    el.textContent=this.winCount===1?'🏆 1 win':'🏆 '+this.winCount+' wins';
   },
 
   _checkWin(gs){
@@ -2497,11 +2639,32 @@ const Solo={
   sounds:[],queue:[],idx:0,paused:false,cdTimer:null,
   card:[],marked:[],cardId:'',diff:'normal',
   currentItem:null, waitingForAnswer:false,
+  winCount:0,
 
   pickDiff(diff,el){
     St.soloDifficulty=diff;
     document.querySelectorAll('#ov-solo-setup .diff-card').forEach(c=>c.classList.remove('sel'));
     el.classList.add('sel');
+    // Trim solo guarantees if they exceed the new difficulty's cap
+    const max=GRID_COUNT[diff]-(diff==='hard'?1:0);
+    if((St.soloGuaranteedSounds||[]).length>max){
+      St.soloGuaranteedSounds=(St.soloGuaranteedSounds||[]).slice(0,max);
+      const c=$('solo-guar-count');if(c)c.textContent=St.soloGuaranteedSounds.length;
+    }
+  },
+
+  pickWin(w,el){
+    St.soloWinCondition=w;
+    document.querySelectorAll('#ov-solo-setup .win-btn').forEach(b=>b.classList.remove('sel'));
+    el.classList.add('sel');
+  },
+
+  openGuaranteed(){
+    // Switch the shared modal to "solo" mode and reuse Teacher's picker UI
+    Teacher._guarCtx='solo';
+    Teacher._buildGuarList();
+    Teacher._updateGuarCount();
+    UI.showOv('ov-guaranteed');
   },
 
   init(){
@@ -2509,8 +2672,26 @@ const Solo={
     this.sounds=soundsForDiff(this.diff);
     if(!this.sounds.length){alert('No sounds enabled! Check Options.');return;}
     this._buildQueue();this.idx=0;this.paused=false;this.waitingForAnswer=false;
+    this.winCount=0;
+    this._renderStreak();
     this._buildCard();
     this._setStatus('Find the sound on your card and tap it!');
+    this._next();
+  },
+
+  _renderStreak(){
+    const el=$('solo-streak');if(!el)return;
+    if(!this.winCount||this.winCount<=0){el.classList.add('hidden');return;}
+    el.classList.remove('hidden');
+    el.textContent=this.winCount===1?'🏆 1 win':'🏆 '+this.winCount+' wins';
+  },
+
+  newCard(){
+    // Called from the win modal — rebuild a fresh card without resetting the streak
+    this.paused=false;this.waitingForAnswer=false;
+    this._buildQueue();this.idx=0;
+    this._buildCard();
+    this._setStatus('Fresh card! Find the sound and tap it.');
     this._next();
   },
 
@@ -2522,7 +2703,18 @@ const Solo={
 
   _buildCard(){
     const gs=GRID_SIZE[this.diff];const needed=gs*gs-(this.diff==='hard'?1:0);
-    const picked=shuffle(this.sounds).slice(0,needed);
+    // Hard-include solo guarantees, then RNG-fill the rest from the active sounds pool
+    const guarSet=new Set(St.soloGuaranteedSounds||[]);
+    const guarSounds=SOUNDS.filter(s=>guarSet.has(s.id)).slice(0,needed);
+    const guarIds=new Set(guarSounds.map(s=>s.id));
+    const rest=shuffle(this.sounds.filter(s=>!guarIds.has(s.id))).slice(0,needed-guarSounds.length);
+    let picked=shuffle([...guarSounds,...rest]);
+    // Safety net: top up from full pool if guarantees + enabled filter left us short
+    if(picked.length<needed){
+      const have=new Set(picked.map(s=>s.id));
+      const extras=shuffle(SOUNDS.filter(s=>!have.has(s.id))).slice(0,needed-picked.length);
+      picked=shuffle([...picked,...extras]);
+    }
     this.card=shuffle(picked);
     if(this.diff==='hard')this.card.splice(Math.floor(gs*gs/2),0,null);
     this.marked=new Array(gs*gs).fill(false);
@@ -2641,8 +2833,11 @@ const Solo={
           $('solo-pause-btn').textContent='▶';
           win.cells.forEach(wi=>{const we=document.querySelector(`#solo-grid .bsq[data-i="${wi}"]`);if(we)we.classList.add('winner');});
           FX.celebrate(win,'solo-grid');
+          this.winCount=(this.winCount||0)+1;
+          this._renderStreak();
           $('win-card-id').textContent='Card #'+this.cardId;
-          $('win-sub').textContent='🎉 Solo BINGO! You correctly identified every sound!';
+          const streakMsg=this.winCount>1?` 🔥 That's win #${this.winCount} this session!`:'';
+          $('win-sub').textContent='🎉 Solo BINGO!'+streakMsg+' Tap New Card to keep the streak going.';
           FX._timers.push(setTimeout(()=>UI.showOv('ov-win'),win.type==='fullhouse'?1100:650));
           return;
         }
@@ -2665,9 +2860,10 @@ const Solo={
     lines.push(Array.from({length:n},(_,i)=>i*n+i));
     lines.push(Array.from({length:n},(_,i)=>i*n+(n-1-i)));
     const wins=lines.filter(l=>l.every(i=>m[i]));
-    if(St.winCondition==='line'&&wins.length>=1)return{type:'line',lines:[wins[0]],cells:[...new Set(wins[0])]};
-    if(St.winCondition==='twolines'&&wins.length>=2)return{type:'twolines',lines:[wins[0],wins[1]],cells:[...new Set([...wins[0],...wins[1]])]};
-    if(St.winCondition==='fullhouse'&&m.every(x=>x))return{type:'fullhouse',lines:[],cells:m.map((_,i)=>i)};
+    const wc=St.soloWinCondition||'line';
+    if(wc==='line'&&wins.length>=1)return{type:'line',lines:[wins[0]],cells:[...new Set(wins[0])]};
+    if(wc==='twolines'&&wins.length>=2)return{type:'twolines',lines:[wins[0],wins[1]],cells:[...new Set([...wins[0],...wins[1]])]};
+    if(wc==='fullhouse'&&m.every(x=>x))return{type:'fullhouse',lines:[],cells:m.map((_,i)=>i)};
     return null;
   },
 
@@ -3010,6 +3206,7 @@ const WinDemo={
 const Dashboard={
   students:{},
   winnerCardIds:new Set(),
+  winsPerCard:{},  // {cardId: count}
   _unsub:null,
   _unsubClaims:null,
   _pollTimer:null,
@@ -3019,6 +3216,7 @@ const Dashboard={
     this.close();
     this._roomId=roomId;
     this.winnerCardIds=new Set();
+    this.winsPerCard={};
     const el=$('dashboard-sidebar');
     if(el)el.style.display='flex';
     this._loadInitial();
@@ -3038,6 +3236,7 @@ const Dashboard={
     if(this._pollTimer){clearInterval(this._pollTimer);this._pollTimer=null;}
     this.students={};
     this.winnerCardIds=new Set();
+    this.winsPerCard={};
     this._roomId=null;
     const el=$('dashboard-sidebar');
     if(el&&!document.body.classList.contains('dashboard-only'))el.style.display='none';
@@ -3047,22 +3246,28 @@ const Dashboard={
     if(!this._roomId)return;
     try{
       const{data}=await _sb.from('claims').select('card_id,created_at').eq('room_id',this._roomId).order('created_at',{ascending:true});
-      for(const c of data||[])this.winnerCardIds.add(c.card_id);
+      this.winsPerCard={};
+      for(const c of (data||[])){
+        this.winnerCardIds.add(c.card_id);
+        this.winsPerCard[c.card_id]=(this.winsPerCard[c.card_id]||0)+1;
+      }
       this.render();
     }catch(e){console.warn('[Dashboard._loadInitialClaims]',e);}
   },
 
   _onClaim(claim){
     if(!claim||!claim.card_id)return;
-    const isNew=!this.winnerCardIds.has(claim.card_id);
+    const isFirstWinForCard=!this.winnerCardIds.has(claim.card_id);
     this.winnerCardIds.add(claim.card_id);
+    this.winsPerCard[claim.card_id]=(this.winsPerCard[claim.card_id]||0)+1;
     this.render();
-    if(isNew){
-      if(typeof Chime!=='undefined')Chime.bingo();
-      const s=this.students[claim.card_id];
-      const who=(s&&s.name)||('Card #'+claim.card_id);
-      if(typeof toast==='function')toast('🎰 '+who+' called BINGO!');
-    }
+    // Chime + toast on every claim (each win is meaningful — student tried a new card and won again!)
+    if(typeof Chime!=='undefined')Chime.bingo();
+    const s=this.students[claim.card_id];
+    const who=(s&&s.name)||('Card #'+claim.card_id);
+    const n=this.winsPerCard[claim.card_id];
+    const msg=n>1?`🎰 ${who} BINGO! (win #${n} on this card)`:`🎰 ${who} called BINGO!`;
+    if(typeof toast==='function')toast(msg);
   },
 
   _onRoundEnd(){
@@ -3123,9 +3328,10 @@ const Dashboard={
       }).join('');
       const isLeader=idx===0&&s.count>0;
       const isWinner=this.winnerCardIds&&this.winnerCardIds.has(s.id);
+      const winN=(this.winsPerCard&&this.winsPerCard[s.id])||0;
       const totalCells=s.total||(gs*gs);
       const cls=[isWinner?'winner':'',isLeader?'leader':''].filter(Boolean).join(' ');
-      const badge=isWinner?'<span class="dash-win-badge" title="Called BINGO">🎰</span>':'';
+      const badge=isWinner?`<span class="dash-win-badge" title="${winN>1?'Called BINGO ×'+winN+' (new cards each time)':'Called BINGO'}">${winN>1?'🎰 ×'+winN:'🎰'}</span>`:'';
       return`<div class="dash-row ${cls}"><div class="dash-rank">${idx+1}</div><div class="dash-name" title="${escapeHtml(s.name)}">${escapeHtml(s.name)}${badge}</div><div class="dash-mini-grid dg-${gs}">${cells}</div><div class="dash-count">${s.count}/${totalCells}</div></div>`;
     }).join('');
   },
@@ -3163,6 +3369,8 @@ function _lsSave(k,v){try{localStorage.setItem(k,v);}catch(e){}}
 function _lsLoad(k){try{return localStorage.getItem(k);}catch(e){return null;}}
 
 function showVignette(btnId,msg,storeKey,duration=4500){
+  // Honor the global "Show tips" preference
+  if(typeof St!=='undefined'&&St.showTips===false)return;
   // Check in-memory (current session) AND localStorage (cross-session)
   if(storeKey&&(_seenVignettes.has(storeKey)||_lsGet(storeKey)))return;
   const btn=$(btnId);if(!btn)return;
@@ -3280,31 +3488,65 @@ UI.showOv=function(id){
 
 /* ════════════ NETWORK UI (reconnect toasts) ════════════ */
 const NetUI={
-  _toast:null,_okTimer:null,_state:'unknown',
+  _toast:null,_okTimer:null,_state:'unknown',_persistCheck:null,
   _ensure(){
     if(this._toast)return this._toast;
     const d=document.createElement('div');
     d.className='net-toast hidden';
-    d.innerHTML='<span class="nt-dot"></span><span class="nt-text">Reconnecting…</span>';
+    d.innerHTML='<span class="nt-dot"></span><span class="nt-text">Reconnecting…</span><button class="nt-act hidden" onclick="NetUI._actClick()">Rejoin</button>';
+    d.style.cssText+=';';  // ensure inline styles preserved
     document.body.appendChild(d);
     this._toast=d;return d;
   },
   flashError(){
     const d=this._ensure();
-    d.classList.remove('ok','hidden');
+    d.classList.remove('ok','hidden','ended');
     d.querySelector('.nt-text').textContent='Reconnecting…';
+    d.querySelector('.nt-act').classList.add('hidden');
     this._state='error';
     clearTimeout(this._okTimer);
+    // After 5s of persistent error, check if the room is actually gone — if so, swap the message
+    clearTimeout(this._persistCheck);
+    this._persistCheck=setTimeout(()=>this._checkRoomState(),5000);
   },
   flashOk(){
-    // Only flash "Connected" if we were previously in error state, otherwise stay quiet.
-    if(this._state!=='error')return;
+    if(this._state==='unknown')return; // never been in error; stay quiet
+    if(this._state==='dismissed')return;
     const d=this._ensure();
-    d.classList.add('ok');d.classList.remove('hidden');
+    d.classList.add('ok');d.classList.remove('hidden','ended');
     d.querySelector('.nt-text').textContent='✓ Connected';
+    d.querySelector('.nt-act').classList.add('hidden');
     this._state='ok';
-    clearTimeout(this._okTimer);
+    clearTimeout(this._okTimer);clearTimeout(this._persistCheck);
     this._okTimer=setTimeout(()=>{d.classList.add('hidden');this._state='unknown';},1800);
+  },
+  // Explicit teardown — called when the client is intentionally leaving a session
+  dismiss(){
+    clearTimeout(this._okTimer);clearTimeout(this._persistCheck);
+    this._state='dismissed';
+    if(this._toast)this._toast.classList.add('hidden');
+    setTimeout(()=>{this._state='unknown';},200); // reset state shortly after so future sessions can flash again
+  },
+  async _checkRoomState(){
+    if(this._state!=='error')return;
+    // If a roomId is being tracked by Player, check its status
+    const rid=(typeof Player!=='undefined'&&Player._roomId)?Player._roomId:null;
+    if(!rid)return; // nothing to check
+    try{
+      const{data}=await _sb.from('rooms').select('status').eq('id',rid).maybeSingle();
+      if(!data||data.status==='ended'){
+        const d=this._ensure();
+        d.classList.remove('ok');d.classList.add('ended');
+        d.querySelector('.nt-text').textContent='Session has ended';
+        d.querySelector('.nt-act').classList.remove('hidden');
+        this._state='ended';
+      }
+    }catch(e){/* keep showing reconnecting */}
+  },
+  _actClick(){
+    // Rejoin → kick the student back to a fresh code-input
+    if(typeof Player!=='undefined')Player.leaveRoom();
+    this.dismiss();
   }
 };
 
@@ -3409,6 +3651,9 @@ const Resume={
 /* ════════════ POP-OUT DASHBOARD + RESUME BOOT ════════════ */
 (function(){
   try{
+    // Load global "show tips" preference (defaults to true)
+    const savedTips=_lsLoad('sbg.showTips');
+    if(savedTips!==null&&typeof St!=='undefined')St.showTips=savedTips==='1';
     const params=new URLSearchParams(window.location.search);
     const dashRoom=params.get('dashboard');
     if(dashRoom&&typeof Dashboard!=='undefined'){Dashboard.bootStandalone(dashRoom);return;}

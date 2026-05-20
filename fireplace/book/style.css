@@ -258,11 +258,22 @@ html, body {
     0 0 0.9px rgba(60,30,10,0.14);
 }
 
-/* inner glyph: this is what animates (scaleX wipe + blur settle) */
+/* inner glyph: this is what animates (scaleX wipe + blur settle, or the
+   SVG ink trace overlay added by editor.js). position:relative so the
+   absolute SVG overlay anchors to this glyph's box. */
 .ink-glyph {
   display: inline-block;
+  position: relative;
   transform-origin: left center;
-  /* baseline state — visible and crisp; JS animation supplies the wet→dry path */
+}
+.ink-glyph > svg.ink-trace {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
 }
 
 /* spaces and newlines: invisible, no animation */
@@ -293,9 +304,10 @@ html, body {
 }
 
 /* ─────────────── QUILL CARET (the quill IS the cursor) ───────────────
-   #caret is a zero-size positioning anchor. JS sets its left/top to the
-   exact next-write point (in book-local stage px).
-   The quill SVG inside is offset so its nib pixel sits at (0,0) of #caret. */
+   #caret lives INSIDE the active .page-inner so it inherits the 3D tilt
+   automatically — quill leans with the page, math is plain page-local.
+   The quill SVG is sized in em units so the nib stays anchored at any
+   font size. */
 
 #caret {
   position: absolute;
@@ -305,31 +317,65 @@ html, body {
   top: 0;
   pointer-events: none;
   z-index: 10;
-  /* no transition on left/top — we want instant placement, not lag. The
-     blink/breathe lives on the SVG instead. */
+  /* Inherit page font-size so em sizing on the quill tracks it. */
+  font-size: inherit;
 }
 
 #caret #quill-svg {
   position: absolute;
-  /* displayed at 36 × 96 stage-px; nib at SVG (64, 312) of 120×320 viewBox.
-     In displayed coords that's (64/120*36, 312/320*96) = (19.2, 93.6) → use 19, 94. */
-  width: 36px;
-  height: 96px;
-  left: -19px;
-  top: -94px;
-  transform-origin: 19px 94px;   /* the nib */
-  transform: rotate(28deg);       /* feather extends up + right, away from text */
-  filter: drop-shadow(1.5px 3px 3px rgba(0,0,0,0.4));
+  /* viewBox 120 × 320, nib at (64, 312). Sized in em so it scales with text.
+     nibX_em = 64/120 × 1.2em  = 0.6400em
+     nibY_em = 312/320 × 3.2em = 3.1200em */
+  width: 1.2em;
+  height: 3.2em;
+  left: -0.64em;
+  top: -3.12em;
+  transform-origin: 0.64em 3.12em;   /* the nib pixel */
+  transform: rotate(28deg);           /* feather extends up + right */
+  filter: drop-shadow(0.05em 0.1em 0.1em rgba(0,0,0,0.4));
   animation: quill-breathe 4.5s ease-in-out infinite;
   pointer-events: none;
+  will-change: transform;
 }
 
 @keyframes quill-breathe {
   0%, 100% { transform: rotate(28deg) translate(0, 0); }
-  50%      { transform: rotate(26.5deg) translate(-0.3px, -0.4px); }
+  50%      { transform: rotate(26.5deg) translate(-0.01em, -0.013em); }
 }
 
 #caret.hidden #quill-svg { opacity: 0; transition: opacity 220ms; }
+#caret.dormant #quill-svg { opacity: 0.35; transition: opacity 400ms; }
+
+/* Selection highlight on rendered chars — warm candlelight wash. */
+.ink-char.ink-selected,
+.ink-char.ink-selected .ink-glyph {
+  background: rgba(232, 182, 105, 0.28);
+}
+
+/* ─────────────── PAGE FLIP CLONE ───────────────
+   Drops on top of .spread during goToSpread; pivots around the spine. */
+.flipping-page {
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  z-index: 50;
+  pointer-events: none;
+  backface-visibility: hidden;
+  /* paper-back gradient so the back of the page reads as paper, not blank */
+  background: linear-gradient(135deg, #efe1c1 0%, #d8c79d 70%, #b69968 100%);
+}
+.flipping-page.from-right { left: 50%; transform-origin: 0% 50%; }
+.flipping-page.from-left  { left: 0;   transform-origin: 100% 50%; }
+
+/* ─────────────── DANGER BUTTON (tweaks: Erase) ─────────────── */
+.font-btn.danger {
+  color: #f5cfcf;
+  background: rgba(232, 105, 105, 0.06);
+  border-color: rgba(232, 105, 105, 0.22);
+}
+.font-btn.danger:hover  { background: rgba(232, 105, 105, 0.18); }
+.font-btn.danger.armed  { background: rgba(232, 105, 105, 0.32); color: #fff8f8; }
 
 /* ─────────────── FOLIO / PAGE MARKERS ─────────────── */
 
