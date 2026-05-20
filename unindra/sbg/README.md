@@ -179,6 +179,7 @@ Late joiners (joining after `status='playing'`) get historical calls via `Net.jo
 | `guaranteed_sounds` | text[] | Sound IDs forced onto every card and into caller queue |
 | `status` | text | 'lobby' (pre-start) or 'playing' (after teacher hits Start Calling) |
 | `started_at` | timestamptz | Timestamp of Start Calling |
+| `created_at` | timestamptz | Auto-populated on insert; used by `purge_room_if_stale` / `purge_stale_rooms` to detect never-started rooms older than the staleness threshold |
 
 ### `cards`
 
@@ -558,6 +559,68 @@ The 8s dashboard poll then reads `marked:[]` from DB and overrides the local "1/
 
 The fix: every card write is an UPSERT, and all writes are chained on a single Promise queue per client. Each write awaits the previous one's completion before firing. Last-fired-wins, deterministically.
 
+### 12. Room cleanup / TTL system
+
+Codes are only 4 digits (3,000 possible per difficulty since the first digit is fixed: `1xxx` easy, `2xxx` normal, `3xxx` hard). After a few hundred sessions, collisions are statistically inevitable. The failure mode: a teacher creates session `2746`, students join, but they're actually walking into a graveyard session from last month, complete with phantom calls being replayed from `Net.joinRoom`'s `recentCalls` array.
+
+**Two-tier cleanup** ships in the SQL schema and `Net.createRoom`:
+
+| Tier | When it fires | What it does |
+|------|---------------|--------------|
+| **Collision recycle** (automatic) | Every `Net.createRoom` call | RPC-invokes `purge_room_if_stale(code)` before INSERT. Function deletes the old row if and only if `(started_at IS NULL AND created_at < now() - 30 minutes)` OR `(started_at < now() - 4 hours)`. Cascade drops calls/cards/claims atomically. |
+| **Periodic sweep** (manual) | Admin runs `select purge_stale_rooms();` in the SQL editor | Single-shot nuke of all rooms older than the threshold. Function is NOT granted to anon — only the postgres role can execute it. Run this every week or two during heavy classroom usage. |
+
+The collision recycle is wrapped in `try/catch` so if the RPC is missing (e.g., on a stale schema), `createRoom` still works — it just falls back to the natural PK collision error.
+
+**Active-room collision** (the edge case where the random code matches an actively-running session): `purge_room_if_stale` refuses to delete it, the INSERT fails with PG error 23505, `Net.createRoom` returns `{collision: true}`, and `Teacher.launch` retries with a fresh code (up to 5 attempts). Surface to the teacher only if all 5 fail — at which point the codespace is genuinely saturated and they should wait or change difficulty.
+
+**Why `security definer` and not raw DELETE grants**: granting anon raw `DELETE` on `rooms` would let any client purge any session by ID. The function constrains the deletion to provably-stale rows only. Defense-in-depth, even in a low-stakes classroom context.
+
+**Required SQL** (run once on the Supabase project):
+```sql
+alter table rooms add column if not exists created_at timestamptz default now();
+
+alter table calls  drop constraint if exists calls_room_id_fkey;
+alter table calls  add  constraint calls_room_id_fkey
+  foreign key (room_id) references rooms(id) on delete cascade;
+alter table cards  drop constraint if exists cards_room_id_fkey;
+alter table cards  add  constraint cards_room_id_fkey
+  foreign key (room_id) references rooms(id) on delete cascade;
+alter table claims drop constraint if exists claims_room_id_fkey;
+alter table claims add  constraint claims_room_id_fkey
+  foreign key (room_id) references rooms(id) on delete cascade;
+
+create or replace function purge_room_if_stale(p_room_id text)
+returns boolean language plpgsql security definer set search_path = public as $$
+declare v_started timestamptz; v_created timestamptz;
+begin
+  select started_at, created_at into v_started, v_created from rooms where id = p_room_id;
+  if not found then return false; end if;
+  if (v_started is null and v_created < now() - interval '30 minutes')
+     or (v_started is not null and v_started < now() - interval '4 hours') then
+    delete from rooms where id = p_room_id;
+    return true;
+  end if;
+  return false;
+end; $$;
+grant execute on function purge_room_if_stale(text) to anon;
+
+create or replace function purge_stale_rooms()
+returns int language plpgsql security definer set search_path = public as $$
+declare v_count int;
+begin
+  with deleted as (
+    delete from rooms
+    where (started_at is null and created_at < now() - interval '1 hour')
+       or (started_at is not null and started_at < now() - interval '24 hours')
+    returning 1
+  )
+  select count(*) into v_count from deleted;
+  return v_count;
+end; $$;
+-- purge_stale_rooms is intentionally NOT granted to anon.
+```
+
 The queue is per-tab (per Net instance), but since each tab only writes to its own cardId, this effectively gives us per-cardId serialization. Multi-student concurrency is handled by Supabase server-side.
 
 If you ever add another write path on `cards`, route it through `Net._queuedCardUpsert` too. Don't bypass.
@@ -679,6 +742,8 @@ These were intentionally NOT shipped in the current iteration. Priorities can sh
 | 8 | **Mobile teacher** | Caller-screen is desktop-optimized. Cramps on phones. |
 | 9 | **Caller filler determinism** | Each `LobbyT.start` picks random fillers. Two refreshes give different filler sets. Could persist filler set in the room row. |
 | 10 | **IPA toggle on dashboard** | Currently dots only. Could add a toggle to show IPA labels for teachers who want to spot patterns ("most students don't have /θ/ marked yet"). |
+| 11 | **Automated `purge_stale_rooms` cron** | Collision recycle is automatic (per-call via `purge_room_if_stale`), but the bulk sweep is manual — admin runs `select purge_stale_rooms();` in the SQL editor. Could wire to `pg_cron` (Supabase supports it via the dashboard) to run nightly, but that requires enabling the extension first. For now, manual sweeps every 1-2 weeks during active classroom usage is fine. |
+| 12 | **Larger code space** | 4 digits with the first locked to difficulty = 3,000 codes per difficulty. Heavy long-term usage could exhaust them. Stretching to 5 digits (30,000 per difficulty) gives ~10× headroom but trades off student typing friction. The cleanup system delays this need significantly. |
 
 ---
 

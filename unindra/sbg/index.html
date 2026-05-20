@@ -1413,8 +1413,18 @@ const Net={
     return ch;
   },
   async createRoom(roomId,difficulty,winCondition,enabledCats,strictMarking,highlightTappable,guaranteedSounds){
+    // Collision recycle: purge any stale row under this code before INSERT. The SQL function
+    // refuses to purge active rooms, so this is safe — we only ever delete provably-dead data.
+    try{await _sb.rpc('purge_room_if_stale',{p_room_id:roomId});}
+    catch(e){console.warn('[Net.createRoom] purge_room_if_stale unavailable:',e&&e.message);}
     const{error}=await _sb.from('rooms').insert({id:roomId,difficulty,win_condition:winCondition,enabled_cats:[...enabledCats],strict_marking:!!strictMarking,highlight_tappable:highlightTappable!==false,guaranteed_sounds:guaranteedSounds||[],status:'lobby'});
-    if(error)console.error('[Net.createRoom]',error.message);
+    if(error){
+      console.error('[Net.createRoom]',error.message);
+      // Active-room collision: the rare case where two rooms get the same code AND the old one is still live.
+      // Surface clearly so the caller can regenerate the code and retry.
+      return{collision:error.code==='23505'||/duplicate key/i.test(error.message||'')};
+    }
+    return{collision:false};
   },
 
   async startGame(roomId){
@@ -1569,14 +1579,23 @@ const Teacher={
     const cEl=$('guar-count');if(cEl)cEl.textContent=n;
     const sEl=$('guar-status');if(sEl)sEl.textContent=`${n} selected · room for up to ${max} in ${St.difficulty} mode`;
   },
-  launch(){
+  async launch(){
     const sounds=callerSoundsFor(St.difficulty);
     if(sounds.length<GRID_COUNT[St.difficulty]){
       alert(`Not enough sounds enabled! Need ${GRID_COUNT[St.difficulty]} but only ${sounds.length} active. Go to ⚙️ Options and enable more categories.`);
       return;
     }
-    St.sessionCode=genCode(St.difficulty);
-    Net.createRoom(St.sessionCode,St.difficulty,St.winCondition,St.enabledCats,St.strictMarking,St.highlightTappable,St.guaranteedSounds||[]);
+    // Try up to 5 codes — collisions with ACTIVE rooms are rare, but if they happen we just reroll.
+    let res={collision:true},attempts=0;
+    while(res.collision&&attempts<5){
+      St.sessionCode=genCode(St.difficulty);
+      res=await Net.createRoom(St.sessionCode,St.difficulty,St.winCondition,St.enabledCats,St.strictMarking,St.highlightTappable,St.guaranteedSounds||[])||{collision:false};
+      attempts++;
+    }
+    if(res.collision){
+      alert('Could not allocate a fresh session code after several tries. Please try again in a moment.');
+      return;
+    }
     if(St.teacherMode==='print'){
       UI.go('print-screen');Print.gen();
     }else{
