@@ -1075,10 +1075,26 @@ body.dashboard-only .dash-title{font-size:1.3rem}
 </div>
 
 <!-- ╔═══ OV: WIN SCREEN ═══╗ -->
-<!-- ╔═══ OV: ROUND ENDED (teacher) ═══╗ -->
+<!-- ╔═══ OV: CONFIRM END ROUND (teacher pre-confirm) ═══╗ -->
+<div id="ov-confirm-end" class="ov">
+  <div class="obox" style="max-width:420px">
+    <div class="otitle" style="color:#FF8855">🏁 End this round?</div>
+    <div style="font-size:13px;color:var(--text);line-height:1.55;text-align:center;margin-bottom:8px">
+      Students will see a "Round Ended" notice and can't tap their cards anymore.
+    </div>
+    <div style="font-size:11.5px;color:var(--muted);line-height:1.5;text-align:center;margin-bottom:16px">
+      You'll then be able to start a new round (same code or fresh code) or exit to Setup.
+    </div>
+    <div class="re-actions">
+      <button class="btn btn-grad" style="font-size:14px;padding:12px" onclick="Caller._confirmEndRound()">🏁 Yes, end the round</button>
+      <button class="btn btn-navy" style="font-size:13px;padding:11px" onclick="Caller._cancelEndConfirm()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ╔═══ OV: ROUND ENDED (teacher) — NO X, terminal modal ═══╗ -->
 <div id="ov-roundend" class="ov">
   <div class="obox">
-    <button class="ox" onclick="UI.closeOv('ov-roundend')">✕</button>
     <div class="otitle">🏁 Round Ended</div>
     <div class="re-stats">
       <div class="re-stat"><div class="re-stat-num" id="re-stat-students">0</div><div class="re-stat-lbl">Students</div></div>
@@ -1090,9 +1106,27 @@ body.dashboard-only .dash-title{font-size:1.3rem}
       <div id="re-winners-list"></div>
     </div>
     <div class="re-actions">
-      <button class="btn btn-grad" style="font-size:15px;padding:13px" onclick="Caller.newRoundSameCode()">🔁 New Round (same code, same students)</button>
-      <button class="btn btn-teal" style="font-size:13px;padding:11px" onclick="Caller.downloadSummary()">⬇ Download session summary</button>
-      <button class="btn btn-navy" style="font-size:13px;padding:11px" onclick="Caller.exitToSetup()">🚪 Exit to Setup</button>
+      <button class="btn btn-grad" style="font-size:14px;padding:12px" onclick="Caller.newRoundSameCode()">🔁 Same students, fresh cards <span style="font-weight:600;opacity:.85;font-size:11px;display:block;margin-top:2px">Keeps the code — students already in stay seated</span></button>
+      <button class="btn btn-teal" style="font-size:14px;padding:12px" onclick="Caller.newRoundFreshCode()">🆕 New code, students rejoin <span style="font-weight:600;opacity:.85;font-size:11px;display:block;margin-top:2px">Brand-new session — everyone re-enters the code</span></button>
+      <button class="btn btn-navy" style="font-size:12.5px;padding:10px" onclick="Caller.downloadSummary()">⬇ Download session summary</button>
+      <button class="btn btn-ghost" style="font-size:12.5px;padding:10px" onclick="Caller.exitToSetup()">🚪 Exit to Setup</button>
+    </div>
+  </div>
+</div>
+
+<!-- ╔═══ OV: STUDENT ROUND ENDED ═══╗ -->
+<div id="ov-student-roundend" class="ov">
+  <div class="obox" style="max-width:420px">
+    <div class="otitle">🏁 Round Ended</div>
+    <div style="font-size:13px;color:var(--text);line-height:1.55;text-align:center;margin-bottom:6px">
+      Your teacher ended this round.
+    </div>
+    <div style="font-size:11.5px;color:var(--muted);line-height:1.5;text-align:center;margin-bottom:14px">
+      Your card is still visible below if you want to review it.
+    </div>
+    <div class="re-actions">
+      <button class="btn btn-grad" style="font-size:14px;padding:12px" onclick="Player.continueWaiting()">🔁 Stay — wait for the next round</button>
+      <button class="btn btn-navy" style="font-size:13px;padding:11px" onclick="Player.leaveRoom()">🚪 Leave</button>
     </div>
   </div>
 </div>
@@ -1928,7 +1962,26 @@ const Caller={
     $('cd-fill').style.transition='none';$('cd-fill').style.width='0%';
   },
 
-  exit(){clearInterval(this.autoTimer);this._stopCountdown();speechSynthesis.cancel();Dashboard.close();if(typeof Persist!=='undefined')Persist.clearTeacher();UI.go('setup-screen');},
+  // Backspace exit — confirm + auto-end if there's a live session so students aren't stranded
+  exit(){
+    if(St.sessionCode&&this._isActive()){
+      // Open the end-round confirmation, but route confirm to exit-after-end instead of new-round
+      this._pendingExitOnEnd=true;
+      UI.showOv('ov-confirm-end');
+      return;
+    }
+    this._doExit();
+  },
+  _doExit(){
+    clearInterval(this.autoTimer);this._stopCountdown();speechSynthesis.cancel();
+    Dashboard.close();
+    if(typeof Persist!=='undefined')Persist.clearTeacher();
+    UI.go('setup-screen');
+  },
+  _isActive(){
+    // True if the room is in 'playing' state — we track this via St.sessionCode + Caller having ever called
+    return !!(St.sessionCode&&this.sounds&&this.sounds.length);
+  },
 
   launchAfterPrint(){
     const sounds=callerSoundsFor(St.difficulty);
@@ -1937,12 +1990,35 @@ const Caller={
   },
 
   /* ──── End Round / New Round / Exit ──── */
-  async endRound(){
-    // Stop auto, fire end broadcast, populate stats modal
+  endRound(){
+    // Open the confirmation modal — destructive Net.endRound only fires on confirm
+    if(!St.sessionCode){this._doExit();return;}
+    UI.showOv('ov-confirm-end');
+  },
+
+  _cancelEndConfirm(){
+    // If user opened the confirm via backspace, clear the pending-exit flag so the next
+    // direct "End Round" click goes through the normal modal path instead of exiting.
+    this._pendingExitOnEnd=false;
+    UI.closeOv('ov-confirm-end');
+  },
+
+  async _confirmEndRound(){
+    UI.closeOv('ov-confirm-end');
+    // Stop auto + fire end broadcast
     clearInterval(this.autoTimer);this._stopCountdown();
     if(this.isAuto){this.isAuto=false;$('auto-btn').textContent='▶ Auto';}
-    if(!St.sessionCode){this.exit();return;}
+    if(!St.sessionCode){this._doExit();return;}
     await Net.endRound(St.sessionCode);
+    if(this._pendingExitOnEnd){
+      this._pendingExitOnEnd=false;
+      this._doExit();
+      return;
+    }
+    await this._showRoundEndModal();
+  },
+
+  async _showRoundEndModal(){
     // Populate end-round modal stats
     $('re-stat-students').textContent=Object.keys(Dashboard.students||{}).length;
     $('re-stat-calls').textContent=(St.calledHistory||[]).length;
@@ -1979,10 +2055,33 @@ const Caller={
     this.next();
   },
 
+  async newRoundFreshCode(){
+    // Brand-new session: keep teacher's setup intact, but cycle to a fresh code so students rejoin.
+    UI.closeOv('ov-roundend');
+    // Existing room already in 'ended' state (set by _confirmEndRound). Clean teardown.
+    clearInterval(this.autoTimer);this._stopCountdown();speechSynthesis.cancel();
+    Dashboard.close();
+    Persist.clearTeacher();
+    // Spin up a new room with the same difficulty/options
+    let res={collision:true},attempts=0;
+    while(res.collision&&attempts<5){
+      St.sessionCode=genCode(St.difficulty);
+      res=await Net.createRoom(St.sessionCode,St.difficulty,St.winCondition,St.enabledCats,St.strictMarking,St.highlightTappable,St.guaranteedSounds||[])||{collision:false};
+      attempts++;
+    }
+    if(res.collision){
+      alert('Could not allocate a fresh session code after several tries. Try again in a moment.');
+      UI.go('setup-screen');
+      return;
+    }
+    if(typeof toast==='function')toast('🆕 New session '+St.sessionCode+' — students should re-enter the code.');
+    LobbyT.enter();
+  },
+
   exitToSetup(){
     UI.closeOv('ov-roundend');
     Persist.clearTeacher();
-    this.exit();
+    this._doExit();
   },
 
   downloadSummary(){
@@ -2161,7 +2260,7 @@ const Player={
   },
 
   onRoundEnd(){
-    // Round is over — freeze card, show banner. Student waits for teacher's next move.
+    // Round is over — freeze card, show banner + explicit modal so the student knows.
     this.armed=new Set();
     this._refreshArmedState();
     this._frozen=true;
@@ -2169,6 +2268,35 @@ const Player={
     $('round-ended-banner').classList.remove('hidden');
     $('now-calling').classList.add('hidden');
     Persist.clearCard(this._roomId,this.displayName);
+    UI.showOv('ov-student-roundend');
+  },
+
+  continueWaiting(){
+    // Student chose Stay — close the modal, keep frozen card visible. The 'reset' broadcast (if teacher fires it) will unfreeze.
+    UI.closeOv('ov-student-roundend');
+  },
+
+  leaveRoom(){
+    // Student chose Leave — full cleanup + back to fresh code-input on card-screen.
+    UI.closeOv('ov-student-roundend');
+    if(this._unsubRoom){this._unsubRoom();this._unsubRoom=null;}
+    Persist.clearCard(this._roomId,this.displayName);
+    this._roomId='';
+    this.cardId='';
+    this._frozen=false;
+    this.armed=new Set();
+    this.marked=[];
+    this.card=[];
+    this.calledLog=[];
+    this._restored=null;
+    // Blank the name so it's a truly fresh entry per the user's call
+    this.displayName='';
+    const ni=$('player-name-input');if(ni)ni.value='';
+    const si=$('session-input');if(si)si.value='';
+    $('player-grid').innerHTML='';
+    $('round-ended-banner').classList.add('hidden');
+    $('now-calling').classList.add('hidden');
+    UI.goCard(); // re-shows code-input-wrap
   },
 
   onRoundReset(){
@@ -2179,8 +2307,10 @@ const Player={
     this.cardId='';  // force a fresh layout for the new round
     this._restored=null;
     Persist.clearCard(this._roomId,this.displayName);
+    UI.closeOv('ov-student-roundend');
     $('round-ended-banner').classList.add('hidden');
     $('now-calling').classList.add('hidden');
+    document.querySelectorAll('#player-grid .bsq').forEach(el=>el.classList.remove('frozen'));
     this.buildCard();
     this._refreshArmedState();
     this._renderHistory();

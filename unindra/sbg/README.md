@@ -690,26 +690,45 @@ The one-time spotlight tooltips (`showVignette`) use `localStorage` to remember 
 
 ### 14. Round lifecycle: lobby → playing → ended (or → reset back to playing)
 
-`rooms.status` is the source of truth for round lifecycle. Three states + one back-transition:
+`rooms.status` is the source of truth for round lifecycle. Three states + branching back-transitions:
 
 ```
 lobby ──────► playing ──────► ended
    ▲              │   ▲          │
-   │              │   └──reset───┘   ("New Round, same code")
-   └─exit─────────┘                  ("Exit to Setup")
+   │              │   └──reset───┘                ("Same students, fresh cards")
+   │              │                               
+   │              └─────exit─────► setup-screen   ("Exit to Setup")
+   │                                              
+   └─newRoundFreshCode──┐                         ("New code, students rejoin")
+                        │                         
+                        └──► (new room, lobby)    
 ```
 
-Three broadcast events drive transitions on the room channel:
+**Five broadcast events** drive transitions on the room channel:
 
 | Event | Who fires it | Effect on student client |
 |-------|--------------|-------------------------|
 | `start` | Teacher hits ▶ Start Calling | Lobby → Playing: hide waiting panel, arm card |
-| `end` | Teacher hits 🏁 End Round | Playing → Ended: freeze card (`.bsq.frozen`), show round-ended banner, clear armed set, hide now-calling panel, `Persist.clearCard` |
-| `reset` | Teacher hits 🔁 New Round (same code) | Ended → Playing: clear marks, rebuild card from scratch (forced new cardId), hide end banner, `_frozen=false` |
+| `call` | Teacher advances to next word | Update Now Calling panel; arm the matching cell |
+| `progress` | Student marks a cell | Teacher's dashboard updates that row |
+| `end` | Teacher hits 🏁 End Round (after confirm) | Playing → Ended: freeze card, show banner + `ov-student-roundend` modal, clear armed set, hide now-calling, `Persist.clearCard` |
+| `reset` | Teacher hits 🔁 Same students, fresh cards | Ended → Playing: clear marks, rebuild card from scratch (forced new cardId), hide modals, `_frozen=false` |
 
-**Why `reset` doesn't just rebuild the same card**: students get a *new* layout for the new round so it doesn't feel like the same game continuing. The seat (cardId line in `cards` table) stays the same identity-wise, but `Net.resetRound` clears `cards.marked` and the student client forces a `this.cardId=''` + `buildCard()` to pick fresh sounds.
+**Why End Round needs confirmation**: `Net.endRound` is destructive and irreversible (without `reset`/`newRoundFreshCode`). The teacher's 🏁 button on the topbar opens `ov-confirm-end` first; only the explicit "Yes, end the round" button fires the broadcast. Cancellable accidents.
 
-**Server-side guarantee**: `reset_round(text)` is a `security definer` SQL function that atomically clears `calls`, `claims`, and `cards.marked` for the room, then sets `rooms.status='playing'`. Client falls back to direct table writes if the RPC is missing (graceful degradation on stale schemas).
+**Why `ov-roundend` has no X close button**: the modal is the terminal state after a destructive action. Letting the teacher dismiss it would leave them on a zombie caller-screen with `rooms.status='ended'` — calls can't fire, students can't mark, and they'd be stuck. The four explicit actions (Same students / New code / Download / Exit) are the only valid paths.
+
+**Two-path "New Round"**:
+- **🔁 Same students, fresh cards** → `Caller.newRoundSameCode` → `Net.resetRound` → broadcasts `reset` → students in the room get a new layout, same seat, same code
+- **🆕 New code, students rejoin** → `Caller.newRoundFreshCode` → keeps current room in `ended`, creates a brand-new room with a new code via `Net.createRoom`, navigates teacher to lobby. Students who Stay on the old session never get a reset (the new room is a different channel); they need to Leave and re-enter the new code
+
+**Student-side ended modal** (`ov-student-roundend`): on `end` broadcast, the student sees an explicit modal with two paths:
+- **🔁 Stay** — keep the frozen card visible for review; if teacher fires `reset` later, the modal auto-closes and a fresh card builds
+- **🚪 Leave** — full cleanup: unsubscribe, clear localStorage, blank the name field, return to the code-input screen for a clean rejoin (with the same OR different code)
+
+The frozen card stays visible behind the modal (`.bsq.frozen`) so students can review what they marked vs. what they missed — small pedagogical win.
+
+**Server-side guarantee for reset**: `reset_round(text)` is a `security definer` SQL function that atomically clears `calls`, `claims`, and `cards.marked` for the room, then sets `rooms.status='playing'`. Client falls back to direct table writes if the RPC is missing (graceful degradation on stale schemas).
 
 ### 15. Teacher resume + student card persistence
 
