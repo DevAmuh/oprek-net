@@ -467,6 +467,68 @@ body.dashboard-only .dash-title{font-size:1.3rem}
 .tab-btn.active{background:var(--surface);color:var(--tab-clr,var(--text));box-shadow:0 2px 8px rgba(0,0,0,.3)}
 
 .hidden{display:none!important}
+
+/* ══════════════════════ END-ROUND + MISC ══════════════════════ */
+/* End Round button in caller topbar */
+.end-round-btn{background:rgba(255,107,53,.14);border:1px solid rgba(255,107,53,.35);color:#FF6B35;font-family:'Nunito',sans-serif;font-weight:900;font-size:12px;padding:7px 12px;border-radius:9px;cursor:pointer;letter-spacing:.04em;transition:all .15s}
+.end-round-btn:hover{background:rgba(255,107,53,.22);color:#FF8855}
+/* Round-ended modal */
+.re-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:18px 0}
+.re-stat{background:var(--s2);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:12px 8px;text-align:center}
+.re-stat-num{font-family:'Fredoka One',cursive;font-size:1.5rem;color:var(--text);line-height:1.1;margin-bottom:4px}
+.re-stat-lbl{font-size:9px;font-weight:900;letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+.re-winners{background:rgba(255,209,102,.08);border:1px solid rgba(255,209,102,.25);border-radius:12px;padding:12px 14px;margin-bottom:14px}
+.re-winners-title{font-size:11px;font-weight:900;letter-spacing:.1em;color:var(--gold);text-transform:uppercase;margin-bottom:8px}
+.re-winner-row{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;padding:4px 0}
+.re-winner-row::before{content:'🏆';font-size:14px}
+.re-actions{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+/* Student round-ended overlay (within card-screen) */
+.re-banner{background:linear-gradient(135deg,rgba(255,107,53,.16),rgba(255,209,102,.12));border:1px solid rgba(255,107,53,.35);border-radius:14px;padding:16px 18px;margin-bottom:14px;text-align:center;animation:reBannerIn .4s ease}
+@keyframes reBannerIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+.re-banner-title{font-family:'Fredoka One',cursive;font-size:1.3rem;color:#FF8855;margin-bottom:4px}
+.re-banner-sub{font-size:12px;color:var(--muted);font-weight:600}
+.bsq.frozen{opacity:.5;pointer-events:none;filter:grayscale(.5)}
+/* Dashboard winner badge */
+.dash-row.winner{background:linear-gradient(90deg,rgba(255,209,102,.18),rgba(255,209,102,.06));border:1px solid rgba(255,209,102,.5);box-shadow:0 0 18px rgba(255,209,102,.18)}
+.dash-row.winner .dash-rank{background:linear-gradient(135deg,#FFD166,#FF6B35);color:#1a1430}
+.dash-row .dash-win-badge{display:none;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#FFD166,#FF6B35);color:#1a1430;font-size:11px;font-weight:900;margin-left:6px;animation:winPulse 1.6s ease-in-out infinite}
+.dash-row.winner .dash-win-badge{display:inline-flex}
+@keyframes winPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,209,102,.6)}50%{box-shadow:0 0 0 6px rgba(255,209,102,0)}}
+/* Reconnect toast */
+.net-toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:rgba(20,16,55,.95);border:1px solid rgba(255,107,53,.4);border-radius:12px;padding:9px 16px;font-size:12px;font-weight:800;color:var(--text);z-index:500;box-shadow:0 8px 30px rgba(0,0,0,.5);display:flex;align-items:center;gap:8px;animation:ntIn .25s ease}
+.net-toast.ok{border-color:rgba(0,204,163,.4);color:var(--teal)}
+.net-toast .nt-dot{width:8px;height:8px;border-radius:50%;background:#FF6B35;animation:ntPulse 1.2s ease-in-out infinite}
+.net-toast.ok .nt-dot{background:var(--teal);animation:none}
+@keyframes ntIn{from{opacity:0;transform:translate(-50%,-12px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes ntPulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
+/* Resume-as-teacher prompt */
+.resume-pill{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:linear-gradient(135deg,var(--surface),var(--s2));border:1px solid rgba(255,209,102,.4);border-radius:16px;padding:14px 18px;display:flex;align-items:center;gap:14px;z-index:300;box-shadow:0 12px 40px rgba(0,0,0,.5);max-width:92vw;animation:rpIn .35s cubic-bezier(.2,.8,.3,1.2)}
+.resume-pill .rp-info{font-size:12px;font-weight:700;color:var(--text);line-height:1.4}
+.resume-pill .rp-code{font-family:'Fredoka One',cursive;font-size:1.05rem;color:var(--gold)}
+.resume-pill .rp-actions{display:flex;gap:6px}
+.resume-pill .rp-btn{font-family:'Nunito',sans-serif;font-weight:900;font-size:11.5px;padding:8px 12px;border-radius:9px;border:none;cursor:pointer}
+.resume-pill .rp-btn.go{background:linear-gradient(135deg,#FFD166,#FF6B35);color:#1a1430}
+.resume-pill .rp-btn.dismiss{background:rgba(255,255,255,.07);color:var(--muted)}
+@keyframes rpIn{from{opacity:0;transform:translate(-50%,12px) scale(.96)}to{opacity:1;transform:translate(-50%,0) scale(1)}}
+/* Colorblind-friendly redundant signals on cells */
+.bsq.armed::before{content:'';position:absolute;top:6px;right:6px;width:14px;height:14px;border-radius:50%;background:var(--clr);border:2px solid #fff;box-shadow:0 0 8px rgba(255,255,255,.4)}
+.bsq.armed{position:relative}
+.bsq.disabled{border-style:dashed!important}
+.bsq.marked{position:relative}
+/* Mobile teacher layout */
+@media (max-width:720px){
+  .caller-wrap{padding:14px 12px 100px}
+  .word-display{font-size:3.2rem!important}
+  .ipa-reveal{font-size:1.3rem!important;padding:14px 18px!important}
+  .caller-ctrls{gap:6px}
+  .ctrl-btn,.auto-btn{font-size:13px;padding:11px 12px}
+  .reveal-btn{font-size:13px;padding:10px 14px}
+  .history-chips .hc{font-size:9px;padding:5px 6px}
+  .dash-sidebar{width:88vw;max-width:340px}
+  .dash-tab{height:96px;font-size:14px;width:38px;left:-38px}
+  .end-round-btn{font-size:11px;padding:6px 9px}
+  .session-note{display:none}
+}
 </style>
 </head>
 <body>
@@ -596,6 +658,7 @@ body.dashboard-only .dash-title{font-size:1.3rem}
   <div class="topbar">
     <button class="backbtn" onclick="Caller.exit()">←</button>
     <div class="topbar-title">📢 Caller</div>
+    <button class="end-round-btn" id="caller-endround-btn" onclick="Caller.endRound()" title="End the current round">🏁 End Round</button>
     <button class="icon-btn" id="caller-gear-btn" onclick="UI.showOv('ov-options')" title="Settings">⚙️</button>
   </div>
   <div class="caller-wrap">
@@ -639,6 +702,10 @@ body.dashboard-only .dash-title{font-size:1.3rem}
     <div id="waiting-panel" class="wp-panel hidden">
       <div class="wp-title"><span class="wp-pulse"></span>Waiting for your teacher</div>
       <div class="wp-sub">The game will begin when the teacher hits Start. Your card is ready below.</div>
+    </div>
+    <div id="round-ended-banner" class="re-banner hidden">
+      <div class="re-banner-title">🏁 Round ended</div>
+      <div class="re-banner-sub" id="re-banner-sub">Wait for your teacher to start the next round, or head back home.</div>
     </div>
     <div id="now-calling" class="nc-panel hidden">
       <div class="nc-label">Now Calling</div>
@@ -1008,6 +1075,28 @@ body.dashboard-only .dash-title{font-size:1.3rem}
 </div>
 
 <!-- ╔═══ OV: WIN SCREEN ═══╗ -->
+<!-- ╔═══ OV: ROUND ENDED (teacher) ═══╗ -->
+<div id="ov-roundend" class="ov">
+  <div class="obox">
+    <button class="ox" onclick="UI.closeOv('ov-roundend')">✕</button>
+    <div class="otitle">🏁 Round Ended</div>
+    <div class="re-stats">
+      <div class="re-stat"><div class="re-stat-num" id="re-stat-students">0</div><div class="re-stat-lbl">Students</div></div>
+      <div class="re-stat"><div class="re-stat-num" id="re-stat-calls">0</div><div class="re-stat-lbl">Sounds called</div></div>
+      <div class="re-stat"><div class="re-stat-num" id="re-stat-winners">0</div><div class="re-stat-lbl">Winners</div></div>
+    </div>
+    <div class="re-winners hidden" id="re-winners-wrap">
+      <div class="re-winners-title">Winners (claim order)</div>
+      <div id="re-winners-list"></div>
+    </div>
+    <div class="re-actions">
+      <button class="btn btn-grad" style="font-size:15px;padding:13px" onclick="Caller.newRoundSameCode()">🔁 New Round (same code, same students)</button>
+      <button class="btn btn-teal" style="font-size:13px;padding:11px" onclick="Caller.downloadSummary()">⬇ Download session summary</button>
+      <button class="btn btn-navy" style="font-size:13px;padding:11px" onclick="Caller.exitToSetup()">🚪 Exit to Setup</button>
+    </div>
+  </div>
+</div>
+
 <div id="ov-win" class="ov">
   <div class="obox win-wrap">
     <span class="win-trophy">🏆</span>
@@ -1229,11 +1318,41 @@ const St={
 /* ════════════ HELPERS ════════════ */
 const $=id=>document.getElementById(id);
 const shuffle=a=>[...a].sort(()=>Math.random()-.5);
+
+// Pick the best available English voice once and reuse for every speak() call.
+// Browser TTS quality varies wildly; we prefer en-US/en-GB voices, then natural-sounding ones.
+let _preferredVoice=null,_voicesPolled=false;
+function _pickEnglishVoice(){
+  if(!window.speechSynthesis)return null;
+  const voices=speechSynthesis.getVoices();
+  if(!voices||!voices.length)return null;
+  const en=voices.filter(v=>/^en[-_]/i.test(v.lang)||v.lang==='en');
+  if(!en.length)return null;
+  // Prefer "natural"/"neural"/"premium"/"online" in the name (browsers expose them when available)
+  const fancy=en.find(v=>/natural|neural|premium|online|wavenet|google/i.test(v.name||''));
+  if(fancy)return fancy;
+  // Prefer en-US, then en-GB
+  const us=en.find(v=>/en[-_]US/i.test(v.lang));if(us)return us;
+  const gb=en.find(v=>/en[-_]GB/i.test(v.lang));if(gb)return gb;
+  return en[0];
+}
+function _ensureVoice(){
+  if(_preferredVoice)return;
+  _preferredVoice=_pickEnglishVoice();
+  if(!_preferredVoice&&!_voicesPolled&&window.speechSynthesis){
+    _voicesPolled=true;
+    // voiceschanged fires asynchronously on first load in some browsers
+    speechSynthesis.addEventListener('voiceschanged',()=>{_preferredVoice=_pickEnglishVoice();},{once:true});
+  }
+}
+
 let _speechChecked=false;
 const speak=w=>{
   if(!window.speechSynthesis)return;
+  _ensureVoice();
   speechSynthesis.cancel();
   const u=new SpeechSynthesisUtterance(w);u.lang='en-US';u.rate=.82;u.pitch=1.05;
+  if(_preferredVoice)u.voice=_preferredVoice;
   speechSynthesis.speak(u);
   if(!_speechChecked){
     _speechChecked=true;
@@ -1442,26 +1561,75 @@ const Net={
     return{found:true,difficulty:data.difficulty,winCondition:data.win_condition,status:data.status||'lobby',strictMarking:!!data.strict_marking,highlightTappable:data.highlight_tappable!==false,enabledCats:data.enabled_cats||[],guaranteedSounds:data.guaranteed_sounds||[],recentCalls:calls||[]};
   },
 
+  // Retry-with-backoff for broadcast sends. Supabase returns 'ok', 'timed out', or 'rate limited'.
+  async _sendWithRetry(ch,msg,label){
+    for(let attempt=0;attempt<3;attempt++){
+      const res=await ch.send(msg);
+      if(res==='ok')return'ok';
+      if(res==='rate limited'){await new Promise(r=>setTimeout(r,300+attempt*200));continue;}
+      // 'timed out' or other — backoff and try again
+      await new Promise(r=>setTimeout(r,250*(attempt+1)));
+    }
+    console.warn('[Net.'+label+'] send did not confirm after 3 attempts',msg.event);
+    if(typeof NetUI!=='undefined'&&NetUI.flashError)NetUI.flashError();
+    return'failed';
+  },
+
   async pushCall(roomId,word,sound){
     const ch=await this._ensureBC(roomId);
-    ch.send({type:'broadcast',event:'call',payload:{word,soundId:sound.id,soundLabel:sound.label}});
+    this._sendWithRetry(ch,{type:'broadcast',event:'call',payload:{word,soundId:sound.id,soundLabel:sound.label}},'pushCall');
     const{error}=await _sb.from('calls').insert({room_id:roomId,word,sound_id:sound.id,sound_label:sound.label});
     if(error)console.error('[Net.pushCall]',error.message);
   },
 
-  subscribeRoomEvents(roomId,{onCall,onStart,onProgress}){
+  async endRound(roomId){
+    const{error}=await _sb.from('rooms').update({status:'ended'}).eq('id',roomId);
+    if(error)console.error('[Net.endRound]',error.message);
+    const ch=await this._ensureBC(roomId);
+    this._sendWithRetry(ch,{type:'broadcast',event:'end',payload:{}},'endRound');
+  },
+
+  async resetRound(roomId){
+    // Clear calls + claims + each card's marks via a security-definer SQL function.
+    // Layouts stay so students keep their seats; only the marked state resets.
+    try{await _sb.rpc('reset_round',{p_room_id:roomId});}
+    catch(e){console.warn('[Net.resetRound] rpc unavailable, falling back to direct writes:',e&&e.message);
+      await _sb.from('calls').delete().eq('room_id',roomId);
+      await _sb.from('claims').delete().eq('room_id',roomId);
+      await _sb.from('cards').update({marked:[]}).eq('room_id',roomId);
+      await _sb.from('rooms').update({status:'playing',started_at:new Date().toISOString()}).eq('id',roomId);
+    }
+    const ch=await this._ensureBC(roomId);
+    this._sendWithRetry(ch,{type:'broadcast',event:'reset',payload:{}},'resetRound');
+  },
+
+  async fetchRoomSnapshot(roomId){
+    // Used for teacher reconnect to rehydrate a session
+    const{data:room}=await _sb.from('rooms').select('*').eq('id',roomId).maybeSingle();
+    if(!room)return null;
+    const{data:calls}=await _sb.from('calls').select('sound_id,word,sound_label,created_at').eq('room_id',roomId).order('created_at',{ascending:true});
+    return{room,calls:calls||[]};
+  },
+
+  subscribeRoomEvents(roomId,{onCall,onStart,onProgress,onEnd,onReset}){
     const ch=_sb.channel('room:'+roomId)
       .on('broadcast',{event:'call'},({payload})=>onCall&&onCall({word:payload.word,soundId:payload.soundId,soundLabel:payload.soundLabel}))
       .on('broadcast',{event:'start'},()=>onStart&&onStart())
       .on('broadcast',{event:'progress'},({payload})=>onProgress&&onProgress(payload))
-      .subscribe();
+      .on('broadcast',{event:'end'},()=>onEnd&&onEnd())
+      .on('broadcast',{event:'reset'},()=>onReset&&onReset())
+      .subscribe(status=>{
+        // Surface connection issues for the user
+        if(typeof NetUI==='undefined')return;
+        if(status==='SUBSCRIBED')NetUI.flashOk();
+        else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED')NetUI.flashError();
+      });
     return()=>_sb.removeChannel(ch);
   },
 
   async broadcastProgress(roomId,payload){
     const ch=await this._ensureBC(roomId);
-    const res=await ch.send({type:'broadcast',event:'progress',payload});
-    if(res!=='ok')console.warn('[Net.broadcastProgress] send result:',res,payload);
+    await this._sendWithRetry(ch,{type:'broadcast',event:'progress',payload},'broadcastProgress');
   },
 
   async upsertCardProgress(roomId,cardId,displayName,layout,markedIds){
@@ -1628,6 +1796,7 @@ const LobbyT={
   async start(){
     clearInterval(this._pollTimer);this._pollTimer=null;
     await Net.startGame(St.sessionCode);
+    Persist.saveTeacher(St.sessionCode,St.difficulty);
     const sounds=callerSoundsFor(St.difficulty);
     Caller.init(sounds);
     UI.go('caller-screen');
@@ -1759,12 +1928,87 @@ const Caller={
     $('cd-fill').style.transition='none';$('cd-fill').style.width='0%';
   },
 
-  exit(){clearInterval(this.autoTimer);this._stopCountdown();speechSynthesis.cancel();Dashboard.close();UI.go('setup-screen');},
+  exit(){clearInterval(this.autoTimer);this._stopCountdown();speechSynthesis.cancel();Dashboard.close();if(typeof Persist!=='undefined')Persist.clearTeacher();UI.go('setup-screen');},
 
   launchAfterPrint(){
     const sounds=callerSoundsFor(St.difficulty);
     this.init(sounds);UI.go('caller-screen');
     if(St.sessionCode)Dashboard.open(St.sessionCode);
+  },
+
+  /* ──── End Round / New Round / Exit ──── */
+  async endRound(){
+    // Stop auto, fire end broadcast, populate stats modal
+    clearInterval(this.autoTimer);this._stopCountdown();
+    if(this.isAuto){this.isAuto=false;$('auto-btn').textContent='▶ Auto';}
+    if(!St.sessionCode){this.exit();return;}
+    await Net.endRound(St.sessionCode);
+    // Populate end-round modal stats
+    $('re-stat-students').textContent=Object.keys(Dashboard.students||{}).length;
+    $('re-stat-calls').textContent=(St.calledHistory||[]).length;
+    // Fetch claims for winner list
+    try{
+      const{data:claims}=await _sb.from('claims').select('card_id,created_at').eq('room_id',St.sessionCode).order('created_at',{ascending:true});
+      const winners=(claims||[]).map(c=>{
+        const s=Dashboard.students[c.card_id];return s?s.name:('Card #'+c.card_id);
+      });
+      $('re-stat-winners').textContent=winners.length;
+      const wrap=$('re-winners-wrap'),list=$('re-winners-list');
+      if(winners.length){wrap.classList.remove('hidden');list.innerHTML=winners.map(w=>`<div class="re-winner-row">${escapeHtml(w)}</div>`).join('');}
+      else{wrap.classList.add('hidden');list.innerHTML='';}
+    }catch(e){console.warn('[endRound] claims fetch failed',e);}
+    UI.showOv('ov-roundend');
+  },
+
+  async newRoundSameCode(){
+    if(!St.sessionCode){UI.closeOv('ov-roundend');this.exit();return;}
+    UI.closeOv('ov-roundend');
+    await Net.resetRound(St.sessionCode);
+    // Refresh caller state with a fresh queue (using existing sounds list)
+    this.sounds=callerSoundsFor(St.difficulty);
+    this.calledIds=new Set();
+    St.calledHistory=[];
+    this.buildQueue();
+    this.current=-1;
+    this.revealed=false;
+    this._buildChips();
+    this._updateProgress();
+    $('done-banner').classList.add('hidden');
+    Persist.saveTeacher(St.sessionCode,St.difficulty);
+    if(typeof toast==='function')toast('🔁 New round started — students get fresh cards.');
+    this.next();
+  },
+
+  exitToSetup(){
+    UI.closeOv('ov-roundend');
+    Persist.clearTeacher();
+    this.exit();
+  },
+
+  downloadSummary(){
+    // Generate a printable HTML summary of the just-ended round
+    const code=St.sessionCode||'(unknown)';
+    const date=new Date().toLocaleString();
+    const calls=St.calledHistory||[];
+    const callsByFreq={};calls.forEach(c=>{callsByFreq[c.soundLabel]=(callsByFreq[c.soundLabel]||0)+1;});
+    const callsHtml=calls.map((c,i)=>`<tr><td>${i+1}</td><td><strong>${escapeHtml(c.word)}</strong></td><td>${escapeHtml(c.soundLabel)}</td></tr>`).join('');
+    const studentsList=Object.entries(Dashboard.students||{}).map(([id,s])=>{
+      const total=(s.layout||[]).filter(x=>x).length;
+      return{id,name:s.name,count:(s.marked&&s.marked.size)||0,total};
+    }).sort((a,b)=>b.count-a.count);
+    const studentsHtml=studentsList.map((s,i)=>`<tr><td>${i+1}</td><td>${escapeHtml(s.name)}</td><td>${s.count}/${s.total||'-'}</td></tr>`).join('');
+    const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Sound BINGO · Session ${escapeHtml(code)} · ${escapeHtml(date)}</title>
+<style>body{font-family:'Segoe UI',Arial,sans-serif;max-width:780px;margin:30px auto;padding:0 20px;color:#222}h1{color:#FF6B35;font-size:1.6rem;margin-bottom:4px}.meta{color:#777;font-size:13px;margin-bottom:24px}h2{font-size:1.15rem;border-bottom:2px solid #eee;padding-bottom:6px;margin-top:30px;color:#444}table{border-collapse:collapse;width:100%;margin-top:10px;font-size:13px}th,td{padding:6px 10px;text-align:left;border-bottom:1px solid #eee}th{background:#f7f7f7;font-weight:700}tr:nth-child(even){background:#fafafa}.footer{margin-top:40px;font-size:11px;color:#aaa;text-align:center}</style>
+</head><body><h1>🔊 Sound BINGO · Session Summary</h1><div class="meta">Room ${escapeHtml(code)} · ${escapeHtml(date)} · ${St.difficulty} (${GRID_SIZE[St.difficulty]}×${GRID_SIZE[St.difficulty]})</div>
+<h2>📊 Students (${studentsList.length})</h2><table><tr><th>#</th><th>Name</th><th>Marks</th></tr>${studentsHtml||'<tr><td colspan=3>No students registered.</td></tr>'}</table>
+<h2>📢 Sounds called (${calls.length})</h2><table><tr><th>#</th><th>Word</th><th>Sound</th></tr>${callsHtml||'<tr><td colspan=3>No calls.</td></tr>'}</table>
+<div class="footer">Generated by Sound BINGO · UNINDRA English Phonology</div></body></html>`;
+    const blob=new Blob([html],{type:'text/html'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=`sound-bingo-session-${code}-${Date.now()}.html`;
+    document.body.appendChild(a);a.click();
+    setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},300);
   }
 };
 
@@ -1824,18 +2068,30 @@ const Player={
     this._roomEnabledCats=(room.enabledCats&&room.enabledCats.length)?new Set(room.enabledCats):null;
     this._roomGuaranteed=room.guaranteedSounds||[];
     this._roomId=raw;
-    this.cardId='';  // fresh session = fresh cardId (newCard within session reuses it)
     this.armed=new Set();
     this.calledLog=[];
+    // Try to restore a previous card for this (room, name) so refresh mid-game is non-destructive
+    const saved=Persist.loadCard(raw,this.displayName);
+    if(saved&&saved.cardId&&Array.isArray(saved.layout)){
+      this.cardId=saved.cardId;
+      this._restored=saved;
+    }else{
+      this.cardId='';
+      this._restored=null;
+    }
     this._initEmit();
     $('code-input-wrap').classList.add('hidden');
+    $('round-ended-banner').classList.add('hidden');
     if(this._unsubRoom){this._unsubRoom();this._unsubRoom=null;}
     this._unsubRoom=Net.subscribeRoomEvents(this._roomId,{
       onCall:(ev)=>Player.onCallReceived(ev),
       onStart:()=>Player.onGameStart(),
+      onEnd:()=>Player.onRoundEnd(),
+      onReset:()=>Player.onRoundReset(),
     });
     const pastCalls=room.recentCalls||[];
     const isLobby=room.status==='lobby';
+    const isEnded=room.status==='ended';
     WinDemo.show(()=>{
       Player.buildCard();
       for(const c of pastCalls){
@@ -1845,6 +2101,7 @@ const Player={
       if(pastCalls.length){const last=pastCalls[pastCalls.length-1];Player.showCalledPanel({word:last.word,soundId:last.sound_id,soundLabel:last.sound_label});}
       if(isLobby)Player.showWaitingPanel();
       else Player.hideWaitingPanel();
+      if(isEnded)Player.onRoundEnd();
       Player._refreshArmedState();
       Player._renderHistory();
     });
@@ -1860,34 +2117,74 @@ const Player={
 
   buildCard(){
     const diff=this.currentDiff||St.difficulty;
-    let sounds=soundsForDiff(diff);
-    if(this._roomEnabledCats){
-      const filtered=SOUNDS.filter(s=>this._roomEnabledCats.has(s.category));
-      if(filtered.length>=GRID_COUNT[diff])sounds=filtered;
-    }
     const gs=GRID_SIZE[diff];
-    const needed=gs*gs-(diff==='hard'?1:0);
-    // Hard-include guaranteed sounds first, then RNG-fill the rest
-    const guarSet=new Set(this._roomGuaranteed||[]);
-    const guarSounds=SOUNDS.filter(s=>guarSet.has(s.id)).slice(0,needed);
-    const guarIds=new Set(guarSounds.map(s=>s.id));
-    const rest=shuffle(sounds.filter(s=>!guarIds.has(s.id))).slice(0,needed-guarSounds.length);
-    let picked=shuffle([...guarSounds,...rest]);
-    // Safety net: if filters/guarantees left too few sounds, top up from the full pool
-    if(picked.length<needed){
-      const have=new Set(picked.map(s=>s.id));
-      const extras=shuffle(SOUNDS.filter(s=>!have.has(s.id))).slice(0,needed-picked.length);
-      picked=shuffle([...picked,...extras]);
+    // If we restored a saved card for this (room,name), rehydrate instead of rolling fresh
+    if(this._restored&&Array.isArray(this._restored.layout)&&this._restored.layout.length===gs*gs){
+      this.card=this._restored.layout.map(id=>id?SOUNDS.find(s=>s.id===id)||null:null);
+      this.marked=new Array(gs*gs).fill(false);
+      const markedSet=new Set(this._restored.marked||[]);
+      for(let i=0;i<this.card.length;i++){const s=this.card[i];if(s&&markedSet.has(s.id))this.marked[i]=true;}
+      if(diff==='hard')this.marked[Math.floor(gs*gs/2)]=true;
+      if(!this.cardId)this.cardId=this._restored.cardId||cardId();
+      this._restored=null;
+    }else{
+      let sounds=soundsForDiff(diff);
+      if(this._roomEnabledCats){
+        const filtered=SOUNDS.filter(s=>this._roomEnabledCats.has(s.category));
+        if(filtered.length>=GRID_COUNT[diff])sounds=filtered;
+      }
+      const needed=gs*gs-(diff==='hard'?1:0);
+      // Hard-include guaranteed sounds first, then RNG-fill the rest
+      const guarSet=new Set(this._roomGuaranteed||[]);
+      const guarSounds=SOUNDS.filter(s=>guarSet.has(s.id)).slice(0,needed);
+      const guarIds=new Set(guarSounds.map(s=>s.id));
+      const rest=shuffle(sounds.filter(s=>!guarIds.has(s.id))).slice(0,needed-guarSounds.length);
+      let picked=shuffle([...guarSounds,...rest]);
+      if(picked.length<needed){
+        const have=new Set(picked.map(s=>s.id));
+        const extras=shuffle(SOUNDS.filter(s=>!have.has(s.id))).slice(0,needed-picked.length);
+        picked=shuffle([...picked,...extras]);
+      }
+      this.card=shuffle(picked);
+      if(diff==='hard'){this.card.splice(Math.floor(gs*gs/2),0,null);}
+      this.marked=new Array(gs*gs).fill(false);
+      if(diff==='hard')this.marked[Math.floor(gs*gs/2)]=true;
+      if(!this.cardId)this.cardId=cardId();
     }
-    this.card=shuffle(picked);
-    if(diff==='hard'){this.card.splice(Math.floor(gs*gs/2),0,null);}
-    this.marked=new Array(gs*gs).fill(false);
-    if(diff==='hard')this.marked[Math.floor(gs*gs/2)]=true;
-    if(!this.cardId)this.cardId=cardId();
     $('card-id-label').textContent='Card #'+this.cardId;
     $('card-diff-label').textContent=diff.charAt(0).toUpperCase()+diff.slice(1)+' · '+gs+'×'+gs;
     this._render(diff,gs);
-    if(this._roomId)Net.registerCard(this._roomId,this.cardId,this.card.map(s=>s?s.id:null),this.displayName,this._markedSoundIds());
+    if(this._roomId){
+      Net.registerCard(this._roomId,this.cardId,this.card.map(s=>s?s.id:null),this.displayName,this._markedSoundIds());
+      Persist.saveCard(this._roomId,this.displayName,{cardId:this.cardId,layout:this.card.map(s=>s?s.id:null),marked:this._markedSoundIds()});
+    }
+  },
+
+  onRoundEnd(){
+    // Round is over — freeze card, show banner. Student waits for teacher's next move.
+    this.armed=new Set();
+    this._refreshArmedState();
+    this._frozen=true;
+    document.querySelectorAll('#player-grid .bsq').forEach(el=>el.classList.add('frozen'));
+    $('round-ended-banner').classList.remove('hidden');
+    $('now-calling').classList.add('hidden');
+    Persist.clearCard(this._roomId,this.displayName);
+  },
+
+  onRoundReset(){
+    // New round, same room: rebuild card fresh, clear marks, hide end-banner
+    this._frozen=false;
+    this.armed=new Set();
+    this.calledLog=[];
+    this.cardId='';  // force a fresh layout for the new round
+    this._restored=null;
+    Persist.clearCard(this._roomId,this.displayName);
+    $('round-ended-banner').classList.add('hidden');
+    $('now-calling').classList.add('hidden');
+    this.buildCard();
+    this._refreshArmedState();
+    this._renderHistory();
+    if(typeof toast==='function')toast('🔁 New round! Listen for the next sound.');
   },
 
   _markedSoundIds(){
@@ -1930,6 +2227,7 @@ const Player={
   },
 
   mark(i){
+    if(this._frozen)return;
     const s=this.card[i];
     if(!s)return;
     if(this.marked[i])return;
@@ -1944,6 +2242,8 @@ const Player={
     this._refreshArmedState();
     this._renderHistory();
     this._emitProgress();
+    // Persist locally so refresh mid-game restores the card
+    if(this._roomId)Persist.saveCard(this._roomId,this.displayName,{cardId:this.cardId,layout:this.card.map(x=>x?x.id:null),marked:this._markedSoundIds()});
   },
 
   callBingo(){
@@ -2005,6 +2305,7 @@ const Player={
   },
 
   onCallReceived({word,soundId,soundLabel}){
+    if(this._frozen)return; // round ended; ignore further calls
     this.hideWaitingPanel();
     this._logCall({word,soundId,soundLabel});
     this.showCalledPanel({word,soundId,soundLabel});
@@ -2578,29 +2879,74 @@ const WinDemo={
 /* ════════════ LIVE DASHBOARD ════════════ */
 const Dashboard={
   students:{},
+  winnerCardIds:new Set(),
   _unsub:null,
+  _unsubClaims:null,
   _pollTimer:null,
   _roomId:null,
 
   open(roomId){
     this.close();
     this._roomId=roomId;
+    this.winnerCardIds=new Set();
     const el=$('dashboard-sidebar');
     if(el)el.style.display='flex';
     this._loadInitial();
+    this._loadInitialClaims();
     this._pollTimer=setInterval(()=>this._loadInitial(),8000);
     this._unsub=Net.subscribeRoomEvents(roomId,{
       onProgress:(p)=>this._onProgress(p),
+      onEnd:()=>this._onRoundEnd(),
+      onReset:()=>this._onRoundReset(),
     });
+    this._unsubClaims=Net.subscribeClaims(roomId,(claim)=>this._onClaim(claim));
   },
 
   close(){
     if(this._unsub){this._unsub();this._unsub=null;}
+    if(this._unsubClaims){this._unsubClaims();this._unsubClaims=null;}
     if(this._pollTimer){clearInterval(this._pollTimer);this._pollTimer=null;}
     this.students={};
+    this.winnerCardIds=new Set();
     this._roomId=null;
     const el=$('dashboard-sidebar');
     if(el&&!document.body.classList.contains('dashboard-only'))el.style.display='none';
+  },
+
+  async _loadInitialClaims(){
+    if(!this._roomId)return;
+    try{
+      const{data}=await _sb.from('claims').select('card_id,created_at').eq('room_id',this._roomId).order('created_at',{ascending:true});
+      for(const c of data||[])this.winnerCardIds.add(c.card_id);
+      this.render();
+    }catch(e){console.warn('[Dashboard._loadInitialClaims]',e);}
+  },
+
+  _onClaim(claim){
+    if(!claim||!claim.card_id)return;
+    const isNew=!this.winnerCardIds.has(claim.card_id);
+    this.winnerCardIds.add(claim.card_id);
+    this.render();
+    if(isNew){
+      if(typeof Chime!=='undefined')Chime.bingo();
+      const s=this.students[claim.card_id];
+      const who=(s&&s.name)||('Card #'+claim.card_id);
+      if(typeof toast==='function')toast('🎰 '+who+' called BINGO!');
+    }
+  },
+
+  _onRoundEnd(){
+    // Visually freeze the dashboard
+    const sb=$('dashboard-sidebar');
+    if(sb)sb.classList.add('round-ended');
+  },
+
+  _onRoundReset(){
+    this.students={};
+    this.winnerCardIds=new Set();
+    const sb=$('dashboard-sidebar');
+    if(sb)sb.classList.remove('round-ended');
+    this._loadInitial();
   },
 
   async _loadInitial(){
@@ -2646,8 +2992,11 @@ const Dashboard={
         return`<div class="dg-cell ${s.marked.has(sid)?'dg-marked':''}"></div>`;
       }).join('');
       const isLeader=idx===0&&s.count>0;
+      const isWinner=this.winnerCardIds&&this.winnerCardIds.has(s.id);
       const totalCells=s.total||(gs*gs);
-      return`<div class="dash-row ${isLeader?'leader':''}"><div class="dash-rank">${idx+1}</div><div class="dash-name" title="${escapeHtml(s.name)}">${escapeHtml(s.name)}</div><div class="dash-mini-grid dg-${gs}">${cells}</div><div class="dash-count">${s.count}/${totalCells}</div></div>`;
+      const cls=[isWinner?'winner':'',isLeader?'leader':''].filter(Boolean).join(' ');
+      const badge=isWinner?'<span class="dash-win-badge" title="Called BINGO">🎰</span>':'';
+      return`<div class="dash-row ${cls}"><div class="dash-rank">${idx+1}</div><div class="dash-name" title="${escapeHtml(s.name)}">${escapeHtml(s.name)}${badge}</div><div class="dash-mini-grid dg-${gs}">${cells}</div><div class="dash-count">${s.count}/${totalCells}</div></div>`;
     }).join('');
   },
 
@@ -2799,15 +3148,143 @@ UI.showOv=function(id){
   }
 };
 
-/* ════════════ POP-OUT DASHBOARD BOOT ════════════ */
-// If URL has ?dashboard=ROOMID, boot directly into the dashboard-only view.
-// This is what Dashboard.popout() opens in a new window for the teacher.
+/* ════════════ NETWORK UI (reconnect toasts) ════════════ */
+const NetUI={
+  _toast:null,_okTimer:null,_state:'unknown',
+  _ensure(){
+    if(this._toast)return this._toast;
+    const d=document.createElement('div');
+    d.className='net-toast hidden';
+    d.innerHTML='<span class="nt-dot"></span><span class="nt-text">Reconnecting…</span>';
+    document.body.appendChild(d);
+    this._toast=d;return d;
+  },
+  flashError(){
+    const d=this._ensure();
+    d.classList.remove('ok','hidden');
+    d.querySelector('.nt-text').textContent='Reconnecting…';
+    this._state='error';
+    clearTimeout(this._okTimer);
+  },
+  flashOk(){
+    // Only flash "Connected" if we were previously in error state, otherwise stay quiet.
+    if(this._state!=='error')return;
+    const d=this._ensure();
+    d.classList.add('ok');d.classList.remove('hidden');
+    d.querySelector('.nt-text').textContent='✓ Connected';
+    this._state='ok';
+    clearTimeout(this._okTimer);
+    this._okTimer=setTimeout(()=>{d.classList.add('hidden');this._state='unknown';},1800);
+  }
+};
+
+/* ════════════ CHIME (teacher BINGO alert) ════════════ */
+const Chime={
+  _ctx:null,
+  _ensure(){
+    if(this._ctx)return this._ctx;
+    try{this._ctx=new(window.AudioContext||window.webkitAudioContext)();}
+    catch(e){return null;}
+    return this._ctx;
+  },
+  bingo(){
+    const ctx=this._ensure();if(!ctx)return;
+    // Three-note ascending chime: A5 → C#6 → E6 (A major)
+    [880,1109,1319].forEach((freq,i)=>{
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.type='triangle';o.frequency.value=freq;
+      g.gain.setValueAtTime(0,ctx.currentTime+i*0.12);
+      g.gain.linearRampToValueAtTime(0.18,ctx.currentTime+i*0.12+0.02);
+      g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+i*0.12+0.55);
+      o.connect(g);g.connect(ctx.destination);
+      o.start(ctx.currentTime+i*0.12);
+      o.stop(ctx.currentTime+i*0.12+0.6);
+    });
+  }
+};
+
+/* ════════════ PERSIST (localStorage helpers) ════════════ */
+const Persist={
+  K_TEACHER:'sbg.teacher.activeSession',
+  K_PLAYER_NAME:'sbg.playerName',
+  saveTeacher(code,difficulty){
+    try{localStorage.setItem(this.K_TEACHER,JSON.stringify({code,difficulty,ts:Date.now()}));}catch(e){}
+  },
+  loadTeacher(){
+    try{const raw=localStorage.getItem(this.K_TEACHER);if(!raw)return null;const v=JSON.parse(raw);
+      // Expire client-side after 4h to match server's "stale" threshold
+      if(Date.now()-v.ts>4*60*60*1000){this.clearTeacher();return null;}
+      return v;}catch(e){return null;}
+  },
+  clearTeacher(){try{localStorage.removeItem(this.K_TEACHER);}catch(e){}},
+  cardKey(roomId,name){return'sbg.card.'+roomId+'.'+(name||'').toLowerCase();},
+  saveCard(roomId,name,payload){
+    try{localStorage.setItem(this.cardKey(roomId,name),JSON.stringify({...payload,ts:Date.now()}));}catch(e){}
+  },
+  loadCard(roomId,name){
+    try{const raw=localStorage.getItem(this.cardKey(roomId,name));if(!raw)return null;const v=JSON.parse(raw);
+      // Expire after 4h
+      if(Date.now()-(v.ts||0)>4*60*60*1000)return null;
+      return v;}catch(e){return null;}
+  },
+  clearCard(roomId,name){try{localStorage.removeItem(this.cardKey(roomId,name));}catch(e){}}
+};
+
+/* ════════════ TEACHER RESUME PROMPT ════════════ */
+const Resume={
+  async check(){
+    // Skip resume check if we're in dashboard-only mode (pop-out window)
+    if(document.body.classList.contains('dashboard-only'))return;
+    const saved=Persist.loadTeacher();if(!saved||!saved.code)return;
+    const snap=await Net.fetchRoomSnapshot(saved.code);
+    if(!snap||!snap.room){Persist.clearTeacher();return;}
+    if(snap.room.status==='ended'){Persist.clearTeacher();return;}
+    // Show the pill
+    this._show(saved.code,snap);
+  },
+  _show(code,snap){
+    const existing=$('resume-pill');if(existing)existing.remove();
+    const pill=document.createElement('div');
+    pill.id='resume-pill';pill.className='resume-pill';
+    const callsCount=(snap.calls||[]).length;
+    pill.innerHTML=`<div class="rp-info">📻 Active session <span class="rp-code">${escapeHtml(code)}</span><br><span style="color:var(--muted);font-weight:600">${callsCount} call${callsCount===1?'':'s'} so far · resume as teacher?</span></div><div class="rp-actions"><button class="rp-btn go" id="rp-go">Resume</button><button class="rp-btn dismiss" id="rp-no">Dismiss</button></div>`;
+    document.body.appendChild(pill);
+    $('rp-go').onclick=()=>{this._hide();Resume.rehydrate(code,snap);};
+    $('rp-no').onclick=()=>{Persist.clearTeacher();this._hide();};
+  },
+  _hide(){const p=$('resume-pill');if(p)p.remove();},
+  rehydrate(code,snap){
+    St.sessionCode=code;
+    St.difficulty=snap.room.difficulty||'normal';
+    St.winCondition=snap.room.win_condition||'line';
+    St.strictMarking=!!snap.room.strict_marking;
+    St.highlightTappable=snap.room.highlight_tappable!==false;
+    St.enabledCats=new Set(snap.room.enabled_cats&&snap.room.enabled_cats.length?snap.room.enabled_cats:['consonant','short_vowel','long_vowel','diphthong']);
+    St.guaranteedSounds=snap.room.guaranteed_sounds||[];
+    const sounds=callerSoundsFor(St.difficulty);
+    Caller.init(sounds);
+    // Rehydrate the called set
+    const called=(snap.calls||[]).map(c=>c.sound_id);
+    Caller.calledIds=new Set(called);
+    St.calledHistory=(snap.calls||[]).map(c=>({word:c.word,soundId:c.sound_id,soundLabel:c.sound_label}));
+    // Refresh history strip + progress display
+    if(typeof Caller._buildChips==='function')Caller._buildChips();
+    if(typeof Caller._updateProgress==='function')Caller._updateProgress();
+    UI.go('caller-screen');
+    Dashboard.open(code);
+    if(typeof toast==='function')toast('📻 Resumed session '+code+'. Hit Next to continue.');
+  }
+};
+
+/* ════════════ POP-OUT DASHBOARD + RESUME BOOT ════════════ */
 (function(){
   try{
     const params=new URLSearchParams(window.location.search);
     const dashRoom=params.get('dashboard');
-    if(dashRoom&&typeof Dashboard!=='undefined')Dashboard.bootStandalone(dashRoom);
-  }catch(e){console.error('[dashboard bootstrap]',e);}
+    if(dashRoom&&typeof Dashboard!=='undefined'){Dashboard.bootStandalone(dashRoom);return;}
+    // Otherwise, check for an in-progress teacher session to resume
+    setTimeout(()=>{if(typeof Resume!=='undefined')Resume.check();},600);
+  }catch(e){console.error('[boot]',e);}
 })();
 </script>
 

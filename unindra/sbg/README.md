@@ -106,13 +106,17 @@ Four tables: `rooms`, `cards`, `calls`, `claims`. See [Data Model](#data-model).
 
 All multiplayer events flow through **a single Supabase Broadcast channel** per session: `room:XXXX` where `XXXX` is the 4-digit room code.
 
-Three event types travel on this channel:
+Five event types travel on this channel:
 
 | Event | Direction | Payload | Throttled? |
 |-------|-----------|---------|------------|
 | `call` | Teacher → Students | `{word, soundId, soundLabel}` | No (teacher pace) |
 | `start` | Teacher → All | `{}` | No (once per round) |
+| `end` | Teacher → All | `{}` | No (once per round) |
+| `reset` | Teacher → All | `{}` | No (when "New Round same code") |
 | `progress` | Student → Teacher dashboard | `{cardId, name, layout, markedIds}` | 300ms per student |
+
+All sends go through `Net._sendWithRetry` — 3 attempts with backoff, surfaces to `NetUI` on persistent failure.
 
 Both teacher and students hold **two channel objects** on `room:XXXX`:
 - One via `Net._ensureBC(roomId)` — lazy singleton, used for **sending** broadcasts
@@ -326,6 +330,23 @@ Tab-based viewer of all 24 sounds with tips, example words, and IPA. Built once 
 
 ### `Home` — Home-screen toggle
 `Home.toggleClassroom()` — expand/collapse the "In a Classroom" path's sub-options.
+
+### `Persist` — localStorage façade
+- `Persist.saveTeacher(code, difficulty)` / `loadTeacher()` / `clearTeacher()` — active teacher session metadata for refresh-resume
+- `Persist.saveCard(roomId, name, payload)` / `loadCard(roomId, name)` / `clearCard(roomId, name)` — per-(room, name) student card snapshot
+- 4h client-side TTL on both, matching the server's staleness threshold
+
+### `Resume` — Teacher reconnect prompt
+- `Resume.check()` — called on app boot (with 600ms delay so the rest of the UI mounts first). Reads `Persist.loadTeacher`, verifies the room via `Net.fetchRoomSnapshot`, shows the floating `#resume-pill` if valid.
+- `Resume.rehydrate(code, snap)` — restores `St`, calls `Caller.init`, replays `calledIds` from the snapshot, opens the Dashboard. Tested manually by hitting Ctrl+R on the caller-screen.
+
+### `NetUI` — Connection toast
+- `NetUI.flashError()` — "Reconnecting…" toast (orange pulsing dot). Wired into `_sendWithRetry` failure and channel `CHANNEL_ERROR`/`TIMED_OUT`/`CLOSED` states.
+- `NetUI.flashOk()` — "✓ Connected" toast (teal, 1.8s timeout). Only fires when previously in error state — quiet success.
+
+### `Chime` — Teacher BINGO audio cue
+- `Chime.bingo()` — Web Audio API ascending triangle-wave chime (A5 → C#6 → E6, ~600ms). Lazy AudioContext init.
+- Fires from `Dashboard._onClaim` when a new claim arrives — audio cue while the teacher is focused on speaking the next word.
 
 ### Helpers (top-level functions)
 
@@ -619,15 +640,117 @@ begin
   return v_count;
 end; $$;
 -- purge_stale_rooms is intentionally NOT granted to anon.
+
+-- ─── Round reset (called by Net.resetRound for "New Round, same code") ───
+-- Anon needs this granted; the function constrains the writes to a single room.
+create or replace function reset_round(p_room_id text)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  delete from calls where room_id = p_room_id;
+  delete from claims where room_id = p_room_id;
+  update cards set marked = '{}'::text[] where room_id = p_room_id;
+  update rooms set status = 'playing', started_at = now() where id = p_room_id;
+end; $$;
+grant execute on function reset_round(text) to anon;
+
+-- ─── Automate the nightly sweep via pg_cron ───
+-- Requires pg_cron extension. Enable once via Supabase Dashboard → Database → Extensions
+-- (or via SQL below). '0 19 * * *' = 19:00 UTC = 02:00 WIB (well past Indonesian class periods).
+create extension if not exists pg_cron with schema extensions;
+select cron.schedule(
+  'purge-stale-rooms-nightly',
+  '0 19 * * *',
+  $cron$select purge_stale_rooms()$cron$
+);
+-- Verify with:   select jobid, jobname, schedule, command, active from cron.job;
+-- Run history:   select * from cron.job_run_details order by start_time desc limit 10;
+-- Unschedule:    select cron.unschedule('purge-stale-rooms-nightly');
+
+-- ─── Realtime publication sanity-check ───
+-- Claims still use postgres_changes (not Broadcast) so dashboard claim-spotlight fires live.
+-- This is idempotent — won't error if claims is already in the publication.
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname='supabase_realtime' and schemaname='public' and tablename='claims'
+  ) then
+    execute 'alter publication supabase_realtime add table claims';
+  end if;
+end $$;
 ```
 
 The queue is per-tab (per Net instance), but since each tab only writes to its own cardId, this effectively gives us per-cardId serialization. Multi-student concurrency is handled by Supabase server-side.
 
 If you ever add another write path on `cards`, route it through `Net._queuedCardUpsert` too. Don't bypass.
 
-### 12. The vignette persistence trap
+### 13. The vignette persistence trap
 
 The one-time spotlight tooltips (`showVignette`) use `localStorage` to remember dismissal. Earlier versions only persisted on the explicit "Got it" link click — clicking the overlay just closed it temporarily, so users dismissed-via-overlay kept seeing it. Now **any interaction** (overlay click, hole click, tip click, X button, auto-timeout) marks it permanent. If you add a new one-time hint, follow the same any-interaction-dismisses pattern.
+
+### 14. Round lifecycle: lobby → playing → ended (or → reset back to playing)
+
+`rooms.status` is the source of truth for round lifecycle. Three states + one back-transition:
+
+```
+lobby ──────► playing ──────► ended
+   ▲              │   ▲          │
+   │              │   └──reset───┘   ("New Round, same code")
+   └─exit─────────┘                  ("Exit to Setup")
+```
+
+Three broadcast events drive transitions on the room channel:
+
+| Event | Who fires it | Effect on student client |
+|-------|--------------|-------------------------|
+| `start` | Teacher hits ▶ Start Calling | Lobby → Playing: hide waiting panel, arm card |
+| `end` | Teacher hits 🏁 End Round | Playing → Ended: freeze card (`.bsq.frozen`), show round-ended banner, clear armed set, hide now-calling panel, `Persist.clearCard` |
+| `reset` | Teacher hits 🔁 New Round (same code) | Ended → Playing: clear marks, rebuild card from scratch (forced new cardId), hide end banner, `_frozen=false` |
+
+**Why `reset` doesn't just rebuild the same card**: students get a *new* layout for the new round so it doesn't feel like the same game continuing. The seat (cardId line in `cards` table) stays the same identity-wise, but `Net.resetRound` clears `cards.marked` and the student client forces a `this.cardId=''` + `buildCard()` to pick fresh sounds.
+
+**Server-side guarantee**: `reset_round(text)` is a `security definer` SQL function that atomically clears `calls`, `claims`, and `cards.marked` for the room, then sets `rooms.status='playing'`. Client falls back to direct table writes if the RPC is missing (graceful degradation on stale schemas).
+
+### 15. Teacher resume + student card persistence
+
+Both sides survive accidental refresh / tab close via localStorage:
+
+**Teacher** (`Persist.K_TEACHER = 'sbg.teacher.activeSession'`):
+- Stored by `LobbyT.start` after `Net.startGame` succeeds: `{code, difficulty, ts}`
+- Boot-time `Resume.check()` (~600ms after page load):
+  1. Reads localStorage
+  2. Calls `Net.fetchRoomSnapshot(code)` to verify the room still exists and isn't ended
+  3. If valid: shows a `#resume-pill` floating prompt with the code + call count
+  4. On accept: `Resume.rehydrate()` rebuilds `St`, calls `Caller.init`, replays `calledIds` from snapshot, opens dashboard
+- Cleared on: `Caller.exit`, `Caller.exitToSetup`, room.status='ended', or 4h client-side TTL
+
+**Student** (`Persist.K_PLAYER_NAME = 'sbg.playerName'` + per-card key `sbg.card.<roomId>.<lowercased name>`):
+- Name persists across visits so the 🎲 dance only happens once
+- Card layout + marked state saved on every `buildCard` and every `Player.mark`
+- On `applyCode` to an existing room with a remembered name: `Persist.loadCard` is called; if a saved card exists, `buildCard` restores it instead of rolling a fresh layout
+- Cleared on round end (so the next round starts truly fresh)
+
+**Edge case**: if a student refreshes mid-round, they get the SAME card back. If they refresh AFTER the round ended, the localStorage card was cleared by `onRoundEnd` so they'll roll a new card on rejoin. Intended behavior — students shouldn't get a "free reset" by refreshing.
+
+### 16. NetUI + Chime + reconnect resilience
+
+Two helper modules sit between Net and the user:
+
+- **`NetUI`** owns a `#net-toast` element that flips between "Reconnecting…" (orange dot, pulsing) and "✓ Connected" (teal, no pulse). `Net.subscribeRoomEvents` wires its channel `.subscribe(status=>...)` callback to `NetUI.flashError` / `flashOk`. `Net._sendWithRetry` calls `NetUI.flashError` if all 3 send attempts fail.
+- **`Chime`** is a tiny Web Audio API ascending triangle-wave chime (A5 → C#6 → E6, ~600ms). Fired by `Dashboard._onClaim` when a new BINGO claim arrives so the teacher gets an audio cue while focused on speaking the next word. AudioContext is lazily created on first use to avoid autoplay-policy warnings.
+
+`Net._sendWithRetry(channel, message, label)` is the canonical wrapper around `ch.send` — 3 attempts with backoff (250ms × attempt for timeouts, 300ms + 200ms × attempt for rate limits). Any new broadcast path should use it.
+
+### 17. Voice selection for `speak()`
+
+Browser TTS quality varies catastrophically. `_pickEnglishVoice()` scans `speechSynthesis.getVoices()` once (with a `voiceschanged` event fallback for browsers that load voices async) and picks in priority order:
+1. Any voice whose name matches `/natural|neural|premium|online|wavenet|google/i` (the high-quality ones browsers expose)
+2. Otherwise, `en-US`
+3. Otherwise, `en-GB`
+4. Otherwise, any `en*` voice
+5. Otherwise, browser default
+
+The picked voice is cached in `_preferredVoice` and assigned to every `SpeechSynthesisUtterance.voice` in `speak()`. Big perceived quality improvement on Chrome/Edge desktop where Google's "Natural" voices are available.
 
 ---
 
@@ -732,17 +855,17 @@ These were intentionally NOT shipped in the current iteration. Priorities can sh
 
 | # | Item | Notes |
 |---|------|-------|
-| 1 | **End-of-round flow** | Currently when one student wins, the caller keeps calling. Need an "End Round" button + "Round 2" reset. Probably wants `rooms.status='ended'` + a teacher-side modal. |
-| 2 | **Card persistence across refresh** | Student refreshes → new card. Could persist `cardId` to `localStorage` keyed by room, then `Net.fetchCard(cardId)` to restore layout + marked state. |
+| 1 | ~~End-of-round flow~~ | ✅ **Shipped.** See Gotcha #14 (Round lifecycle). Teacher gets 🏁 End Round in the caller topbar → ov-roundend modal with stats + winners list + 🔁 New Round (same code) / ⬇ Download summary / 🚪 Exit. |
+| 2 | ~~Card persistence across refresh~~ | ✅ **Shipped.** `Persist.saveCard` / `loadCard` keyed by (roomId, name). Student refresh mid-round restores their layout + marks. See Gotcha #15. |
 | 3 | **Real Supabase Presence** | Current student count uses 8s polling of cards table. Real presence (`channel.track` / `channel.presenceState`) would be faster but requires more wiring. |
 | 4 | **Per-student progress drill-down** | Clicking a dashboard row could show the full IPA grid showing which sounds were marked when. The current dots-grid is intentionally compact for scale. |
 | 5 | **Multi-room teacher** | `St.sessionCode` is singular. One teacher can't run two simultaneous rooms. Would need a room switcher. |
-| 6 | **Teacher reconnect** | If teacher refreshes mid-game, room state is lost client-side. Could rehydrate from `rooms` + `calls` tables on the matching code. |
+| 6 | ~~Teacher reconnect~~ | ✅ **Shipped.** `Persist.saveTeacher` + `Resume.check` on boot. Floating resume-pill on the home screen if an active session is detected. See Gotcha #15. |
 | 7 | **i18n** | UI strings are English-only. SOUNDS dataset is English phonemes. |
-| 8 | **Mobile teacher** | Caller-screen is desktop-optimized. Cramps on phones. |
+| 8 | ~~Mobile teacher~~ | ✅ **Shipped.** `@media (max-width:720px)` block in CSS — word stage scales, ctrl buttons compact, sidebar narrows, session-note hidden on phones. Not pixel-perfect but usable. |
 | 9 | **Caller filler determinism** | Each `LobbyT.start` picks random fillers. Two refreshes give different filler sets. Could persist filler set in the room row. |
 | 10 | **IPA toggle on dashboard** | Currently dots only. Could add a toggle to show IPA labels for teachers who want to spot patterns ("most students don't have /θ/ marked yet"). |
-| 11 | **Automated `purge_stale_rooms` cron** | Collision recycle is automatic (per-call via `purge_room_if_stale`), but the bulk sweep is manual — admin runs `select purge_stale_rooms();` in the SQL editor. Could wire to `pg_cron` (Supabase supports it via the dashboard) to run nightly, but that requires enabling the extension first. For now, manual sweeps every 1-2 weeks during active classroom usage is fine. |
+| 11 | ~~Automated `purge_stale_rooms` cron~~ | ✅ **Shipped.** `pg_cron` extension + nightly schedule at 19:00 UTC (02:00 WIB). SQL block in Gotcha #12. Verify with `select * from cron.job;`. |
 | 12 | **Larger code space** | 4 digits with the first locked to difficulty = 3,000 codes per difficulty. Heavy long-term usage could exhaust them. Stretching to 5 digits (30,000 per difficulty) gives ~10× headroom but trades off student typing friction. The cleanup system delays this need significantly. |
 
 ---
