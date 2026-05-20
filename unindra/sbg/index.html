@@ -4,6 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Sound BINGO – English Phonology</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='84' font-size='84'%3E%F0%9F%8E%B0%3C/text%3E%3C/svg%3E"/>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
@@ -342,11 +343,14 @@ body.dashboard-only .dash-title{font-size:1.3rem}
 /* ══════════════════════ SOLO MODE ══════════════════════ */
 #solo-screen{padding:0}
 .solo-caller-bar{width:100%;background:var(--surface);border-bottom:1px solid rgba(255,255,255,.07);padding:14px 18px;display:flex;align-items:center;gap:14px}
-.solo-word-big{font-family:'Fredoka One',cursive;font-size:2rem;flex:1;text-align:center}
-.solo-ipa-tag{background:rgba(255,209,102,.15);border:1px solid rgba(255,209,102,.3);border-radius:8px;padding:5px 12px;text-align:center;flex-shrink:0}
-.solo-ipa-sym{font-family:'Fredoka One',cursive;font-size:1.2rem;color:var(--gold);display:block;line-height:1}
-.solo-ipa-nm{font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
-.solo-ctrls{display:flex;gap:8px;flex-shrink:0}
+.solo-word-wrap{flex:1;text-align:center;min-width:0}
+.solo-word-big{font-family:'Fredoka One',cursive;font-size:2.2rem;line-height:1.05}
+.solo-reveal{display:none;align-items:center;justify-content:center;gap:8px;margin-top:6px;animation:revealIn .35s ease}
+.solo-reveal.shown{display:inline-flex}
+@keyframes revealIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.solo-ipa-sym{font-family:'Fredoka One',cursive;font-size:1.15rem;line-height:1}
+.solo-ipa-nm{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.solo-ctrls{display:flex;gap:6px;flex-shrink:0}
 .solo-progress{width:100%;height:3px;background:rgba(255,255,255,.08)}
 .solo-fill{height:100%;background:var(--gold);transition:width linear}
 .solo-card-wrap{width:100%;max-width:480px;padding:16px 14px 90px;margin:0 auto}
@@ -770,15 +774,17 @@ body.dashboard-only .dash-title{font-size:1.3rem}
     <button class="icon-btn" onclick="UI.showOv('ov-options')">⚙️</button>
   </div>
   <div class="solo-caller-bar">
-    <div class="solo-word-big" id="solo-word">—</div>
-    <div class="solo-ipa-tag" id="solo-ipa-tag">
-      <span class="solo-ipa-sym" id="solo-ipa">?</span>
-      <span class="solo-ipa-nm" id="solo-ipa-nm">tap the sound</span>
+    <div class="solo-word-wrap">
+      <div class="solo-word-big" id="solo-word">—</div>
+      <div class="solo-reveal" id="solo-reveal">
+        <span class="solo-ipa-sym" id="solo-ipa"></span>
+        <span class="solo-ipa-nm" id="solo-ipa-nm"></span>
+      </div>
     </div>
     <div class="solo-ctrls">
-      <button class="icon-btn" onclick="Solo.replay()" title="Hear again">🔊</button>
-      <button class="icon-btn" id="solo-pause-btn" onclick="Solo.togglePause()" title="Pause">⏸</button>
-      <button class="icon-btn" onclick="Solo.skip()" title="Skip / reveal">⏭</button>
+      <button class="icon-btn" onclick="Solo.replay()" title="Hear it again">🔊</button>
+      <button class="icon-btn hidden" id="solo-pause-btn" onclick="Solo.togglePause()" title="Pause">⏸</button>
+      <button class="icon-btn" onclick="Solo.skip()" title="Skip + reveal">⏭</button>
     </div>
   </div>
   <div class="solo-progress"><div class="solo-fill" id="solo-fill" style="width:0%"></div></div>
@@ -1464,14 +1470,20 @@ function soundsForDiff(diff){
 // Caller-side sound pool: guarantees forced in, random fillers from enabled categories
 // to reach grid_count. Used by both digital (multiplayer) and print flows so every
 // session honors guaranteed sounds in BOTH cards and caller queue.
-function callerSoundsFor(diff){
+function callerSoundsFor(diff,opts){
+  // opts: {guaranteed:[soundIds], enabledCats:Set} — falls back to teacher St.* defaults
   const d=diff||St.difficulty;
   const need=GRID_COUNT[d];
-  const guar=St.guaranteedSounds||[];
-  if(guar.length===0)return soundsForDiff(d);
+  const guar=(opts&&opts.guaranteed)||St.guaranteedSounds||[];
+  const enabled=(opts&&opts.enabledCats)||St.enabledCats;
+  if(guar.length===0){
+    // Honor the enabledCats override even without guarantees
+    if(opts&&opts.enabledCats)return SOUNDS.filter(s=>enabled.has(s.category)).slice(0,need);
+    return soundsForDiff(d);
+  }
   const guarSet=new Set(guar);
   const guarSounds=SOUNDS.filter(s=>guarSet.has(s.id)).slice(0,need);
-  const fillerPool=SOUNDS.filter(s=>St.enabledCats.has(s.category)&&!guarSet.has(s.id));
+  const fillerPool=SOUNDS.filter(s=>enabled.has(s.category)&&!guarSet.has(s.id));
   const fillers=shuffle(fillerPool).slice(0,need-guarSounds.length);
   let result=[...guarSounds,...fillers];
   if(result.length<need){
@@ -1536,6 +1548,10 @@ const UI={
   closeOv(id){
     $(id).classList.remove('on');
     if(id==='ov-win'&&typeof FX!=='undefined')FX.cleanup();
+    if(id==='ov-guaranteed'){
+      // Reset any temporary z-index bump (used when opened from ov-solo-setup)
+      const ov=$('ov-guaranteed');if(ov)ov.style.zIndex='';
+    }
   },
   goCard(){
     this.go('card-screen');
@@ -2142,12 +2158,16 @@ const Caller={
   },
 
   async _showRoundEndModal(){
+    // Drop the resume marker — even if the rooms.status='ended' UPDATE was rejected by RLS,
+    // a refresh from this device shouldn't surface the resume pill anymore.
+    // newRoundSameCode re-saves it if the teacher continues the session.
+    if(typeof Persist!=='undefined')Persist.clearTeacher();
     // Populate end-round modal stats
     $('re-stat-students').textContent=Object.keys(Dashboard.students||{}).length;
     $('re-stat-calls').textContent=(St.calledHistory||[]).length;
     // Fetch claims for winner list
     try{
-      const{data:claims}=await _sb.from('claims').select('card_id,created_at').eq('room_id',St.sessionCode).order('created_at',{ascending:true});
+      const{data:claims}=await _sb.from('claims').select('card_id,id').eq('room_id',St.sessionCode).order('id',{ascending:true});
       const winners=(claims||[]).map(c=>{
         const s=Dashboard.students[c.card_id];return s?s.name:('Card #'+c.card_id);
       });
@@ -2623,7 +2643,10 @@ const Player={
     const p=$('now-calling');
     p.style.background=clr+'22';p.style.borderColor=clr+'66';
     p.style.animation='none';void p.offsetHeight;p.style.animation='';
-    $('nc-word').textContent=word;$('nc-word').style.color=clr;
+    // Highlight the sound's letters within the word (same as solo) — pedagogical cue
+    if(s)$('nc-word').innerHTML=highlightCallerWord(word,s);
+    else $('nc-word').textContent=word;
+    $('nc-word').style.color=clr;
     $('nc-ipa').textContent=soundLabel;
     $('nc-ipa').style.background=clr+'33';$('nc-ipa').style.borderColor=clr+'88';$('nc-ipa').style.color=clr;
     $('nc-cat').textContent=catName;
@@ -2660,16 +2683,21 @@ const Solo={
   },
 
   openGuaranteed(){
-    // Switch the shared modal to "solo" mode and reuse Teacher's picker UI
+    // Switch the shared modal to "solo" mode and reuse Teacher's picker UI.
+    // Bump z-index above ov-solo-setup so it stacks on top (both share class .ov).
     Teacher._guarCtx='solo';
     Teacher._buildGuarList();
     Teacher._updateGuarCount();
+    const ov=$('ov-guaranteed');
+    if(ov)ov.style.zIndex='500';
     UI.showOv('ov-guaranteed');
   },
 
   init(){
     this.diff=St.soloDifficulty;
-    this.sounds=soundsForDiff(this.diff);
+    // Guarantee-aware caller pool — solo guarantees force matching words into the queue too,
+    // mirroring how callerSoundsFor works in classroom mode.
+    this.sounds=callerSoundsFor(this.diff,{guaranteed:St.soloGuaranteedSounds||[],enabledCats:St.enabledCats});
     if(!this.sounds.length){alert('No sounds enabled! Check Options.');return;}
     this._buildQueue();this.idx=0;this.paused=false;this.waitingForAnswer=false;
     this.winCount=0;
@@ -2689,6 +2717,8 @@ const Solo={
   newCard(){
     // Called from the win modal — rebuild a fresh card without resetting the streak
     this.paused=false;this.waitingForAnswer=false;
+    // Re-derive the sound pool in case guarantees changed via Options between rounds
+    this.sounds=callerSoundsFor(this.diff,{guaranteed:St.soloGuaranteedSounds||[],enabledCats:St.enabledCats});
     this._buildQueue();this.idx=0;
     this._buildCard();
     this._setStatus('Fresh card! Find the sound and tap it.');
@@ -2740,22 +2770,26 @@ const Solo={
     this.waitingForAnswer=true;
 
     const sound=this.currentItem.sound;
-    const clr=CAT_COLORS[sound.category];
 
     // Show word with highlighted letters from the start
     $('solo-word').innerHTML=highlightCallerWord(this.currentItem.word,sound);
-
-    // IPA tag: category color border/bg, but sound still hidden
-    const tag=$('solo-ipa-tag');
-    tag.style.background=`${clr}22`;
-    tag.style.borderColor=`${clr}66`;
-    $('solo-ipa').style.color=clr;
-    $('solo-ipa').textContent='?';
-    $('solo-ipa-nm').textContent='tap the sound';
+    // Hide the reveal until they tap right / skip / time-up
+    $('solo-reveal').classList.remove('shown');
+    // Show/hide pause based on whether auto-advance is on (no point pausing static mode)
+    const pb=$('solo-pause-btn');
+    if(pb){if(St.autoCall)pb.classList.remove('hidden');else pb.classList.add('hidden');}
 
     speak(this.currentItem.word);
-    this._setStatus('Which sound do the highlighted letters make? Tap it on your card!');
+    this._setStatus('Which sound do the highlighted letters make? Tap it on your card below.');
     if(St.autoCall&&!this.paused)this._startCd();
+  },
+
+  _showReveal(sound){
+    const clr=CAT_COLORS[sound.category];
+    $('solo-ipa').textContent=sound.label;
+    $('solo-ipa').style.color=clr;
+    $('solo-ipa-nm').textContent=sound.name;
+    $('solo-reveal').classList.add('shown');
   },
 
   _startCd(){
@@ -2770,13 +2804,10 @@ const Solo={
     // Time pressure ran out - reveal and move on without marking
     this.waitingForAnswer=false;
     if(this.currentItem){
-      const _tc=CAT_COLORS[this.currentItem.sound.category];
-      const _tt=$('solo-ipa-tag');_tt.style.background=`${_tc}33`;_tt.style.borderColor=_tc;
-      $('solo-ipa').textContent=this.currentItem.sound.label;$('solo-ipa').style.color=_tc;
-      $('solo-ipa-nm').textContent=this.currentItem.sound.name;
+      this._showReveal(this.currentItem.sound);
       this._setStatus(`⏱ Time's up! That was ${this.currentItem.sound.label} — ${this.currentItem.sound.name}`);
     }
-    setTimeout(()=>{if(!this.paused)this._next();},1400);
+    setTimeout(()=>{if(!this.paused)this._next();},1100);
   },
 
   togglePause(){
@@ -2792,12 +2823,11 @@ const Solo={
     clearTimeout(this.cdTimer);
     this.waitingForAnswer=false;
     if(this.currentItem){
-      const _sc=CAT_COLORS[this.currentItem.sound.category];
-      const _st=$('solo-ipa-tag');_st.style.background=`${_sc}33`;_st.style.borderColor=_sc;
-      $('solo-ipa').textContent=this.currentItem.sound.label;$('solo-ipa').style.color=_sc;
-      $('solo-ipa-nm').textContent=this.currentItem.sound.name;
+      this._showReveal(this.currentItem.sound);
+      this._setStatus(`⏭ Skipped — that was ${this.currentItem.sound.label} (${this.currentItem.sound.name}).`);
     }
-    setTimeout(()=>this._next(),1000);
+    // Snappier: advance after a short reveal pause
+    setTimeout(()=>{if(!this.paused)this._next();},700);
   },
 
   mark(i){
@@ -2808,11 +2838,8 @@ const Solo={
     const el=document.querySelector(`#solo-grid .bsq[data-i="${i}"]`);
 
     if(correct){
-      // Reveal the answer with category color
-      const _mc=CAT_COLORS[s.category];
-      const _mt=$('solo-ipa-tag');_mt.style.background=`${_mc}33`;_mt.style.borderColor=_mc;
-      $('solo-ipa').textContent=s.label;$('solo-ipa').style.color=_mc;
-      $('solo-ipa-nm').textContent=s.name;
+      // Reveal the answer
+      this._showReveal(s);
       clearTimeout(this.cdTimer);
       this.waitingForAnswer=false;
 
@@ -2842,7 +2869,7 @@ const Solo={
           return;
         }
       }
-      setTimeout(()=>{if(!this.paused)this._next();},1200);
+      setTimeout(()=>{if(!this.paused)this._next();},900);
     }else{
       // Wrong answer — shake and hint
       el.classList.remove('shake');
@@ -3245,7 +3272,7 @@ const Dashboard={
   async _loadInitialClaims(){
     if(!this._roomId)return;
     try{
-      const{data}=await _sb.from('claims').select('card_id,created_at').eq('room_id',this._roomId).order('created_at',{ascending:true});
+      const{data}=await _sb.from('claims').select('card_id,id').eq('room_id',this._roomId).order('id',{ascending:true});
       this.winsPerCard={};
       for(const c of (data||[])){
         this.winnerCardIds.add(c.card_id);
