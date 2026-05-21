@@ -1,3 +1,9 @@
 {
-  "cleanUrls": true
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/binge",          "destination": "https://binge-web-puce.vercel.app/binge" },
+    { "source": "/binge/:path*",   "destination": "https://binge-web-puce.vercel.app/binge/:path*" },
+    { "source": "/auth/:path*",    "destination": "https://binge-web-puce.vercel.app/auth/:path*" },
+    { "source": "/api/binge/:path*", "destination": "https://binge-web-puce.vercel.app/api/binge/:path*" }
+  ]
 }
