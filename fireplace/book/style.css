@@ -1,16 +1,14 @@
 /* ═══════════════════════════════════════════════════════════════
-   Fireplace · The Book
-   A high-fidelity book-style note editor
+   Fireplace · The Book — a parchment markdown editor
+   Single writing surface · SVG page-warp · ink-trace · quill cursor
    ═══════════════════════════════════════════════════════════════ */
 
 :root {
   /* ink palette */
   --ink: #2a1808;
-  --ink-soft: rgba(42, 24, 8, 0.86);
-  --ink-wet: rgba(28, 16, 6, 1);
-
-  /* warm parchment text glow */
-  --candle: #f7d894;
+  --ink-soft: rgba(42, 24, 8, 0.62);
+  --ink-faint: rgba(42, 24, 8, 0.32);
+  --ink-wet: #1c1006;
 
   /* chrome */
   --chrome-bg: rgba(18, 12, 6, 0.74);
@@ -19,41 +17,23 @@
   --chrome-muted: #a08c66;
   --chrome-accent: #e8b669;
 
-  /* book layout — percentages of the 2730×1535 stage where the book pages sit.
+  /* book layout — percentages of the 2730×1535 stage where the book sits.
      Measured from the reference photo: the open spread spans roughly
-     x: 27%→73%, y: 23%→78%, with the spine landing at 50% of the stage. */
+     x: 27%→73%, y: 23%→78%, spine at 50% of the stage. */
   --book-x: 27%;
   --book-y: 23%;
   --book-w: 46%;
   --book-h: 55%;
-  --spine-gap: 36px;   /* visual gutter between left and right page-inner */
-  --page-pad-y: 6%;    /* top/bottom margin inside page */
-  --page-pad-x: 7%;    /* left/right margin inside page */
-
-  /* 3D book geometry */
-  --spine-tilt: 10deg;     /* each page rotates this much around its inner edge */
-  --book-perspective: 1800px;
+  --page-pad-x: 7.5%;   /* left/right writing margin inside the book */
+  --page-pad-y: 7%;     /* top/bottom writing margin */
 
   /* type */
-  --book-font: 'EB Garamond', 'Cormorant Garamond', Georgia, serif;
+  --book-font: 'Cormorant Garamond', 'Georgia', serif;
   --book-size: 30px;
-  --book-leading: 1.6;
-  --warp-strength: 2.2;
+  --book-leading: 1.62;
 
-  /* timing */
-  --stroke-ms: 80ms;
-  --settle-ms: 260ms;
-}
-
-@property --stroke-progress {
-  syntax: '<percentage>';
-  initial-value: 0%;
-  inherits: false;
-}
-@property --ink-bloom {
-  syntax: '<length>';
-  initial-value: 0px;
-  inherits: false;
+  /* ink-trace timing */
+  --ink-ms: 80ms;
 }
 
 * { box-sizing: border-box; }
@@ -70,23 +50,7 @@ html, body {
   user-select: none;
 }
 
-/* ─────────────── HIDDEN INPUT ─────────────── */
-
-#hidden-input {
-  position: fixed;
-  top: 50%;
-  left: -10000px;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-  pointer-events: none;
-  border: 0;
-  outline: 0;
-  resize: none;
-  font-size: 16px; /* prevents iOS zoom on focus */
-}
-
-/* ─────────────── VIEWPORT & STAGE ─────────────── */
+/* ─────────────── VIEWPORT · CAMERA · STAGE ─────────────── */
 
 #viewport {
   position: fixed;
@@ -96,7 +60,7 @@ html, body {
     radial-gradient(ellipse 80% 60% at 50% 50%, #1c150c 0%, #0c0805 70%, #050302 100%);
   cursor: text;
 }
-#viewport.panning { cursor: grabbing; }
+#viewport.panning   { cursor: grabbing; }
 #viewport.pan-ready { cursor: grab; }
 
 #camera {
@@ -105,10 +69,9 @@ html, body {
   left: 0;
   transform-origin: 0 0;
   will-change: transform;
-  /* no transition by default - applied conditionally */
 }
 #camera.animating {
-  transition: transform 280ms cubic-bezier(.4,.0,.2,1);
+  transition: transform 280ms cubic-bezier(.4, .0, .2, 1);
 }
 
 #stage {
@@ -126,7 +89,7 @@ html, body {
   filter: brightness(1.02) contrast(1.04) saturate(1.08);
 }
 
-/* warm candlelight glow centered on the book (book center: 50%, 50.5%) */
+/* warm candlelight glow centred on the book */
 .candlelight {
   position: absolute;
   inset: 0;
@@ -155,161 +118,98 @@ html, body {
   height: var(--book-h);
 }
 
-#paper {
-  position: absolute;
-  inset: 0;
-  /* paper itself has no padding — the .page-inner inside each page handles
-     the writing margin. This way the spread fills the photographed pages
-     edge to edge and only the inner writing surface is padded. */
-}
+/* ─────────────── THE WRITING SURFACE ───────────────
+   The contenteditable IS the page. It fills the book area; the inner
+   padding is the page margin. Phase B applies the SVG page-warp filter. */
 
-/* ─────────────── SPREAD + PAGES (CSS 3D) ───────────────
-   Replaces the old multicol + feDisplacementMap approach.
-   Each page is a real rotated rectangle, tilting back at the spine to
-   match the photographed book's spine fold. */
-
-.spread {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  perspective: var(--book-perspective);
-  perspective-origin: 50% 40%;
-  transform-style: preserve-3d;
-}
-
-.page {
-  position: relative;
-  flex: 1 1 50%;
-  height: 100%;
-  transform-style: preserve-3d;
-  backface-visibility: hidden;
-}
-.page-left {
-  transform-origin: 100% 50%;  /* right edge = spine */
-  transform: rotateY(var(--spine-tilt));
-}
-.page-right {
-  transform-origin: 0% 50%;    /* left edge = spine */
-  transform: rotateY(calc(var(--spine-tilt) * -1));
-}
-
-.page-inner {
+.text-flow {
   position: absolute;
   inset: 0;
   padding: var(--page-pad-y) var(--page-pad-x);
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  outline: none;
   font-family: var(--book-font);
+  font-style: italic;
   font-size: var(--book-size);
   line-height: var(--book-leading);
   color: var(--ink);
   font-feature-settings: 'liga' 1, 'dlig' 1, 'kern' 1;
-  letter-spacing: 0.005em;
+  letter-spacing: 0.004em;
   text-rendering: geometricPrecision;
   word-wrap: break-word;
   overflow-wrap: break-word;
+  user-select: text;
+  -webkit-user-select: text;
+  /* scrollbar hidden — it's a page, not a textarea */
+  scrollbar-width: none;
+}
+.text-flow::-webkit-scrollbar { width: 0; height: 0; }
+
+/* page-warp filter — added by editor.js once the spine map is generated */
+.text-flow.warp-on { filter: url(#page-warp); }
+
+/* markdown block defaults — refined further in phase F */
+.text-flow p {
+  margin: 0 0 0.15em;
+}
+.text-flow h1,
+.text-flow h2,
+.text-flow h3 {
+  font-weight: 600;
+  font-style: italic;
+  margin: 0.5em 0 0.2em;
+  line-height: 1.25;
+  color: var(--ink-wet);
+}
+.text-flow h1 { font-size: 1.72em; }
+.text-flow h2 { font-size: 1.4em; }
+.text-flow h3 { font-size: 1.16em; }
+.text-flow blockquote {
+  margin: 0.3em 0;
+  padding-left: 0.85em;
+  border-left: 2px solid var(--ink-faint);
+  color: var(--ink-soft);
+}
+.text-flow ul,
+.text-flow ol {
+  margin: 0.2em 0;
+  padding-left: 1.5em;
+}
+.text-flow li { margin: 0.05em 0; }
+.text-flow code {
+  font-family: 'Courier New', monospace;
+  font-style: normal;
+  font-size: 0.86em;
+  background: rgba(60, 36, 18, 0.1);
+  border-radius: 3px;
+  padding: 0.05em 0.3em;
+}
+.text-flow strong { font-weight: 600; }
+.text-flow em { font-style: italic; }
+.text-flow a {
+  color: #5a3a8a;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
 }
 
-/* Paper warp turbulence — applied to each .page-inner (NOT the rotated
-   .page) so we don't flatten the 3D context. Toggled off by default;
-   turned on by JS for the subtle texture. */
-.paper-warp .page-inner.warp-on {
-  filter: url(#paper-warp);
+/* warm candlelight wash on selected text */
+.text-flow ::selection {
+  background: rgba(232, 182, 105, 0.42);
+  color: var(--ink-wet);
+}
+.text-flow ::-moz-selection {
+  background: rgba(232, 182, 105, 0.42);
+  color: var(--ink-wet);
 }
 
-/* The left page gets a slight inner-edge shadow to deepen the gutter,
-   right page mirrors. Lives on .page-inner so it doesn't interact with
-   the 3D rotation directly. */
-.page-left .page-inner::after,
-.page-right .page-inner::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 14%;
-  pointer-events: none;
-  mix-blend-mode: multiply;
-  opacity: 0.55;
-}
-.page-left .page-inner::after {
-  right: 0;
-  background: linear-gradient(90deg,
-    transparent 0%,
-    rgba(40, 22, 10, 0.06) 50%,
-    rgba(40, 22, 10, 0.34) 100%);
-}
-.page-right .page-inner::after {
-  left: 0;
-  background: linear-gradient(270deg,
-    transparent 0%,
-    rgba(40, 22, 10, 0.06) 50%,
-    rgba(40, 22, 10, 0.34) 100%);
-}
+/* ─────────────── QUILL CARET ───────────────
+   #quill-caret is a zero-size anchor; JS sets its left/top to the native
+   caret position (book-local stage px). The quill SVG is sized in em so
+   the nib stays anchored at any font size. Hidden until phase C wires it. */
 
-/* ─────────────── INK CHARACTERS ─────────────── */
-
-.ink-char {
-  display: inline-block;
-  position: relative;
-  vertical-align: baseline;
-  white-space: pre;
-  color: var(--ink);
-  text-shadow:
-    0 0 0.4px rgba(28,16,6,0.32),
-    0 0 0.9px rgba(60,30,10,0.14);
-}
-
-/* inner glyph: this is what animates (scaleX wipe + blur settle, or the
-   SVG ink trace overlay added by editor.js). position:relative so the
-   absolute SVG overlay anchors to this glyph's box. */
-.ink-glyph {
-  display: inline-block;
-  position: relative;
-  transform-origin: left center;
-}
-.ink-glyph > svg.ink-trace {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  overflow: visible;
-}
-
-/* spaces and newlines: invisible, no animation */
-.ink-char.space {
-  color: transparent;
-}
-.ink-char.newline,
-.ink-char.hard-break {
-  display: block;
-  height: 0;
-  color: transparent;
-}
-
-/* tiny moving "wet ink" dot at the stroke head — animated via JS WAAPI */
-.ink-glyph::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 0;
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: rgba(20,10,4,0.85);
-  filter: blur(0.6px);
-  transform: translateY(-50%);
-  pointer-events: none;
-  opacity: 0;
-}
-
-/* ─────────────── QUILL CARET (the quill IS the cursor) ───────────────
-   #caret lives INSIDE the active .page-inner so it inherits the 3D tilt
-   automatically — quill leans with the page, math is plain page-local.
-   The quill SVG is sized in em units so the nib stays anchored at any
-   font size. */
-
-#caret {
+#quill-caret {
   position: absolute;
   width: 0;
   height: 0;
@@ -317,85 +217,27 @@ html, body {
   top: 0;
   pointer-events: none;
   z-index: 10;
-  /* Inherit page font-size so em sizing on the quill tracks it. */
-  font-size: inherit;
+  font-size: var(--book-size);
+  display: none;   /* phase C turns this on */
 }
 
-#caret #quill-svg {
+#quill-svg {
   position: absolute;
-  /* viewBox 120 × 320, nib at (64, 312). Sized in em so it scales with text.
-     nibX_em = 64/120 × 1.2em  = 0.6400em
-     nibY_em = 312/320 × 3.2em = 3.1200em */
+  /* viewBox 120×320, nib at (64, 312). In em:
+     nibX = 64/120 × 1.2em  = 0.64em
+     nibY = 312/320 × 3.2em = 3.12em */
   width: 1.2em;
   height: 3.2em;
   left: -0.64em;
   top: -3.12em;
-  transform-origin: 0.64em 3.12em;   /* the nib pixel */
-  transform: rotate(28deg);           /* feather extends up + right */
+  transform-origin: 0.64em 3.12em;
+  transform: rotate(28deg);
   filter: drop-shadow(0.05em 0.1em 0.1em rgba(0,0,0,0.4));
   animation: quill-breathe 4.5s ease-in-out infinite;
-  pointer-events: none;
-  will-change: transform;
 }
-
 @keyframes quill-breathe {
   0%, 100% { transform: rotate(28deg) translate(0, 0); }
   50%      { transform: rotate(26.5deg) translate(-0.01em, -0.013em); }
-}
-
-#caret.hidden #quill-svg { opacity: 0; transition: opacity 220ms; }
-#caret.dormant #quill-svg { opacity: 0.35; transition: opacity 400ms; }
-
-/* Selection highlight on rendered chars — warm candlelight wash. */
-.ink-char.ink-selected,
-.ink-char.ink-selected .ink-glyph {
-  background: rgba(232, 182, 105, 0.28);
-}
-
-/* ─────────────── PAGE FLIP CLONE ───────────────
-   Drops on top of .spread during goToSpread; pivots around the spine. */
-.flipping-page {
-  position: absolute;
-  top: 0;
-  width: 50%;
-  height: 100%;
-  z-index: 50;
-  pointer-events: none;
-  backface-visibility: hidden;
-  /* paper-back gradient so the back of the page reads as paper, not blank */
-  background: linear-gradient(135deg, #efe1c1 0%, #d8c79d 70%, #b69968 100%);
-}
-.flipping-page.from-right { left: 50%; transform-origin: 0% 50%; }
-.flipping-page.from-left  { left: 0;   transform-origin: 100% 50%; }
-
-/* ─────────────── DANGER BUTTON (tweaks: Erase) ─────────────── */
-.font-btn.danger {
-  color: #f5cfcf;
-  background: rgba(232, 105, 105, 0.06);
-  border-color: rgba(232, 105, 105, 0.22);
-}
-.font-btn.danger:hover  { background: rgba(232, 105, 105, 0.18); }
-.font-btn.danger.armed  { background: rgba(232, 105, 105, 0.32); color: #fff8f8; }
-
-/* ─────────────── FOLIO / PAGE MARKERS ─────────────── */
-
-.folio {
-  position: absolute;
-  color: rgba(50, 30, 14, 0.55);
-  font-family: 'EB Garamond', serif;
-  font-style: italic;
-  font-size: 16px;
-  letter-spacing: 0.04em;
-  pointer-events: none;
-  z-index: 4;
-}
-.folio-left {
-  left: var(--page-pad-x);
-  top: calc(var(--page-pad-y) * 0.4);
-}
-.folio-right {
-  right: var(--page-pad-x);
-  top: calc(var(--page-pad-y) * 0.4);
 }
 
 /* ─────────────── HINT ─────────────── */
@@ -403,18 +245,19 @@ html, body {
 .hint {
   position: absolute;
   top: 50%;
-  left: 25%;
+  left: 50%;
   transform: translate(-50%, -50%);
-  font-family: 'EB Garamond', serif;
+  font-family: var(--book-font);
   font-style: italic;
-  font-size: 22px;
-  color: rgba(50, 30, 14, 0.42);
+  font-size: 24px;
+  color: rgba(50, 30, 14, 0.4);
   pointer-events: none;
   letter-spacing: 0.02em;
   transition: opacity 600ms ease, visibility 600ms;
   white-space: nowrap;
+  z-index: 5;
 }
-.hint.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+.hint.hidden { opacity: 0; visibility: hidden; }
 
 /* ─────────────── CHROME ─────────────── */
 
@@ -442,17 +285,11 @@ html, body {
   transition: opacity 400ms ease;
   user-select: none;
 }
-.chrome.faded { opacity: 0.42; }
+.chrome.faded { opacity: 0.4; }
 .chrome.faded:hover { opacity: 1; }
 
-.top-chrome {
-  top: 18px;
-  min-width: 540px;
-}
-.bottom-chrome {
-  bottom: 22px;
-  min-width: 620px;
-}
+.top-chrome    { top: 18px;    min-width: 360px; }
+.bottom-chrome { bottom: 22px; min-width: 480px; }
 
 .title-block {
   display: flex;
@@ -468,28 +305,12 @@ html, body {
   color: var(--chrome-muted);
 }
 .title-main {
-  font-family: 'EB Garamond', serif;
+  font-family: var(--book-font);
   font-style: italic;
-  font-size: 17px;
+  font-size: 18px;
   color: var(--chrome-text);
   font-weight: 500;
   letter-spacing: 0.01em;
-}
-
-.page-nav {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.page-indicator {
-  font-size: 11.5px;
-  color: var(--chrome-muted);
-  font-variant-numeric: tabular-nums;
-  padding: 0 8px;
-}
-.page-indicator b {
-  color: var(--chrome-text);
-  font-weight: 500;
 }
 
 .icon-btn {
@@ -519,9 +340,7 @@ html, body {
   background: transparent;
   border-color: transparent;
 }
-.icon-btn.ghost:hover {
-  background: rgba(229,198,144,0.08);
-}
+.icon-btn.ghost:hover { background: rgba(229,198,144,0.08); }
 .icon-btn svg { display: block; }
 
 .tool-cluster {
@@ -529,9 +348,7 @@ html, body {
   align-items: center;
   gap: 6px;
 }
-.tool-cluster.right {
-  margin-left: auto;
-}
+.tool-cluster.right { margin-left: auto; }
 
 .zoom-cluster {
   display: flex;
@@ -560,8 +377,9 @@ html, body {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #6ed09a;
-  box-shadow: 0 0 6px rgba(110,208,154,0.6);
+  background: var(--chrome-muted);
+  box-shadow: 0 0 6px rgba(160,140,102,0.5);
+  transition: background 200ms;
 }
 .status-text {
   font-size: 11px;
@@ -569,7 +387,7 @@ html, body {
   letter-spacing: 0.02em;
 }
 
-/* shortcut chip - bottom right */
+/* shortcut chip */
 .shortcut-chip {
   position: fixed;
   right: 22px;
@@ -599,138 +417,27 @@ html, body {
   margin: 0 1px;
 }
 
-/* ─────────────── TWEAKS PANEL ─────────────── */
+/* ─────────────── INK-TRACE OVERLAY HOST ─────────────── */
 
-#tweaks-panel {
+#hidden-host {
   position: fixed;
-  right: 22px;
-  bottom: 90px;
-  width: 280px;
-  z-index: 200;
-  background: rgba(18, 12, 6, 0.94);
-  backdrop-filter: blur(22px) saturate(1.2);
-  border: 1px solid var(--chrome-stroke);
-  border-radius: 14px;
-  padding: 16px 14px 14px;
-  color: var(--chrome-text);
-  font-size: 12px;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.45);
-  font-family: 'Inter', sans-serif;
-  animation: tweak-in 220ms cubic-bezier(.2,.6,.2,1);
-}
-@keyframes tweak-in {
-  from { opacity: 0; transform: translateY(8px) scale(0.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-#tweaks-panel h3 {
-  margin: 0 0 4px;
-  font-family: 'EB Garamond', serif;
-  font-style: italic;
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--chrome-text);
-  letter-spacing: 0.01em;
-}
-#tweaks-panel .panel-sub {
-  font-size: 10.5px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--chrome-muted);
-  margin-bottom: 14px;
-}
-.tweak-row {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 8px 0;
-  border-top: 1px solid rgba(229,198,144,0.08);
-}
-.tweak-row:first-of-type { border-top: 0; }
-.tweak-label {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  font-size: 11px;
-  color: var(--chrome-muted);
-  letter-spacing: 0.04em;
-}
-.tweak-label b {
-  color: var(--chrome-text);
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-}
-.tweak-row input[type="range"] {
-  -webkit-appearance: none;
-  width: 100%;
-  height: 4px;
-  background: rgba(229,198,144,0.1);
-  border-radius: 2px;
-  outline: 0;
-}
-.tweak-row input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: var(--chrome-accent);
-  cursor: pointer;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
-}
-.tweak-row input[type="range"]::-moz-range-thumb {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: var(--chrome-accent);
-  cursor: pointer;
-  border: 0;
-}
-.swatch-row {
-  display: flex;
-  gap: 6px;
-}
-.swatch {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  border: 1px solid rgba(229,198,144,0.16);
-  cursor: pointer;
-  transition: transform 120ms, border-color 120ms;
-}
-.swatch:hover { transform: scale(1.08); }
-.swatch.active {
-  border-color: var(--chrome-accent);
-  box-shadow: 0 0 0 2px rgba(232,182,105,0.22);
-}
-.font-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-}
-.font-btn {
-  background: rgba(229,198,144,0.04);
-  border: 1px solid rgba(229,198,144,0.12);
-  color: var(--chrome-text);
-  padding: 8px 10px;
-  border-radius: 7px;
-  cursor: pointer;
-  font-size: 13px;
-  text-align: center;
-  transition: all 120ms;
-}
-.font-btn:hover { background: rgba(229,198,144,0.1); }
-.font-btn.active {
-  border-color: var(--chrome-accent);
-  background: rgba(232,182,105,0.1);
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
 }
 
 /* ─────────────── RESPONSIVE ─────────────── */
 
 @media (max-width: 720px) {
-  .top-chrome { min-width: 0; max-width: calc(100vw - 24px); padding: 8px 10px; gap: 8px; }
-  .bottom-chrome { min-width: 0; max-width: calc(100vw - 24px); padding: 8px 10px; gap: 8px; }
+  .top-chrome,
+  .bottom-chrome {
+    min-width: 0;
+    max-width: calc(100vw - 24px);
+    padding: 8px 10px;
+    gap: 8px;
+  }
   .title-eyebrow { display: none; }
-  .page-indicator { display: none; }
   .status-text { display: none; }
   .shortcut-chip { display: none; }
 }

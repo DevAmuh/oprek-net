@@ -256,7 +256,7 @@ body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-
 .dash-count{font-family:'Fredoka One',cursive;font-size:13px;color:var(--gold);min-width:36px;text-align:right;letter-spacing:.02em}
 @media (max-width:720px){.dash-sidebar{width:92vw}}
 /* Dashboard-only pop-out mode */
-body.dashboard-only > *:not(.dash-sidebar){display:none!important}
+body.dashboard-only > *:not(.dash-sidebar):not(#ov-student-detail){display:none!important}
 body.dashboard-only .dash-sidebar{position:static;width:100%;height:100vh;border-left:none;transform:none!important;box-shadow:none}
 body.dashboard-only .dash-sidebar.collapsed{transform:none!important}
 body.dashboard-only .dash-tab{display:none}
@@ -268,6 +268,41 @@ body.dashboard-only .dash-mini-grid.dg-5{width:100px}
 body.dashboard-only .dash-name{font-size:15px}
 body.dashboard-only .dash-count{font-size:16px}
 body.dashboard-only .dash-title{font-size:1.3rem}
+/* ── dashboard IPA-label mode ── */
+.dash-row{cursor:pointer}
+.dash-row:hover{border-color:rgba(255,255,255,.22)}
+.dash-ipa-toggle{font-size:10px!important;font-family:'Fredoka One',cursive;letter-spacing:.04em}
+.dash-ipa-toggle.active{background:var(--gold);color:#1a1430}
+.dash-mini-grid.ipa.dg-3{width:104px}
+.dash-mini-grid.ipa.dg-4{width:124px}
+.dash-mini-grid.ipa.dg-5{width:140px}
+.dg-cell.dg-ipa{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-family:'Fredoka One',cursive;font-size:8.5px;color:rgba(255,255,255,.5);background:rgba(255,255,255,.07);border-radius:3px;line-height:1;overflow:hidden}
+.dg-cell.dg-ipa.dg-marked{background:var(--gold);color:#1a1430}
+.dg-cell.dg-ipa.dg-free{background:rgba(0,204,163,.5);color:#06281f;font-size:9px}
+body.dashboard-only .dash-mini-grid.ipa.dg-3{width:168px}
+body.dashboard-only .dash-mini-grid.ipa.dg-4{width:200px}
+body.dashboard-only .dash-mini-grid.ipa.dg-5{width:230px}
+body.dashboard-only .dg-cell.dg-ipa{font-size:13px}
+/* ── per-student drill-down modal ── */
+.sd-head{text-align:center;margin-bottom:16px}
+.sd-name{font-family:'Fredoka One',cursive;font-size:1.45rem;color:var(--text);display:flex;align-items:center;justify-content:center;gap:8px}
+.sd-meta{font-size:12px;font-weight:800;color:var(--muted);margin-top:5px;letter-spacing:.02em}
+.sd-grid{display:grid;gap:6px;margin:0 auto 16px;max-width:360px}
+.sd-cell{aspect-ratio:1;border-radius:10px;background:var(--s2);border:2px solid transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3px;position:relative;transition:background .2s,border-color .2s}
+.sd-cell .sd-ipa{font-family:'Fredoka One',cursive;font-size:1.05rem;line-height:1}
+.sd-cell .sd-nm{font-size:7.5px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);margin-top:3px;text-align:center}
+.sd-cell.sd-marked{background:rgba(255,209,102,.16);border-color:var(--gold)}
+.sd-cell.sd-marked .sd-ipa{color:var(--gold)}
+.sd-cell.sd-marked::after{content:'✓';position:absolute;top:3px;right:6px;color:var(--gold);font-weight:900;font-size:11px}
+.sd-cell.sd-missed{border-color:#FF6B35;border-style:dashed}
+.sd-cell.sd-missed::after{content:'!';position:absolute;top:2px;right:6px;color:#FF6B35;font-weight:900;font-size:12px}
+.sd-cell.sd-free{background:rgba(0,204,163,.16);border-color:rgba(0,204,163,.4)}
+.sd-legend{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;font-size:10.5px;font-weight:700;color:var(--muted)}
+.sd-legend span{display:flex;align-items:center;gap:5px}
+.sd-lg{width:13px;height:13px;border-radius:3px;display:inline-block;flex-shrink:0}
+.sd-lg-marked{background:var(--gold)}
+.sd-lg-missed{border:2px dashed #FF6B35}
+.sd-lg-open{background:var(--s2);border:1px solid rgba(255,255,255,.15)}
 /* ─── Teacher lobby ─── */
 #lobby-screen{padding:0}
 .lobby-wrap{width:100%;max-width:520px;padding:24px 18px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:16px}
@@ -1183,6 +1218,23 @@ body.dashboard-only .dash-title{font-size:1.3rem}
   </div>
 </div>
 
+<!-- ╔═══ OV: PER-STUDENT DRILL-DOWN ═══╗ -->
+<div id="ov-student-detail" class="ov" style="align-items:flex-start;padding-top:16px">
+  <div class="obox" style="max-width:440px">
+    <button class="ox" onclick="Dashboard.closeStudent()">✕</button>
+    <div class="sd-head">
+      <div class="sd-name" id="sd-name">—</div>
+      <div class="sd-meta" id="sd-meta"></div>
+    </div>
+    <div class="sd-grid" id="sd-grid"></div>
+    <div class="sd-legend">
+      <span><i class="sd-lg sd-lg-marked"></i> Marked</span>
+      <span><i class="sd-lg sd-lg-missed"></i> Called, not marked</span>
+      <span><i class="sd-lg sd-lg-open"></i> Not called yet</span>
+    </div>
+  </div>
+</div>
+
 <!-- ╔═══ LIVE DASHBOARD SIDEBAR ═══╗ -->
 <div id="dashboard-sidebar" class="dash-sidebar collapsed" style="display:none">
   <button class="dash-tab" onclick="Dashboard.toggle()">📊 LIVE</button>
@@ -1190,6 +1242,7 @@ body.dashboard-only .dash-title{font-size:1.3rem}
     <div class="dash-header">
       <div class="dash-title">📊 Live Board <span class="dash-count-pill" id="dash-count">0</span></div>
       <div class="dash-actions">
+        <button class="dash-iconbtn dash-ipa-toggle" id="dash-ipa-btn" onclick="Dashboard.toggleIpa()" title="Toggle IPA labels on the mini-cards">IPA</button>
         <button class="dash-iconbtn" onclick="Dashboard.popout()" title="Open in a separate window">↗</button>
         <button class="dash-iconbtn" onclick="Dashboard.toggle()" title="Collapse">✕</button>
       </div>
@@ -3230,10 +3283,15 @@ const WinDemo={
 };
 
 /* ════════════ LIVE DASHBOARD ════════════ */
+const SOUND_BY_ID=Object.fromEntries(SOUNDS.map(s=>[s.id,s]));
+
 const Dashboard={
   students:{},
   winnerCardIds:new Set(),
   winsPerCard:{},  // {cardId: count}
+  calledSoundIds:new Set(),  // for the drill-down "missed" diagnostic
+  ipaMode:false,
+  _detailCardId:null,
   _unsub:null,
   _unsubClaims:null,
   _pollTimer:null,
@@ -3244,12 +3302,17 @@ const Dashboard={
     this._roomId=roomId;
     this.winnerCardIds=new Set();
     this.winsPerCard={};
+    this.calledSoundIds=new Set();
+    this.ipaMode=_lsLoad('sbg.dashIpa')==='1';
+    this._syncIpaBtn();
     const el=$('dashboard-sidebar');
     if(el)el.style.display='flex';
     this._loadInitial();
     this._loadInitialClaims();
+    this._loadInitialCalls();
     this._pollTimer=setInterval(()=>this._loadInitial(),8000);
     this._unsub=Net.subscribeRoomEvents(roomId,{
+      onCall:(ev)=>{if(ev&&ev.soundId){this.calledSoundIds.add(ev.soundId);this._refreshDetailIfOpen();}},
       onProgress:(p)=>this._onProgress(p),
       onEnd:()=>this._onRoundEnd(),
       onReset:()=>this._onRoundReset(),
@@ -3264,9 +3327,31 @@ const Dashboard={
     this.students={};
     this.winnerCardIds=new Set();
     this.winsPerCard={};
+    this.calledSoundIds=new Set();
+    this._detailCardId=null;
     this._roomId=null;
     const el=$('dashboard-sidebar');
     if(el&&!document.body.classList.contains('dashboard-only'))el.style.display='none';
+  },
+
+  async _loadInitialCalls(){
+    if(!this._roomId)return;
+    try{
+      const{data}=await _sb.from('calls').select('sound_id').eq('room_id',this._roomId);
+      for(const c of (data||[]))this.calledSoundIds.add(c.sound_id);
+      this._refreshDetailIfOpen();
+    }catch(e){console.warn('[Dashboard._loadInitialCalls]',e);}
+  },
+
+  toggleIpa(){
+    this.ipaMode=!this.ipaMode;
+    _lsSave('sbg.dashIpa',this.ipaMode?'1':'0');
+    this._syncIpaBtn();
+    this.render();
+  },
+  _syncIpaBtn(){
+    const b=$('dash-ipa-btn');
+    if(b)b.classList.toggle('active',!!this.ipaMode);
   },
 
   async _loadInitialClaims(){
@@ -3306,9 +3391,12 @@ const Dashboard={
   _onRoundReset(){
     this.students={};
     this.winnerCardIds=new Set();
+    this.winsPerCard={};
+    this.calledSoundIds=new Set();
     const sb=$('dashboard-sidebar');
     if(sb)sb.classList.remove('round-ended');
     this._loadInitial();
+    this._refreshDetailIfOpen();
   },
 
   async _loadInitial(){
@@ -3345,13 +3433,20 @@ const Dashboard={
 
     if(!list.length){
       body.innerHTML='<div class="dash-empty">Waiting for students to join…<br><br>As they tap sounds on their cards, you\'ll see their progress here in real time.</div>';
+      this._refreshDetailIfOpen();
       return;
     }
+    const ipa=this.ipaMode;
     body.innerHTML=list.map((s,idx)=>{
       const gs=Math.round(Math.sqrt(s.layout.length))||3;
       const cells=s.layout.map(sid=>{
-        if(!sid)return'<div class="dg-cell dg-free"></div>';
-        return`<div class="dg-cell ${s.marked.has(sid)?'dg-marked':''}"></div>`;
+        if(!sid)return ipa?'<div class="dg-cell dg-ipa dg-free">★</div>':'<div class="dg-cell dg-free"></div>';
+        const mk=s.marked.has(sid)?' dg-marked':'';
+        if(ipa){
+          const snd=SOUND_BY_ID[sid];
+          return`<div class="dg-cell dg-ipa${mk}">${snd?escapeHtml(snd.label.replace(/\//g,'')):''}</div>`;
+        }
+        return`<div class="dg-cell${mk}"></div>`;
       }).join('');
       const isLeader=idx===0&&s.count>0;
       const isWinner=this.winnerCardIds&&this.winnerCardIds.has(s.id);
@@ -3359,8 +3454,54 @@ const Dashboard={
       const totalCells=s.total||(gs*gs);
       const cls=[isWinner?'winner':'',isLeader?'leader':''].filter(Boolean).join(' ');
       const badge=isWinner?`<span class="dash-win-badge" title="${winN>1?'Called BINGO ×'+winN+' (new cards each time)':'Called BINGO'}">${winN>1?'🎰 ×'+winN:'🎰'}</span>`:'';
-      return`<div class="dash-row ${cls}"><div class="dash-rank">${idx+1}</div><div class="dash-name" title="${escapeHtml(s.name)}">${escapeHtml(s.name)}${badge}</div><div class="dash-mini-grid dg-${gs}">${cells}</div><div class="dash-count">${s.count}/${totalCells}</div></div>`;
+      return`<div class="dash-row ${cls}" onclick="Dashboard.openStudent('${s.id}')" title="Tap for ${escapeHtml(s.name)}'s full card"><div class="dash-rank">${idx+1}</div><div class="dash-name" title="${escapeHtml(s.name)}">${escapeHtml(s.name)}${badge}</div><div class="dash-mini-grid dg-${gs}${ipa?' ipa':''}">${cells}</div><div class="dash-count">${s.count}/${totalCells}</div></div>`;
     }).join('');
+    this._refreshDetailIfOpen();
+  },
+
+  /* ──── Per-student drill-down ──── */
+  openStudent(cardId){
+    this._detailCardId=cardId;
+    if(!this._renderStudentDetail())return;
+    UI.showOv('ov-student-detail');
+  },
+  closeStudent(){
+    this._detailCardId=null;
+    UI.closeOv('ov-student-detail');
+  },
+  _refreshDetailIfOpen(){
+    const ov=$('ov-student-detail');
+    if(this._detailCardId&&ov&&ov.classList.contains('on'))this._renderStudentDetail();
+  },
+  _renderStudentDetail(){
+    const cardId=this._detailCardId;
+    const s=cardId&&this.students[cardId];
+    if(!s){this.closeStudent();return false;}
+    const gs=Math.round(Math.sqrt(s.layout.length))||3;
+    const total=s.layout.filter(x=>x).length;
+    const count=s.marked.size;
+    let missed=0;
+    const cellsHtml=s.layout.map(sid=>{
+      if(!sid)return`<div class="sd-cell sd-free"><div class="sd-ipa" style="color:var(--teal)">⭐</div><div class="sd-nm">FREE</div></div>`;
+      const snd=SOUND_BY_ID[sid];
+      const isMarked=s.marked.has(sid);
+      const isMissed=!isMarked&&this.calledSoundIds.has(sid);
+      if(isMissed)missed++;
+      const cellCls=isMarked?'sd-marked':(isMissed?'sd-missed':'');
+      const clr=snd?CAT_COLORS[snd.category]:'#888';
+      const ipaStyle=isMarked?'':`color:${clr}`;
+      return`<div class="sd-cell ${cellCls}"><div class="sd-ipa" style="${ipaStyle}">${snd?escapeHtml(snd.label):'?'}</div><div class="sd-nm">${snd?escapeHtml(snd.name):''}</div></div>`;
+    }).join('');
+    const winN=(this.winsPerCard&&this.winsPerCard[cardId])||0;
+    const winBadge=winN>0?`<span class="dash-win-badge" style="display:inline-flex;position:static">🎰</span>`:'';
+    $('sd-name').innerHTML=escapeHtml(s.name)+winBadge;
+    $('sd-meta').innerHTML=`Card #${escapeHtml(cardId)} &nbsp;·&nbsp; <strong style="color:var(--gold)">${count}/${total}</strong> marked`
+      +(missed>0?` &nbsp;·&nbsp; <strong style="color:#FF6B35">${missed}</strong> missed`:'')
+      +(winN>0?` &nbsp;·&nbsp; ${winN} BINGO${winN>1?'s':''}`:'');
+    const grid=$('sd-grid');
+    grid.style.gridTemplateColumns=`repeat(${gs},1fr)`;
+    grid.innerHTML=cellsHtml;
+    return true;
   },
 
   toggle(){

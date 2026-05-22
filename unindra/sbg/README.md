@@ -456,6 +456,15 @@ Leader (#1, count > 0) gets a gold tint + glow.
 
 **Conflict resolution**: recent broadcasts (<2.5s old) win over stale DB reads.
 
+**IPA-label mode**: the "IPA" toggle in the dashboard header (`Dashboard.toggleIpa`) swaps the dot mini-grids for mini-grids showing the actual IPA symbols. Trade-off: IPA cells need ~2.5× the width, so fewer students fit per screen — that's why dots is the default. Preference persists in `localStorage` under `sbg.dashIpa`. In pop-out mode the IPA cells widen further (more screen real estate). Use it for pattern recognition ("most students are missing /θ/"); use dots for breadth ("who's ahead").
+
+**Per-student drill-down**: clicking any dashboard row opens `ov-student-detail` — a modal with that student's full bingo card rendered with IPA + sound names. Cell states:
+- **Marked** → gold fill + ✓
+- **Called but not marked** → dashed orange border + `!` — the *missed* diagnostic. Answers "why is this student behind?" at a glance.
+- **Not called yet** → neutral
+
+The "missed" computation needs to know which sounds have been called. `Dashboard.calledSoundIds` is a Set populated two ways: `_loadInitialCalls()` fetches the `calls` table on open, and the `onCall` broadcast handler adds live calls. This means the diagnostic works both in the sidebar (same page as the Caller) **and** in the pop-out window (a separate browser context that never sees `St.calledHistory`). The modal live-refreshes via `_refreshDetailIfOpen()` — called from `render()` and the `onCall` handler — so marks and misses update in real time while you're looking at a student.
+
 ### Pop-out dashboard
 
 `Dashboard.popout()` opens `index.html?dashboard=ROOMID` in a new window (560×920).
@@ -877,13 +886,13 @@ These were intentionally NOT shipped in the current iteration. Priorities can sh
 | 1 | ~~End-of-round flow~~ | ✅ **Shipped.** See Gotcha #14 (Round lifecycle). Teacher gets 🏁 End Round in the caller topbar → ov-roundend modal with stats + winners list + 🔁 New Round (same code) / ⬇ Download summary / 🚪 Exit. |
 | 2 | ~~Card persistence across refresh~~ | ✅ **Shipped.** `Persist.saveCard` / `loadCard` keyed by (roomId, name). Student refresh mid-round restores their layout + marks. See Gotcha #15. |
 | 3 | **Real Supabase Presence** | Current student count uses 8s polling of cards table. Real presence (`channel.track` / `channel.presenceState`) would be faster but requires more wiring. |
-| 4 | **Per-student progress drill-down** | Clicking a dashboard row could show the full IPA grid showing which sounds were marked when. The current dots-grid is intentionally compact for scale. |
+| 4 | ~~Per-student progress drill-down~~ | ✅ **Shipped.** Click any dashboard row → `ov-student-detail` modal with the student's full IPA card. Marked cells gold + ✓; called-but-unmarked cells flagged dashed-orange with `!` (the "missed" diagnostic). Live-refreshes while open. Works in the pop-out window too. `Dashboard.openStudent` / `_renderStudentDetail`. |
 | 5 | **Multi-room teacher** | `St.sessionCode` is singular. One teacher can't run two simultaneous rooms. Would need a room switcher. |
 | 6 | ~~Teacher reconnect~~ | ✅ **Shipped.** `Persist.saveTeacher` + `Resume.check` on boot. Floating resume-pill on the home screen if an active session is detected. See Gotcha #15. |
 | 7 | **i18n** | UI strings are English-only. SOUNDS dataset is English phonemes. |
 | 8 | ~~Mobile teacher~~ | ✅ **Shipped.** `@media (max-width:720px)` block in CSS — word stage scales, ctrl buttons compact, sidebar narrows, session-note hidden on phones. Not pixel-perfect but usable. |
 | 9 | **Caller filler determinism** | Each `LobbyT.start` picks random fillers. Two refreshes give different filler sets. Could persist filler set in the room row. |
-| 10 | **IPA toggle on dashboard** | Currently dots only. Could add a toggle to show IPA labels for teachers who want to spot patterns ("most students don't have /θ/ marked yet"). |
+| 10 | ~~IPA toggle on dashboard~~ | ✅ **Shipped.** "IPA" toggle button in the dashboard header swaps the dot mini-grids for IPA-label mini-grids. Preference persisted in localStorage (`sbg.dashIpa`). Cells widen in IPA mode, widen further in pop-out mode. `Dashboard.toggleIpa`. |
 | 11 | ~~Automated `purge_stale_rooms` cron~~ | ✅ **Shipped.** `pg_cron` extension + nightly schedule at 19:00 UTC (02:00 WIB). SQL block in Gotcha #12. Verify with `select * from cron.job;`. |
 | 12 | **Larger code space** | 4 digits with the first locked to difficulty = 3,000 codes per difficulty. Heavy long-term usage could exhaust them. Stretching to 5 digits (30,000 per difficulty) gives ~10× headroom but trades off student typing friction. The cleanup system delays this need significantly. |
 
