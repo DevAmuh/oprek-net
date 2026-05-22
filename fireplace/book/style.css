@@ -141,6 +141,8 @@ html, body {
   overflow-wrap: break-word;
   user-select: text;
   -webkit-user-select: text;
+  /* the quill IS the cursor — hide the native caret */
+  caret-color: transparent;
   /* scrollbar hidden — it's a page, not a textarea */
   scrollbar-width: none;
 }
@@ -148,6 +150,9 @@ html, body {
 
 /* page-warp filter — added by editor.js once the spine map is generated */
 .text-flow.warp-on { filter: url(#page-warp); }
+
+/* a freshly-typed char, hidden while its ink-trace overlay draws it */
+.text-flow .ink-fresh { color: transparent; }
 
 /* markdown block defaults — refined further in phase F */
 .text-flow p {
@@ -218,8 +223,10 @@ html, body {
   pointer-events: none;
   z-index: 10;
   font-size: var(--book-size);
-  display: none;   /* phase C turns this on */
+  opacity: 0;
+  transition: opacity 220ms ease;
 }
+#quill-caret.visible { opacity: 1; }
 
 #quill-svg {
   position: absolute;

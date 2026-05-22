@@ -14,6 +14,8 @@ const Camera       = document.getElementById('camera');
 const Stage        = document.getElementById('stage');
 const Book         = document.getElementById('book');
 const TextFlow     = document.getElementById('text-flow');
+const QuillCaret   = document.getElementById('quill-caret');
+const HiddenHost   = document.getElementById('hidden-host');
 const HintEl       = document.getElementById('hint');
 const ZoomValue    = document.getElementById('zoom-value');
 const StatusText   = document.getElementById('status-text');
@@ -36,24 +38,27 @@ let firstInputDone = false;
 // shared book state (built up across phases)
 window.__book = {
   font: 'Cormorant Garamond',
+  ink: '#2a1808',
+  inkMs: 80,            // per-glyph ink-trace duration
 };
 
 // ─────────── camera ───────────
+// Viewport size with fallbacks — innerWidth/innerHeight can momentarily be
+// 0 before the layout viewport sizes (especially in headless contexts).
+function vpW() { return window.innerWidth  || document.documentElement.clientWidth  || 1280; }
+function vpH() { return window.innerHeight || document.documentElement.clientHeight || 800; }
+
 function fitStage() {
   const pad = 80;
-  // Guard the first-paint case where the layout viewport hasn't sized yet
-  // (innerWidth/innerHeight can momentarily be 0 → negative fitScale).
-  const vw = window.innerWidth  || document.documentElement.clientWidth  || 1280;
-  const vh = window.innerHeight || document.documentElement.clientHeight || 800;
-  fitScale = Math.min((vw - pad * 2) / STAGE_W, (vh - pad * 2) / STAGE_H);
+  fitScale = Math.min((vpW() - pad * 2) / STAGE_W, (vpH() - pad * 2) / STAGE_H);
   if (!(fitScale > 0)) fitScale = 0.3;
   applyCamera();
 }
 
 function applyCamera() {
   const scale = fitScale * zoom;
-  const cx = (window.innerWidth  - STAGE_W * scale) / 2 + panX;
-  const cy = (window.innerHeight - STAGE_H * scale) / 2 + panY;
+  const cx = (vpW() - STAGE_W * scale) / 2 + panX;
+  const cy = (vpH() - STAGE_H * scale) / 2 + panY;
   Camera.style.transform = `translate3d(${cx}px, ${cy}px, 0) scale(${scale})`;
   ZoomValue.textContent = Math.round(zoom * 100) + '%';
 }
@@ -64,12 +69,12 @@ function setZoom(target, anchorX, anchorY, animated) {
     // keep the world point under the anchor stable
     const sb = fitScale * zoom;
     const sa = fitScale * target;
-    const cxb = (window.innerWidth  - STAGE_W * sb) / 2 + panX;
-    const cyb = (window.innerHeight - STAGE_H * sb) / 2 + panY;
+    const cxb = (vpW() - STAGE_W * sb) / 2 + panX;
+    const cyb = (vpH() - STAGE_H * sb) / 2 + panY;
     const wx = (anchorX - cxb) / sb;
     const wy = (anchorY - cyb) / sb;
-    panX = anchorX - wx * sa - (window.innerWidth  - STAGE_W * sa) / 2;
-    panY = anchorY - wy * sa - (window.innerHeight - STAGE_H * sa) / 2;
+    panX = anchorX - wx * sa - (vpW() - STAGE_W * sa) / 2;
+    panY = anchorY - wy * sa - (vpH() - STAGE_H * sa) / 2;
   }
   zoom = target;
   if (animated) {
@@ -225,6 +230,225 @@ function installPageWarp() {
   }
 }
 
+// ─────────── quill cursor — follows the native caret ───────────
+// The quill SVG (em-scaled, nib at #quill-caret's 0,0) is positioned at
+// the native caret. #quill-caret lives in #book, outside the SVG filter,
+// so the quill itself isn't warped — but we DO add the spine dip to its
+// y so the nib still meets the warped line of text near the gutter.
+
+// Visual y-offset the page-warp filter applies at horizontal fraction t
+// (0..1 across the text-flow). Mirrors buildSpineMap + the scale=22
+// feDisplacementMap: ~11px downward at the spine, ~0 at the edges.
+function spineDipPx(t) {
+  const s = Math.max(0, 1 - Math.abs(t - 0.5) * 2);
+  return 11 * Math.pow(s, 2.4);
+}
+
+// The caret rectangle in viewport pixels (collapsed to the selection's
+// focus point). Falls back to the block / its <br> for empty blocks.
+function caretRect() {
+  const sel = window.getSelection();
+  if (!sel || !sel.focusNode || !TextFlow.contains(sel.focusNode)) return null;
+  const range = document.createRange();
+  try {
+    range.setStart(sel.focusNode, sel.focusOffset);
+  } catch (_) { return null; }
+  range.collapse(true);
+  let r = range.getBoundingClientRect();
+  if (r && (r.height > 0)) return r;
+  const rects = range.getClientRects();
+  if (rects.length && rects[0].height > 0) return rects[0];
+  // empty block — measure its <br>, else the block box
+  let node = sel.focusNode;
+  if (node.nodeType === 3) node = node.parentNode;
+  if (node && node.querySelector) {
+    const br = node.querySelector('br');
+    if (br) {
+      const br2 = br.getBoundingClientRect();
+      if (br2.height > 0) return br2;
+    }
+  }
+  return node ? node.getBoundingClientRect() : null;
+}
+
+function updateQuill() {
+  const r = caretRect();
+  if (!r) return;
+  const bookRect = Book.getBoundingClientRect();
+  const tfRect = TextFlow.getBoundingClientRect();
+  const scale = fitScale * zoom;
+  if (scale <= 0 || tfRect.width === 0) return;
+
+  // caret position in book-local (un-zoomed stage) pixels
+  let x = (r.left - bookRect.left) / scale;
+  let y = (r.top  - bookRect.top)  / scale;
+  const h = r.height / scale;
+
+  // follow the spine dip so the nib meets the warped text near the gutter
+  const t = (r.left - tfRect.left) / tfRect.width;
+  y += spineDipPx(t);
+
+  // nib sits near the writing line (≈ baseline of the caret line)
+  QuillCaret.style.left = x + 'px';
+  QuillCaret.style.top  = (y + h * 0.74) + 'px';
+}
+
+// Throttle with setTimeout (not rAF — rAF can be paused when the page
+// isn't painting, which would stick the throttle permanently).
+let quillTimer = null;
+function scheduleQuillUpdate() {
+  if (quillTimer) return;
+  quillTimer = setTimeout(() => { quillTimer = null; updateQuill(); }, 16);
+}
+
+document.addEventListener('selectionchange', scheduleQuillUpdate);
+TextFlow.addEventListener('focus', () => {
+  QuillCaret.classList.add('visible');
+  scheduleQuillUpdate();
+});
+TextFlow.addEventListener('blur', () => {
+  QuillCaret.classList.remove('visible');
+});
+
+// ─────────── ink trace (opentype.js · transient overlay) ───────────
+// Every typed character draws itself: the just-typed glyph is briefly
+// hidden (an .ink-fresh span, transparent), an SVG path of the glyph is
+// spawned in #hidden-host (screen-space, decoupled from the editable DOM),
+// its stroke-dashoffset animates 0→full over ~80ms, then the overlay fades
+// as the real char is revealed. Falls back to a plain (un-traced) char if
+// opentype.js or the font TTF isn't available — no DOM mutation in that
+// case, so native undo stays pristine.
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const FONTSOURCE_SLUGS = {
+  'Cormorant Garamond': 'cormorant-garamond',
+  'Italianno':          'italianno',
+};
+const fontDb = {};
+
+async function loadFontForInkTrace(family) {
+  if (typeof opentype === 'undefined') return null;
+  if (fontDb[family]) return fontDb[family];
+  const slug = FONTSOURCE_SLUGS[family];
+  if (!slug) return null;
+  try {
+    // Fontsource serves TTF (opentype.js can't decode Google's WOFF2 —
+    // the CDN build has no Brotli decoder).
+    const res = await fetch(`https://cdn.jsdelivr.net/fontsource/fonts/${slug}@latest/latin-400-normal.ttf`);
+    if (!res.ok) throw new Error('http ' + res.status);
+    const font = opentype.parse(await res.arrayBuffer());
+    fontDb[family] = font;
+    return font;
+  } catch (e) {
+    console.warn('book: ink-trace font load failed for', family, e);
+    return null;
+  }
+}
+
+function runInkTrace(ch) {
+  const font = fontDb[window.__book.font];
+  if (!font) return;                     // fallback: no trace, no DOM mutation
+  const sel = window.getSelection();
+  if (!sel || !sel.rangeCount) return;
+  const node = sel.focusNode;
+  const off  = sel.focusOffset;
+  if (!node || node.nodeType !== 3 || off < 1) return;
+  if (node.textContent[off - 1] !== ch) return;
+
+  // isolate the just-typed char in a transient transparent span
+  const charNode = node.splitText(off - 1);   // charNode starts with ch
+  const afterNode = charNode.splitText(1);     // afterNode = the rest
+  const span = document.createElement('span');
+  span.className = 'ink-fresh';
+  span.textContent = ch;
+  charNode.parentNode.replaceChild(span, charNode);
+
+  // restore the caret right after the span
+  const r = document.createRange();
+  r.setStart(afterNode, 0);
+  r.collapse(true);
+  sel.removeAllRanges();
+  sel.addRange(r);
+
+  const rect = span.getBoundingClientRect();
+  let drew = false;
+  if (rect.width > 0 && rect.height > 0) {
+    drew = spawnInkOverlay(ch, span, rect, font);
+  }
+  const revealMs = drew ? (window.__book.inkMs || 80) + 70 : 0;
+  setTimeout(() => revealInkFresh(span), revealMs);
+}
+
+function revealInkFresh(span) {
+  const p = span.parentNode;
+  if (p) p.replaceChild(document.createTextNode(span.textContent), span);
+}
+
+function spawnInkOverlay(ch, span, rect, font) {
+  const glyph = font.charToGlyph(ch);
+  if (!glyph || !glyph.path || !glyph.path.commands || !glyph.path.commands.length) return false;
+
+  const scale = fitScale * zoom;
+  const cssFs = parseFloat(getComputedStyle(span).fontSize) || 30;
+  const emPx  = cssFs * scale;                       // on-screen em, px
+  const upm = font.unitsPerEm || 1000;
+  const ascentEm  = font.ascender  / upm;
+  const descentEm = font.descender / upm;            // negative
+  const emBoxPx = (ascentEm - descentEm) * emPx;
+  const baselineY = rect.top + (rect.height - emBoxPx) / 2 + ascentEm * emPx;
+
+  const path = glyph.getPath(0, 0, emPx);            // baseline at y=0
+  const d = path.toPathData(2);
+  const bb = path.getBoundingBox();
+  if (!isFinite(bb.x1) || (bb.x2 - bb.x1) < 0.01) return false;
+
+  const pad = emPx * 0.22;
+  const vbX = bb.x1 - pad, vbY = bb.y1 - pad;
+  const vbW = (bb.x2 - bb.x1) + pad * 2;
+  const vbH = (bb.y2 - bb.y1) + pad * 2;
+
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('viewBox', `${vbX} ${vbY} ${vbW} ${vbH}`);
+  svg.style.cssText =
+    `position:absolute; overflow:visible; filter:blur(0.35px);` +
+    `left:${rect.left + vbX}px; top:${baselineY + vbY}px;` +
+    `width:${vbW}px; height:${vbH}px;`;
+
+  const pathEl = document.createElementNS(SVG_NS, 'path');
+  pathEl.setAttribute('d', d);
+  pathEl.setAttribute('fill', 'none');
+  pathEl.setAttribute('stroke', window.__book.ink || '#2a1808');
+  pathEl.setAttribute('stroke-width', String(Math.max(0.7, emPx * 0.052)));
+  pathEl.setAttribute('stroke-linecap', 'round');
+  pathEl.setAttribute('stroke-linejoin', 'round');
+  svg.appendChild(pathEl);
+  HiddenHost.appendChild(svg);
+
+  let len = 0;
+  try { len = pathEl.getTotalLength(); } catch (_) {}
+  if (!len) { svg.remove(); return false; }
+
+  pathEl.style.strokeDasharray  = len;
+  pathEl.style.strokeDashoffset = len;
+  const dur = window.__book.inkMs || 80;
+  const anim = pathEl.animate(
+    [{ strokeDashoffset: len }, { strokeDashoffset: 0 }],
+    { duration: dur, easing: 'ease-out', fill: 'forwards' }
+  );
+
+  let cleaned = false;
+  const finish = () => {
+    if (cleaned) return;
+    cleaned = true;
+    svg.style.transition = 'opacity 130ms ease-out';
+    svg.style.opacity = '0';
+    setTimeout(() => { if (svg.parentNode) svg.remove(); }, 150);
+  };
+  anim.onfinish = finish;
+  anim.oncancel = finish;
+  setTimeout(finish, dur + 90);   // safety net if WAAPI callbacks stall
+  return true;
+}
+
 // ─────────── the writing surface (contenteditable) ───────────
 function focusEditorAtEnd() {
   TextFlow.focus();
@@ -234,6 +458,7 @@ function focusEditorAtEnd() {
   range.collapse(false);  // collapse to end
   sel.removeAllRanges();
   sel.addRange(range);
+  scheduleQuillUpdate();
 }
 
 function isEditorEmpty() {
@@ -245,7 +470,11 @@ function refreshHint() {
   else HintEl.classList.add('hidden');
 }
 
-TextFlow.addEventListener('input', () => {
+TextFlow.addEventListener('input', (e) => {
+  // draw the just-typed character with the ink trace
+  if (e && e.inputType === 'insertText' && e.data && e.data.length === 1) {
+    runInkTrace(e.data);
+  }
   if (!firstInputDone && !isEditorEmpty()) {
     firstInputDone = true;
     document.querySelectorAll('.chrome').forEach(c => c.classList.add('faded'));
@@ -253,6 +482,7 @@ TextFlow.addEventListener('input', () => {
   refreshHint();
   StatusText.textContent = 'writing…';
   StatusDot.style.background = 'var(--chrome-accent)';
+  scheduleQuillUpdate();
 });
 
 // ─────────── toolbar ───────────
@@ -287,11 +517,16 @@ window.addEventListener('mousemove', (e) => {
 try { document.execCommand('defaultParagraphSeparator', false, 'p'); } catch (_) {}
 
 fitStage();
-requestAnimationFrame(fitStage);          // re-fit once layout has settled
+setTimeout(fitStage, 0);                  // re-fit once layout has settled
 window.addEventListener('load', fitStage);
 installPageWarp();
+loadFontForInkTrace('Cormorant Garamond');   // ink-trace glyph data (async)
 refreshHint();
 TextFlow.focus();
+QuillCaret.classList.add('visible');
+scheduleQuillUpdate();
+setTimeout(updateQuill, 60);              // settle once fonts/layout land
+setTimeout(updateQuill, 300);
 
 setTimeout(() => {
   ShortcutChip.classList.add('visible');
