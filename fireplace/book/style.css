@@ -24,8 +24,12 @@
   --book-y: 23%;
   --book-w: 46%;
   --book-h: 55%;
-  --page-pad-x: 7.5%;   /* left/right writing margin inside the book */
-  --page-pad-y: 7%;     /* top/bottom writing margin */
+  --page-pad-x: 11%;    /* left/right writing margin — pulled inward so each
+                           column sits cleanly inside its photographed page */
+  --page-pad-y: 9%;     /* top/bottom margin — extra so the page-warp dip
+                           doesn't push text past the visible page edge */
+  --spine-gap: 220px;   /* spine gutter — matches the photo's actual gutter
+                           so text clearly stops well before the spine */
 
   /* type */
   --book-font: 'Cormorant Garamond', 'Georgia', serif;
@@ -145,6 +149,10 @@ html, body {
   caret-color: transparent;
   /* scrollbar hidden — it's a page, not a textarea */
   scrollbar-width: none;
+  /* two real pages with a hard spine gutter — text cannot cross */
+  column-count: 2;
+  column-gap: var(--spine-gap, 90px);
+  column-fill: auto;
 }
 .text-flow::-webkit-scrollbar { width: 0; height: 0; }
 
@@ -153,6 +161,60 @@ html, body {
 
 /* a freshly-typed char, hidden while its ink-trace overlay draws it */
 .text-flow .ink-fresh { color: transparent; }
+
+/* markdown source markers — visible but dimmed (Typora-style),
+   brighten when the caret is in the same block. */
+.text-flow .md-marker {
+  opacity: 0.32;
+  transition: opacity 220ms ease;
+  font-weight: normal;
+}
+.text-flow .md-marker.near { opacity: 0.88; }
+.text-flow .md-bullet { color: var(--ink-soft); }
+
+/* ─────────── WHIMSY: ink-bleed text-shadow on the writing surface ─────────── */
+.text-flow {
+  text-shadow:
+    0 0 0.4px rgba(28, 16, 6, 0.5),
+    0 0 1.1px rgba(60, 30, 10, 0.2);
+}
+
+/* ─────────── WHIMSY: save flourish on the status dot ─────────── */
+.status-dot.flash {
+  animation: candle-pulse 700ms ease-out;
+}
+@keyframes candle-pulse {
+  0%   { box-shadow: 0 0 6px rgba(110, 208, 154, 0.6); }
+  40%  { box-shadow: 0 0 0 6px rgba(232, 182, 105, 0.18),
+                     0 0 14px rgba(255, 200, 130, 0.7); }
+  100% { box-shadow: 0 0 6px rgba(110, 208, 154, 0.6); }
+}
+
+/* ─────────── WHIMSY: wax-seal mark in the top chrome ─────────── */
+.wax-seal {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 35%, rgba(255, 220, 180, 0.45) 0%, transparent 50%),
+    radial-gradient(circle at 60% 60%, #6e1818 0%, #4a0d0d 70%, #2a0606 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 200, 160, 0.18),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.4),
+    0 1px 3px rgba(0, 0, 0, 0.4);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 220, 180, 0.85);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+  letter-spacing: -0.04em;
+  user-select: none;
+  cursor: default;
+}
 
 /* markdown block defaults — refined further in phase F */
 .text-flow p {
@@ -203,10 +265,12 @@ html, body {
 .text-flow ::selection {
   background: rgba(232, 182, 105, 0.42);
   color: var(--ink-wet);
+  text-shadow: 0 0 0.6px rgba(60, 30, 10, 0.42);
 }
 .text-flow ::-moz-selection {
   background: rgba(232, 182, 105, 0.42);
   color: var(--ink-wet);
+  text-shadow: 0 0 0.6px rgba(60, 30, 10, 0.42);
 }
 
 /* ─────────────── QUILL CARET ───────────────

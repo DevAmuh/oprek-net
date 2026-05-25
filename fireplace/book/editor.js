@@ -184,33 +184,60 @@ Viewport.addEventListener('touchmove', (e) => {
 
 Viewport.addEventListener('touchend', () => { touchState = null; });
 
-// ─────────── SVG page-warp (paper texture + spine curve) ───────────
-// Generates the spine displacement map: a horizontal cosine valley where
-// the G channel encodes vertical displacement. The map is anchored to the
-// whole .text-flow element (objectBoundingBox filter region), so even
-// sparse text gets the right curve at the right horizontal positions.
+// ─────────── SVG page-warp (paper texture + per-page topology) ───────────
+// 2-D displacement map. Each HALF of the map is one page:
+//   t (0 = outer edge, 1 = spine) drives the horizontal curve;
+//   Y (0 = top, 1 = bottom)  drives where on the line the bend lands.
 //
-// feDisplacementMap samples output(x,y) = input(x, y + scale·(G-0.5)).
-// To make a line DIP downward at the spine — i.e. render content from
-// ABOVE — we need G < 0.5 there. So: G = 128 at the outer edges
-// (no displacement) falling toward 0 at the horizontal centre (spine).
-function buildSpineMap() {
-  const w = 256, h = 4;                       // 1-D gradient; a few rows is plenty
+// Curve per page:
+//   dip(t) = 0.04·sin(t·π) + 0.012·t
+//     — flat at the outer corner (t=0),
+//     — max dip in the MIDDLE of the page (t=0.5),
+//     — slight residual dip at the spine corner (t=1).
+//   dispY(t, Y) = dip(t) · (1 − 2·Y)
+//     — top line moves DOWN by dip(t),
+//     — middle line doesn't move,
+//     — bottom line moves UP by dip(t).
+//   Net visual: the page is bounded by a "smile" on the top edge
+//   and an inverted smile on the bottom edge — exactly the silhouette
+//   in the photo (and what you drew over it).
+//
+// feDisplacementMap samples output(x,y) = input(x, y + scale·(G/255 − 0.5)).
+// scale on the filter = 80, so encoded G in [1..255] gives ±40 px.
+//
+// The RIGHT half of the map is the MIRROR of the left, so both pages
+// dip toward their own middles, with the spine shared at the centre.
+const PAGE_WARP = { mapW: 512, mapH: 256, maxDispPx: 100, pageHeightPx: 844 };
+
+function pageDip(t) {
+  // Big enough that it's UNDENIABLE if the filter is applying.
+  // We'll dial back to "slight" once confirmed visible.
+  return 0.15 * Math.sin(t * Math.PI) + 0.04 * t;
+}
+
+function buildPageWarpMap() {
+  const { mapW: w, mapH: h, maxDispPx, pageHeightPx } = PAGE_WARP;
   const c = document.createElement('canvas');
   c.width = w; c.height = h;
   const ctx = c.getContext('2d');
   const img = ctx.createImageData(w, h);
-  for (let x = 0; x < w; x++) {
-    const t = x / (w - 1);                    // 0..1 across the width
-    const s = 1 - Math.abs(t - 0.5) * 2;      // 1 at the spine, 0 at the edges
-    const dip = Math.pow(Math.max(0, s), 2.4);// concentrate the curve near the spine
-    const g = Math.round(128 * (1 - dip));    // 128 at edges → ~0 at spine
-    for (let y = 0; y < h; y++) {
-      const i = (y * w + x) * 4;
-      img.data[i]     = 128;   // R — no horizontal displacement
-      img.data[i + 1] = g;     // G — vertical displacement
-      img.data[i + 2] = 128;   // B
-      img.data[i + 3] = 255;   // A
+  const half = w / 2;
+  for (let i = 0; i < w; i++) {
+    // t = 0 at the outer edge of the page, 1 at the spine — mirrored for the right page
+    const tPage = (i < half) ? (i / (half - 1)) : (1 - (i - half) / (half - 1));
+    const dip = pageDip(tPage);
+    for (let j = 0; j < h; j++) {
+      const Y = j / (h - 1);                  // 0 top → 1 bottom
+      const dispYNorm = dip * (1 - 2 * Y);    // top dips down, bottom rises up
+      const dispYPx = dispYNorm * pageHeightPx;
+      // encode into G; scale on the filter must equal 2·maxDispPx
+      let g = 128 + (dispYPx / maxDispPx) * 127;
+      if (g < 0) g = 0; else if (g > 255) g = 255;
+      const idx = (j * w + i) * 4;
+      img.data[idx]     = 128;                // R — no horizontal displacement (yet)
+      img.data[idx + 1] = Math.round(g);      // G — vertical displacement
+      img.data[idx + 2] = 128;
+      img.data[idx + 3] = 255;
     }
   }
   ctx.putImageData(img, 0, 0);
@@ -221,7 +248,7 @@ function installPageWarp() {
   const spineMap = document.getElementById('spine-map');
   if (!spineMap) return;
   try {
-    const url = buildSpineMap();
+    const url = buildPageWarpMap();
     spineMap.setAttribute('href', url);
     spineMap.setAttributeNS('http://www.w3.org/1999/xlink', 'href', url);
     TextFlow.classList.add('warp-on');
@@ -236,12 +263,13 @@ function installPageWarp() {
 // so the quill itself isn't warped — but we DO add the spine dip to its
 // y so the nib still meets the warped line of text near the gutter.
 
-// Visual y-offset the page-warp filter applies at horizontal fraction t
-// (0..1 across the text-flow). Mirrors buildSpineMap + the scale=22
-// feDisplacementMap: ~11px downward at the spine, ~0 at the edges.
-function spineDipPx(t) {
-  const s = Math.max(0, 1 - Math.abs(t - 0.5) * 2);
-  return 11 * Math.pow(s, 2.4);
+// Visual y-offset the page-warp filter applies at fraction (xFrac, yFrac)
+// of the .text-flow. Mirrors buildPageWarpMap so the quill nib stays
+// glued to the displaced line of text.
+function pageWarpDispPx(xFrac, yFrac) {
+  // map xFrac (0..1 across whole text-flow) → tPage (0..1 outer→spine on its page)
+  const tPage = (xFrac < 0.5) ? (xFrac * 2) : ((1 - xFrac) * 2);
+  return pageDip(tPage) * (1 - 2 * yFrac) * PAGE_WARP.pageHeightPx;
 }
 
 // The caret rectangle in viewport pixels (collapsed to the selection's
@@ -284,9 +312,10 @@ function updateQuill() {
   let y = (r.top  - bookRect.top)  / scale;
   const h = r.height / scale;
 
-  // follow the spine dip so the nib meets the warped text near the gutter
-  const t = (r.left - tfRect.left) / tfRect.width;
-  y += spineDipPx(t);
+  // follow the page-warp displacement so the nib meets the warped line
+  const xFrac = (r.left - tfRect.left) / tfRect.width;
+  const yFrac = (r.top  - tfRect.top)  / tfRect.height;
+  y += pageWarpDispPx(xFrac, yFrac);
 
   // nib sits near the writing line (≈ baseline of the caret line)
   QuillCaret.style.left = x + 'px';
@@ -449,6 +478,87 @@ function spawnInkOverlay(ch, span, rect, font) {
   return true;
 }
 
+// ─────────── persistence (localStorage autosave) ───────────
+const STORAGE_KEY = 'fireplace.book.v2';
+const SAVE_DEBOUNCE_MS = 300;
+let saveTimer = null;
+let lastSaveAt = 0;
+
+function schedulePersist() {
+  StatusText.textContent = 'writing…';
+  StatusDot.style.background = 'var(--chrome-accent)';
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(persistNow, SAVE_DEBOUNCE_MS);
+}
+
+function persistNow() {
+  saveTimer = null;
+  try {
+    const payload = {
+      v: 2,
+      html: TextFlow.innerHTML,
+      font: window.__book.font,
+      savedAt: Date.now(),
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    lastSaveAt = payload.savedAt;
+    updateSavedStatus();
+    // whimsy: candle-glow pulse on the status dot
+    StatusDot.classList.remove('flash');
+    // force reflow so the animation re-triggers
+    void StatusDot.offsetWidth;
+    StatusDot.classList.add('flash');
+    setTimeout(() => StatusDot.classList.remove('flash'), 750);
+  } catch (e) {
+    StatusText.textContent = 'save failed';
+    StatusDot.style.background = '#e86969';
+  }
+}
+
+function updateSavedStatus() {
+  if (!lastSaveAt) return;
+  const ago = Date.now() - lastSaveAt;
+  let label;
+  if      (ago <    3000) label = 'saved · just now';
+  else if (ago <   60000) label = `saved · ${Math.floor(ago / 1000)}s ago`;
+  else if (ago < 3600000) label = `saved · ${Math.floor(ago / 60000)}m ago`;
+  else                    label = `saved · ${Math.floor(ago / 3600000)}h ago`;
+  StatusText.textContent = label;
+  StatusDot.style.background = '#6ed09a';
+}
+
+function restoreFromStorage() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return false;
+  try {
+    const data = JSON.parse(raw);
+    if (data.v !== 2) return false;
+    if (data.html) TextFlow.innerHTML = data.html;
+    if (data.font) {
+      window.__book.font = data.font;
+      const fallback = data.font === 'Italianno'
+        ? "'Petit Formal Script', cursive"
+        : "'Georgia', serif";
+      document.documentElement.style.setProperty('--book-font', `'${data.font}', ${fallback}`);
+      loadFontForInkTrace(data.font);
+    }
+    lastSaveAt = data.savedAt || 0;
+    if (lastSaveAt) updateSavedStatus();
+    if (!isEditorEmpty()) {
+      firstInputDone = true;
+      HintEl.classList.add('hidden');
+    }
+    return true;
+  } catch (e) {
+    console.warn('book: restore failed', e);
+    return false;
+  }
+}
+
+// expose for tweaks.js
+window.__book.loadFontForInkTrace = loadFontForInkTrace;
+window.__book.schedulePersist     = schedulePersist;
+
 // ─────────── the writing surface (contenteditable) ───────────
 function focusEditorAtEnd() {
   TextFlow.focus();
@@ -480,8 +590,7 @@ TextFlow.addEventListener('input', (e) => {
     document.querySelectorAll('.chrome').forEach(c => c.classList.add('faded'));
   }
   refreshHint();
-  StatusText.textContent = 'writing…';
-  StatusDot.style.background = 'var(--chrome-accent)';
+  schedulePersist();
   scheduleQuillUpdate();
 });
 
@@ -521,12 +630,26 @@ setTimeout(fitStage, 0);                  // re-fit once layout has settled
 window.addEventListener('load', fitStage);
 installPageWarp();
 loadFontForInkTrace('Cormorant Garamond');   // ink-trace glyph data (async)
+restoreFromStorage();                         // bring back the last session
 refreshHint();
 TextFlow.focus();
 QuillCaret.classList.add('visible');
 scheduleQuillUpdate();
 setTimeout(updateQuill, 60);              // settle once fonts/layout land
 setTimeout(updateQuill, 300);
+
+// keep the "saved · Xs ago" label fresh
+setInterval(updateSavedStatus, 5000);
+
+// whimsy: nudge the paper-warp turbulence seed every 8s — the page
+// texture drifts imperceptibly, the parchment looks alive
+setInterval(() => {
+  const turb = document.querySelector('#page-warp feTurbulence');
+  if (turb) {
+    const s = (parseInt(turb.getAttribute('seed'), 10) + 1) % 90;
+    turb.setAttribute('seed', String(s));
+  }
+}, 8000);
 
 setTimeout(() => {
   ShortcutChip.classList.add('visible');

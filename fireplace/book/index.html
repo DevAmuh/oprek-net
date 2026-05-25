@@ -10,7 +10,7 @@
      Italianno — flowing script (the dramatic toggle hand).
      Inter — chrome UI only. -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Italianno&family=Inter:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=g4">
 <!-- opentype.js: per-glyph SVG path data for the ink-trace animation.
      If it fails to load (offline / CSP / CDN down), the editor simply
      skips the trace overlay — the typed glyph still appears normally. -->
@@ -92,6 +92,7 @@
   <!-- ─────── CHROME ─────── -->
 
   <header class="chrome top-chrome">
+    <div class="wax-seal" title="Fireplace">Fp</div>
     <div class="title-block">
       <div class="title-eyebrow">Fireplace · The Book</div>
       <div class="title-main">Commonplace, vol. iii</div>
@@ -146,18 +147,19 @@
       <filter id="page-warp" x="-3%" y="-3%" width="106%" height="106%">
         <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2"
                       seed="7" result="noise"/>
-        <feDisplacementMap in="SourceGraphic" in2="noise" scale="4"
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="12"
                            xChannelSelector="R" yChannelSelector="G" result="paperWarped"/>
         <feImage id="spine-map" x="0%" y="0%" width="100%" height="100%"
                  preserveAspectRatio="none" result="spineMap"/>
-        <feDisplacementMap in="paperWarped" in2="spineMap" scale="22"
+        <feDisplacementMap in="paperWarped" in2="spineMap" scale="200"
                            xChannelSelector="R" yChannelSelector="G"/>
       </filter>
     </defs>
   </svg>
 </div>
 
-<script src="editor.js"></script>
-<script src="tweaks.js"></script>
+<script src="editor.js?v=g4"></script>
+<script src="markdown.js?v=g4"></script>
+<script src="tweaks.js?v=g4"></script>
 </body>
 </html>

@@ -271,6 +271,12 @@ body.dashboard-only .dash-title{font-size:1.3rem}
 /* ── dashboard IPA-label mode ── */
 .dash-row{cursor:pointer}
 .dash-row:hover{border-color:rgba(255,255,255,.22)}
+/* Student-mode: highlight YOU */
+.dash-row.you{border-color:var(--teal);box-shadow:0 0 0 1px var(--teal),0 0 14px rgba(0,204,163,.25)}
+.dash-row.you::before{content:'YOU';position:absolute;top:-7px;left:8px;background:var(--teal);color:#06281f;font-size:8.5px;font-weight:900;letter-spacing:.1em;padding:1px 6px;border-radius:6px}
+.dash-row.you{position:relative}
+.dash-row.you.winner{border-color:var(--gold)}
+.dash-row.you.winner::before{background:var(--gold);color:#1a1430}
 .dash-ipa-toggle{font-size:10px!important;font-family:'Fredoka One',cursive;letter-spacing:.04em}
 .dash-ipa-toggle.active{background:var(--gold);color:#1a1430}
 .dash-mini-grid.ipa.dg-3{width:104px}
@@ -1052,6 +1058,16 @@ body.dashboard-only .dg-cell.dg-ipa{font-size:13px}
         <label class="tog"><input type="checkbox" id="tog-highlight" checked onchange="Opts.save()"><span class="tog-slider"></span></label>
       </div>
     </div>
+    <div class="opt-section" id="opt-studentdash-section">
+      <div class="opt-title">Live Leaderboard</div>
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-lbl">📊 Show students the leaderboard</div>
+          <div class="toggle-sub">Students see live rankings of the whole class — competitive chaotic-fun energy. Their own row is highlighted "YOU"; they can only inspect their own card, no peeking.</div>
+        </div>
+        <label class="tog"><input type="checkbox" id="tog-studentdash" onchange="Opts.save()"><span class="tog-slider"></span></label>
+      </div>
+    </div>
     <div class="opt-section" id="opt-autocall-section">
       <div class="opt-title">Time Pressure Mode</div>
       <div class="toggle-row">
@@ -1443,6 +1459,7 @@ const St={
   strictMarking:true,
   highlightTappable:true,
   guaranteedSounds:[],
+  studentLeaderboard:false,
   showTips:true,
   soloDifficulty:'normal',
   soloWinCondition:'line',
@@ -1635,6 +1652,9 @@ const Opts={
     vis('opt-ipareveal-section', isSetup||isCaller);
     // Strict marking — pre-game multiplayer setup only
     vis('opt-strict-section',    isSetup);
+    // Student-side leaderboard — pre-game multiplayer setup only
+    vis('opt-studentdash-section', isSetup);
+    const tSD=$('tog-studentdash');if(tSD)tSD.checked=!!St.studentLeaderboard;
     // Time pressure — solo only
     vis('opt-autocall-section',  isSolo);
     // Tips & Hints — global, always visible
@@ -1661,6 +1681,7 @@ const Opts={
     St.autoCall=$('tog-autocall').checked;
     St.strictMarking=$('tog-strict').checked;
     St.highlightTappable=$('tog-highlight').checked;
+    const tSD=$('tog-studentdash');if(tSD)St.studentLeaderboard=tSD.checked;
     const tT=$('tog-tips');if(tT)St.showTips=tT.checked;
     _lsSave('sbg.showTips',St.showTips?'1':'0');
     checkWarning();
@@ -1707,12 +1728,12 @@ const Net={
     this._bch=ch;this._bchRoom=roomId;
     return ch;
   },
-  async createRoom(roomId,difficulty,winCondition,enabledCats,strictMarking,highlightTappable,guaranteedSounds){
+  async createRoom(roomId,difficulty,winCondition,enabledCats,strictMarking,highlightTappable,guaranteedSounds,studentLeaderboard){
     // Collision recycle: purge any stale row under this code before INSERT. The SQL function
     // refuses to purge active rooms, so this is safe — we only ever delete provably-dead data.
     try{await _sb.rpc('purge_room_if_stale',{p_room_id:roomId});}
     catch(e){console.warn('[Net.createRoom] purge_room_if_stale unavailable:',e&&e.message);}
-    const{error}=await _sb.from('rooms').insert({id:roomId,difficulty,win_condition:winCondition,enabled_cats:[...enabledCats],strict_marking:!!strictMarking,highlight_tappable:highlightTappable!==false,guaranteed_sounds:guaranteedSounds||[],status:'lobby'});
+    const{error}=await _sb.from('rooms').insert({id:roomId,difficulty,win_condition:winCondition,enabled_cats:[...enabledCats],strict_marking:!!strictMarking,highlight_tappable:highlightTappable!==false,guaranteed_sounds:guaranteedSounds||[],student_leaderboard:!!studentLeaderboard,status:'lobby'});
     if(error){
       console.error('[Net.createRoom]',error.message);
       // Active-room collision: the rare case where two rooms get the same code AND the old one is still live.
@@ -1730,11 +1751,11 @@ const Net={
   },
 
   async joinRoom(code){
-    const{data,error}=await _sb.from('rooms').select('difficulty,win_condition,status,strict_marking,highlight_tappable,enabled_cats,guaranteed_sounds').eq('id',code).maybeSingle();
+    const{data,error}=await _sb.from('rooms').select('difficulty,win_condition,status,strict_marking,highlight_tappable,enabled_cats,guaranteed_sounds,student_leaderboard').eq('id',code).maybeSingle();
     if(error)console.error('[Net.joinRoom]',error.message);
     if(!data)return{found:false};
     const{data:calls}=await _sb.from('calls').select('sound_id,word,sound_label').eq('room_id',code).order('created_at',{ascending:true});
-    return{found:true,difficulty:data.difficulty,winCondition:data.win_condition,status:data.status||'lobby',strictMarking:!!data.strict_marking,highlightTappable:data.highlight_tappable!==false,enabledCats:data.enabled_cats||[],guaranteedSounds:data.guaranteed_sounds||[],recentCalls:calls||[]};
+    return{found:true,difficulty:data.difficulty,winCondition:data.win_condition,status:data.status||'lobby',strictMarking:!!data.strict_marking,highlightTappable:data.highlight_tappable!==false,enabledCats:data.enabled_cats||[],guaranteedSounds:data.guaranteed_sounds||[],studentLeaderboard:!!data.student_leaderboard,recentCalls:calls||[]};
   },
 
   // Retry-with-backoff for broadcast sends. Supabase returns 'ok', 'timed out', or 'rate limited'.
@@ -1982,7 +2003,7 @@ const Teacher={
     let res={collision:true},attempts=0;
     while(res.collision&&attempts<5){
       St.sessionCode=genCode(St.difficulty);
-      res=await Net.createRoom(St.sessionCode,St.difficulty,St.winCondition,St.enabledCats,St.strictMarking,St.highlightTappable,St.guaranteedSounds||[])||{collision:false};
+      res=await Net.createRoom(St.sessionCode,St.difficulty,St.winCondition,St.enabledCats,St.strictMarking,St.highlightTappable,St.guaranteedSounds||[],St.studentLeaderboard) ||{collision:false};
       attempts++;
     }
     if(res.collision){
@@ -2262,7 +2283,7 @@ const Caller={
     let res={collision:true},attempts=0;
     while(res.collision&&attempts<5){
       St.sessionCode=genCode(St.difficulty);
-      res=await Net.createRoom(St.sessionCode,St.difficulty,St.winCondition,St.enabledCats,St.strictMarking,St.highlightTappable,St.guaranteedSounds||[])||{collision:false};
+      res=await Net.createRoom(St.sessionCode,St.difficulty,St.winCondition,St.enabledCats,St.strictMarking,St.highlightTappable,St.guaranteedSounds||[],St.studentLeaderboard) ||{collision:false};
       attempts++;
     }
     if(res.collision){
@@ -2360,6 +2381,7 @@ const Player={
     this.strictMarking=!!room.strictMarking;
     this.highlightTappable=room.highlightTappable!==false;
     this.winCondition=room.winCondition||'line';
+    this.studentLeaderboard=!!room.studentLeaderboard;
     this._roomEnabledCats=(room.enabledCats&&room.enabledCats.length)?new Set(room.enabledCats):null;
     this._roomGuaranteed=room.guaranteedSounds||[];
     this._roomId=raw;
@@ -2402,6 +2424,10 @@ const Player={
       if(isEnded)Player.onRoundEnd();
       Player._refreshArmedState();
       Player._renderHistory();
+      // Teacher-gated leaderboard for students: open Dashboard in studentMode (own row highlighted, no peeking at others)
+      if(Player.studentLeaderboard&&Player._roomId&&Player.cardId){
+        Dashboard.open(Player._roomId,{studentMode:true,myCardId:Player.cardId});
+      }
     });
   },
 
@@ -2479,6 +2505,7 @@ const Player={
     // Student chose Leave — full cleanup + back to fresh code-input on card-screen.
     UI.closeOv('ov-student-roundend');
     if(this._unsubRoom){this._unsubRoom();this._unsubRoom=null;}
+    if(typeof Dashboard!=='undefined')Dashboard.close();
     Persist.clearCard(this._roomId,this.displayName);
     if(typeof NetUI!=='undefined')NetUI.dismiss();
     this._roomId='';
@@ -3291,15 +3318,19 @@ const Dashboard={
   winsPerCard:{},  // {cardId: count}
   calledSoundIds:new Set(),  // for the drill-down "missed" diagnostic
   ipaMode:false,
+  studentMode:false,    // when true: this is a student viewing the leaderboard (teacher-gated)
+  myCardId:null,        // the student's own cardId — used to highlight "YOU" row + gate drill-down
   _detailCardId:null,
   _unsub:null,
   _unsubClaims:null,
   _pollTimer:null,
   _roomId:null,
 
-  open(roomId){
+  open(roomId,opts){
     this.close();
     this._roomId=roomId;
+    this.studentMode=!!(opts&&opts.studentMode);
+    this.myCardId=(opts&&opts.myCardId)||null;
     this.winnerCardIds=new Set();
     this.winsPerCard={};
     this.calledSoundIds=new Set();
@@ -3329,6 +3360,8 @@ const Dashboard={
     this.winsPerCard={};
     this.calledSoundIds=new Set();
     this._detailCardId=null;
+    this.studentMode=false;
+    this.myCardId=null;
     this._roomId=null;
     const el=$('dashboard-sidebar');
     if(el&&!document.body.classList.contains('dashboard-only'))el.style.display='none';
@@ -3352,6 +3385,9 @@ const Dashboard={
   _syncIpaBtn(){
     const b=$('dash-ipa-btn');
     if(b)b.classList.toggle('active',!!this.ipaMode);
+    // Hide the pop-out for students — they're on phones, pop-out doesn't apply
+    const popBtn=document.querySelector('#dashboard-sidebar .dash-actions button[onclick*="popout"]');
+    if(popBtn)popBtn.style.display=this.studentMode?'none':'';
   },
 
   async _loadInitialClaims(){
@@ -3450,17 +3486,24 @@ const Dashboard={
       }).join('');
       const isLeader=idx===0&&s.count>0;
       const isWinner=this.winnerCardIds&&this.winnerCardIds.has(s.id);
+      const isYou=this.studentMode&&this.myCardId===s.id;
       const winN=(this.winsPerCard&&this.winsPerCard[s.id])||0;
       const totalCells=s.total||(gs*gs);
-      const cls=[isWinner?'winner':'',isLeader?'leader':''].filter(Boolean).join(' ');
+      const cls=[isWinner?'winner':'',isLeader?'leader':'',isYou?'you':''].filter(Boolean).join(' ');
       const badge=isWinner?`<span class="dash-win-badge" title="${winN>1?'Called BINGO ×'+winN+' (new cards each time)':'Called BINGO'}">${winN>1?'🎰 ×'+winN:'🎰'}</span>`:'';
-      return`<div class="dash-row ${cls}" onclick="Dashboard.openStudent('${s.id}')" title="Tap for ${escapeHtml(s.name)}'s full card"><div class="dash-rank">${idx+1}</div><div class="dash-name" title="${escapeHtml(s.name)}">${escapeHtml(s.name)}${badge}</div><div class="dash-mini-grid dg-${gs}${ipa?' ipa':''}">${cells}</div><div class="dash-count">${s.count}/${totalCells}</div></div>`;
+      const titleAttr=this.studentMode?(isYou?'Tap to inspect your own card':`Hands off — you can only inspect your own card`):`Tap for ${escapeHtml(s.name)}'s full card`;
+      return`<div class="dash-row ${cls}" onclick="Dashboard.openStudent('${s.id}')" title="${titleAttr}"><div class="dash-rank">${idx+1}</div><div class="dash-name" title="${escapeHtml(s.name)}">${escapeHtml(s.name)}${badge}</div><div class="dash-mini-grid dg-${gs}${ipa?' ipa':''}">${cells}</div><div class="dash-count">${s.count}/${totalCells}</div></div>`;
     }).join('');
     this._refreshDetailIfOpen();
   },
 
   /* ──── Per-student drill-down ──── */
   openStudent(cardId){
+    // Student-mode gating: students can only inspect their own card, not their classmates'
+    if(this.studentMode&&cardId!==this.myCardId){
+      if(typeof toast==='function')toast('🙈 Hands off — you can only inspect your own card.');
+      return;
+    }
     this._detailCardId=cardId;
     if(!this._renderStudentDetail())return;
     UI.showOv('ov-student-detail');
@@ -3801,6 +3844,7 @@ const Resume={
     St.highlightTappable=snap.room.highlight_tappable!==false;
     St.enabledCats=new Set(snap.room.enabled_cats&&snap.room.enabled_cats.length?snap.room.enabled_cats:['consonant','short_vowel','long_vowel','diphthong']);
     St.guaranteedSounds=snap.room.guaranteed_sounds||[];
+    St.studentLeaderboard=!!snap.room.student_leaderboard;
     const sounds=callerSoundsFor(St.difficulty);
     Caller.init(sounds);
     // Rehydrate the called set

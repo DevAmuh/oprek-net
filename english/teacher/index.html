@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin · Mr.D English</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='10' y='8' width='34' height='44' rx='3' fill='none' stroke='%2380c8ff' stroke-width='2.5'/%3E%3Ctext x='27' y='36' text-anchor='middle' font-size='18' fill='%2380c8ff' font-family='Georgia'%3ED%3C/text%3E%3C/svg%3E"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%;background:#06070a;font-family:'Georgia','Times New Roman',serif;color:rgba(244,243,239,.88)}
+:root{
+  --bg:#06070a;--surface:rgba(128,200,255,.04);--accent:#80c8ff;--accent-dim:rgba(128,200,255,.55);
+  --text:rgba(244,243,239,.88);--text-mid:rgba(244,243,239,.6);--text-muted:rgba(244,243,239,.42);--text-dim:rgba(244,243,239,.25);
+  --border:rgba(128,200,255,.12);--border-hover:rgba(128,200,255,.28);
+  --success:rgba(100,220,140,.8);--warn:rgba(255,200,80,.8);
+}
+
+/* ── layout ── */
+.gate{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#06070a;z-index:900}
+.gate-box{display:flex;flex-direction:column;gap:16px;align-items:center;max-width:320px;width:100%;padding:24px}
+.gate-title{font-size:13px;letter-spacing:.3em;text-transform:uppercase;color:var(--text-dim)}
+.gate-input{font-family:'Georgia',serif;font-size:15px;letter-spacing:.1em;background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:12px 16px;color:var(--text-mid);width:100%;outline:none;transition:border-color .2s}
+.gate-input:focus{border-color:var(--accent-dim)}
+.gate-err{font-size:11px;color:var(--warn);letter-spacing:.06em;opacity:0;transition:opacity .3s}
+.gate-err.show{opacity:1}
+
+#app{display:none;min-height:100vh}
+.topbar{position:sticky;top:0;z-index:100;background:#06070a;border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:16px}
+.topbar-title{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--accent-dim)}
+.topbar-tabs{display:flex;gap:2px;margin-left:auto}
+.tab{font-family:'Georgia',serif;font-size:10px;letter-spacing:.22em;text-transform:uppercase;padding:7px 14px;border:1px solid transparent;border-radius:2px;cursor:pointer;color:var(--text-dim);background:transparent;transition:all .2s}
+.tab:hover{color:var(--text-muted);border-color:var(--border)}
+.tab.active{color:var(--accent);border-color:var(--border);background:var(--surface)}
+.content{padding:28px 24px;max-width:900px;margin:0 auto}
+
+/* ── shared ── */
+.eyebrow{font-size:9px;letter-spacing:.32em;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px}
+h2{font-size:clamp(16px,2.5vw,22px);font-weight:normal;letter-spacing:.04em;margin-bottom:20px}
+.rule{height:1px;background:linear-gradient(to right,transparent,var(--border),transparent);margin:20px 0}
+.badge{display:inline-block;font-size:9px;letter-spacing:.2em;text-transform:uppercase;padding:3px 8px;border-radius:2px;border:1px solid var(--border);color:var(--text-dim)}
+.badge.new{border-color:rgba(128,200,255,.35);color:var(--accent-dim)}
+.badge.speech{border-color:rgba(100,220,140,.3);color:rgba(100,220,140,.8)}
+.badge.grammar{border-color:var(--border);color:var(--text-dim)}
+
+/* ── buttons ── */
+.btn{font-family:'Georgia',serif;font-size:10px;letter-spacing:.2em;text-transform:uppercase;padding:9px 18px;border:1px solid var(--border);border-radius:2px;cursor:pointer;transition:all .2s;background:transparent;color:var(--text-muted)}
+.btn:hover{border-color:var(--border-hover);color:var(--text-mid)}
+.btn.primary{background:var(--surface);border-color:var(--border-hover);color:var(--accent)}
+.btn.primary:hover{background:rgba(128,200,255,.09)}
+.btn.sm{font-size:9px;padding:6px 12px}
+.btn.danger{border-color:rgba(255,100,100,.2);color:rgba(255,120,120,.6)}
+
+/* ── tables / lists ── */
+.list{display:flex;flex-direction:column;gap:8px}
+.list-item{background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:14px 16px;cursor:pointer;transition:all .2s;display:flex;align-items:flex-start;gap:14px}
+.list-item:hover{border-color:var(--border-hover);background:rgba(128,200,255,.07)}
+.list-item.unread{border-color:rgba(128,200,255,.25);background:rgba(128,200,255,.05)}
+.list-meta{flex:1;display:flex;flex-direction:column;gap:5px}
+.list-handle{font-size:12px;letter-spacing:.22em;color:var(--accent-dim);font-family:'Georgia',serif}
+.list-excerpt{font-size:13px;color:var(--text-mid);line-height:1.55;font-style:italic}
+.list-time{font-size:10px;letter-spacing:.06em;color:var(--text-dim)}
+.list-actions{display:flex;gap:8px;align-items:center;flex-shrink:0}
+.unread-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:5px}
+
+/* ── learner detail / thread ── */
+.detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:20px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.stat-label{font-size:9px;letter-spacing:.25em;text-transform:uppercase;color:var(--text-dim)}
+.stat-val{font-size:16px;color:var(--text-mid)}
+.stat-val.big{font-size:24px;color:var(--accent)}
+.thread{display:flex;flex-direction:column;gap:10px;margin:16px 0}
+.msg-bubble{padding:12px 16px;border-radius:3px;max-width:85%;display:flex;flex-direction:column;gap:4px}
+.msg-bubble.learner{background:rgba(128,200,255,.07);border:1px solid rgba(128,200,255,.16);align-self:flex-end}
+.msg-bubble.teacher{background:var(--surface);border:1px solid var(--border);align-self:flex-start}
+.msg-body{font-size:13px;color:var(--text-mid);line-height:1.6}
+.msg-meta{font-size:10px;letter-spacing:.05em;color:var(--text-dim)}
+.reply-ta{width:100%;min-height:90px;background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:12px 14px;font-family:'Georgia',serif;font-size:13px;color:var(--text-mid);resize:vertical;outline:none;transition:border-color .2s;line-height:1.7;margin-top:12px}
+.reply-ta:focus{border-color:var(--accent-dim)}
+.reply-ta::placeholder{color:var(--text-dim)}
+.reply-row{display:flex;gap:10px;margin-top:8px}
+
+/* ── stats ── */
+.funnel{display:flex;flex-direction:column;gap:6px}
+.funnel-row{display:flex;align-items:center;gap:14px}
+.funnel-label{font-size:11px;letter-spacing:.1em;color:var(--text-muted);width:200px;flex-shrink:0}
+.funnel-bar-wrap{flex:1;height:6px;background:rgba(128,200,255,.08);border-radius:3px;overflow:hidden}
+.funnel-bar{height:100%;background:var(--accent-dim);border-radius:3px;transition:width .6s ease}
+.funnel-n{font-size:11px;color:var(--text-dim);width:36px;text-align:right;flex-shrink:0}
+
+/* ── empty states ── */
+.empty{padding:40px;text-align:center;font-size:13px;color:var(--text-dim);font-style:italic}
+
+/* ── toast ── */
+#toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:500;font-size:12px;letter-spacing:.08em;color:var(--text-mid);background:rgba(6,7,10,.95);border:1px solid var(--border);border-radius:3px;padding:9px 18px;pointer-events:none;opacity:0;transition:opacity .3s;white-space:nowrap}
+#toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<!-- ── Key gate ── -->
+<div class="gate" id="gate">
+  <div class="gate-box">
+    <div class="gate-title">Mr.D Admin</div>
+    <input class="gate-input" id="gate-input" type="password" placeholder="Enter admin key" onkeydown="if(event.key==='Enter')tryKey()"/>
+    <div class="gate-err" id="gate-err">Wrong key. Try again.</div>
+    <button class="btn primary" onclick="tryKey()">Enter</button>
+  </div>
+</div>
+
+<!-- ── Main app ── -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-title">Mr.D · Admin</div>
+    <div class="topbar-tabs">
+      <button class="tab active" id="tab-inbox" onclick="showTab('inbox')">Inbox</button>
+      <button class="tab" id="tab-learners" onclick="showTab('learners')">Learners</button>
+      <button class="tab" id="tab-stats" onclick="showTab('stats')">Stats</button>
+    </div>
+  </div>
+  <div class="content">
+    <div id="pane-inbox"></div>
+    <div id="pane-learners" style="display:none"></div>
+    <div id="pane-stats" style="display:none"></div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════
+   CONFIG
+   ════════════════════════════════════════════════ */
+const SUPABASE_URL  = 'https://fvrwxuwkwwrajuausuaj.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2cnd4dXdrd3dyYWp1YXVzdWFqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4MzQ5MjUsImV4cCI6MjA5MzQxMDkyNX0.cOKS50Du_5XUwe4sYA0HqR9JDgkui8kTdRKyT8d8dmc';
+
+// ── CHANGE THIS to a long random string, then bookmark the URL with ?key=YOURKEY ──
+const ADMIN_KEY_HASH = 'FILL_IN_SHA256_OF_YOUR_KEY_HERE';
+// To generate: open browser console → crypto.subtle.digest('SHA-256', new TextEncoder().encode('yourkey'))
+//   .then(b => console.log([...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')))
+// Paste the 64-char hex result above, and use the original string in the URL: /english/teacher?key=yourkey
+
+const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+/* ════════════════════════════════════════════════
+   GATE
+   ════════════════════════════════════════════════ */
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return [...new Uint8Array(buf)].map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+
+async function tryKey() {
+  const val = document.getElementById('gate-input').value.trim();
+  if(!val) return;
+  const hash = await sha256(val);
+  if(hash === ADMIN_KEY_HASH || ADMIN_KEY_HASH === 'FILL_IN_SHA256_OF_YOUR_KEY_HERE') {
+    // During setup, allow bypass if hash not yet set
+    if(ADMIN_KEY_HASH === 'FILL_IN_SHA256_OF_YOUR_KEY_HERE' && val !== 'admin') {
+      document.getElementById('gate-err').classList.add('show'); return;
+    }
+    document.getElementById('gate').style.display='none';
+    document.getElementById('app').style.display='block';
+    loadAll();
+  } else {
+    document.getElementById('gate-err').classList.add('show');
+  }
+}
+
+// Auto-unlock from URL key
+window.addEventListener('DOMContentLoaded', async()=>{
+  const urlKey = new URLSearchParams(location.search).get('key');
+  if(urlKey){
+    const hash = await sha256(urlKey);
+    if(hash === ADMIN_KEY_HASH) {
+      document.getElementById('gate').style.display='none';
+      document.getElementById('app').style.display='block';
+      loadAll();
+    }
+  }
+  document.getElementById('gate-input').addEventListener('keydown', e=>{ if(e.key==='Enter') tryKey(); });
+});
+
+/* ════════════════════════════════════════════════
+   HELPERS
+   ════════════════════════════════════════════════ */
+const $ = id => document.getElementById(id);
+function toast(msg) {
+  const t=$('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2800);
+}
+function timeAgo(ts) {
+  const d=Date.now()-new Date(ts).getTime(), m=Math.floor(d/60000), h=Math.floor(m/60), dy=Math.floor(h/24);
+  if(dy>0) return `${dy}d ago`; if(h>0) return `${h}h ago`; if(m>0) return `${m}m ago`; return 'just now';
+}
+function fmtDate(ts) {
+  return new Date(ts).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+
+/* ════════════════════════════════════════════════
+   DATA LOADING
+   ════════════════════════════════════════════════ */
+let ALL = { pings:[], learners:[], progress:[], submissions:[], drills:[] };
+
+async function loadAll() {
+  const [pings, learners, progress, submissions, drills] = await Promise.all([
+    _sb.from('eng_contact_pings').select('*').order('created_at',{ascending:false}),
+    _sb.from('eng_learners').select('*').order('created_at',{ascending:false}),
+    _sb.from('eng_progress').select('*'),
+    _sb.from('eng_submissions').select('*').order('created_at',{ascending:false}),
+    _sb.from('eng_drills').select('*').order('created_at',{ascending:false})
+  ]);
+  ALL.pings   = pings.data||[];
+  ALL.learners= learners.data||[];
+  ALL.progress= progress.data||[];
+  ALL.submissions=submissions.data||[];
+  ALL.drills  = drills.data||[];
+  renderInbox();
+  renderLearners();
+  renderStats();
+}
+
+/* ════════════════════════════════════════════════
+   TAB SWITCHING
+   ════════════════════════════════════════════════ */
+function showTab(name) {
+  ['inbox','learners','stats'].forEach(t=>{
+    $('tab-'+t).classList.toggle('active',t===name);
+    $('pane-'+t).style.display=t===name?'block':'none';
+  });
+}
+
+/* ════════════════════════════════════════════════
+   INBOX
+   ════════════════════════════════════════════════ */
+function renderInbox() {
+  const c=$('pane-inbox'); c.innerHTML='';
+  c.appendChild(Object.assign(document.createElement('p'),{className:'eyebrow',textContent:'Messages from Learners'}));
+  const h=document.createElement('h2'); h.textContent='Inbox'; c.appendChild(h);
+
+  // Group pings by handle — show last learner message per handle
+  const byHandle={};
+  ALL.pings.filter(p=>p.direction==='learner→teacher').forEach(p=>{
+    if(!byHandle[p.handle]||new Date(p.created_at)>new Date(byHandle[p.handle].created_at)) byHandle[p.handle]=p;
+  });
+  const sorted=Object.values(byHandle).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+
+  if(!sorted.length){ c.appendChild(Object.assign(document.createElement('div'),{className:'empty',textContent:'No messages yet.'})); return; }
+
+  const list=document.createElement('div'); list.className='list'; c.appendChild(list);
+  sorted.forEach(p=>{
+    const unread=!p.seen_by_teacher;
+    const item=document.createElement('div'); item.className='list-item'+(unread?' unread':'');
+    item.innerHTML=`
+      ${unread?'<div class="unread-dot"></div>':'<div style="width:7px"></div>'}
+      <div class="list-meta">
+        <div class="list-handle">${p.handle}</div>
+        <div class="list-excerpt">"${p.body.slice(0,120)}${p.body.length>120?'…':''}"</div>
+        <div class="list-time">${timeAgo(p.created_at)}</div>
+      </div>
+      <button class="btn sm" onclick="event.stopPropagation();openThread('${p.handle}')">Reply</button>`;
+    item.onclick=()=>openThread(p.handle);
+    list.appendChild(item);
+  });
+  // Mark visible unread as seen
+  const unseenIds=ALL.pings.filter(p=>p.direction==='learner→teacher'&&!p.seen_by_teacher).map(p=>p.id);
+  if(unseenIds.length) _sb.from('eng_contact_pings').update({seen_by_teacher:true}).in('id',unseenIds);
+}
+
+/* ════════════════════════════════════════════════
+   THREAD VIEW
+   ════════════════════════════════════════════════ */
+function openThread(handle) {
+  const c=$('pane-inbox'); c.innerHTML='';
+  const learner=ALL.learners.find(l=>l.handle===handle)||{handle,path:'?',level:1,streak_count:0};
+
+  // Back button
+  const backBtn=document.createElement('button'); backBtn.className='btn sm'; backBtn.textContent='← Back to inbox';
+  backBtn.onclick=()=>{renderInbox();};  c.appendChild(backBtn);
+  c.appendChild(document.createElement('br'));
+
+  const eyebrow=document.createElement('p'); eyebrow.className='eyebrow'; eyebrow.textContent='Thread with'; c.appendChild(eyebrow);
+  const h=document.createElement('h2'); h.textContent=handle; c.appendChild(h);
+
+  // Learner mini-stats
+  const statsEl=document.createElement('div'); statsEl.className='detail-grid';
+  const lessons=ALL.progress.filter(p=>p.handle===handle).length;
+  statsEl.innerHTML=`
+    <div class="stat-card"><div class="stat-label">Path</div><div class="stat-val">${learner.path||'—'}</div></div>
+    <div class="stat-card"><div class="stat-label">Level</div><div class="stat-val">${learner.level||1}</div></div>
+    <div class="stat-card"><div class="stat-label">Streak</div><div class="stat-val big">${learner.streak_count||0}</div></div>
+    <div class="stat-card"><div class="stat-label">Lessons done</div><div class="stat-val">${lessons}/6</div></div>`;
+  c.appendChild(statsEl);
+
+  // Thread
+  c.appendChild(Object.assign(document.createElement('div'),{className:'rule'}));
+  const thread=document.createElement('div'); thread.className='thread'; c.appendChild(thread);
+  const msgs=ALL.pings.filter(p=>p.handle===handle).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+  if(!msgs.length) thread.appendChild(Object.assign(document.createElement('div'),{className:'empty',textContent:'No messages yet.'}));
+  msgs.forEach(m=>{
+    const isTeacher=m.direction==='teacher→learner';
+    const bubble=document.createElement('div'); bubble.className=`msg-bubble ${isTeacher?'teacher':'learner'}`;
+    bubble.innerHTML=`<div class="msg-body">${m.body}</div><div class="msg-meta">${isTeacher?'Mr. D':'Learner'} · ${fmtDate(m.created_at)}</div>`;
+    thread.appendChild(bubble);
+  });
+
+  // Reply composer
+  c.appendChild(Object.assign(document.createElement('div'),{className:'rule'}));
+  const ta=document.createElement('textarea'); ta.className='reply-ta'; ta.placeholder='Type your reply...'; c.appendChild(ta);
+  const replyRow=document.createElement('div'); replyRow.className='reply-row'; c.appendChild(replyRow);
+  const sendBtn=document.createElement('button'); sendBtn.className='btn primary'; sendBtn.textContent='Send reply';
+  sendBtn.onclick=async()=>{
+    const body=ta.value.trim(); if(!body){toast('Write something first.');return;}
+    const {error}=await _sb.from('eng_contact_pings').insert({handle,body,direction:'teacher→learner',seen_by_teacher:true,seen_by_learner:false});
+    if(error){toast('Failed to send.');return;}
+    toast('Reply sent.');
+    ta.value='';
+    // Refresh data
+    const {data}=await _sb.from('eng_contact_pings').select('*').eq('handle',handle).order('created_at',{ascending:true});
+    ALL.pings=ALL.pings.filter(p=>p.handle!==handle).concat(data||[]);
+    openThread(handle);
+  };
+  replyRow.appendChild(sendBtn);
+
+  // View submissions
+  const subs=ALL.submissions.filter(s=>s.handle===handle);
+  if(subs.length){
+    c.appendChild(Object.assign(document.createElement('div'),{className:'rule'}));
+    c.appendChild(Object.assign(document.createElement('p'),{className:'eyebrow',textContent:'Written Submissions'}));
+    subs.forEach(s=>{
+      const sub=document.createElement('div'); sub.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:14px 16px;margin-bottom:8px;display:flex;flex-direction:column;gap:8px';
+      sub.innerHTML=`<div style="font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--text-dim)">Lesson ${s.lesson_id} · ${fmtDate(s.created_at)}</div>
+        <div style="font-size:13px;color:var(--text-mid);line-height:1.6;font-style:italic">"${s.body}"</div>`;
+      c.appendChild(sub);
+    });
+  }
+}
+
+/* ════════════════════════════════════════════════
+   LEARNERS LIST
+   ════════════════════════════════════════════════ */
+function renderLearners() {
+  const c=$('pane-learners'); c.innerHTML='';
+  c.appendChild(Object.assign(document.createElement('p'),{className:'eyebrow',textContent:'All Learners'}));
+  const h=document.createElement('h2'); h.textContent=`${ALL.learners.length} learner${ALL.learners.length!==1?'s':''}`;  c.appendChild(h);
+
+  if(!ALL.learners.length){ c.appendChild(Object.assign(document.createElement('div'),{className:'empty',textContent:'No learners yet. Share the link!'})); return; }
+
+  // Sort options
+  const sortRow=document.createElement('div'); sortRow.style.cssText='display:flex;gap:8px;margin-bottom:14px';
+  ['Newest','Streak','Lessons'].forEach(s=>{
+    const b=document.createElement('button'); b.className='btn sm'; b.textContent=s;
+    b.onclick=()=>renderLearnersSorted(s.toLowerCase());
+    sortRow.appendChild(b);
+  });
+  c.appendChild(sortRow);
+
+  renderLearnersSorted('newest', c);
+}
+
+function renderLearnersSorted(sort, container) {
+  const c = container || $('pane-learners').querySelector('.learners-list') || (() => {
+    const el=document.createElement('div'); el.className='learners-list list'; $('pane-learners').appendChild(el); return el;
+  })();
+  if(c.className==='list learners-list'||c.className==='learners-list list') c.innerHTML='';
+
+  let sorted=[...ALL.learners];
+  if(sort==='streak') sorted.sort((a,b)=>(b.streak_count||0)-(a.streak_count||0));
+  else if(sort==='lessons') sorted.sort((a,b)=>{ const la=ALL.progress.filter(p=>p.handle===a.handle).length, lb=ALL.progress.filter(p=>p.handle===b.handle).length; return lb-la; });
+  else sorted.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+
+  const list=document.createElement('div'); list.className='list';
+  sorted.forEach(l=>{
+    const lessons=ALL.progress.filter(p=>p.handle===l.handle).length;
+    const lastPing=ALL.pings.find(p=>p.handle===l.handle);
+    const item=document.createElement('div'); item.className='list-item';
+    item.innerHTML=`
+      <div class="list-meta">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="list-handle">${l.handle}</div>
+          <div class="badge ${l.path==='speech'?'speech':'grammar'}">${l.path||'—'}</div>
+        </div>
+        <div style="display:flex;gap:14px;font-size:11px;color:var(--text-dim);margin-top:4px">
+          <span>Streak: ${l.streak_count||0}d</span>
+          <span>Lessons: ${lessons}/6</span>
+          <span>Level: ${l.level||1}</span>
+          ${lastPing?`<span>Last msg: ${timeAgo(lastPing.created_at)}</span>`:''}
+        </div>
+      </div>
+      <button class="btn sm" onclick="event.stopPropagation();openLearnerDetail('${l.handle}')">View</button>`;
+    item.onclick=()=>openLearnerDetail(l.handle);
+    list.appendChild(item);
+  });
+  // Replace any existing list in pane
+  const existing=$('pane-learners').querySelector('.learners-list,.list');
+  if(existing) existing.replaceWith(list); else $('pane-learners').appendChild(list);
+}
+
+function openLearnerDetail(handle) {
+  showTab('learners');
+  const c=$('pane-learners'); c.innerHTML='';
+  const l=ALL.learners.find(x=>x.handle===handle)||{handle};
+  const lessons=ALL.progress.filter(p=>p.handle===handle).length;
+  const subs=ALL.submissions.filter(s=>s.handle===handle);
+  const drills=ALL.drills.filter(d=>d.handle===handle);
+  const pings=ALL.pings.filter(p=>p.handle===handle).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+
+  const back=document.createElement('button'); back.className='btn sm'; back.textContent='← All learners';
+  back.onclick=()=>{renderLearners();showTab('learners');}; c.appendChild(back);
+
+  c.appendChild(Object.assign(document.createElement('p'),{className:'eyebrow',style:'margin-top:16px',textContent:'Learner Detail'}));
+  const h=document.createElement('h2'); h.textContent=handle; c.appendChild(h);
+
+  const grid=document.createElement('div'); grid.className='detail-grid';
+  grid.innerHTML=`
+    <div class="stat-card"><div class="stat-label">Path</div><div class="stat-val">${l.path||'—'}</div></div>
+    <div class="stat-card"><div class="stat-label">Grammar Level</div><div class="stat-val">${l.level||1}</div></div>
+    <div class="stat-card"><div class="stat-label">Current Streak</div><div class="stat-val big">${l.streak_count||0}</div></div>
+    <div class="stat-card"><div class="stat-label">Lessons Done</div><div class="stat-val">${lessons}/6</div></div>
+    <div class="stat-card"><div class="stat-label">Speech Drills</div><div class="stat-val">${drills.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Trial Used</div><div class="stat-val">${l.trial_drill_used?'Yes':'No'}</div></div>`;
+  c.appendChild(grid);
+
+  // Message thread
+  c.appendChild(Object.assign(document.createElement('div'),{className:'rule'}));
+  c.appendChild(Object.assign(document.createElement('p'),{className:'eyebrow',textContent:'Message thread'}));
+  const thread=document.createElement('div'); thread.className='thread';
+  if(!pings.length) thread.appendChild(Object.assign(document.createElement('div'),{className:'empty',textContent:'No messages.'}));
+  pings.forEach(m=>{
+    const isT=m.direction==='teacher→learner';
+    const b=document.createElement('div'); b.className=`msg-bubble ${isT?'teacher':'learner'}`;
+    b.innerHTML=`<div class="msg-body">${m.body}</div><div class="msg-meta">${isT?'Mr. D':'Learner'} · ${fmtDate(m.created_at)}</div>`;
+    thread.appendChild(b);
+  });
+  c.appendChild(thread);
+
+  // Quick reply
+  const ta=document.createElement('textarea'); ta.className='reply-ta'; ta.placeholder='Reply to this learner...'; c.appendChild(ta);
+  const replyRow=document.createElement('div'); replyRow.className='reply-row'; c.appendChild(replyRow);
+  const sendBtn=document.createElement('button'); sendBtn.className='btn primary'; sendBtn.textContent='Send reply';
+  sendBtn.onclick=async()=>{
+    const body=ta.value.trim(); if(!body){toast('Write something first.');return;}
+    await _sb.from('eng_contact_pings').insert({handle,body,direction:'teacher→learner',seen_by_teacher:true,seen_by_learner:false});
+    toast('Reply sent.'); ta.value=''; openLearnerDetail(handle);
+  };
+  replyRow.appendChild(sendBtn);
+
+  // Submissions
+  if(subs.length){
+    c.appendChild(Object.assign(document.createElement('div'),{className:'rule'}));
+    c.appendChild(Object.assign(document.createElement('p'),{className:'eyebrow',textContent:'Written Submissions'}));
+    subs.forEach(s=>{
+      const sub=document.createElement('div'); sub.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:14px 16px;margin-bottom:8px;display:flex;flex-direction:column;gap:8px';
+      sub.innerHTML=`<div style="font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--text-dim)">Lesson ${s.lesson_id} · ${fmtDate(s.created_at)}</div>
+        <div style="font-size:13px;color:var(--text-mid);line-height:1.6;font-style:italic">"${s.body}"</div>`;
+      c.appendChild(sub);
+    });
+  }
+
+  // Drill summaries
+  if(drills.length){
+    c.appendChild(Object.assign(document.createElement('div'),{className:'rule'}));
+    c.appendChild(Object.assign(document.createElement('p'),{className:'eyebrow',textContent:'Speech Drills'}));
+    drills.slice(0,5).forEach(d=>{
+      const dur=`${Math.floor(d.duration_s/60)}m ${d.duration_s%60}s`;
+      const sub=document.createElement('div'); sub.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:12px 16px;margin-bottom:8px;display:flex;flex-direction:column;gap:6px';
+      sub.innerHTML=`<div style="display:flex;gap:14px;align-items:center"><div style="font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--text-dim)">${fmtDate(d.started_at)}</div><div style="font-size:9px;letter-spacing:.15em;color:var(--text-dim)">${dur} · ${d.topic||'—'}</div></div>
+        ${d.summary?`<div style="font-size:12px;color:var(--text-muted);font-style:italic">${typeof d.summary==='string'?d.summary.slice(0,200):'—'}</div>`:''}`;
+      c.appendChild(sub);
+    });
+  }
+}
+
+/* ════════════════════════════════════════════════
+   STATS
+   ════════════════════════════════════════════════ */
+function renderStats() {
+  const c=$('pane-stats'); c.innerHTML='';
+  c.appendChild(Object.assign(document.createElement('p'),{className:'eyebrow',textContent:'Funnel Overview'}));
+  const h=document.createElement('h2'); h.textContent='Stats'; c.appendChild(h);
+
+  const total=ALL.learners.length;
+  const diagDone=ALL.learners.filter(l=>l.path).length;
+  const lesson1Done=new Set(ALL.progress.filter(p=>p.lesson_id===1).map(p=>p.handle)).size;
+  const streak3=ALL.learners.filter(l=>(l.streak_count||0)>=3).length;
+  const trialDrills=ALL.learners.filter(l=>l.trial_drill_used).length;
+  const grammarPath=ALL.learners.filter(l=>l.path==='grammar'||l.path==='both').length;
+  const speechPath=ALL.learners.filter(l=>l.path==='speech'||l.path==='both').length;
+  const withMessages=new Set(ALL.pings.filter(p=>p.direction==='learner→teacher').map(p=>p.handle)).size;
+
+  function fRow(label, n, pct) {
+    const row=document.createElement('div'); row.className='funnel-row';
+    row.innerHTML=`<div class="funnel-label">${label}</div>
+      <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${pct}%"></div></div>
+      <div class="funnel-n">${n}</div>`;
+    return row;
+  }
+
+  const funnel=document.createElement('div'); funnel.className='funnel';
+  const base=Math.max(total,1);
+  funnel.appendChild(fRow('Total learners',        total,      100));
+  funnel.appendChild(fRow('Completed diagnostic',  diagDone,   Math.round(diagDone/base*100)));
+  funnel.appendChild(fRow('Finished Lesson 1',     lesson1Done,Math.round(lesson1Done/base*100)));
+  funnel.appendChild(fRow('Streak ≥ 3 days',       streak3,    Math.round(streak3/base*100)));
+  funnel.appendChild(fRow('Trial drill used',      trialDrills,Math.round(trialDrills/base*100)));
+  funnel.appendChild(fRow('Messaged Mr. D',        withMessages,Math.round(withMessages/base*100)));
+  c.appendChild(funnel);
+
+  c.appendChild(Object.assign(document.createElement('div'),{className:'rule'}));
+  c.appendChild(Object.assign(document.createElement('p'),{className:'eyebrow',textContent:'Path Split'}));
+  const splitGrid=document.createElement('div'); splitGrid.className='detail-grid';
+  splitGrid.innerHTML=`
+    <div class="stat-card"><div class="stat-label">Grammar path</div><div class="stat-val big">${grammarPath}</div></div>
+    <div class="stat-card"><div class="stat-label">Speech path</div><div class="stat-val big">${speechPath}</div></div>
+    <div class="stat-card"><div class="stat-label">Total submissions</div><div class="stat-val">${ALL.submissions.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Total drills</div><div class="stat-val">${ALL.drills.length}</div></div>`;
+  c.appendChild(splitGrid);
+
+  // Refresh button
+  c.appendChild(Object.assign(document.createElement('div'),{className:'rule'}));
+  const refreshBtn=document.createElement('button'); refreshBtn.className='btn'; refreshBtn.textContent='Refresh data';
+  refreshBtn.onclick=()=>{toast('Refreshing...');loadAll();};
+  c.appendChild(refreshBtn);
+}
+</script>
+</body>
+</html>

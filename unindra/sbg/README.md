@@ -181,6 +181,7 @@ Late joiners (joining after `status='playing'`) get historical calls via `Net.jo
 | `strict_marking` | bool | On = only the latest call is tappable; off = all called-but-untapped stay armed |
 | `highlight_tappable` | bool | On = armed cell glows + others dim; off = uniform appearance |
 | `guaranteed_sounds` | text[] | Sound IDs forced onto every card and into caller queue |
+| `student_leaderboard` | bool | When on, students also see the Live Board sidebar (own row highlighted, drill-down restricted to own card) |
 | `status` | text | 'lobby' (pre-start) or 'playing' (after teacher hits Start Calling) |
 | `started_at` | timestamptz | Timestamp of Start Calling |
 | `created_at` | timestamptz | Auto-populated on insert; used by `purge_room_if_stale` / `purge_stale_rooms` to detect never-started rooms older than the staleness threshold |
@@ -457,6 +458,12 @@ Leader (#1, count > 0) gets a gold tint + glow.
 **Conflict resolution**: recent broadcasts (<2.5s old) win over stale DB reads.
 
 **IPA-label mode**: the "IPA" toggle in the dashboard header (`Dashboard.toggleIpa`) swaps the dot mini-grids for mini-grids showing the actual IPA symbols. Trade-off: IPA cells need ~2.5× the width, so fewer students fit per screen — that's why dots is the default. Preference persists in `localStorage` under `sbg.dashIpa`. In pop-out mode the IPA cells widen further (more screen real estate). Use it for pattern recognition ("most students are missing /θ/"); use dots for breadth ("who's ahead").
+
+**Student-facing leaderboard** (opt-in by teacher): when `rooms.student_leaderboard = true`, students see the same Live Board sidebar on their card-screen — same data, same IPA toggle, but with two restrictions enforced by `Dashboard.studentMode`:
+1. Their own row is highlighted with a teal "YOU" tag (`.dash-row.you`), so they can spot themselves at a glance among 20+ classmates
+2. The drill-down is gated to their own card only — tapping someone else's row triggers a "🙈 Hands off" toast. The pop-out button is also hidden (students are on phones)
+
+Wire-up: `St.studentLeaderboard` toggle in Options → propagates via `rooms.student_leaderboard` column → `Net.joinRoom` returns it as `studentLeaderboard` → `Player.applyCode` opens `Dashboard.open(roomId, {studentMode:true, myCardId:Player.cardId})` after `buildCard` runs (so `cardId` is set). Closes on `Player.leaveRoom`. Same "chaotic-fun energy" as a Wayground-style live ranking — students see classmates pull ahead, motivation stays sticky.
 
 **Per-student drill-down**: clicking any dashboard row opens `ov-student-detail` — a modal with that student's full bingo card rendered with IPA + sound names. Cell states:
 - **Marked** → gold fill + ✓
