@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>English Class · Mr.D</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='10' y='8' width='34' height='44' rx='3' fill='none' stroke='%2380c8ff' stroke-width='2.5' opacity='0.9'/%3E%3Cline x1='18' y1='22' x2='36' y2='22' stroke='%2380c8ff' stroke-width='2' opacity='0.7'/%3E%3Cline x1='18' y1='30' x2='36' y2='30' stroke='%2380c8ff' stroke-width='2' opacity='0.7'/%3E%3Cline x1='18' y1='38' x2='28' y2='38' stroke='%2380c8ff' stroke-width='2' opacity='0.7'/%3E%3Ccircle cx='46' cy='46' r='10' fill='%2306070a' stroke='%2380c8ff' stroke-width='2'/%3E%3Ctext x='46' y='50' text-anchor='middle' font-size='11' fill='%2380c8ff' font-family='Georgia'>E%3C/text%3E%3C/svg%3E"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+/* ── reset ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#06070a;font-family:'Georgia','Times New Roman',serif;color:rgba(244,243,239,.88)}
+:root{
+  --bg:#06070a;--accent:#80c8ff;--accent-dim:rgba(128,200,255,.55);--accent-faint:rgba(128,200,255,.08);
+  --text:rgba(244,243,239,.88);--text-mid:rgba(244,243,239,.6);--text-muted:rgba(244,243,239,.42);--text-dim:rgba(244,243,239,.28);
+  --card-bg:rgba(128,200,255,.04);--card-border:rgba(128,200,255,.12);--card-hover:rgba(128,200,255,.22);
+  --success:rgba(100,220,140,.8);--warn:rgba(255,200,80,.8);
+}
+
+/* ── starfield ── */
+#stars{display:block;position:fixed;inset:0;pointer-events:none;z-index:0}
+
+/* ── screen system ── */
+.scr{display:none;position:fixed;inset:0;flex-direction:column;align-items:center;justify-content:flex-start;overflow-y:auto;z-index:10;padding-bottom:80px}
+.scr.on{display:flex;animation:scr-in .4s ease forwards}
+@keyframes scr-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── scrollable inner ── */
+.inner{width:100%;max-width:540px;padding:clamp(40px,8vh,80px) clamp(20px,5vw,40px) 20px;display:flex;flex-direction:column;gap:clamp(16px,3vh,28px)}
+
+/* ── decorative rule ── */
+.rule{width:clamp(40px,8vw,80px);height:1px;background:linear-gradient(to right,transparent,var(--accent-dim),transparent);flex-shrink:0}
+
+/* ── eyebrow ── */
+.eyebrow{font-size:clamp(9px,1.6vw,11px);letter-spacing:.38em;text-transform:uppercase;color:var(--accent-dim);user-select:none}
+
+/* ── headings ── */
+h1{font-size:clamp(26px,5.5vw,52px);letter-spacing:.05em;font-weight:normal;color:var(--text);line-height:1.15;text-shadow:0 0 40px rgba(128,200,255,.1)}
+h1 span{color:var(--accent-dim)}
+h2{font-size:clamp(16px,3vw,22px);font-weight:normal;letter-spacing:.04em;color:var(--text)}
+h3{font-size:clamp(13px,2.2vw,17px);font-weight:normal;letter-spacing:.05em;color:var(--text-mid)}
+
+/* ── body text ── */
+.lead{font-size:clamp(13px,2vw,15px);line-height:1.75;color:var(--text-muted);font-style:italic;max-width:400px;text-align:center}
+
+/* ── buttons ── */
+.btn-primary,.btn-ghost,.btn-accent{font-family:'Georgia',serif;border:none;cursor:pointer;transition:all .2s;border-radius:3px;letter-spacing:.15em;text-transform:uppercase;font-size:clamp(10px,1.8vw,12px);padding:14px 28px;width:100%;max-width:320px}
+.btn-primary{background:var(--accent-faint);border:1px solid var(--card-border);color:var(--accent);box-shadow:0 0 20px rgba(128,200,255,.06)}
+.btn-primary:hover{border-color:var(--card-hover);background:rgba(128,200,255,.1);box-shadow:0 0 30px rgba(128,200,255,.12)}
+.btn-ghost{background:transparent;border:1px solid rgba(244,243,239,.1);color:var(--text-muted)}
+.btn-ghost:hover{border-color:rgba(244,243,239,.25);color:var(--text-mid)}
+.btn-accent{background:rgba(128,200,255,.15);border:1px solid var(--card-hover);color:var(--accent)}
+.btn-accent:hover{background:rgba(128,200,255,.25)}
+.btn-row{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%}
+
+/* ── status dot ── */
+.status{display:flex;align-items:center;gap:10px;font-size:clamp(9px,1.5vw,11px);letter-spacing:.3em;text-transform:uppercase;color:var(--text-dim)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--accent-dim);animation:pulse 2.8s ease-in-out infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:.3;transform:scale(1)}50%{opacity:1;transform:scale(1.25)}}
+
+/* ── path cards (landing) ── */
+.path-cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;max-width:420px}
+.path-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:4px;padding:clamp(18px,3vw,28px) clamp(14px,2.5vw,22px);cursor:pointer;transition:all .25s;text-align:left;display:flex;flex-direction:column;gap:10px}
+.path-card:hover{border-color:var(--card-hover);background:rgba(128,200,255,.07);transform:translateY(-2px)}
+.path-card.selected{border-color:var(--accent-dim);background:rgba(128,200,255,.1)}
+.path-icon{font-size:1.6rem}
+.path-title{font-size:clamp(14px,2.5vw,18px);letter-spacing:.06em;color:var(--text)}
+.path-desc{font-size:clamp(11px,1.8vw,13px);color:var(--text-muted);line-height:1.6;font-style:italic}
+.path-tag{font-size:9px;letter-spacing:.25em;text-transform:uppercase;color:var(--accent-dim);margin-top:auto;padding-top:8px;border-top:1px solid var(--card-border)}
+
+/* ── diagnostic progress ── */
+.diag-header{width:100%;max-width:540px;padding:clamp(28px,5vh,50px) clamp(20px,5vw,40px) 0;display:flex;flex-direction:column;gap:12px;flex-shrink:0}
+.progress-dots{display:flex;gap:6px;flex-wrap:wrap}
+.pdot{width:8px;height:8px;border-radius:50%;background:var(--card-border);transition:all .3s;flex-shrink:0}
+.pdot.done{background:var(--accent-dim)}
+.pdot.active{background:var(--accent);box-shadow:0 0 8px rgba(128,200,255,.5);transform:scale(1.3)}
+.section-label{font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:var(--text-dim)}
+
+/* ── question card ── */
+.q-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:4px;padding:clamp(20px,4vw,32px);display:flex;flex-direction:column;gap:16px}
+.q-subtext{font-size:clamp(11px,1.8vw,13px);color:var(--text-muted);font-style:italic;line-height:1.7;padding:12px 14px;background:rgba(128,200,255,.04);border-left:2px solid var(--card-border);white-space:pre-line}
+.q-label{font-size:clamp(13px,2.2vw,16px);color:var(--text);line-height:1.6}
+.q-question{font-size:clamp(12px,1.9vw,14px);color:var(--text-mid);font-style:italic}
+.q-options{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.q-opt{background:transparent;border:1px solid var(--card-border);border-radius:3px;padding:12px 16px;text-align:left;font-family:'Georgia',serif;font-size:clamp(12px,1.9vw,14px);color:var(--text-muted);cursor:pointer;transition:all .2s;letter-spacing:.01em;line-height:1.5}
+.q-opt:hover{border-color:var(--card-hover);color:var(--text-mid)}
+.q-opt.selected{border-color:var(--accent-dim);color:var(--accent);background:var(--accent-faint)}
+.q-scale{display:flex;flex-direction:column;gap:8px}
+.diag-nav{display:flex;gap:10px;width:100%}
+.diag-nav .btn-primary,.diag-nav .btn-ghost{max-width:none;flex:1}
+
+/* ── path pick result ── */
+.result-score{font-size:clamp(11px,1.8vw,13px);letter-spacing:.08em;color:var(--text-muted)}
+.result-score strong{color:var(--accent)}
+.result-recommend{background:var(--card-bg);border:1px solid var(--card-border);border-radius:4px;padding:24px;display:flex;flex-direction:column;gap:10px}
+.result-path-name{font-size:clamp(20px,4vw,32px);letter-spacing:.06em;color:var(--accent)}
+.result-desc{font-size:clamp(12px,1.9vw,14px);color:var(--text-muted);line-height:1.7;font-style:italic}
+.result-warn{font-size:11px;letter-spacing:.05em;color:var(--warn);padding:10px 14px;border:1px solid rgba(255,200,80,.2);border-radius:3px;line-height:1.6}
+.result-override{font-size:11px;letter-spacing:.08em;color:var(--text-dim);text-align:center}
+.result-override a{color:var(--text-muted);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+
+/* ── handle screen ── */
+.handle-box{background:var(--card-bg);border:1px solid var(--card-border);border-radius:4px;padding:clamp(24px,5vw,40px);display:flex;flex-direction:column;align-items:center;gap:20px}
+.handle-code{font-size:clamp(32px,7vw,56px);letter-spacing:.3em;color:var(--accent);font-family:'Georgia',serif;text-shadow:0 0 30px rgba(128,200,255,.3)}
+.handle-warn{font-size:clamp(11px,1.8vw,13px);color:var(--text-muted);text-align:center;line-height:1.7;font-style:italic}
+.handle-chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.handle-chip-item{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--text-dim);padding:5px 10px;border:1px solid var(--card-border);border-radius:2px}
+
+/* ── recover screen ── */
+.recover-input{font-family:'Georgia',serif;font-size:clamp(22px,5vw,40px);letter-spacing:.25em;text-transform:uppercase;background:var(--card-bg);border:1px solid var(--card-border);border-radius:3px;padding:18px 24px;color:var(--accent);text-align:center;width:100%;max-width:320px;outline:none;transition:border-color .2s}
+.recover-input:focus{border-color:var(--accent-dim)}
+.recover-error{font-size:12px;letter-spacing:.08em;color:var(--warn);text-align:center;opacity:0;transition:opacity .3s}
+.recover-error.show{opacity:1}
+
+/* ── dashboard ── */
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%}
+.dash-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:4px;padding:18px 20px;display:flex;flex-direction:column;gap:8px;cursor:pointer;transition:all .2s}
+.dash-card:hover{border-color:var(--card-hover);background:rgba(128,200,255,.06);transform:translateY(-1px)}
+.dash-card.wide{grid-column:1/-1}
+.dash-card.disabled{opacity:.45;cursor:default;pointer-events:none}
+.dash-label{font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--text-dim)}
+.dash-value{font-size:clamp(14px,2.5vw,18px);color:var(--text-mid);line-height:1.4}
+.dash-value strong{color:var(--accent)}
+.dash-value.big{font-size:clamp(28px,5vw,44px);color:var(--accent);letter-spacing:.04em}
+.dash-sub{font-size:11px;color:var(--text-dim);font-style:italic;letter-spacing:.04em}
+.dash-badge{display:inline-block;font-size:9px;letter-spacing:.2em;text-transform:uppercase;padding:3px 8px;border-radius:2px;border:1px solid var(--card-border);color:var(--text-dim)}
+.dash-badge.new{border-color:rgba(128,200,255,.35);color:var(--accent-dim)}
+.streak-ring{display:flex;align-items:center;gap:14px}
+.streak-num{font-size:clamp(36px,7vw,54px);color:var(--accent);font-family:'Georgia',serif;line-height:1}
+.streak-labels{display:flex;flex-direction:column;gap:4px}
+.streak-label{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--text-dim)}
+.streak-best{font-size:11px;color:var(--text-dim);font-style:italic}
+
+/* ── lesson player ── */
+.lesson-meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.lesson-badge{font-size:9px;letter-spacing:.22em;text-transform:uppercase;padding:4px 10px;border:1px solid var(--card-border);border-radius:2px;color:var(--text-dim)}
+.lesson-body{font-size:clamp(13px,2.1vw,15px);line-height:1.85;color:var(--text-muted)}
+.lesson-body h2{font-size:clamp(14px,2.4vw,18px);color:var(--text);margin:1.4em 0 .6em;letter-spacing:.04em;font-weight:normal}
+.lesson-body h3{font-size:clamp(13px,2.1vw,15px);color:var(--text-mid);margin:1.2em 0 .5em;font-weight:normal;letter-spacing:.04em}
+.lesson-body p{margin:.7em 0;color:var(--text-muted)}
+.lesson-body ul,.lesson-body ol{margin:.7em 0 .7em 1.4em;color:var(--text-muted)}
+.lesson-body li{margin:.35em 0;line-height:1.7}
+.lesson-body strong{color:var(--text-mid);font-weight:normal}
+.lesson-body em{color:var(--text-muted)}
+.lesson-body code{font-family:monospace;font-size:.9em;color:var(--accent-dim);background:rgba(128,200,255,.06);padding:2px 6px;border-radius:2px}
+.lesson-body blockquote{border-left:2px solid var(--card-border);padding:10px 16px;margin:12px 0;background:rgba(128,200,255,.03);color:var(--text-muted);font-style:italic}
+.lesson-body table{border-collapse:collapse;width:100%;margin:14px 0;font-size:13px}
+.lesson-body th{border:1px solid var(--card-border);padding:8px 12px;color:var(--text-mid);text-align:left;font-weight:normal;letter-spacing:.06em}
+.lesson-body td{border:1px solid var(--card-border);padding:8px 12px;color:var(--text-muted)}
+.lesson-body hr{border:none;border-top:1px solid var(--card-border);margin:20px 0}
+.exercises-head{font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--text-dim);padding-top:8px;border-top:1px solid var(--card-border);margin-top:8px}
+.exercise{background:var(--card-bg);border:1px solid var(--card-border);border-radius:3px;padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.exercise-q{font-size:clamp(12px,1.9vw,14px);color:var(--text-mid);line-height:1.6}
+.exercise-opts{display:flex;flex-direction:column;gap:6px}
+.ex-opt{background:transparent;border:1px solid var(--card-border);border-radius:2px;padding:10px 14px;text-align:left;font-family:'Georgia',serif;font-size:clamp(11px,1.8vw,13px);color:var(--text-muted);cursor:pointer;transition:all .2s;letter-spacing:.01em}
+.ex-opt:hover{border-color:var(--card-hover);color:var(--text-mid)}
+.ex-opt.selected{border-color:var(--accent-dim);color:var(--accent);background:var(--accent-faint)}
+.ex-opt.correct{border-color:var(--success);color:var(--success);background:rgba(100,220,140,.06)}
+.ex-opt.wrong{border-color:rgba(255,100,100,.5);color:rgba(255,120,120,.8);background:rgba(255,80,80,.05)}
+.writeback-head{font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--text-dim);padding-top:8px;border-top:1px solid var(--card-border);margin-top:8px}
+.writeback-prompt{font-size:clamp(12px,1.9vw,14px);color:var(--text-muted);font-style:italic;line-height:1.7}
+.writeback-ta{width:100%;min-height:130px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:3px;padding:14px 16px;font-family:'Georgia',serif;font-size:clamp(12px,1.9vw,14px);color:var(--text-mid);resize:vertical;outline:none;transition:border-color .2s;line-height:1.7}
+.writeback-ta:focus{border-color:var(--accent-dim)}
+.writeback-ta::placeholder{color:var(--text-dim)}
+
+/* ── speech screen ── */
+.speech-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:4px;padding:clamp(24px,5vw,36px);display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center}
+.speech-icon{font-size:3rem}
+.speech-title{font-size:clamp(18px,3.5vw,26px);letter-spacing:.06em;color:var(--text)}
+.speech-desc{font-size:clamp(12px,1.9vw,14px);color:var(--text-muted);line-height:1.75;font-style:italic;max-width:340px}
+.drill-phase{display:flex;flex-direction:column;gap:20px;width:100%}
+.phase-indicator{display:flex;gap:8px;align-items:center;justify-content:center}
+.phase-dot{width:10px;height:10px;border-radius:50%;background:var(--card-border);transition:all .3s}
+.phase-dot.active{background:var(--accent);box-shadow:0 0 10px rgba(128,200,255,.5)}
+.phase-dot.done{background:var(--accent-dim)}
+.drill-prompt{font-size:clamp(16px,3vw,22px);color:var(--text);line-height:1.6;text-align:center;padding:24px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:4px;min-height:100px;display:flex;align-items:center;justify-content:center}
+.mic-btn{width:72px;height:72px;border-radius:50%;background:var(--accent-faint);border:2px solid var(--card-border);cursor:pointer;font-size:1.8rem;transition:all .2s;display:flex;align-items:center;justify-content:center}
+.mic-btn:hover{border-color:var(--card-hover);background:rgba(128,200,255,.12)}
+.mic-btn.listening{border-color:var(--accent);background:rgba(128,200,255,.15);box-shadow:0 0 20px rgba(128,200,255,.3);animation:mic-pulse 1.5s ease-in-out infinite}
+@keyframes mic-pulse{0%,100%{box-shadow:0 0 15px rgba(128,200,255,.3)}50%{box-shadow:0 0 30px rgba(128,200,255,.5)}}
+.user-transcript{font-size:clamp(12px,1.9vw,14px);color:var(--text-dim);font-style:italic;min-height:40px;text-align:center;line-height:1.6}
+.drill-timer{font-size:clamp(22px,4vw,32px);color:var(--text-dim);letter-spacing:.15em;font-family:'Georgia',serif}
+.drill-chat{display:flex;flex-direction:column;gap:10px;width:100%;max-height:300px;overflow-y:auto;padding:4px}
+.chat-bubble{padding:12px 16px;border-radius:3px;font-size:clamp(12px,1.9vw,14px);line-height:1.65;max-width:90%}
+.chat-bubble.ai{background:var(--card-bg);border:1px solid var(--card-border);color:var(--text-mid);align-self:flex-start}
+.chat-bubble.user{background:rgba(128,200,255,.08);border:1px solid rgba(128,200,255,.18);color:var(--text-mid);align-self:flex-end}
+.cooldown-item{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:3px}
+.cooldown-item.good{background:rgba(100,220,140,.06);border:1px solid rgba(100,220,140,.2)}
+.cooldown-item.improve{background:rgba(255,200,80,.05);border:1px solid rgba(255,200,80,.18)}
+.cooldown-icon{font-size:1.1rem;flex-shrink:0;margin-top:1px}
+.cooldown-text{font-size:clamp(12px,1.9vw,14px);color:var(--text-muted);line-height:1.65;font-style:italic}
+.waitlist-joined{display:flex;align-items:center;gap:10px;padding:12px 16px;border:1px solid rgba(128,200,255,.2);border-radius:3px;background:var(--accent-faint)}
+.waitlist-joined .dot{background:var(--accent)}
+.waitlist-text{font-size:clamp(11px,1.8vw,13px);color:var(--text-muted);letter-spacing:.06em}
+
+/* ── contact / messages ── */
+.contact-ta{width:100%;min-height:120px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:3px;padding:14px 16px;font-family:'Georgia',serif;font-size:clamp(12px,1.9vw,14px);color:var(--text-mid);resize:vertical;outline:none;transition:border-color .2s;line-height:1.7}
+.contact-ta:focus{border-color:var(--accent-dim)}
+.contact-ta::placeholder{color:var(--text-dim)}
+.contact-hint{font-size:11px;color:var(--text-dim);font-style:italic;letter-spacing:.04em;line-height:1.6}
+.thread{display:flex;flex-direction:column;gap:10px;width:100%}
+.msg-bubble{padding:14px 16px;border-radius:3px;max-width:88%;display:flex;flex-direction:column;gap:5px}
+.msg-bubble.learner{background:rgba(128,200,255,.07);border:1px solid rgba(128,200,255,.16);align-self:flex-end}
+.msg-bubble.teacher{background:var(--card-bg);border:1px solid var(--card-border);align-self:flex-start}
+.msg-body{font-size:clamp(12px,1.9vw,14px);color:var(--text-mid);line-height:1.65}
+.msg-meta{font-size:10px;letter-spacing:.08em;color:var(--text-dim)}
+.msg-empty{font-size:clamp(12px,1.9vw,14px);color:var(--text-dim);font-style:italic;text-align:center;padding:30px 0}
+.unread-badge{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0}
+
+/* ── nav chip (bottom-right handle display) ── */
+#chip{position:fixed;bottom:clamp(16px,3vw,24px);right:clamp(16px,3vw,24px);z-index:200;font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--text-dim);display:none;align-items:center;gap:8px;cursor:pointer;transition:color .2s}
+#chip:hover{color:var(--text-muted)}
+#chip .chip-code{color:var(--accent-dim);letter-spacing:.3em}
+
+/* ── back link ── */
+#back{position:fixed;bottom:clamp(20px,4vw,32px);left:clamp(20px,4vw,32px);z-index:200;font-family:'Georgia',serif;font-size:clamp(11px,2.5vw,13px);letter-spacing:.25em;text-transform:uppercase;color:rgba(255,255,255,.38);text-decoration:none;text-shadow:0 1px 6px rgba(0,0,0,.85);transition:color .25s,transform .25s;display:flex;align-items:center;gap:10px;min-height:44px;-webkit-tap-highlight-color:transparent}
+#back:hover{color:rgba(255,255,255,.82);transform:translateX(-4px)}
+#back svg{width:14px;height:14px;opacity:.7}
+
+/* ── toast ── */
+#toast{position:fixed;top:clamp(16px,3vw,24px);left:50%;transform:translateX(-50%);z-index:500;font-size:12px;letter-spacing:.1em;color:var(--text-mid);background:rgba(6,7,10,.92);border:1px solid var(--card-border);border-radius:3px;padding:10px 20px;pointer-events:none;opacity:0;transition:opacity .3s;white-space:nowrap;max-width:90vw;text-align:center}
+#toast.show{opacity:1}
+
+/* ── loading overlay ── */
+#loading{position:fixed;inset:0;z-index:400;background:#06070a;display:flex;align-items:center;justify-content:center;transition:opacity .5s}
+#loading.hide{opacity:0;pointer-events:none}
+.loading-text{font-size:11px;letter-spacing:.35em;text-transform:uppercase;color:var(--text-dim);animation:pulse 2s ease-in-out infinite}
+</style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+<div id="loading"><span class="loading-text">Loading</span></div>
+<div id="toast"></div>
+
+<!-- ══════════════════════ LANDING ══════════════════════ -->
+<section class="scr" id="scr-landing">
+  <div class="inner" style="align-items:center;text-align:center;justify-content:center;min-height:100vh">
+    <div class="rule"></div>
+    <p class="eyebrow">Mr.D · English Class</p>
+    <h1>Two paths.<br><span>One instructor.</span></h1>
+    <p class="lead">Start with what you actually need. Grammar builds your foundation. Speech builds your confidence.</p>
+    <div class="path-cards">
+      <div class="path-card" onclick="quickPath('grammar')">
+        <div class="path-icon">📖</div>
+        <div class="path-title">Grammar</div>
+        <div class="path-desc">Structure. Clarity. Reading that makes sense.</div>
+        <div class="path-tag">Structured lessons</div>
+      </div>
+      <div class="path-card" onclick="quickPath('speech')">
+        <div class="path-icon">🎙️</div>
+        <div class="path-title">Speech</div>
+        <div class="path-desc">Daily drills. Real confidence. You do the work.</div>
+        <div class="path-tag">Daily commitment</div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="go('diagnostic')">Begin — take the diagnostic</button>
+      <button class="btn-ghost" onclick="go('recover')">I already have a handle</button>
+    </div>
+    <p style="font-size:11px;color:var(--text-dim);font-style:italic">Not sure which path? The diagnostic will guide you. Takes about 4 minutes.</p>
+    <div class="rule"></div>
+  </div>
+</section>
+
+<!-- ══════════════════════ DIAGNOSTIC ══════════════════════ -->
+<section class="scr" id="scr-diagnostic">
+  <div class="diag-header">
+    <p class="eyebrow">Mr.D · Diagnostic</p>
+    <div class="progress-dots" id="progress-dots"></div>
+    <div class="section-label" id="section-label"></div>
+  </div>
+  <div class="inner" style="padding-top:16px">
+    <div id="q-container"></div>
+    <div class="diag-nav" id="diag-nav"></div>
+  </div>
+</section>
+
+<!-- ══════════════════════ PATH PICK ══════════════════════ -->
+<section class="scr" id="scr-path-pick">
+  <div class="inner" style="justify-content:center;min-height:100vh">
+    <div class="rule"></div>
+    <p class="eyebrow">Your Result</p>
+    <div id="result-content"></div>
+    <div class="btn-row" id="result-btns"></div>
+    <div class="rule"></div>
+  </div>
+</section>
+
+<!-- ══════════════════════ HANDLE ══════════════════════ -->
+<section class="scr" id="scr-handle">
+  <div class="inner" style="align-items:center;justify-content:center;min-height:100vh;text-align:center">
+    <div class="rule"></div>
+    <p class="eyebrow">Your Handle</p>
+    <h2>This is your key.</h2>
+    <div class="handle-box" id="handle-box">
+      <div class="handle-code" id="handle-display">——————</div>
+      <p class="handle-warn">Save this code somewhere safe.<br>It is your account. No email. No password. Just this.</p>
+      <div class="handle-chips">
+        <div class="handle-chip-item">📸 Screenshot it</div>
+        <div class="handle-chip-item">📝 Write it down</div>
+        <div class="handle-chip-item">💬 Send it to yourself</div>
+      </div>
+    </div>
+    <button class="btn-primary" id="handle-continue-btn" onclick="">I've saved it — let's go</button>
+    <div class="rule"></div>
+  </div>
+</section>
+
+<!-- ══════════════════════ RECOVER ══════════════════════ -->
+<section class="scr" id="scr-recover">
+  <div class="inner" style="align-items:center;justify-content:center;min-height:100vh;text-align:center">
+    <div class="rule"></div>
+    <p class="eyebrow">Welcome Back</p>
+    <h2>Enter your handle.</h2>
+    <p class="lead" style="max-width:300px">Type the 6-character code you saved when you first signed up.</p>
+    <input class="recover-input" id="recover-input" maxlength="6" placeholder="ABC123" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')recoverSubmit()"/>
+    <div class="recover-error" id="recover-error">Handle not found. Check the code and try again.</div>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="recoverSubmit()">Find my account</button>
+      <button class="btn-ghost" onclick="go('landing')">Back</button>
+    </div>
+    <div class="rule"></div>
+  </div>
+</section>
+
+<!-- ══════════════════════ DASHBOARD ══════════════════════ -->
+<section class="scr" id="scr-dashboard">
+  <div class="inner">
+    <p class="eyebrow">Mr.D · English Class</p>
+    <div id="dash-content"></div>
+  </div>
+</section>
+
+<!-- ══════════════════════ LESSON ══════════════════════ -->
+<section class="scr" id="scr-lesson">
+  <div class="inner" id="lesson-content"></div>
+</section>
+
+<!-- ══════════════════════ SPEECH ══════════════════════ -->
+<section class="scr" id="scr-speech">
+  <div class="inner" style="align-items:center" id="speech-content"></div>
+</section>
+
+<!-- ══════════════════════ CONTACT ══════════════════════ -->
+<section class="scr" id="scr-contact">
+  <div class="inner">
+    <p class="eyebrow">Message Mr.D</p>
+    <h2>What's on your mind?</h2>
+    <p class="lead" style="text-align:left;max-width:none">Ask a question, share your progress, or let him know you're stuck. He typically replies within a day or so.</p>
+    <textarea class="contact-ta" id="contact-ta" placeholder="Write your message here..."></textarea>
+    <p class="contact-hint">Your message will be sent with your handle so Mr. D knows who you are. Your actual identity stays private.</p>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="sendMessage()">Send message</button>
+      <button class="btn-ghost" onclick="go('dashboard')">Back to dashboard</button>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════ MESSAGES ══════════════════════ -->
+<section class="scr" id="scr-messages">
+  <div class="inner">
+    <p class="eyebrow">Messages</p>
+    <h2>Your thread with Mr.D</h2>
+    <div class="thread" id="thread-content"></div>
+    <div class="btn-row" style="margin-top:8px">
+      <button class="btn-primary" onclick="go('contact')">Send a new message</button>
+      <button class="btn-ghost" onclick="go('dashboard')">Back to dashboard</button>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════ HANDLE CHIP ══════════════════════ -->
+<div id="chip" onclick="go('handle')">
+  <span>handle</span>
+  <span class="chip-code" id="chip-code">——</span>
+</div>
+
+<!-- ══════════════════════ BACK LINK ══════════════════════ -->
+<a href="/" id="back">
+  <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="9,2 4,7 9,12"/>
+  </svg>
+  Back
+</a>
+
+<script>
+/* ════════════════════════════════════════════════
+   CONFIG — add your keys here before deploying
+   ════════════════════════════════════════════════ */
+const SUPABASE_URL  = 'https://fvrwxuwkwwrajuausuaj.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ2cnd4dXdrd3dyYWp1YXVzdWFqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4MzQ5MjUsImV4cCI6MjA5MzQxMDkyNX0.cOKS50Du_5XUwe4sYA0HqR9JDgkui8kTdRKyT8d8dmc';
+const ELEVENLABS_VOICE_ID = 'FILL_IN_ELEVENLABS_VOICE_ID';  // e.g. 'pNInz6obpgDQGcFmaJgB'
+const EDGE_BASE = SUPABASE_URL + '/functions/v1';            // for eng-drill edge function
+
+/* ════════════════════════════════════════════════
+   LESSONS — Mr. D fills in / edits content
+   ════════════════════════════════════════════════ */
+const LESSONS = [
+  {
+    id:1, level:1,
+    title:'Present Simple — Things You Do Every Day',
+    read:`
+## What is the Present Simple?
+
+We use the **Present Simple** to talk about things that happen regularly — habits, routines, and facts.
+
+**Structure:**
+- I / You / We / They + verb (base form)
+- He / She / It + verb + **s**
+
+**Examples:**
+- I **go** to school every morning.
+- She **works** at a hospital.
+- They **play** football on weekends.
+
+**Negative form:**
+- I **don't** like coffee.
+- He **doesn't** watch TV.
+
+**Question form:**
+- **Do** you speak English?
+- **Does** she live in Jakarta?
+
+> 💡 Remember: the "s" matters! *"She go"* is wrong. *"She **goes**"* is correct.
+    `,
+    exercises:[
+      {q:'She ___ to school by bus every day.',options:['go','goes','going','went'],answer:1},
+      {q:'They ___ not like spicy food.',options:['is','are','do','does'],answer:2},
+      {q:'___ he work on Saturdays?',options:['Do','Does','Is','Are'],answer:1},
+      {q:'My brother ___ football every weekend.',options:['play','plays','playing','played'],answer:1},
+      {q:'We ___ English at school.',options:['studies','study','studying','studied'],answer:1}
+    ],
+    writeback:'Write 3 sentences about what you do every day. Be honest and specific!'
+  },
+  {
+    id:2, level:1,
+    title:'Present Continuous — What Is Happening Right Now',
+    read:`
+## What is the Present Continuous?
+
+We use the **Present Continuous** to talk about things happening **right now**, or temporary situations.
+
+**Structure:** Subject + **am/is/are** + verb + **-ing**
+
+**Examples:**
+- I **am studying** English right now.
+- She **is cooking** dinner.
+- They **are watching** a movie.
+
+**When to use it:**
+1. Something happening at this moment: *"It is raining."*
+2. A temporary situation: *"I'm staying at my uncle's house this week."*
+3. A planned future event: *"We are meeting tomorrow."*
+
+**Common mistakes:**
+- ❌ "I am study English." → ✅ "I am **studying** English."
+- ❌ "She cooking." → ✅ "She **is cooking**."
+    `,
+    exercises:[
+      {q:'Look! It ___ outside. Bring an umbrella.',options:['rain','rains','is raining','rained'],answer:2},
+      {q:'She ___ on the phone right now. Please wait.',options:['talk','talks','is talking','talked'],answer:2},
+      {q:'We ___ a new project this month.',options:['work','works','are working','worked'],answer:2},
+      {q:'Why ___ you laughing? What\'s funny?',options:['do','does','are','is'],answer:2},
+      {q:'He ___ lunch at the moment.',options:['have','has','is having','are having'],answer:2}
+    ],
+    writeback:'Look around you right now. Write 3 sentences about what is happening around you at this moment.'
+  },
+  {
+    id:3, level:2,
+    title:'Past Simple — Things That Already Happened',
+    read:`
+## What is the Past Simple?
+
+We use the **Past Simple** to talk about actions that are **finished** — they happened at a specific time in the past.
+
+**Structure:**
+- Regular verbs: verb + **-ed** → *walked, played, worked*
+- Irregular verbs: must be memorized → *go → went, eat → ate, see → saw*
+
+**Examples:**
+- I **walked** to the market yesterday.
+- She **ate** noodles for breakfast.
+- We **watched** a film last night.
+
+**Negative:** did not (didn't) + base verb
+- He **didn't go** to school today.
+
+**Questions:** Did + subject + base verb?
+- **Did** you sleep well last night?
+
+**Common irregular verbs:**
+
+| Base | Past |
+|---|---|
+| go | went |
+| have | had |
+| see | saw |
+| make | made |
+| say | said |
+    `,
+    exercises:[
+      {q:'She ___ to the market yesterday.',options:['go','goes','went','gone'],answer:2},
+      {q:'I ___ a great movie last weekend.',options:['see','saw','seen','sees'],answer:1},
+      {q:'___ you eat breakfast this morning?',options:['Do','Does','Did','Have'],answer:2},
+      {q:'He ___ not come to class yesterday.',options:['do','does','did','done'],answer:2},
+      {q:'We ___ a lot of fun at the school trip.',options:['have','has','had','having'],answer:2}
+    ],
+    writeback:'Tell me about your day yesterday. Write at least 4 sentences using the Past Simple.'
+  },
+  {
+    id:4, level:2,
+    title:'Modal Verbs — Can, Could, Should',
+    read:`
+## What are Modal Verbs?
+
+**Modal verbs** add meaning to the main verb — they express ability, possibility, advice, or permission.
+
+Today we focus on **can**, **could**, and **should**.
+
+---
+
+### CAN — ability or permission
+- I **can** swim. *(I have the ability)*
+- **Can** I use your phone? *(asking permission)*
+
+### COULD — past ability or polite request
+- When I was young, I **could** run very fast. *(past ability)*
+- **Could** you help me, please? *(polite request)*
+
+### SHOULD — advice or recommendation
+- You **should** sleep earlier. *(advice)*
+- She **should** see a doctor. *(recommendation)*
+
+**Important rule:** Modal verbs are always followed by the **base form** of the verb.
+- ✅ She **can speak** English.
+- ❌ She **can speaks** English.
+    `,
+    exercises:[
+      {q:'You look tired. You ___ rest for a while.',options:['can','could','should','must'],answer:2},
+      {q:'When he was a child, he ___ climb trees very fast.',options:['can','could','should','would'],answer:1},
+      {q:'___ I sit here? Is this seat free?',options:['Should','Could','Would','Must'],answer:1},
+      {q:'She ___ play three instruments — guitar, piano, and violin.',options:['should','could','can','must'],answer:2},
+      {q:'If you want to improve, you ___ practice every day.',options:['could','can','should','might'],answer:2}
+    ],
+    writeback:'Write 3 sentences using modal verbs (can, could, or should) — about your abilities, something from your past, or advice you\'d give a friend.'
+  },
+  {
+    id:5, level:3,
+    title:'Present Perfect — Experience and Recent Actions',
+    read:`
+## What is the Present Perfect?
+
+The **Present Perfect** connects the past to the present. We use it to talk about:
+1. **Experiences** (without saying exactly when)
+2. **Recent actions** that still affect the present
+3. Actions that started in the past and **continue now**
+
+**Structure:** Subject + **have/has** + past participle
+
+**Examples:**
+- I **have visited** Bali. *(experience — at some point in my life)*
+- She **has just finished** her homework. *(recent, now she's free)*
+- We **have lived** here for five years. *(still living here)*
+
+**Key signal words:**
+- **ever / never**: Have you **ever** eaten sushi?
+- **already / yet**: I've **already** eaten. / Have you eaten **yet**?
+- **just**: She has **just** arrived.
+- **for / since**: I've known him **for** years. / She's worked here **since** 2020.
+
+| Verb | Past Participle |
+|---|---|
+| go | gone |
+| see | seen |
+| eat | eaten |
+| write | written |
+| be | been |
+    `,
+    exercises:[
+      {q:'I ___ never eaten sushi before. I want to try it.',options:['have','has','had','did'],answer:0},
+      {q:'She ___ just sent the email. Check your inbox.',options:['have','has','had','did'],answer:1},
+      {q:'Have you ___ your homework yet?',options:['finish','finishing','finished','finishes'],answer:2},
+      {q:'We ___ been friends for ten years.',options:['are','were','have','has'],answer:2},
+      {q:'___ he ever lived abroad?',options:['Did','Does','Has','Have'],answer:2}
+    ],
+    writeback:'Write 3 sentences using the Present Perfect. Talk about things you have done in your life, something you have recently done, or how long you have been doing something.'
+  },
+  {
+    id:6, level:3,
+    title:'First Conditional — Real Possibilities',
+    read:`
+## What is the First Conditional?
+
+The **First Conditional** talks about real, possible situations in the future — if something happens, something else will happen.
+
+**Structure:** If + Present Simple, **will** + base verb
+
+**Examples:**
+- **If** it rains, I **will** stay home.
+- **If** you study hard, you **will** pass the exam.
+- **If** she calls, please tell her I'm busy.
+
+**Important:** The if-clause uses Present Simple, not future!
+- ❌ "If it **will rain**, I will stay home."
+- ✅ "If it **rains**, I will stay home."
+
+**Variations:**
+- Start with the **will** clause: "I will stay home **if** it rains."
+- Use **can / may / should** instead of **will**: "If you're tired, you **can** rest."
+
+**When to use it:**
+- Warnings: *"If you don't hurry, you'll miss the bus."*
+- Promises: *"If you help me, I'll help you too."*
+- Real plans: *"If the weather is nice, we'll go to the beach."*
+    `,
+    exercises:[
+      {q:'If I have time tomorrow, I ___ call you.',options:['will','would','should','can'],answer:0},
+      {q:'If it ___ tomorrow, we will cancel the trip.',options:['will rain','rained','rains','rain'],answer:2},
+      {q:'She will be angry if you ___ on time.',options:['arrive','will arrive','arrived','don\'t arrive'],answer:3},
+      {q:'If he ___ hard, he will pass the exam.',options:['studies','will study','studied','study'],answer:0},
+      {q:'What will you do if you ___ the lottery?',options:['win','will win','won','wins'],answer:0}
+    ],
+    writeback:'Write 3 sentences using the First Conditional. Think about real possibilities in your life — what will happen if certain things occur?'
+  }
+];
+
+/* ════════════════════════════════════════════════
+   DIAGNOSTIC QUESTIONS
+   ════════════════════════════════════════════════ */
+const QUESTIONS = [
+  // ── Section A: Motivation ──
+  {section:'A',label:'Why do you want to learn English right now?',type:'choice',scored:false,
+   options:['For work or career opportunities','For study — school, university, or exams','For online communication — social media, games, content','Personal interest — I just want to be able to use it']},
+  {section:'A',label:'What does success look like for you in 3 months?',type:'choice',scored:false,
+   options:['I can read articles and understand them','I can hold a basic conversation','I can write emails or messages clearly','I can understand movies without subtitles']},
+  {section:'A',label:'How much time can you realistically give to English every day?',type:'choice',scored:false,
+   options:['5–10 minutes','15–20 minutes','30 minutes','1 hour or more']},
+  // ── Section B: Ability ──
+  {section:'B',label:'Read this and answer the question.',
+   subtext:'"Tom wakes up at 7 AM every day. He eats breakfast and then takes the bus to work. He works in an office and comes home at 6 PM."',
+   question:'What does Tom do before taking the bus?',type:'choice',scored:true,answer:1,
+   options:['He calls a taxi','He eats breakfast','He goes for a run','He reads the news']},
+  {section:'B',label:'Read this and answer the question.',
+   subtext:'"Although she had studied hard for weeks, Sarah was still nervous before her presentation. However, once she started speaking, her confidence grew and she gave an excellent talk."',
+   question:'How did Sarah feel before the presentation?',type:'choice',scored:true,answer:2,
+   options:['Excited and confident','Bored and tired','Nervous, despite studying hard','Confused about her topic']},
+  {section:'B',label:'Choose the correct word to complete the sentence.',
+   subtext:'"If I ___ more time, I would travel the world."',
+   type:'choice',scored:true,answer:1,
+   options:['have','had','has','having']},
+  {section:'B',label:'Which word means almost the same as "difficult"?',
+   type:'choice',scored:true,answer:2,
+   options:['Easy','Helpful','Challenging','Quick']},
+  {section:'B',label:'Be honest with yourself.',
+   subtext:'Read this sentence silently, then try saying it aloud:\n"She usually goes to school by bus, but today she took a taxi because it was raining."',
+   question:'How did it go?',type:'choice',scored:true,selfHonest:true,answer:null,
+   options:['I said it comfortably and smoothly (+1)','I said it but stumbled a bit (0)','It was quite difficult (0)']},
+  // ── Section C: Commitment ──
+  {section:'C',label:'What would you like to focus on first?',
+   subtext:'There is no wrong answer — this is just about where you want to start.',
+   type:'choice',scored:false,isPathQ:true,
+   options:['Understanding — reading and writing clearly','Talking — speaking and being understood']},
+  {section:'C',label:'Have you tried learning English before with apps, courses, or classes?',
+   type:'choice',scored:false,
+   options:['Yes, but I stopped at some point','Yes, and I am still using something','No, this is my first serious attempt']},
+  {section:'C',label:'What has been your biggest challenge with English so far?',
+   type:'choice',scored:false,
+   options:['It gets boring quickly','It feels too hard','I run out of time','I haven\'t really tried yet']},
+  {section:'C',label:'How committed are you to showing up consistently for the next month?',
+   subtext:'Be realistic, not optimistic. This helps Mr. D guide you better.',
+   type:'choice',scored:false,isCommitQ:true,
+   options:['1 — I\'ll try, but I might miss many days','2 — Maybe 3–4 days a week','3 — I think I can do it most days','4 — I am quite determined','5 — I am fully committed, no excuses']}
+];
+
+/* ════════════════════════════════════════════════
+   SUPABASE CLIENT
+   ════════════════════════════════════════════════ */
+const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+/* ════════════════════════════════════════════════
+   APP STATE
+   ════════════════════════════════════════════════ */
+const St = {
+  handle: null,
+  learner: null,      // row from eng_learners
+  progress: {},       // {lesson_id: true}
+  pendingPath: null,  // path chosen before handle minted
+  pendingLevel: 1,    // grammar level from diagnostic
+  diagAnswers: [],    // array of selected option indices
+  drillState: null,   // active speech drill state
+  unreadMessages: 0
+};
+
+/* ════════════════════════════════════════════════
+   DOM HELPERS
+   ════════════════════════════════════════════════ */
+const $ = id => document.getElementById(id);
+const el = (tag, cls, html) => { const e = document.createElement(tag); if(cls) e.className=cls; if(html) e.innerHTML=html; return e; };
+function toast(msg, dur=2800) {
+  const t = $('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'), dur);
+}
+
+/* ════════════════════════════════════════════════
+   HANDLE LOGIC
+   ════════════════════════════════════════════════ */
+const HANDLE_ALPHA = 'BCDFGHJKLMNPQRSTVWXYZ0123456789';
+function genHandle() {
+  return Array.from({length:6}, ()=>HANDLE_ALPHA[Math.floor(Math.random()*HANDLE_ALPHA.length)]).join('');
+}
+function setHandle(h) {
+  St.handle = h;
+  localStorage.setItem('mrd_handle', h);
+  const chip = $('chip'); chip.style.display='flex';
+  $('chip-code').textContent = h;
+}
+function loadHandleFromStorage() {
+  const h = localStorage.getItem('mrd_handle');
+  if(h) { St.handle=h; $('chip-code').textContent=h; $('chip').style.display='flex'; }
+  return h;
+}
+
+/* ════════════════════════════════════════════════
+   SUPABASE OPERATIONS
+   ════════════════════════════════════════════════ */
+async function dbMintHandle() {
+  let handle, tries=0;
+  do {
+    handle = genHandle();
+    const {data} = await _sb.from('eng_learners').select('handle').eq('handle',handle).single();
+    if(!data) break;
+    tries++;
+  } while(tries < 10);
+  const {error} = await _sb.from('eng_learners').insert({handle, path:St.pendingPath||null, level:St.pendingLevel||1});
+  if(error) { console.warn('Supabase insert failed, using local handle', error); }
+  return handle;
+}
+
+async function dbLoadLearner() {
+  if(!St.handle) return null;
+  const {data} = await _sb.from('eng_learners').select('*').eq('handle',St.handle).single();
+  return data;
+}
+
+async function dbLoadProgress() {
+  if(!St.handle) return {};
+  const {data} = await _sb.from('eng_progress').select('lesson_id').eq('handle',St.handle);
+  const map = {};
+  (data||[]).forEach(r=>{ map[r.lesson_id]=true; });
+  return map;
+}
+
+async function dbSaveDiagnostic(answers, scoreGrammar, recommendedPath, chosenPath) {
+  if(!St.handle) return;
+  await _sb.from('eng_diagnostics').insert({handle:St.handle, answers, score_grammar:scoreGrammar, recommended_path:recommendedPath, chosen_path:chosenPath});
+}
+
+async function dbUpdateLearnerPath(path, level) {
+  if(!St.handle) return;
+  await _sb.from('eng_learners').update({path,level}).eq('handle',St.handle);
+}
+
+async function dbCompleteLesson(lessonId, writebackText) {
+  if(!St.handle) return;
+  const today = new Date().toISOString().slice(0,10);
+  // mark progress
+  await _sb.from('eng_progress').upsert({handle:St.handle, lesson_id:lessonId, completed_at:new Date().toISOString()});
+  // save writeback
+  if(writebackText.trim()) await _sb.from('eng_submissions').insert({handle:St.handle, lesson_id:lessonId, body:writebackText.trim()});
+  // update streak
+  if(St.learner) {
+    const last = St.learner.streak_last_day;
+    const yesterday = new Date(Date.now()-86400000).toISOString().slice(0,10);
+    let newStreak = last===yesterday ? (St.learner.streak_count||0)+1 : (last===today ? St.learner.streak_count : 1);
+    await _sb.from('eng_learners').update({streak_count:newStreak, streak_last_day:today}).eq('handle',St.handle);
+    St.learner.streak_count = newStreak; St.learner.streak_last_day = today;
+  }
+}
+
+async function dbSendMessage(body) {
+  if(!St.handle) return false;
+  const {error} = await _sb.from('eng_contact_pings').insert({handle:St.handle, body, direction:'learner→teacher', seen_by_teacher:false, seen_by_learner:true});
+  return !error;
+}
+
+async function dbLoadMessages() {
+  if(!St.handle) return [];
+  const {data} = await _sb.from('eng_contact_pings').select('*').eq('handle',St.handle).order('created_at',{ascending:true});
+  // mark teacher messages as seen
+  const unseen = (data||[]).filter(m=>m.direction==='teacher→learner'&&!m.seen_by_learner).map(m=>m.id);
+  if(unseen.length) {
+    await _sb.from('eng_contact_pings').update({seen_by_learner:true}).in('id',unseen);
+    St.unreadMessages = 0;
+  }
+  return data||[];
+}
+
+async function dbCountUnread() {
+  if(!St.handle) return 0;
+  const {count} = await _sb.from('eng_contact_pings').select('id',{count:'exact',head:true})
+    .eq('handle',St.handle).eq('direction','teacher→learner').eq('seen_by_learner',false);
+  return count||0;
+}
+
+async function dbJoinWaitlist() {
+  if(!St.handle) return;
+  await _sb.from('eng_waitlist').upsert({handle:St.handle});
+  await _sb.from('eng_learners').update({trial_drill_used:true}).eq('handle',St.handle);
+  if(St.learner) St.learner.trial_drill_used = true;
+}
+
+/* ════════════════════════════════════════════════
+   ROUTER
+   ════════════════════════════════════════════════ */
+let currentScreen = null;
+function go(screen) {
+  if(currentScreen) { const prev=$('scr-'+currentScreen); if(prev) prev.classList.remove('on'); }
+  currentScreen = screen.split('/')[0];
+  const el=$('scr-'+currentScreen);
+  if(el){ el.classList.add('on'); el.scrollTop=0; }
+  // update back link — hide on landing, show everywhere else
+  $('back').style.display = currentScreen==='landing' ? 'none' : 'flex';
+  // render dynamic screens
+  const sub = screen.includes('/') ? screen.split('/')[1] : null;
+  if(currentScreen==='dashboard') renderDashboard();
+  else if(currentScreen==='lesson') renderLesson(parseInt(sub)||1);
+  else if(currentScreen==='speech') renderSpeech();
+  else if(currentScreen==='messages') renderMessages();
+  else if(currentScreen==='handle') renderHandleScreen();
+}
+
+/* ════════════════════════════════════════════════
+   STARFIELD
+   ════════════════════════════════════════════════ */
+(function(){
+  const cv=$('stars'), cx=cv.getContext('2d'); let stars=[];
+  function resize(){ cv.width=innerWidth; cv.height=innerHeight; }
+  function init(){ stars=[]; const n=Math.floor(cv.width*cv.height/5000);
+    for(let i=0;i<n;i++) stars.push({x:Math.random()*cv.width,y:Math.random()*cv.height,r:Math.random()*1.1+.2,speed:Math.random()*.004+.001,phase:Math.random()*Math.PI*2}); }
+  function draw(t){ cx.clearRect(0,0,cv.width,cv.height);
+    for(const s of stars){ const a=(Math.sin(t*s.speed+s.phase)*.5+.5)*.65+.1;
+      cx.beginPath(); cx.arc(s.x,s.y,s.r,0,Math.PI*2); cx.fillStyle=`rgba(200,225,255,${a})`; cx.fill(); }
+    requestAnimationFrame(draw); }
+  window.addEventListener('resize',()=>{resize();init()});
+  resize(); init(); requestAnimationFrame(draw);
+})();
+
+/* ════════════════════════════════════════════════
+   LANDING
+   ════════════════════════════════════════════════ */
+function quickPath(path) {
+  // clicking a path card highlights it but still routes to diagnostic
+  document.querySelectorAll('.path-card').forEach(c=>c.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+  St.pendingPath = path;
+  setTimeout(()=>go('diagnostic'), 280);
+}
+
+/* ════════════════════════════════════════════════
+   DIAGNOSTIC
+   ════════════════════════════════════════════════ */
+let qIdx = 0;
+const SECTION_LABELS = {A:'Section A — About You',B:'Section B — A Quick Ability Check',C:'Section C — Commitment'};
+
+function initDiagnostic() {
+  qIdx=0; St.diagAnswers=new Array(QUESTIONS.length).fill(null);
+  renderQuestion();
+}
+
+function renderDots() {
+  const c=$('progress-dots'); c.innerHTML='';
+  QUESTIONS.forEach((_,i)=>{
+    const d=document.createElement('div'); d.className='pdot'+(i<qIdx?' done':i===qIdx?' active':'');
+    c.appendChild(d);
+  });
+}
+
+function renderQuestion() {
+  const q=QUESTIONS[qIdx];
+  $('section-label').textContent = SECTION_LABELS[q.section]||'';
+  renderDots();
+  const c=$('q-container'); c.innerHTML='';
+  const card=el('div','q-card'); c.appendChild(card);
+
+  if(q.subtext) { const s=el('div','q-subtext'); s.textContent=q.subtext; card.appendChild(s); }
+  const lbl=el('div','q-label'); lbl.textContent=q.label; card.appendChild(lbl);
+  if(q.question) { const qq=el('div','q-question'); qq.textContent=q.question; card.appendChild(qq); }
+
+  const opts=el('div','q-options'); card.appendChild(opts);
+  q.options.forEach((opt,i)=>{
+    const b=el('button','q-opt'); b.textContent=opt;
+    if(St.diagAnswers[qIdx]===i) b.classList.add('selected');
+    b.onclick=()=>{ St.diagAnswers[qIdx]=i; document.querySelectorAll('.q-opt').forEach(x=>x.classList.remove('selected')); b.classList.add('selected'); };
+    opts.appendChild(b);
+  });
+
+  // nav
+  const nav=$('diag-nav'); nav.innerHTML='';
+  if(qIdx>0){ const back=el('button','btn-ghost','← Back'); back.onclick=()=>{qIdx--;renderQuestion();}; nav.appendChild(back); }
+  const next=el('button','btn-primary',qIdx===QUESTIONS.length-1?'See my result →':'Next →');
+  next.onclick=()=>{
+    if(St.diagAnswers[qIdx]===null){ toast('Please choose an answer first.'); return; }
+    if(qIdx===QUESTIONS.length-1) submitDiagnostic(); else { qIdx++; renderQuestion(); }
+  };
+  nav.appendChild(next);
+}
+
+function submitDiagnostic() {
+  // Score Section B
+  let score=0;
+  QUESTIONS.forEach((q,i)=>{
+    if(!q.scored) return;
+    if(q.selfHonest){ if(St.diagAnswers[i]===0) score++; return; }
+    if(St.diagAnswers[i]===q.answer) score++;
+  });
+
+  // Grammar level
+  const level = score<=1?1 : score<=3?2 : 3;
+  const startLesson = level===1?1 : level===2?3 : 5;
+  St.pendingLevel = startLesson;
+
+  // Path recommendation
+  const pathQ = QUESTIONS.findIndex(q=>q.isPathQ);
+  const wantsTalking = St.diagAnswers[pathQ]===1;
+  const commitQ = QUESTIONS.findIndex(q=>q.isCommitQ);
+  const commitScore = St.diagAnswers[commitQ]+1; // 1-5
+  const recommended = wantsTalking ? 'speech' : 'grammar';
+  const warn = wantsTalking && commitScore < 3;
+
+  // Save diagnostic
+  dbSaveDiagnostic(St.diagAnswers, score, recommended, recommended);
+
+  // Show result
+  showPathPick(score, level, startLesson, recommended, warn);
+}
+
+/* ════════════════════════════════════════════════
+   PATH PICK
+   ════════════════════════════════════════════════ */
+function showPathPick(score, level, startLesson, recommended, warn) {
+  const c=$('result-content'); c.innerHTML='';
+  const scoreEl=el('div','result-score');
+  scoreEl.innerHTML=`You answered <strong>${score} out of 5</strong> ability questions correctly.`;
+  c.appendChild(scoreEl);
+
+  const rec=el('div','result-recommend');
+  const levelLabel=['Beginner','Intermediate','Upper-Intermediate'][level-1];
+  rec.innerHTML=`
+    <div class="eyebrow">Mr. D recommends</div>
+    <div class="result-path-name">${recommended==='speech'?'Speech':'Grammar'}</div>
+    <div class="result-desc">${recommended==='speech'
+      ?'Daily AI-powered speaking drills + weekly check-in with Mr. D. You build real confidence through consistent practice.'
+      :`Structured lessons starting at <em>${levelLabel}</em> (Lesson ${startLesson}). Build your foundation one concept at a time.`}
+    </div>`;
+  c.appendChild(rec);
+
+  if(warn) {
+    const w=el('div','result-warn');
+    w.textContent='Speech requires daily practice — 10 minutes every day. You rated your commitment at 1 or 2 out of 5. Consider starting with Grammar first, which is more forgiving. You can always switch.';
+    c.appendChild(w);
+  }
+
+  const override=el('p','result-override');
+  const altPath=recommended==='speech'?'grammar':'speech';
+  const altLabel=altPath==='grammar'?`start with Grammar (Lesson ${startLesson})`:'try Speech instead';
+  override.innerHTML=`Not feeling it? <a onclick="choosePathAndContinue('${altPath}',${startLesson})">I'd rather ${altLabel}</a>`;
+  c.appendChild(override);
+
+  const btns=$('result-btns'); btns.innerHTML='';
+  const main=el('button','btn-primary',`Start ${recommended==='speech'?'Speech':'Grammar'} →`);
+  main.onclick=()=>choosePathAndContinue(recommended, startLesson);
+  btns.appendChild(main);
+
+  go('path-pick');
+}
+
+async function choosePathAndContinue(path, startLesson) {
+  St.pendingPath=path; St.pendingLevel=startLesson;
+  if(!St.handle) {
+    // mint handle now
+    const handle=await dbMintHandle();
+    setHandle(handle);
+    St.learner={handle, path, level:startLesson, streak_count:0, streak_last_day:null, trial_drill_used:false};
+    go('handle');
+  } else {
+    await dbUpdateLearnerPath(path, startLesson);
+    if(St.learner){St.learner.path=path;St.learner.level=startLesson;}
+    go('dashboard');
+  }
+}
+
+/* ════════════════════════════════════════════════
+   HANDLE SCREEN
+   ════════════════════════════════════════════════ */
+function renderHandleScreen() {
+  $('handle-display').textContent = St.handle||'——————';
+  const btn=$('handle-continue-btn');
+  btn.onclick=()=>{ go('dashboard'); };
+}
+
+/* ════════════════════════════════════════════════
+   RECOVER
+   ════════════════════════════════════════════════ */
+async function recoverSubmit() {
+  const input=$('recover-input').value.trim().toUpperCase();
+  if(input.length!==6){ toast('Please enter a 6-character handle.'); return; }
+  const errEl=$('recover-error'); errEl.classList.remove('show');
+  const {data} = await _sb.from('eng_learners').select('*').eq('handle',input).single();
+  if(!data){ errEl.classList.add('show'); return; }
+  setHandle(input);
+  St.learner=data;
+  St.progress=await dbLoadProgress();
+  St.unreadMessages=await dbCountUnread();
+  go('dashboard');
+}
+
+/* ════════════════════════════════════════════════
+   DASHBOARD
+   ════════════════════════════════════════════════ */
+function renderDashboard() {
+  const c=$('dash-content'); c.innerHTML='';
+  const l=St.learner||{};
+  const streak=l.streak_count||0;
+  const path=l.path||'grammar';
+  const level=l.level||1;
+  const nextLesson=LESSONS.find(ls=>!St.progress[ls.id])||null;
+  const totalDone=Object.keys(St.progress).length;
+  const unread=St.unreadMessages||0;
+
+  // Greeting + streak
+  const grid=el('div','dash-grid'); c.appendChild(grid);
+
+  // Streak card
+  const sCard=el('div','dash-card');
+  sCard.innerHTML=`<div class="dash-label">Current streak</div>
+    <div class="streak-ring"><div class="streak-num">${streak}</div>
+    <div class="streak-labels"><div class="dash-sub">${streak===1?'day':'days'}</div></div></div>
+    <div class="dash-sub">${streak===0?'Complete a lesson to start your streak':'Keep going — don\'t break the chain'}</div>`;
+  sCard.onclick=null; sCard.style.cursor='default';
+  grid.appendChild(sCard);
+
+  // Path card
+  const pCard=el('div','dash-card');
+  pCard.innerHTML=`<div class="dash-label">Your path</div>
+    <div class="dash-value">${path==='speech'?'🎙️ Speech':'📖 Grammar'}</div>
+    <div class="dash-sub">Lessons done: ${totalDone} of ${LESSONS.length}</div>`;
+  pCard.style.cursor='default';
+  grid.appendChild(pCard);
+
+  // Next lesson
+  if(path==='grammar'||path==='both') {
+    const nlCard=el('div','dash-card wide');
+    if(nextLesson) {
+      nlCard.innerHTML=`<div class="dash-label">Next up</div>
+        <div class="dash-value">Lesson ${nextLesson.id} — ${nextLesson.title}</div>
+        <div class="dash-sub">Tap to open</div>`;
+      nlCard.onclick=()=>go('lesson/'+nextLesson.id);
+    } else {
+      nlCard.innerHTML=`<div class="dash-label">Grammar</div>
+        <div class="dash-value">✓ All ${LESSONS.length} lessons complete</div>
+        <div class="dash-sub">Impressive. More lessons coming soon.</div>`;
+      nlCard.style.cursor='default';
+    }
+    grid.appendChild(nlCard);
+  }
+
+  // Speech card
+  const spCard=el('div','dash-card wide');
+  const trialUsed=l.trial_drill_used;
+  if(path==='speech'||path==='both') {
+    spCard.innerHTML=`<div class="dash-label">Speech drill</div>
+      <div class="dash-value">${trialUsed?'Trial complete — v1 coming soon 🎙️':'Your trial drill is waiting'}</div>
+      <div class="dash-sub">${trialUsed?'You\'re on the waitlist for the full Speech experience':'10-minute AI conversation — your one free trial'}</div>`;
+    spCard.onclick=()=>go('speech');
+  } else {
+    spCard.innerHTML=`<div class="dash-label">Speech path</div>
+      <div class="dash-value">Available after Grammar foundation</div>
+      <div class="dash-sub">Tap to preview the Speech experience</div>`;
+    spCard.onclick=()=>go('speech');
+  }
+  grid.appendChild(spCard);
+
+  // Messages card
+  const msgCard=el('div','dash-card wide');
+  msgCard.innerHTML=`<div class="dash-label">Messages from Mr. D</div>
+    <div class="dash-value">${unread>0?`<span style="color:var(--accent)">${unread} new message${unread>1?'s':''}</span>`:'Your thread with Mr. D'}</div>
+    <div class="dash-sub">Questions? Stuck? Just say hi.</div>`;
+  msgCard.onclick=()=>go('messages');
+  grid.appendChild(msgCard);
+
+  // Handle reminder (subtle)
+  const hintEl=el('p','');
+  hintEl.style.cssText='font-size:10px;letter-spacing:.1em;color:var(--text-dim);text-align:center;margin-top:8px;font-style:italic;cursor:pointer';
+  hintEl.textContent=`Your handle: ${St.handle||'—'}`;
+  hintEl.onclick=()=>go('handle');
+  c.appendChild(hintEl);
+}
+
+/* ════════════════════════════════════════════════
+   LESSON PLAYER
+   ════════════════════════════════════════════════ */
+function renderLesson(id) {
+  const lesson=LESSONS.find(l=>l.id===id);
+  if(!lesson){ go('dashboard'); return; }
+  const c=$('lesson-content'); c.innerHTML='';
+
+  // Header
+  const eyebrow=el('p','eyebrow','Lesson '+lesson.id+' of '+LESSONS.length);
+  c.appendChild(eyebrow);
+  const levelLabel=['Beginner','Intermediate','Upper-Intermediate'][lesson.level-1];
+  const meta=el('div','lesson-meta');
+  meta.innerHTML=`<div class="lesson-badge">Level ${lesson.level} — ${levelLabel}</div>
+    ${St.progress[lesson.id]?'<div class="lesson-badge" style="border-color:rgba(100,220,140,.3);color:var(--success)">✓ Completed</div>':''}`;
+  c.appendChild(meta);
+  const title=el('h2','');title.textContent=lesson.title; c.appendChild(title);
+  c.appendChild(el('div','rule'));
+
+  // Read section
+  const body=el('div','lesson-body');
+  body.innerHTML=marked.parse(lesson.read);
+  c.appendChild(body);
+
+  // Exercises
+  const exHead=el('div','exercises-head','Practice Exercises');
+  c.appendChild(exHead);
+
+  const exAnswers=new Array(lesson.exercises.length).fill(null);
+  const exDone=new Array(lesson.exercises.length).fill(false);
+
+  lesson.exercises.forEach((ex,ei)=>{
+    const card=el('div','exercise');
+    const qEl=el('div','exercise-q'); qEl.textContent=`${ei+1}. ${ex.q}`; card.appendChild(qEl);
+    const opts=el('div','exercise-opts'); card.appendChild(opts);
+    ex.options.forEach((opt,oi)=>{
+      const b=el('button','ex-opt'); b.textContent=opt;
+      b.onclick=()=>{
+        if(exDone[ei]) return;
+        exAnswers[ei]=oi;
+        opts.querySelectorAll('.ex-opt').forEach(x=>x.classList.remove('selected','correct','wrong'));
+        b.classList.add('selected');
+        // reveal after pick
+        exDone[ei]=true;
+        setTimeout(()=>{
+          opts.querySelectorAll('.ex-opt').forEach((x,xi)=>{
+            if(xi===ex.answer) x.classList.add('correct');
+            else if(xi===oi&&oi!==ex.answer) x.classList.add('wrong');
+          });
+        },350);
+      };
+      opts.appendChild(b);
+    });
+    c.appendChild(card);
+  });
+
+  // Writeback
+  c.appendChild(el('div','rule'));
+  const wbHead=el('div','writeback-head','Your Turn to Write');
+  c.appendChild(wbHead);
+  const wbPrompt=el('div','writeback-prompt'); wbPrompt.textContent=lesson.writeback; c.appendChild(wbPrompt);
+  const ta=el('textarea','writeback-ta'); ta.placeholder='Write your answer here... take your time.'; c.appendChild(ta);
+
+  // Submit
+  const allAnswered=()=>exAnswers.every(a=>a!==null);
+  const submitBtn=el('button','btn-primary','Submit this lesson →');
+  submitBtn.onclick=async()=>{
+    if(!allAnswered()){ toast('Please answer all exercises first.'); return; }
+    if(!ta.value.trim()){ toast('Please write something in the writeback section.'); return; }
+    submitBtn.disabled=true; submitBtn.textContent='Saving...';
+    await dbCompleteLesson(lesson.id, ta.value);
+    St.progress[lesson.id]=true;
+    toast('Lesson '+lesson.id+' complete! ✓');
+    setTimeout(()=>go('dashboard'),1200);
+  };
+  c.appendChild(submitBtn);
+  const backBtn=el('button','btn-ghost','Back to dashboard');
+  backBtn.onclick=()=>go('dashboard');
+  c.appendChild(backBtn);
+}
+
+/* ════════════════════════════════════════════════
+   SPEECH DRILL
+   ════════════════════════════════════════════════ */
+// Drill topics — rotate daily
+const DRILL_TOPICS=['Introducing yourself','Daily routines','Talking about family','Describing your home','Your favourite food','Weekend plans','Work or studies','Favourite hobbies','Talking about the weather','A movie or show you liked'];
+function todayTopic(){ return DRILL_TOPICS[new Date().getDate()%DRILL_TOPICS.length]; }
+
+// Web Speech API refs
+let recognition=null; let synthesis=window.speechSynthesis;
+let drillTimer=null; let drillSeconds=0;
+const DRILL_MAX=600; // 10 minutes hard cap
+
+function renderSpeech() {
+  const c=$('speech-content'); c.innerHTML='';
+  const l=St.learner||{};
+  const trialUsed=l.trial_drill_used;
+  const onSpeechPath=(l.path==='speech'||l.path==='both');
+
+  if(trialUsed) {
+    // Waitlist state
+    c.appendChild(el('div','rule'));
+    c.appendChild(el('p','eyebrow','Speech Path'));
+    const card=el('div','speech-card');
+    card.innerHTML=`<div class="speech-icon">🎙️</div>
+      <div class="speech-title">Trial Complete</div>
+      <div class="speech-desc">You've experienced the Speech drill. The full daily practice — unlimited, with progress tracking — opens in v1 with a subscription.</div>
+      <div class="waitlist-joined"><div class="dot"></div><div class="waitlist-text">You are on the waitlist</div></div>`;
+    c.appendChild(card);
+    const btn=el('button','btn-ghost','Back to dashboard'); btn.onclick=()=>go('dashboard'); c.appendChild(btn);
+    c.appendChild(el('div','rule'));
+    return;
+  }
+
+  // Pre-drill card
+  c.appendChild(el('div','rule'));
+  c.appendChild(el('p','eyebrow','Speech Path — Trial Drill'));
+  const card=el('div','speech-card');
+  const topic=todayTopic();
+  card.innerHTML=`<div class="speech-icon">🎙️</div>
+    <div class="speech-title">Today's Topic</div>
+    <div class="speech-desc" style="font-style:normal;font-size:1.1em;color:var(--text-mid)">${topic}</div>
+    <div class="speech-desc">A 10-minute AI conversation. The AI speaks, you reply. At the end, you get feedback. This is your one free trial.</div>
+    <div class="speech-desc" style="color:var(--warn);font-size:12px">⚠ This uses your microphone and the AI voice. Make sure you're somewhere comfortable to speak.</div>`;
+  c.appendChild(card);
+
+  if(!onSpeechPath) {
+    const hint=el('p','');
+    hint.style.cssText='font-size:11px;color:var(--text-dim);text-align:center;font-style:italic';
+    hint.textContent='You\'re currently on the Grammar path — you can still try the Speech trial.';
+    c.appendChild(hint);
+  }
+
+  const btn=el('button','btn-primary','Start my trial drill →');
+  btn.onclick=()=>startDrill(topic);
+  c.appendChild(btn);
+  const back=el('button','btn-ghost','Back to dashboard'); back.onclick=()=>go('dashboard'); c.appendChild(back);
+  c.appendChild(el('div','rule'));
+}
+
+async function startDrill(topic) {
+  const c=$('speech-content'); c.innerHTML='';
+  c.appendChild(el('p','eyebrow',`Speaking about: ${topic}`));
+
+  // Timer display
+  const timerEl=el('div','drill-timer','0:00'); c.appendChild(timerEl);
+
+  // Phase dots
+  const phaseRow=el('div','phase-indicator');
+  ['Warm-up','Conversation','Cooldown'].forEach((_,i)=>{const d=el('div','phase-dot'+(i===0?' active':'')); phaseRow.appendChild(d); });
+  c.appendChild(phaseRow);
+
+  // Prompt + mic area
+  const promptEl=el('div','drill-prompt','Getting ready...'); c.appendChild(promptEl);
+  const micBtn=el('button','mic-btn','🎙️'); c.appendChild(micBtn);
+  const transcriptEl=el('div','user-transcript','Your words will appear here'); c.appendChild(transcriptEl);
+
+  // Chat history (conversation phase)
+  const chatEl=el('div','drill-chat'); chatEl.style.display='none'; c.appendChild(chatEl);
+
+  const stopBtn=el('button','btn-ghost','End drill early'); stopBtn.onclick=()=>endDrill([]); c.appendChild(stopBtn);
+
+  // Timer
+  drillSeconds=0;
+  drillTimer=setInterval(()=>{
+    drillSeconds++;
+    const m=Math.floor(drillSeconds/60), s=drillSeconds%60;
+    timerEl.textContent=`${m}:${s.toString().padStart(2,'0')}`;
+    if(drillSeconds>=DRILL_MAX) endDrill(chatHistory);
+  },1000);
+
+  // Setup speech recognition
+  const SpeechRec = window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(SpeechRec){ recognition=new SpeechRec(); recognition.lang='en-US'; recognition.continuous=false; recognition.interimResults=false; }
+
+  // Warmup phase
+  const warmupPrompts=[
+    'Good. Let\'s warm up first. Repeat after me: "I am learning English because I want to improve myself."',
+    'Great. Now try this: "Every day I practice a little, and every day I get better."',
+    'One more: "I am not afraid to make mistakes. Mistakes help me learn."',
+    'Well done. Now, tell me your name. Say: "My name is..." — and fill in the rest.',
+    'Excellent. Last warmup: "I am ready to have a real conversation today."'
+  ];
+
+  const chatHistory=[];
+  let warmupIdx=0;
+  const phaseDots=phaseRow.querySelectorAll('.phase-dot');
+
+  function setPhase(n){ phaseDots.forEach((d,i)=>{ d.className='phase-dot'+(i<n?' done':i===n?' active':''); }); }
+
+  async function speak(text) {
+    promptEl.textContent=text;
+    // Try ElevenLabs Edge Function first, fallback to browser synthesis
+    try {
+      const res=await fetch(`${EDGE_BASE}/eng-drill-tts`,{
+        method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_ANON},
+        body:JSON.stringify({text, voice_id:ELEVENLABS_VOICE_ID})
+      });
+      if(res.ok){ const blob=await res.blob(); const url=URL.createObjectURL(blob); const audio=new Audio(url); await audio.play(); return; }
+    } catch(_){}
+    // Fallback: browser TTS
+    return new Promise(resolve=>{
+      const u=new SpeechSynthesisUtterance(text); u.lang='en-US'; u.rate=.9; u.pitch=1;
+      u.onend=resolve; synthesis.speak(u);
+    });
+  }
+
+  function listenOnce() {
+    return new Promise((resolve,reject)=>{
+      if(!recognition){ resolve('(browser speech recognition not available)'); return; }
+      micBtn.classList.add('listening');
+      recognition.onresult=e=>{ micBtn.classList.remove('listening'); resolve(e.results[0][0].transcript); };
+      recognition.onerror=()=>{ micBtn.classList.remove('listening'); resolve('(could not hear you)'); };
+      recognition.onend=()=>micBtn.classList.remove('listening');
+      recognition.start();
+    });
+  }
+
+  async function runWarmup() {
+    setPhase(0);
+    for(let i=0;i<warmupPrompts.length;i++){
+      await speak(warmupPrompts[i]);
+      transcriptEl.textContent='🎙️ Your turn — speak now';
+      const said=await listenOnce();
+      transcriptEl.textContent=`You said: "${said}"`;
+      await new Promise(r=>setTimeout(r,600));
+    }
+    runConversation();
+  }
+
+  async function runConversation() {
+    setPhase(1);
+    chatEl.style.display='flex';
+    const openingMsg=`Great warm-up! Now let's have a real conversation. Today we're talking about: ${topic}. To get us started — tell me, what do you enjoy most about this topic? Just speak naturally.`;
+    await speak(openingMsg);
+    addBubble('ai', openingMsg, chatEl);
+    chatHistory.push({role:'assistant', content:openingMsg});
+    convLoop();
+  }
+
+  async function convLoop() {
+    if(drillSeconds>=DRILL_MAX-60){ runCooldown(chatHistory); return; }
+    transcriptEl.textContent='🎙️ Your turn';
+    const userSaid=await listenOnce();
+    if(!userSaid||userSaid.includes('could not hear')) { convLoop(); return; }
+    transcriptEl.textContent=`You: "${userSaid}"`;
+    addBubble('user', userSaid, chatEl);
+    chatHistory.push({role:'user', content:userSaid});
+
+    // Call Claude brain via Edge Function
+    let aiReply='That\'s interesting. Tell me more about that.';
+    try {
+      const res=await fetch(`${EDGE_BASE}/eng-drill-chat`,{
+        method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_ANON},
+        body:JSON.stringify({topic, history:chatHistory})
+      });
+      if(res.ok){ const d=await res.json(); aiReply=d.reply||aiReply; }
+    } catch(_){}
+
+    chatHistory.push({role:'assistant',content:aiReply});
+    addBubble('ai', aiReply, chatEl);
+    await speak(aiReply);
+    convLoop();
+  }
+
+  async function runCooldown(history) {
+    setPhase(2); clearInterval(drillTimer);
+    promptEl.textContent='Great conversation. Let me give you some feedback...';
+    chatEl.style.display='none';
+    transcriptEl.textContent='';
+
+    let feedback={good:['You stayed engaged the whole time.','Your responses were clear and understandable.','Good effort with your vocabulary.'],improve:'Keep working on speaking with more confidence — it comes with daily practice.'};
+    try {
+      const res=await fetch(`${EDGE_BASE}/eng-drill-chat`,{
+        method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_ANON},
+        body:JSON.stringify({topic, history, mode:'cooldown'})
+      });
+      if(res.ok){ const d=await res.json(); if(d.feedback) feedback=d.feedback; }
+    } catch(_){}
+
+    endDrill(history, feedback);
+  }
+
+  micBtn.onclick=()=>{
+    if(recognition){ try{ recognition.stop(); }catch(_){} }
+  };
+
+  runWarmup();
+}
+
+function addBubble(role, text, container) {
+  const b=el('div',`chat-bubble ${role}`); b.textContent=text;
+  container.appendChild(b); container.scrollTop=container.scrollHeight;
+}
+
+async function endDrill(history, feedback=null) {
+  clearInterval(drillTimer);
+  if(recognition){ try{recognition.stop();}catch(_){} }
+  synthesis.cancel();
+
+  const counted=drillSeconds>=300; // 5+ min = counts for streak
+  await _sb.from('eng_drills').insert({
+    handle:St.handle, started_at:new Date(Date.now()-drillSeconds*1000).toISOString(),
+    duration_s:drillSeconds, topic:todayTopic(), transcript:history,
+    summary:feedback?JSON.stringify(feedback):'', counted_for_streak:counted
+  });
+  await dbJoinWaitlist();
+
+  // Show cooldown summary screen
+  const c=$('speech-content'); c.innerHTML='';
+  c.appendChild(el('p','eyebrow','Drill Complete'));
+  c.appendChild(el('h2','','Nice work.'));
+
+  const dur=`${Math.floor(drillSeconds/60)}m ${drillSeconds%60}s`;
+  const durEl=el('p',''); durEl.style.cssText='font-size:13px;color:var(--text-muted);font-style:italic'; durEl.textContent=`Drill duration: ${dur}`; c.appendChild(durEl);
+
+  if(feedback){
+    const goodHead=el('p','eyebrow','What went well'); c.appendChild(goodHead);
+    (Array.isArray(feedback.good)?feedback.good:[feedback.good]).forEach(g=>{
+      const item=el('div','cooldown-item good');
+      item.innerHTML=`<div class="cooldown-icon">✓</div><div class="cooldown-text">${g}</div>`;
+      c.appendChild(item);
+    });
+    const improveHead=el('p','eyebrow','One thing to work on'); c.appendChild(improveHead);
+    const item=el('div','cooldown-item improve');
+    item.innerHTML=`<div class="cooldown-icon">→</div><div class="cooldown-text">${feedback.improve||feedback}</div>`;
+    c.appendChild(item);
+  }
+
+  const waitlistEl=el('div','waitlist-joined');
+  waitlistEl.innerHTML=`<div class="dot"></div><div class="waitlist-text">You're on the waitlist for full Speech access in v1</div>`;
+  c.appendChild(waitlistEl);
+
+  const btn=el('button','btn-primary','Back to dashboard'); btn.onclick=()=>go('dashboard'); c.appendChild(btn);
+}
+
+/* ════════════════════════════════════════════════
+   CONTACT / MESSAGES
+   ════════════════════════════════════════════════ */
+async function sendMessage() {
+  const body=$('contact-ta').value.trim();
+  if(!body){ toast('Please write something first.'); return; }
+  if(!St.handle){ toast('No handle found. Please recover your account.'); return; }
+  const ok=await dbSendMessage(body);
+  if(ok){ $('contact-ta').value=''; toast('Message sent. Mr. D will reply soon.'); setTimeout(()=>go('messages'),1000); }
+  else toast('Could not send — please try again.');
+}
+
+async function renderMessages() {
+  const c=$('thread-content'); c.innerHTML='';
+  const msgs=await dbLoadMessages();
+  St.unreadMessages=0;
+  if(!msgs.length){ c.appendChild(el('div','msg-empty',"No messages yet. Say hello to Mr. D!")); return; }
+  msgs.forEach(m=>{
+    const isTeacher=m.direction==='teacher→learner';
+    const bubble=el('div',`msg-bubble ${isTeacher?'teacher':'learner'}`);
+    const t=new Date(m.created_at);
+    const timeStr=`${t.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})} ${t.getHours().toString().padStart(2,'0')}:${t.getMinutes().toString().padStart(2,'0')}`;
+    bubble.innerHTML=`<div class="msg-body">${m.body}</div><div class="msg-meta">${isTeacher?'Mr. D':'You'} · ${timeStr}</div>`;
+    c.appendChild(bubble);
+  });
+  c.scrollTop=c.scrollHeight;
+}
+
+/* ════════════════════════════════════════════════
+   INIT
+   ════════════════════════════════════════════════ */
+async function init() {
+  // Hide loading
+  setTimeout(()=>$('loading').classList.add('hide'),400);
+
+  // Restore handle from localStorage
+  const savedHandle=loadHandleFromStorage();
+
+  if(savedHandle) {
+    St.handle=savedHandle;
+    // Load learner data
+    try {
+      St.learner=await dbLoadLearner();
+      St.progress=await dbLoadProgress();
+      St.unreadMessages=await dbCountUnread();
+    } catch(e){ console.warn('Supabase load failed', e); }
+    go('dashboard');
+  } else {
+    go('landing');
+  }
+}
+
+// Diagnostic entry point
+document.addEventListener('DOMContentLoaded',()=>{
+  // Wire up diagnostic screen init when it becomes active
+  const orig=go;
+  window.go=function(screen){
+    orig(screen);
+    if(screen==='diagnostic') initDiagnostic();
+  };
+  init();
+});
+</script>
+</body>
+</html>
