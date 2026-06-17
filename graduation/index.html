@@ -209,7 +209,7 @@ html, body {
 ============================================= */
 .chart-ttl   { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); text-align: center; margin-bottom: 8px; }
 .chart-outer { overflow-x: auto; border: 1px solid var(--green); border-radius: var(--r); background: #0b160d; }
-.chart-inner { min-width: 900px; padding: 14px 12px; }
+.chart-inner { min-width: 1000px; padding: 14px 12px; }
 
 .chart-stage {
   grid-column: 1 / -1;
@@ -256,14 +256,15 @@ html, body {
 /* student row */
 .stu-row { display: flex; align-items: center; gap: 2px; padding: 1px 0; }
 
-/* Guru Pendamping cell — green, lives in aisle column */
+/* Wali Kelas cell — green, lives in aisle-side of each student row */
 .pend-cell {
-  width: 36px; height: 22px; border-radius: 3px;
+  width: 42px; height: 22px; border-radius: 3px;
   background: var(--pend-bg); border: 1.5px solid var(--pend-bd);
   display: flex; align-items: center; justify-content: center;
-  font-size: 7.5px; font-weight: 800; color: var(--pend-tx);
-  flex-shrink: 0; letter-spacing: 0.5px;
+  font-size: 7px; font-weight: 800; color: var(--pend-tx);
+  flex-shrink: 0; letter-spacing: 0.3px;
 }
+.pend-hidden { visibility: hidden; }
 
 /* student seats */
 .seats-wrap { display: flex; gap: 2px; flex: 1; }
@@ -290,6 +291,8 @@ html, body {
 }
 
 .seats-spacer { flex: 1; min-width: 0; }
+/* Left half: push seats toward aisle (right edge) */
+.left-half .seats-wrap { justify-content: flex-end; }
 
 /* =============================================
    ORANG TUA
@@ -581,31 +584,59 @@ const S = {
 };
 
 // =============================================
-// SEATING ROWS
-// Left half: seats fill left→right, Pendamping at RIGHT edge (aisle side)
-// Right half: Pendamping at LEFT edge (aisle side), seats fill left→right
-// Offset rows (P4/P8): seats hug the aisle (Pendamping) side
+// SEATING ROWS  (source: Seating Chart sheet)
+// Left half : seats fill left→right, Wali Kelas at RIGHT edge (aisle side)
+// Right half: Wali Kelas at LEFT edge (aisle side), seats fill left→right
+// showPend:false = continuation row for same Wali Kelas group (pend cell hidden)
+// offsetLeft / offsetRight = short overflow rows hugging the aisle
 // =============================================
 const ROWS_LEFT = [
-  { pend:"P1", type:"male",   seats:["9A01","9A02","9A07","9A10","9A16","9A17","9A18","9A19","9A23","9B01","9B07","9B12","9B14","9B18","9B19","9B20","9B21"] },
-  { pend:"P2", type:"female", seats:["9A03","9A04","9A05","9A06","9A08","9A09","9A11","9A12","9A13","9A14","9A15","9A20","9A21","9A22","9A24","9A25","9A26"] },
-  { pend:"P3", type:"female", seats:["9B25","9B26","9B27","9C01","9C03","9C04","9C05","9C06","9C07","9C08","9C13","9C14","9C15","9C16","9C17","9C18","9C22"] },
-  // P4 offset: seats pushed RIGHT (toward aisle), spacer on left
-  { pend:"P4", type:"female", seats:["9D17","9D21","9D22"], offsetLeft:true },
+  // W9C — rows 1 & 2
+  { pend:"W9C", showPend:true,
+    seats:["9C01","9C03","9C04","9C05","9C06","9C07","9C08",
+           "9C13","9C14","9C15","9C16","9C17","9C18"] },
+  { pend:"W9C", showPend:false,
+    seats:["9C22","9C23","9C24","9C25","9C26","9C27",
+           "9D01","9D03","9D04","9D05","9D06","9D07","9D08"] },
+  // W9D — rows 1 & 2
+  { pend:"W9D", showPend:true,
+    seats:["9D09","9D11","9D14","9D15","9D16","9D17",
+           "9D21","9D22","9D23","9D24","9D25","9D27"] },
+  { pend:"W9D", showPend:false,
+    seats:["9C02","9C09","9C10","9C11","9C12","9C19","9C20","9C21",
+           "9D02","9D10","9D12"] },
+  // W8B — single offset row (seats hug aisle)
+  { pend:"W8B", showPend:true, offsetLeft:true,
+    seats:["9D13","9D18","9D19","9D20","9D26"] },
 ];
 const ROWS_RIGHT = [
-  { pend:"P5", type:"male",   seats:["9C02","9C09","9C10","9C11","9C12","9C19","9C20","9C21","9D02","9D10","9D12","9D13","9D18","9D19","9D20","9D26"] },
-  { pend:"P6", type:"female", seats:["9A27","9B02","9B03","9B04","9B05","9B06","9B08","9B09","9B10","9B11","9B13","9B15","9B16","9B17","9B22","9B23","9B24"] },
-  { pend:"P7", type:"female", seats:["9C23","9C24","9C25","9C26","9C27","9D01","9D03","9D04","9D05","9D06","9D07","9D08","9D09","9D11","9D14","9D15","9D16"] },
-  // P8 offset: seats start at LEFT (right after Pendamping), spacer on right
-  { pend:"P8", type:"female", seats:["9D23","9D24","9D25","9D27"], offsetRight:true },
+  // W9A — rows 1 & 2
+  { pend:"W9A", showPend:true,
+    seats:["9A03","9A04","9A05","9A06","9A08","9A09","9A11",
+           "9A12","9A13","9A14","9A15","9A20","9A21"] },
+  { pend:"W9A", showPend:false,
+    seats:["9A22","9A24","9A25","9A26","9A27",
+           "9B02","9B03","9B04","9B05","9B06","9B08","9B09","9B10"] },
+  // W9B — rows 1 & 2
+  { pend:"W9B", showPend:true,
+    seats:["9B11","9B13","9B15","9B16","9B17",
+           "9B22","9B23","9B24","9B25","9B26","9B27"] },
+  { pend:"W9B", showPend:false,
+    seats:["9A01","9A02","9A07","9A10","9A16","9A17","9A18","9A19","9A23",
+           "9B01","9B07","9B12"] },
+  // W8C — single offset row (seats hug aisle)
+  { pend:"W8C", showPend:true, offsetRight:true,
+    seats:["9B14","9B18","9B19","9B20","9B21"] },
 ];
 
-// Build reverse lookup
+// Build reverse lookup — position is continuous across sub-rows of the same pend
 const STU_SEAT = {};
+const _pendPos = {};
 [...ROWS_LEFT, ...ROWS_RIGHT].forEach(r => {
-  r.seats.forEach((code, i) => {
-    STU_SEAT[code] = { pend: r.pend, pos: i+1 };
+  if (!_pendPos[r.pend]) _pendPos[r.pend] = 0;
+  r.seats.forEach(code => {
+    _pendPos[r.pend]++;
+    STU_SEAT[code] = { pend: r.pend, pos: _pendPos[r.pend] };
   });
 });
 
@@ -675,7 +706,7 @@ function showResult(code) {
   document.getElementById('rcInfo').textContent = `Kelas ${s.cls} · ${gLbl} · No. Absen ${s.no}`;
   document.getElementById('pbCode').textContent = code;
   document.getElementById('pbDesc').textContent = par.desc;
-  document.getElementById('srVal').textContent  = `Guru ${seat.pend} · Kursi ke-${seat.pos}`;
+  document.getElementById('srVal').textContent  = `${seat.pend} · Kursi ke-${seat.pos}`;
 
   buildChart(code);
   goSlide(4);
@@ -699,28 +730,33 @@ function buildChart(hlCode) {
       <div class="stu-section-lbl">Students</div>`;
 
     rows.forEach(r => {
-      const gc = r.type==='male' ? 'male' : 'female';
+      const pendEl = r.showPend
+        ? `<div class="pend-cell">${r.pend}</div>`
+        : `<div class="pend-cell pend-hidden"></div>`;
+
       h += `<div class="stu-row">`;
 
       if (side === 'left') {
-        // seats first, then Pendamping on the right (aisle side)
+        // seats first, then Wali Kelas on the right (aisle side)
         h += `<div class="seats-wrap">`;
-        if (r.offsetLeft) h += `<div class="seats-spacer"></div>`; // push seats right
+        if (r.offsetLeft) h += `<div class="seats-spacer"></div>`;
         r.seats.forEach(code => {
+          const gc = S[code]?.g === 'M' ? 'male' : 'female';
           const hl = code===hlCode ? ' stu-hl' : '';
           h += `<div class="seat ${gc}${hl}" title="${code}">${code}</div>`;
         });
         h += `</div>`;
-        h += `<div class="pend-cell">${r.pend}</div>`;
+        h += pendEl;
       } else {
-        // Pendamping first (aisle side), then seats
-        h += `<div class="pend-cell">${r.pend}</div>`;
+        // Wali Kelas first (aisle side), then seats
+        h += pendEl;
         h += `<div class="seats-wrap">`;
         r.seats.forEach(code => {
+          const gc = S[code]?.g === 'M' ? 'male' : 'female';
           const hl = code===hlCode ? ' stu-hl' : '';
           h += `<div class="seat ${gc}${hl}" title="${code}">${code}</div>`;
         });
-        if (r.offsetRight) h += `<div class="seats-spacer"></div>`; // push seats left
+        if (r.offsetRight) h += `<div class="seats-spacer"></div>`;
         h += `</div>`;
       }
 
@@ -760,10 +796,10 @@ function buildChart(hlCode) {
     <div class="chart-body">
       <div class="chart-stage">— PANGGUNG —</div>
 
-      <div class="chart-half">
+      <div class="chart-half left-half">
         ${renderRows(ROWS_LEFT, 'left')}
         <div class="ot-sep">Parents</div>
-        ${renderOT(['9A','9B'])}
+        ${renderOT(['9C','9D'])}
       </div>
 
       <div class="chart-aisle">
@@ -773,7 +809,7 @@ function buildChart(hlCode) {
       <div class="chart-half">
         ${renderRows(ROWS_RIGHT, 'right')}
         <div class="ot-sep">Parents</div>
-        ${renderOT(['9C','9D'])}
+        ${renderOT(['9A','9B'])}
       </div>
 
     </div>`;
@@ -781,7 +817,7 @@ function buildChart(hlCode) {
   document.getElementById('chartLegend').innerHTML = `
     <div class="leg-i"><div class="leg-d" style="background:var(--male-bg);border:1px solid var(--male-bd)"></div>Siswa putra</div>
     <div class="leg-i"><div class="leg-d" style="background:var(--fem-bg);border:1px solid var(--fem-bd)"></div>Siswa putri</div>
-    <div class="leg-i"><div class="leg-d" style="background:var(--pend-bg);border:1px solid var(--pend-bd)"></div>Guru Pendamping (P1–P8)</div>
+    <div class="leg-i"><div class="leg-d" style="background:var(--pend-bg);border:1px solid var(--pend-bd)"></div>Wali Kelas (W9A/B/C/D, W8B/C)</div>
     <div class="leg-i"><div class="leg-d" style="background:#3a2800;border:1px solid var(--gold)"></div>Kursi siswa Anda ✦</div>
     <div class="leg-i"><div class="leg-d" style="background:rgba(0,212,255,.28);border:1px solid var(--cyan)"></div>Kursi Anda (orang tua) ✦</div>`;
 }
