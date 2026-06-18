@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Cloud Editor</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✏️</text></svg>">
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --line:#2a3340;
+    --text:#e6edf3; --muted:#8b97a6; --accent:#3fb950; --accent-d:#2da44e;
+    --blue:#388bfd; --danger:#f85149; --r:10px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    display:flex;flex-direction:column;height:100vh;overflow:hidden;
+  }
+
+  /* ---- top bar ---- */
+  header{
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    padding:10px 14px;background:var(--panel);border-bottom:1px solid var(--line);
+  }
+  header .brand{font-weight:700;font-size:15px;display:flex;align-items:center;gap:7px;margin-right:4px}
+  header .brand small{color:var(--muted);font-weight:500;font-size:12px}
+  select,input,button{
+    font-family:inherit;font-size:14px;border-radius:8px;border:1px solid var(--line);
+    background:var(--panel2);color:var(--text);padding:8px 11px;outline:none;
+  }
+  input:focus,select:focus{border-color:var(--blue)}
+  button{cursor:pointer;border:1px solid var(--line);background:var(--panel2);transition:.15s}
+  button:hover{border-color:#3a4452}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  .btn-publish{background:var(--accent-d);border-color:var(--accent-d);color:#fff;font-weight:700}
+  .btn-publish:hover{background:var(--accent);border-color:var(--accent)}
+  .spacer{flex:1}
+  #status{font-size:13px;color:var(--muted);min-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:46vw}
+  #status.ok{color:var(--accent)} #status.err{color:var(--danger)} #status.work{color:var(--blue)}
+  .dot-unsaved{display:none;width:8px;height:8px;border-radius:50%;background:#d29922}
+  body.dirty .dot-unsaved{display:inline-block}
+
+  /* ---- view tabs (mobile) ---- */
+  .tabs{display:none;gap:6px;padding:8px 14px;background:var(--panel);border-bottom:1px solid var(--line)}
+  .tabs button{flex:1}
+  .tabs button.active{background:var(--blue);border-color:var(--blue);color:#fff}
+
+  /* ---- main split ---- */
+  main{flex:1;display:flex;min-height:0}
+  .pane{flex:1;min-width:0;display:flex;flex-direction:column}
+  .pane.code{border-right:1px solid var(--line)}
+  .pane h2{font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);
+    padding:8px 14px;background:var(--panel);border-bottom:1px solid var(--line)}
+  #code{
+    flex:1;width:100%;resize:none;border:0;outline:0;padding:14px;background:#0b0f14;color:#d7e0ea;
+    font-family:"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;font-size:13px;line-height:1.55;
+    white-space:pre;tab-size:2;
+  }
+  #preview{flex:1;width:100%;border:0;background:#fff}
+
+  /* ---- overlay (login) ---- */
+  .overlay{position:fixed;inset:0;background:rgba(8,11,15,.92);display:flex;align-items:center;justify-content:center;z-index:50}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:26px;width:min(360px,90vw);text-align:center}
+  .card h1{font-size:18px;margin-bottom:6px}
+  .card p{color:var(--muted);font-size:13px;margin-bottom:18px}
+  .card input{width:100%;text-align:center;margin-bottom:12px}
+  .card button{width:100%;background:var(--accent-d);border-color:var(--accent-d);color:#fff;font-weight:700;padding:10px}
+  .hide{display:none!important}
+
+  @media(max-width:760px){
+    .tabs{display:flex}
+    #status{max-width:100%;order:9;flex-basis:100%}
+    .pane{display:none}
+    .pane.show{display:flex}
+    .pane.code{border-right:0}
+  }
+</style>
+</head>
+<body>
+
+  <!-- Password gate -->
+  <div class="overlay" id="gate">
+    <div class="card">
+      <h1>✏️ Cloud Editor</h1>
+      <p>Enter the password to edit your pages.</p>
+      <input id="pw" type="password" placeholder="Password" autocomplete="current-password">
+      <button id="enter">Enter</button>
+    </div>
+  </div>
+
+  <header>
+    <div class="brand">✏️ Editor <small>oprek.net</small></div>
+    <select id="page" title="Which page to edit">
+      <option value="graduation">/graduation</option>
+      <option value="english">/english</option>
+      <option value="fireplace">/fireplace</option>
+      <option value="lab">/lab</option>
+    </select>
+    <button id="reload" title="Throw away changes and load the live version">↻ Reload live</button>
+    <span class="dot-unsaved" title="You have unsaved changes"></span>
+    <div class="spacer"></div>
+    <span id="status"></span>
+    <button id="publish" class="btn-publish">⬆ Publish</button>
+  </header>
+
+  <div class="tabs">
+    <button id="tabCode" class="active">Code</button>
+    <button id="tabPrev">Preview</button>
+  </div>
+
+  <main>
+    <div class="pane code show" id="paneCode">
+      <h2>Code — edit here</h2>
+      <textarea id="code" spellcheck="false" placeholder="Loading…"></textarea>
+    </div>
+    <div class="pane" id="panePrev">
+      <h2>Live preview</h2>
+      <iframe id="preview" sandbox="allow-scripts allow-same-origin"></iframe>
+    </div>
+  </main>
+
+<script>
+(function(){
+  var $ = function(s){ return document.querySelector(s); };
+  var code = $('#code'), preview = $('#preview'), statusEl = $('#status');
+  var pageSel = $('#page'), gate = $('#gate'), pwInput = $('#pw');
+  var password = '';
+  var lastLoaded = '';        // content as last loaded/published (to detect "dirty")
+  var prevTimer = null;
+
+  function setStatus(msg, kind){
+    statusEl.textContent = msg || '';
+    statusEl.className = kind || '';
+  }
+  function markDirty(){
+    document.body.classList.toggle('dirty', code.value !== lastLoaded);
+  }
+  function renderPreview(){
+    // srcdoc gives the iframe the exact HTML, so it renders like the real page.
+    preview.srcdoc = code.value;
+  }
+
+  // Read a response as JSON, but never crash on a non-JSON error page.
+  function safeJson(r){
+    return r.text().then(function(t){
+      var j;
+      try { j = JSON.parse(t); }
+      catch(e){ j = { error: 'Server didn’t respond properly (' + r.status + '). Is /api/edit deployed on Vercel?' }; }
+      return { ok:r.ok, status:r.status, j:j };
+    });
+  }
+
+  // ---- load a page from the server ----
+  function loadPage(){
+    var slug = pageSel.value;
+    setStatus('Loading /' + slug + '…', 'work');
+    code.value = '';
+    fetch('/api/edit?page=' + encodeURIComponent(slug))
+      .then(safeJson)
+      .then(function(res){
+        if(!res.ok){ throw new Error(res.j.error || 'Load failed'); }
+        code.value = res.j.content;
+        lastLoaded = res.j.content;
+        renderPreview();
+        markDirty();
+        setStatus('Loaded /' + slug + '.', 'ok');
+      })
+      .catch(function(e){ setStatus(e.message, 'err'); });
+  }
+
+  // ---- publish ----
+  function publish(){
+    var slug = pageSel.value;
+    var btn = $('#publish');
+    btn.disabled = true;
+    setStatus('Publishing /' + slug + '…', 'work');
+    fetch('/api/edit?page=' + encodeURIComponent(slug), {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ password: password, content: code.value })
+    })
+      .then(safeJson)
+      .then(function(res){
+        btn.disabled = false;
+        if(!res.ok){
+          if(res.status === 401){
+            // password no longer valid -> ask again
+            try{ localStorage.removeItem('edit_pw'); }catch(e){}
+            gate.classList.remove('hide');
+          }
+          throw new Error(res.j.error || 'Publish failed');
+        }
+        lastLoaded = code.value;
+        markDirty();
+        setStatus('✓ Published! Live at oprek.net/' + slug + ' in ~1 min.', 'ok');
+      })
+      .catch(function(e){ btn.disabled = false; setStatus(e.message, 'err'); });
+  }
+
+  // ---- events ----
+  code.addEventListener('input', function(){
+    markDirty();
+    clearTimeout(prevTimer);
+    prevTimer = setTimeout(renderPreview, 400); // debounce live preview
+  });
+
+  // Tab key inserts two spaces instead of leaving the textarea.
+  code.addEventListener('keydown', function(e){
+    if(e.key === 'Tab'){
+      e.preventDefault();
+      var s = code.selectionStart, en = code.selectionEnd;
+      code.value = code.value.slice(0,s) + '  ' + code.value.slice(en);
+      code.selectionStart = code.selectionEnd = s + 2;
+    }
+  });
+
+  pageSel.addEventListener('change', function(){
+    if(document.body.classList.contains('dirty') &&
+       !confirm('Switch page and lose your unsaved changes?')){
+      return; // (selection already changed; reload current instead)
+    }
+    loadPage();
+  });
+
+  $('#reload').addEventListener('click', function(){
+    if(document.body.classList.contains('dirty') &&
+       !confirm('Reload the live version and lose your unsaved changes?')) return;
+    loadPage();
+  });
+
+  $('#publish').addEventListener('click', publish);
+
+  // Warn before leaving with unsaved changes.
+  window.addEventListener('beforeunload', function(e){
+    if(document.body.classList.contains('dirty')){ e.preventDefault(); e.returnValue=''; }
+  });
+
+  // Mobile Code/Preview tabs
+  $('#tabCode').addEventListener('click', function(){
+    $('#paneCode').classList.add('show'); $('#panePrev').classList.remove('show');
+    this.classList.add('active'); $('#tabPrev').classList.remove('active');
+  });
+  $('#tabPrev').addEventListener('click', function(){
+    renderPreview();
+    $('#panePrev').classList.add('show'); $('#paneCode').classList.remove('show');
+    this.classList.add('active'); $('#tabCode').classList.remove('active');
+  });
+
+  // ---- password gate ----
+  function unlock(pw){
+    password = pw;
+    try{ localStorage.setItem('edit_pw', pw); }catch(e){}
+    gate.classList.add('hide');
+    loadPage();
+  }
+  $('#enter').addEventListener('click', function(){ if(pwInput.value) unlock(pwInput.value); });
+  pwInput.addEventListener('keydown', function(e){ if(e.key==='Enter' && pwInput.value) unlock(pwInput.value); });
+
+  var saved = '';
+  try{ saved = localStorage.getItem('edit_pw') || ''; }catch(e){}
+  if(saved){ unlock(saved); } else { pwInput.focus(); }
+})();
+</script>
+</body>
+</html>
