@@ -9,6 +9,9 @@
 <link rel="manifest" href="/escape/manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="/escape/icon.svg">
 <link rel="apple-touch-icon" href="/escape/icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Escape">
@@ -212,6 +215,119 @@ textarea{resize:vertical;min-height:64px}
   .bottomnav{display:none}
   .statgrid{grid-template-columns:repeat(4,1fr)}
 }
+
+/* =====================================================================
+   V2 — "Pre-dawn Ascent" visual system (overrides the base above)
+   ===================================================================== */
+:root{
+  --bg:#070a14; --bg2:#0b1020; --panel:#0e1426; --panel2:#111a30;
+  --line:rgba(150,172,224,.14); --line2:rgba(150,172,224,.26);
+  --ink:#eaf0fb; --muted:#9db0d6; --faint:#67789f;
+  --gold:#f6bf52; --gold-soft:#ffd98a; --teal:#5eead4; --teal-deep:#22d3bf;
+  --violet:#a78bfa;
+  --radius:20px; --radius-sm:13px;
+  --shadow:0 24px 60px -28px rgba(0,0,0,.85), 0 2px 0 rgba(255,255,255,.02) inset;
+  --font-display:'Fraunces',Georgia,'Times New Roman',serif;
+  --font-body:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+}
+body{
+  font-family:var(--font-body); letter-spacing:-0.01em;
+  background:#070a14;
+  background-image:
+    radial-gradient(120% 80% at 50% 120%, rgba(246,191,82,.16), transparent 60%),
+    radial-gradient(90% 60% at 85% 0%, rgba(167,139,250,.10), transparent 55%),
+    linear-gradient(180deg,#070a14 0%,#0a1020 42%,#16142e 74%,#291a33 100%);
+}
+body::after{ bottom:-50vh; height:88vh;
+  background:radial-gradient(closest-side, rgba(246,191,82,.26), rgba(246,191,82,.07) 46%, transparent 72%); }
+/* fine grain so flat panels read as material, not paint */
+.app::before{ content:""; position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.035;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/></filter><rect width='140' height='140' filter='url(%23n)'/></svg>"); }
+h1,h2,h3{ font-family:var(--font-display); letter-spacing:-0.015em; }
+.card h2{ font-size:22px; font-weight:600; }
+.brand b, .brand small{ font-family:var(--font-display); }
+
+/* glass cards with a hairline gradient edge */
+.card{
+  background:linear-gradient(180deg, rgba(20,28,52,.86), rgba(13,19,38,.92));
+  border:1px solid transparent;
+  border-radius:var(--radius);
+  background-origin:border-box;
+  box-shadow:var(--shadow);
+  position:relative; backdrop-filter:blur(8px);
+}
+.card::after{ content:""; position:absolute; inset:0; border-radius:inherit; padding:1px; pointer-events:none;
+  background:linear-gradient(180deg, rgba(160,184,236,.30), rgba(160,184,236,.04) 38%, transparent 70%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor; mask-composite:exclude; }
+.item{ background:rgba(255,255,255,.022); transition:border-color .2s, transform .12s, background .2s; }
+.item:hover{ background:rgba(255,255,255,.04); border-color:var(--line2); }
+
+/* buttons: depth + glow */
+.btn{ border-radius:13px; letter-spacing:-0.01em; box-shadow:0 1px 0 rgba(255,255,255,.04) inset, 0 8px 20px -14px rgba(0,0,0,.9); }
+.btn.primary{ box-shadow:0 8px 24px -10px rgba(246,191,82,.55), 0 1px 0 rgba(255,255,255,.4) inset; }
+.btn.teal{ box-shadow:0 8px 24px -10px rgba(34,211,191,.5), 0 1px 0 rgba(255,255,255,.4) inset; }
+.btn:hover{ filter:brightness(1.08); transform:translateY(-1px); }
+.btn:active{ transform:translateY(0); }
+
+/* hero: living aura + sweeping light */
+.hero{ border:1px solid rgba(246,191,82,.28); overflow:hidden; }
+.hero::before{ content:""; position:absolute; width:260px; height:260px; right:-60px; top:-90px; border-radius:50%;
+  background:radial-gradient(closest-side, rgba(246,191,82,.30), transparent 70%); filter:blur(6px); animation:auraFloat 9s ease-in-out infinite; }
+@keyframes auraFloat{ 0%,100%{ transform:translateY(0) scale(1); opacity:.85 } 50%{ transform:translateY(14px) scale(1.08); opacity:1 } }
+.hero .label{ color:var(--gold); font-weight:600; }
+.hero .action{ font-family:var(--font-display); font-weight:600; letter-spacing:-0.02em; }
+
+/* progress: gradient + shimmer + grow-in */
+.bar{ height:11px; background:rgba(255,255,255,.06); box-shadow:0 1px 0 rgba(255,255,255,.03) inset; }
+.bar > i{ position:relative; transform-origin:left center; animation:growIn .7s cubic-bezier(.2,.8,.2,1) both; }
+.bar > i::after{ content:""; position:absolute; inset:0; border-radius:inherit; opacity:.5;
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); transform:translateX(-100%); animation:shimmer 2.4s ease-in-out infinite; }
+@keyframes growIn{ from{ transform:scaleX(.02) } to{ transform:scaleX(1) } }
+@keyframes shimmer{ 0%{ transform:translateX(-100%) } 60%,100%{ transform:translateX(100%) } }
+
+/* segmented control + chips + badges polish */
+.seg{ background:rgba(8,12,24,.7); }
+.seg button{ transition:.18s; }
+.seg button.on{ box-shadow:0 6px 18px -8px rgba(246,191,82,.6); }
+.seg.teal button.on{ box-shadow:0 6px 18px -8px rgba(34,211,191,.55); }
+.badge{ backdrop-filter:blur(4px); }
+.chip{ transition:.15s; } .chip:hover{ border-color:var(--line2); }
+
+/* streak chip alive */
+.streak-chip{ box-shadow:0 0 0 1px rgba(246,191,82,.12), 0 8px 22px -14px rgba(246,191,82,.6); }
+.streak-chip:hover{ filter:brightness(1.08); }
+
+/* NAV — SVG icons + active indicator */
+.ic svg{ width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.bottomnav button .ic svg{ width:22px; height:22px; }
+.bottomnav button{ position:relative; transition:color .18s; }
+.bottomnav button.on::before{ content:""; position:absolute; top:0; left:50%; transform:translateX(-50%); width:26px; height:3px; border-radius:0 0 4px 4px; background:linear-gradient(90deg,var(--gold),var(--gold-soft)); box-shadow:0 0 10px rgba(246,191,82,.7); }
+.sidebar nav button{ position:relative; transition:.16s; }
+.sidebar nav button.on{ background:linear-gradient(90deg, rgba(246,191,82,.16), rgba(246,191,82,.04)); }
+.sidebar nav button.on::before{ content:""; position:absolute; left:0; top:8px; bottom:8px; width:3px; border-radius:3px; background:linear-gradient(180deg,var(--gold),var(--gold-soft)); }
+.sidebar .brand img{ width:34px; height:34px; }
+
+/* inputs */
+input,select,textarea{ background:rgba(8,12,24,.7); transition:border-color .15s, box-shadow .15s; }
+input:focus,select:focus,textarea:focus{ box-shadow:0 0 0 3px rgba(34,211,191,.16); }
+
+/* wage chart richer */
+.wage .track{ height:20px; border-radius:7px; background:rgba(255,255,255,.05); }
+.wage .track > i{ background:linear-gradient(90deg,var(--gold),var(--gold-soft)); box-shadow:0 0 14px -2px rgba(246,191,82,.5); animation:growIn .7s cubic-bezier(.2,.8,.2,1) both; transform-origin:left; }
+
+/* sheet/modal/toast */
+.sheet,.modal{ background:linear-gradient(180deg, rgba(18,25,46,.98), rgba(11,16,32,.99)); box-shadow:0 -20px 60px -20px rgba(0,0,0,.8); }
+.toast{ background:linear-gradient(180deg,#13203c,#0d1730); box-shadow:0 20px 50px -20px rgba(0,0,0,.9); }
+.note{ backdrop-filter:blur(6px); }
+
+/* view enter transition */
+#view.fade{ animation:viewIn .34s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes viewIn{ from{ opacity:0; transform:translateY(8px) } to{ opacity:1; transform:none } }
+
+/* tidy desktop spacing */
+@media(min-width:900px){ .card{ padding:18px 20px; } .main{ padding-top:30px; } }
+@media(prefers-reduced-motion:reduce){ *{ animation:none!important; transition:none!important } }
 </style>
 </head>
 <body>
@@ -671,6 +787,20 @@ async function fetchRates(){
 }
 
 /* ================================ RENDER ================================= */
+const ICONS={
+  home:'<svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9h14v-9"/><path d="M9.5 19v-5h5v5"/></svg>',
+  documents:'<svg viewBox="0 0 24 24"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H10l2 2.5h6.5A1.5 1.5 0 0 1 20 8v10.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5z"/></svg>',
+  phase1:'<svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M6.5 9.5h.01M17.5 14.5h.01"/></svg>',
+  phase2:'<svg viewBox="0 0 24 24"><path d="M4 20h16"/><path d="M5 20V10l7-5 7 5v10"/><path d="M9.5 20v-5h5v5"/></svg>',
+  runway:'<svg viewBox="0 0 24 24"><path d="M4 19V5"/><path d="M4 19h16"/><path d="M7 15l4-4 3 3 5-6"/></svg>',
+  german:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.3 2.6 14.7 0 17M12 3.5c-2.6 2.3-2.6 14.7 0 17"/></svg>',
+  donelog:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 12.3l2.3 2.3 4.7-4.9"/></svg>',
+  why:'<svg viewBox="0 0 24 24"><path d="M12 21c5-3.2 8-6.5 8-10.4A4.6 4.6 0 0 0 12 7a4.6 4.6 0 0 0-8 3.6C4 14.5 7 17.8 12 21z"/></svg>',
+  resources:'<svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7.3l3-3A4 4 0 0 0 13 5.7l-1.5 1.4"/><path d="M14 10a4 4 0 0 0-5.7-.3l-3 3A4 4 0 0 0 11 18.3l1.5-1.4"/></svg>',
+  settings:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v2.2M12 18.8V21M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M3 12h2.2M18.8 12H21M5.2 18.8l1.6-1.6M17.2 6.8l1.6-1.6"/></svg>',
+  more:'<svg viewBox="0 0 24 24"><circle cx="6" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="18" cy="12" r="1.4"/></svg>',
+};
+function icon(id){ return ICONS[id]||''; }
 const NAV=[
   { id:'home', label:'Home', ic:'🏠', primary:true },
   { id:'documents', label:'Documents', ic:'📁', primary:true },
@@ -694,17 +824,18 @@ function render(){
   $('#topTitle').textContent = (NAV.find(n=>n.id===currentView)||{}).label || 'Escape';
   // sidenav
   $('#sidenav').innerHTML = navItems().map(n=>
-    '<button data-action="nav" data-view="'+n.id+'" class="'+(currentView===n.id?'on':'')+'"><span class="ic">'+n.ic+'</span>'+n.label+'</button>'
+    '<button data-action="nav" data-view="'+n.id+'" class="'+(currentView===n.id?'on':'')+'"><span class="ic">'+icon(n.id)+'</span>'+n.label+'</button>'
   ).join('');
   // bottom nav: primary + More
   const prim=NAV.filter(n=>n.primary);
   $('#bottomnav').innerHTML = prim.map(n=>
-    '<button data-action="nav" data-view="'+n.id+'" class="'+(currentView===n.id?'on':'')+'"><span class="ic">'+n.ic+'</span>'+n.label+'</button>'
-  ).join('') + '<button data-action="more" class="'+(prim.some(p=>p.id===currentView)?'':'on')+'"><span class="ic">⋯</span>More</button>';
+    '<button data-action="nav" data-view="'+n.id+'" class="'+(currentView===n.id?'on':'')+'"><span class="ic">'+icon(n.id)+'</span>'+n.label+'</button>'
+  ).join('') + '<button data-action="more" class="'+(prim.some(p=>p.id===currentView)?'':'on')+'"><span class="ic">'+icon('more')+'</span>More</button>';
   // view
   const fn={ home:viewHome, documents:viewDocuments, phase1:viewPhase1, phase2:viewPhase2, runway:viewRunway,
     german:viewGerman, donelog:viewDoneLog, why:viewWhy, resources:viewResources, settings:viewSettings }[currentView]||viewHome;
-  $('#view').innerHTML=fn();
+  const vw=$('#view'); vw.innerHTML=fn();
+  vw.classList.remove('fade'); void vw.offsetWidth; vw.classList.add('fade');
 }
 
 /* progress helpers */
@@ -1009,6 +1140,14 @@ function viewSettings(){
     +'<button class="btn teal sm" data-action="connectDrive" '+(s.googleClientId?'':'disabled')+'>Connect Drive</button></div>'
     + (s.googleClientId?'':'<div class="note mt">Add a Client ID above (Option B) to enable uploads. Until then, paste Drive links on each document.</div>')+'</div>';
 
+  // reminders (in-app local notification)
+  const notifOn = s.notifEnabled && (typeof Notification!=='undefined') && Notification.permission==='granted';
+  html+='<div class="card"><h3>🔔 Daily reminder</h3><div class="sub">A gentle nudge on this device if you haven’t checked in by your time. Works best with the app installed / open.</div>'
+    +'<div class="grid2 mt"><div class="field"><label>Remind me at</label><input type="time" data-action="setReminderTime" value="'+esc(s.reminderTime||'05:00')+'"></div>'
+    +'<div class="field"><label></label><button class="btn '+(notifOn?'ghost':'teal')+' block" style="margin-top:24px" data-action="enableNotif">'+(notifOn?'✓ Reminders on':'Turn on reminders')+'</button></div></div>'
+    + (notifOn?'<button class="btn ghost sm mt-s" data-action="testNotif">Send a test now</button>':'')
+    +'</div>';
+
   // backup
   html+='<div class="card"><h3 class="mb">Backup & data</h3><div class="btn-row">'
     +'<button class="btn ghost sm" data-action="exportJson">⬇ Export JSON</button>'
@@ -1088,6 +1227,10 @@ document.addEventListener('click', async (e)=>{
     case 'pullCloud': toast('Pulling…'); try{ const r=await pullCloud(); toast(r==='pulled'?'Pulled latest ✓':'Local is already newest'); }catch(err){ toast('Pull failed','err'); } break;
     case 'pushCloudNow': toast('Pushing…'); try{ await pushCloud(); toast('Pushed ✓','ok'); }catch(err){ toast('Push failed','err'); } break;
 
+    // settings — reminders
+    case 'enableNotif': await enableNotifications(); break;
+    case 'testNotif': fireNotification('🌅 Test reminder','If you can see this, daily nudges will work on this device.'); toast('Sent — check your notifications'); break;
+
     // settings — backup
     case 'exportJson': exportJson(); break;
     case 'importJson': importJson(); break;
@@ -1119,6 +1262,7 @@ document.addEventListener('change', (e)=>{
     case 'setAnchor': setSilent(s=>{ s.streak.anchorLabel=v; }); break;
     case 'setClientId': setSilent(s=>{ s.settings.googleClientId=v.trim(); }); render(); break;
     case 'toggleDailyReminder': mutate(s=>{ s.settings.dailyReminder=t.checked; }); break;
+    case 'setReminderTime': setSilent(s=>{ s.settings.reminderTime=v; }); maybeNotify(); break;
   }
 });
 
@@ -1128,7 +1272,7 @@ function toast(msg,kind){ const el=$('#toast'); el.textContent=msg; el.className
 function openMore(){
   const back=$('#sheetBack'), sh=$('#sheet');
   const rest=NAV.filter(n=>!n.primary && (n.id==='german'?germanVisible():true));
-  sh.innerHTML='<h3>More</h3><div class="navlist">'+rest.map(n=>'<button data-action="nav" data-view="'+n.id+'"><span style="font-size:18px">'+n.ic+'</span> '+n.label+'</button>').join('')+'</div>';
+  sh.innerHTML='<h3>More</h3><div class="navlist">'+rest.map(n=>'<button data-action="nav" data-view="'+n.id+'"><span class="ic" style="display:inline-flex">'+icon(n.id)+'</span> '+n.label+'</button>').join('')+'</div>';
   back.classList.add('show');
 }
 function closeSheet(){ $('#sheetBack').classList.remove('show'); }
@@ -1176,6 +1320,44 @@ function importJson(){
 }
 
 /* ================================ INIT ================================== */
+/* ----------------------------- notifications ----------------------------- */
+function notifSupported(){ return typeof Notification!=='undefined'; }
+async function enableNotifications(){
+  if(!notifSupported()){ toast('Notifications aren’t supported on this browser','err'); return; }
+  let perm=Notification.permission;
+  if(perm!=='granted') perm=await Notification.requestPermission();
+  if(perm==='granted'){ setSilent(s=>{ s.settings.notifEnabled=true; }); render(); toast('Reminders on ✓ — best while the app is open or installed','ok'); maybeNotify(); }
+  else { setSilent(s=>{ s.settings.notifEnabled=false; }); render(); toast('Permission blocked — enable it in your browser site settings','err'); }
+}
+function fireNotification(title, body){
+  try{
+    const reg = navigator.serviceWorker && navigator.serviceWorker.ready;
+    const opts={ body, icon:'/escape/icon.svg', badge:'/escape/icon.svg', tag:'escape-daily', renotify:true };
+    if(reg){ reg.then(r=>{ if(r&&r.showNotification) r.showNotification(title,opts); else new Notification(title,opts); }).catch(()=>{ new Notification(title,opts); }); }
+    else new Notification(title,opts);
+  }catch(e){}
+}
+function maybeNotify(){
+  const s=state.settings;
+  if(!s.notifEnabled || !notifSupported() || Notification.permission!=='granted') return;
+  if(s.dailyReminder===false) return;
+  if(state.streak.lastCheckIn===todayISO()) return;            // already showed up today
+  const t=(s.reminderTime||'05:00'); const now=new Date();
+  const nowMin=now.getHours()*60+now.getMinutes();
+  const [hh,mm]=t.split(':').map(Number); const tgt=(hh||0)*60+(mm||0);
+  if(nowMin<tgt) return;                                        // not time yet today
+  if(s._notifiedOn===todayISO()) return;                        // once per day
+  setSilent(x=>{ x.settings._notifiedOn=todayISO(); });
+  fireNotification('🌅 '+(state.streak.anchorLabel||'Daily')+' — open your Escape plan','One tiny step today. Check in, do one thing, log it.');
+}
+let _notifTimer=null;
+function startReminderLoop(){
+  clearInterval(_notifTimer);
+  _notifTimer=setInterval(maybeNotify, 60000);
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden) maybeNotify(); });
+  window.addEventListener('focus', maybeNotify);
+}
+
 function init(){
   loadLocal();
   render();
@@ -1183,6 +1365,8 @@ function init(){
   if('serviceWorker' in navigator){ navigator.serviceWorker.register('/escape/sw.js').catch(()=>{}); }
   // background cloud pull if enabled
   if(state.settings.cloudSync){ pullCloud().catch(()=>{}); }
+  // daily reminder (best-effort, while app is open/installed)
+  startReminderLoop(); maybeNotify();
 }
 window.addEventListener('keydown',(e)=>{ if(e.key==='Escape'){ closeSheet(); closeModal(); } });
 init();
