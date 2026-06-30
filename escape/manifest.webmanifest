@@ -1,0 +1,16 @@
+{
+  "name": "Escape Pipeline",
+  "short_name": "Escape",
+  "description": "Your relocation plan, one next action at a time.",
+  "start_url": "/escape",
+  "scope": "/escape/",
+  "id": "/escape",
+  "display": "standalone",
+  "background_color": "#0a0e1a",
+  "theme_color": "#0a0e1a",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "icon.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "any" },
+    { "src": "icon-maskable.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "maskable" }
+  ]
+}

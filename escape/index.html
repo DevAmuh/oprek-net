@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a0e1a">
+<meta name="description" content="Escape Pipeline — your relocation plan, one next action at a time.">
+<title>Escape Pipeline</title>
+<link rel="manifest" href="/escape/manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="/escape/icon.svg">
+<link rel="apple-touch-icon" href="/escape/icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Escape">
+<style>
+:root{
+  --bg:#0a0e1a; --bg2:#0d1426; --panel:#121a30; --panel2:#16203a;
+  --line:rgba(148,168,214,.16); --line2:rgba(148,168,214,.28);
+  --ink:#eef2fb; --muted:#9fb0d4; --faint:#6f80a6;
+  --gold:#f5b942; --gold-soft:#ffd98a; --teal:#5eead4; --teal-deep:#2dd4bf;
+  --green:#4ade80; --red:#fb7185; --blue:#7aa2ff;
+  --radius:18px; --radius-sm:12px;
+  --shadow:0 18px 50px -24px rgba(0,0,0,.8);
+  --grad-dawn:linear-gradient(180deg,#0a0e1a 0%,#0e1730 46%,#241a37 78%,#3a2746 100%);
+  --safe-b:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  color:var(--ink); background:var(--bg);
+  background-image:var(--grad-dawn);
+  background-attachment:fixed; min-height:100dvh;
+  -webkit-font-smoothing:antialiased; line-height:1.5;
+}
+body::before{ /* faint stars */
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.5;
+  background-image:
+    radial-gradient(1px 1px at 20% 18%, #cdd7ee 50%, transparent),
+    radial-gradient(1px 1px at 70% 12%, #cdd7ee 50%, transparent),
+    radial-gradient(1px 1px at 85% 30%, #aebbe0 50%, transparent),
+    radial-gradient(1px 1px at 35% 8%,  #aebbe0 50%, transparent),
+    radial-gradient(1px 1px at 12% 40%, #cdd7ee 50%, transparent);
+}
+body::after{ /* dawn glow at the horizon */
+  content:""; position:fixed; left:50%; bottom:-44vh; transform:translateX(-50%);
+  width:140vw; height:80vh; border-radius:50%; pointer-events:none; z-index:0;
+  background:radial-gradient(closest-side, rgba(245,185,66,.20), rgba(245,185,66,.06) 45%, transparent 72%);
+}
+h1,h2,h3{font-family:Georgia,"Times New Roman",serif;font-weight:600;letter-spacing:.2px}
+a{color:var(--teal);text-decoration:none}
+a:hover{text-decoration:underline}
+button{font:inherit;cursor:pointer;color:inherit;border:none;background:none}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:10px 12px;width:100%}
+input:focus,select,textarea:focus{outline:none;border-color:var(--teal-deep)}
+select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' fill='none' stroke='%239fb0d4' stroke-width='1.5'/></svg>");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+textarea{resize:vertical;min-height:64px}
+
+/* ---------- Layout ---------- */
+.app{position:relative;z-index:1;display:grid;grid-template-columns:1fr;min-height:100dvh}
+.sidebar{display:none}
+.main{padding:14px 14px calc(96px + var(--safe-b));max-width:760px;margin:0 auto;width:100%}
+.topbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:10px;
+  padding:12px 14px;margin:-14px -14px 12px;backdrop-filter:blur(12px);
+  background:linear-gradient(180deg,rgba(10,14,26,.92),rgba(10,14,26,.55));border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;font-family:Georgia,serif;font-size:18px}
+.brand img{width:28px;height:28px;border-radius:8px}
+.brand b{font-weight:600}
+.brand small{color:var(--faint);font-family:inherit;display:block;font-size:11px;letter-spacing:.18em;text-transform:uppercase}
+.streak-chip{margin-left:auto;display:flex;align-items:center;gap:6px;background:rgba(245,185,66,.12);
+  border:1px solid rgba(245,185,66,.3);color:var(--gold-soft);padding:6px 11px;border-radius:999px;font-size:13px;font-weight:600;white-space:nowrap}
+
+/* ---------- Cards ---------- */
+.card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);
+  border-radius:var(--radius);padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
+.card h2{font-size:19px;margin-bottom:2px}
+.card h3{font-size:15px}
+.sub{color:var(--muted);font-size:13.5px}
+.row{display:flex;gap:10px;align-items:center}
+.between{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.wrap{flex-wrap:wrap}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.muted{color:var(--muted)} .faint{color:var(--faint)} .small{font-size:12.5px}
+.mt{margin-top:12px}.mt-s{margin-top:8px}.mb{margin-bottom:12px}
+.divider{height:1px;background:var(--line);margin:14px -16px}
+
+/* ---------- Buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;padding:11px 16px;
+  font-weight:600;font-size:14px;border:1px solid var(--line2);background:var(--panel2);transition:transform .06s,filter .15s}
+.btn:active{transform:translateY(1px)}
+.btn:hover{filter:brightness(1.12)}
+.btn.primary{background:linear-gradient(180deg,var(--gold-soft),var(--gold));color:#2a1c05;border:none}
+.btn.teal{background:linear-gradient(180deg,#7df0df,var(--teal-deep));color:#06322c;border:none}
+.btn.ghost{background:transparent}
+.btn.sm{padding:7px 11px;font-size:12.5px;border-radius:10px}
+.btn.block{width:100%}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ---------- Hero next action ---------- */
+.hero{background:
+   radial-gradient(120% 140% at 0% 0%, rgba(245,185,66,.18), transparent 55%),
+   linear-gradient(180deg,var(--panel),var(--panel2));
+  border:1px solid rgba(245,185,66,.34);position:relative;overflow:hidden}
+.hero .label{font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--gold)}
+.hero .action{font-family:Georgia,serif;font-size:clamp(22px,6vw,30px);line-height:1.18;margin:8px 0 4px}
+.hero .cta{margin-top:14px;display:flex;gap:8px;flex-wrap:wrap}
+.edit-inline{display:none;margin-top:10px}
+
+/* ---------- Progress ---------- */
+.bar{height:10px;border-radius:999px;background:rgba(255,255,255,.07);overflow:hidden}
+.bar > i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--teal-deep),var(--teal));transition:width .5s ease}
+.bar.gold > i{background:linear-gradient(90deg,var(--gold),var(--gold-soft))}
+.stat{display:flex;flex-direction:column;gap:4px}
+.stat .v{font-size:22px;font-weight:700;font-family:Georgia,serif}
+.statgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+
+/* ---------- Badges / chips ---------- */
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:999px;border:1px solid var(--line2)}
+.badge.crit{background:rgba(251,113,133,.14);border-color:rgba(251,113,133,.4);color:#ffb3c0}
+.badge.warn{background:rgba(245,185,66,.14);border-color:rgba(245,185,66,.4);color:var(--gold-soft)}
+.badge.ok{background:rgba(74,222,128,.14);border-color:rgba(74,222,128,.4);color:#a7f3c6}
+.badge.dot{padding-left:7px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:13px}
+.chip button{color:var(--faint);font-size:15px;line-height:1}
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.s-not{background:var(--faint)} .s-prog{background:var(--gold)} .s-done{background:var(--green)}
+
+/* item list */
+.item{border:1px solid var(--line);border-radius:var(--radius-sm);padding:12px;margin-top:10px;background:rgba(255,255,255,.015)}
+.item.crit{border-color:rgba(251,113,133,.32)}
+.item .head{display:flex;align-items:center;gap:9px;justify-content:space-between}
+.item .title{font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.detail{margin-top:10px;display:none;flex-direction:column;gap:10px}
+.detail.open{display:flex}
+.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
+.expander{color:var(--faint);font-size:18px;transition:transform .2s}
+.expander.open{transform:rotate(180deg)}
+
+/* comparison table */
+.cmp{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
+.cmp th,.cmp td{border:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}
+.cmp th{color:var(--muted);font-weight:600;background:rgba(255,255,255,.02)}
+.cmp .you{outline:2px solid var(--teal-deep);outline-offset:-2px}
+
+/* decision toggle */
+.seg{display:flex;gap:6px;background:var(--bg2);padding:5px;border-radius:14px;border:1px solid var(--line)}
+.seg button{flex:1;padding:10px;border-radius:10px;font-weight:600;font-size:13.5px;color:var(--muted)}
+.seg button.on{background:linear-gradient(180deg,var(--gold-soft),var(--gold));color:#2a1c05}
+.seg.teal button.on{background:linear-gradient(180deg,#7df0df,var(--teal-deep));color:#06322c}
+
+/* wage bars */
+.wage{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.wage .w{display:grid;grid-template-columns:120px 1fr auto;gap:10px;align-items:center;font-size:13px}
+.wage .track{height:18px;border-radius:6px;background:rgba(255,255,255,.06);overflow:hidden}
+.wage .track > i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-soft))}
+
+/* nav */
+.bottomnav{position:fixed;left:0;right:0;bottom:0;z-index:40;display:flex;
+  padding:6px 6px calc(6px + var(--safe-b));gap:2px;
+  background:linear-gradient(0deg,rgba(8,11,21,.98),rgba(8,11,21,.86));
+  backdrop-filter:blur(12px);border-top:1px solid var(--line)}
+.bottomnav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:7px 2px;border-radius:12px;color:var(--faint);font-size:10.5px;font-weight:600}
+.bottomnav button .ic{font-size:19px;line-height:1}
+.bottomnav button.on{color:var(--gold-soft)}
+.bottomnav button.on .ic{filter:drop-shadow(0 0 8px rgba(245,185,66,.5))}
+
+/* sheet / toast / modal */
+.sheet-back,.modal-back{position:fixed;inset:0;z-index:60;background:rgba(4,7,15,.6);backdrop-filter:blur(3px);
+  display:none;align-items:flex-end;justify-content:center}
+.sheet-back.show,.modal-back.show{display:flex}
+.modal-back{align-items:center;padding:18px}
+.sheet{width:100%;max-width:520px;background:var(--panel);border:1px solid var(--line);
+  border-radius:20px 20px 0 0;padding:14px 14px calc(18px + var(--safe-b));max-height:80dvh;overflow:auto}
+.modal{width:100%;max-width:480px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;max-height:84dvh;overflow:auto}
+.sheet h3{margin-bottom:10px}
+.sheet .navlist button{display:flex;align-items:center;gap:12px;width:100%;padding:13px;border-radius:12px;font-size:15px;color:var(--ink)}
+.sheet .navlist button:hover{background:var(--bg2)}
+.toast{position:fixed;left:50%;bottom:calc(86px + var(--safe-b));transform:translateX(-50%) translateY(20px);
+  z-index:80;background:#0f1830;border:1px solid var(--line2);color:var(--ink);padding:11px 16px;border-radius:12px;
+  font-size:13.5px;box-shadow:var(--shadow);opacity:0;transition:.25s;pointer-events:none;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.err{border-color:var(--red);color:#ffd0d8}
+.toast.ok{border-color:rgba(74,222,128,.5)}
+
+.note{background:rgba(122,162,255,.1);border:1px solid rgba(122,162,255,.3);border-radius:12px;padding:11px 13px;font-size:13px;color:#cdd9ff}
+.note.gold{background:rgba(245,185,66,.1);border-color:rgba(245,185,66,.3);color:var(--gold-soft)}
+.kbd{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--bg2);border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:12px}
+.steps{counter-reset:s;list-style:none;display:flex;flex-direction:column;gap:9px;margin-top:8px}
+.steps li{position:relative;padding-left:30px;font-size:13.5px;color:var(--muted)}
+.steps li::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:-1px;width:21px;height:21px;
+  border-radius:50%;background:var(--bg2);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--ink);font-weight:700}
+.copywrap{display:flex;gap:6px;align-items:stretch}
+.copywrap input{font-family:ui-monospace,monospace;font-size:12px}
+.hide{display:none!important}
+.center{text-align:center}
+.empty{text-align:center;color:var(--faint);padding:22px 10px;font-size:13.5px}
+
+@media(min-width:900px){
+  .app{grid-template-columns:248px 1fr}
+  .sidebar{display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100dvh;
+    padding:18px 12px;border-right:1px solid var(--line);overflow:auto}
+  .sidebar .brand{padding:6px 8px 14px}
+  .sidebar nav button{display:flex;align-items:center;gap:12px;width:100%;padding:11px 12px;border-radius:12px;
+    color:var(--muted);font-size:14.5px;font-weight:600;text-align:left}
+  .sidebar nav button .ic{font-size:18px;width:22px;text-align:center}
+  .sidebar nav button.on{background:rgba(245,185,66,.12);color:var(--gold-soft)}
+  .sidebar nav button:hover{background:var(--bg2)}
+  .main{padding:22px 26px 40px;max-width:820px}
+  .topbar{display:none}
+  .bottomnav{display:none}
+  .statgrid{grid-template-columns:repeat(4,1fr)}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Desktop sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <img src="/escape/icon.svg" alt="">
+      <div><b>Escape Pipeline</b><small>Get out. One step.</small></div>
+    </div>
+    <nav id="sidenav"></nav>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="brand">
+        <img src="/escape/icon.svg" alt="">
+        <div><b id="topTitle">Escape</b></div>
+      </div>
+      <button class="streak-chip" data-action="nav" data-view="home" id="streakChip">🔥 0</button>
+    </div>
+    <div id="view"></div>
+  </main>
+</div>
+
+<!-- Mobile bottom nav -->
+<nav class="bottomnav" id="bottomnav"></nav>
+
+<!-- More sheet -->
+<div class="sheet-back" id="sheetBack" data-close="sheet">
+  <div class="sheet" id="sheet"></div>
+</div>
+
+<!-- Generic modal -->
+<div class="modal-back" id="modalBack" data-close="modal">
+  <div class="modal" id="modal"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+"use strict";
+/* ============================================================================
+   Escape Pipeline — single-file relocation tracker.
+   Data lives in localStorage (private, offline). Optional cloud sync to
+   Supabase powers multi-device + the live Google Calendar feed. Documents go
+   to Google Drive. Nothing about your calendar is hard-coded: the app CREATES
+   a dedicated calendar and only ever writes there.
+============================================================================ */
+
+const CFG = {
+  SUPA_URL: 'https://pvgsrurcxssjqxshqkli.supabase.co',
+  SUPA_KEY: 'sb_publishable_oDZbTs1Ssm92kTIqqzwqWQ_-31YHKOU',
+  CAL_NAME: '🛫 Escape Velocity',
+  CAL_DESC: 'Your relocation deadlines & daily nudge — from the Escape Pipeline.',
+  DRIVE_FOLDER: '🛫 Escape Pipeline — Documents',
+  SCOPES: 'https://www.googleapis.com/auth/calendar.app.created https://www.googleapis.com/auth/drive.file',
+  STORE_KEY: 'escapePipeline.v1',
+};
+CFG.ICS_BASE = CFG.SUPA_URL + '/functions/v1/escape-ics';
+
+/* ----------------------------- seed / defaults --------------------------- */
+function defaults(){
+  return {
+    v:1, _ts:0, _syncedTs:0,
+    profile:{ name:'Amuh', birthDate:'1999-10-15', baseCurrency:'USD' },
+    nextActionOverride:'',
+    streak:{ count:0, lastCheckIn:null, anchorLabel:'After Subuh' },
+    documents:[
+      { id:'passport', label:'Passport', status:'not_started', critical:true, expiry:'', notes:'', driveLink:'' },
+      { id:'ktp', label:'KTP', status:'not_started', expiry:'', notes:'', driveLink:'' },
+      { id:'kk', label:'Kartu Keluarga', status:'not_started', expiry:'', notes:'', driveLink:'' },
+      { id:'akta', label:'Akta Kelahiran', status:'not_started', expiry:'', notes:'', driveLink:'' },
+      { id:'ijazah', label:'Ijazah + Transkrip', status:'not_started', expiry:'', notes:'', driveLink:'' },
+      { id:'skck', label:'SKCK', status:'not_started', expiry:'', notes:'Valid ~6 months — get it close to when you need it.', driveLink:'' },
+      { id:'mcu', label:'MCU (Medical Check-Up)', status:'not_started', expiry:'', notes:'Validity is short — time it to the application.', driveLink:'' },
+    ],
+    phase1:[
+      { id:'taiwan_sp2t', label:'Taiwan SP2T', lead:true, status:'not_started', waveWindow:'',
+        nextStep:'Register on SISKOP2MI', link:'https://siskop2mi.bp2mi.go.id',
+        note:'No language, no fee · ~NT$29,500/mo + OT ≈ 6–8× Indonesian pay.' },
+      { id:'korea_eps', label:'Korea EPS', status:'not_started', waveWindow:'',
+        nextStep:'Study for EPS-TOPIK (~$28)', link:'https://www.eps.go.kr',
+        note:'Needs the EPS-TOPIK Korean test.' },
+      { id:'japan_ssw', label:'Japan SSW', status:'not_started', waveWindow:'',
+        nextStep:'JFT-Basic A2 + skills test', link:'https://www.jlpt.jp',
+        note:'Japanese A2 + a skills test required.' },
+    ],
+    phase2:{
+      decision:'undecided',
+      germany:{ germanLevel:'A0', germanStreak:0, germanLastDay:null,
+        ausbildungShortlist:['Care / Pflege','Hospitality','Logistics'], employers:[], lessons:[], sperrkontoNote:'' },
+      australia:{ savedAUD:0, sduwhvStatus:'not_started', whvNotes:'' },
+    },
+    runway:{
+      entries:[],
+      targets:[
+        { id:'t_passport', label:'Passport fee (~Rp 350k)', amount:350000, currency:'IDR' },
+        { id:'t_aud', label:'Australia buffer (AUD 5,000)', amount:5000, currency:'AUD' },
+        { id:'t_sperr', label:'Sperrkonto (~€11,904, often offset)', amount:11904, currency:'EUR' },
+      ],
+      rates:{ IDR:1, USD:17888, TWD:565, AUD:11800, EUR:19300 },
+      ratesUpdated:'',
+    },
+    doneLog:[],
+    why:{
+      reasons:[
+        'The rupiah keeps shrinking — my hours are worth more abroad.',
+        'I refuse to let inertia decide my whole life.',
+        'A passport in a strong-currency country = freedom for my future family.',
+        'Every tiny step compounds. I act, therefore I am not stuck.',
+      ],
+      wageComparison:[
+        { place:'Indonesia (teaching)', monthlyUSD:140 },
+        { place:'Taiwan (with OT)', monthlyUSD:1100 },
+        { place:'Australia (FT min)', monthlyUSD:2860 },
+      ],
+    },
+    resources:[
+      { label:'KP2MI / SISKOP2MI (labor programs)', url:'https://siskop2mi.bp2mi.go.id' },
+      { label:'Imigrasi / M-Paspor (passport)', url:'https://www.imigrasi.go.id' },
+      { label:'Deutsche Welle — “Nicos Weg” (free German)', url:'https://learngerman.dw.com' },
+      { label:'Make it in Germany (Ausbildung & visas)', url:'https://www.make-it-in-germany.com' },
+      { label:'Australia Work & Holiday (462)', url:'https://immi.homeaffairs.gov.au' },
+    ],
+    settings:{
+      reminderTime:'05:00', dailyReminder:true,
+      cloudSync:false, cloudToken:'',
+      googleClientId:'', calendarId:'', driveFolderId:'', eventMap:{},
+    },
+  };
+}
+
+/* --------------------------- state & persistence ------------------------- */
+let state = defaults();
+let currentView = 'home';
+
+function deepMerge(base, over){
+  if(Array.isArray(base)) return Array.isArray(over)&&over.length!==undefined?over:base;
+  if(base && typeof base==='object'){
+    const out={...base};
+    if(over && typeof over==='object'){
+      for(const k of Object.keys(over)){
+        out[k] = (k in base) ? deepMerge(base[k], over[k]) : over[k];
+      }
+    }
+    return out;
+  }
+  return over===undefined?base:over;
+}
+function loadLocal(){
+  try{
+    const raw=localStorage.getItem(CFG.STORE_KEY);
+    if(raw){ state=deepMerge(defaults(), JSON.parse(raw)); }
+  }catch(e){ console.warn('load failed',e); state=defaults(); }
+}
+function saveLocal(){ try{ localStorage.setItem(CFG.STORE_KEY, JSON.stringify(state)); }catch(e){} }
+
+let cloudTimer=null;
+function scheduleCloud(){
+  if(!state.settings.cloudSync) return;
+  clearTimeout(cloudTimer);
+  cloudTimer=setTimeout(()=>pushCloud().catch(()=>{}), 1200);
+}
+function mutate(fn){
+  try{ fn(state); }catch(e){ console.error(e); }
+  state._ts=Date.now(); saveLocal(); scheduleCloud(); render();
+}
+/* silent set used by inputs (no full re-render to keep focus) */
+function setSilent(fn){ try{ fn(state); }catch(e){} state._ts=Date.now(); saveLocal(); scheduleCloud(); }
+
+/* ------------------------------- cloud sync ------------------------------ */
+function ensureToken(){
+  if(!state.settings.cloudToken){
+    const a=new Uint8Array(24); crypto.getRandomValues(a);
+    state.settings.cloudToken=[...a].map(b=>b.toString(16).padStart(2,'0')).join('');
+  }
+  return state.settings.cloudToken;
+}
+async function rpc(fn, body){
+  const r=await fetch(CFG.SUPA_URL+'/rest/v1/rpc/'+fn,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','apikey':CFG.SUPA_KEY,'Authorization':'Bearer '+CFG.SUPA_KEY},
+    body:JSON.stringify(body),
+  });
+  if(!r.ok){ throw new Error('Cloud error '+r.status); }
+  const t=await r.text(); return t?JSON.parse(t):null;
+}
+async function pushCloud(){
+  const token=ensureToken();
+  state.calendarItems=computeCalendarItems(state);
+  state._syncedTs=state._ts;
+  const payload={...state};
+  await rpc('escape_save',{ p_token:token, p_data:payload });
+}
+async function pullCloud(){
+  const token=ensureToken();
+  const remote=await rpc('escape_load',{ p_token:token });
+  if(remote && typeof remote==='object'){
+    if((remote._ts||0) > (state._ts||0)){
+      state=deepMerge(defaults(), remote); saveLocal(); render();
+      return 'pulled';
+    }
+    return 'local-newer';
+  }
+  return 'empty';
+}
+
+/* -------------------------------- helpers -------------------------------- */
+const $ = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function uid(){ return Math.random().toString(36).slice(2,9); }
+function todayISO(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function parseYMD(s){ const m=String(s||'').match(/^(\d{4})-(\d{2})-(\d{2})/); return m?new Date(+m[1],+m[2]-1,+m[3]):null; }
+function addDaysISO(iso,n){ const d=parseYMD(iso)||new Date(); d.setDate(d.getDate()+n); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function daysBetween(aISO,bISO){ const a=parseYMD(aISO), b=parseYMD(bISO); if(!a||!b)return null; return Math.round((b-a)/86400000); }
+function fmtDate(iso){ const d=parseYMD(iso); if(!d)return ''; return d.toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'}); }
+function tz(){ try{ return Intl.DateTimeFormat().resolvedOptions().timeZone||'Asia/Jakarta'; }catch(e){ return 'Asia/Jakarta'; } }
+function fmtNum(n){ return (Math.round((+n||0)*100)/100).toLocaleString(undefined,{maximumFractionDigits:2}); }
+function firstDateIn(text){ const m=String(text||'').match(/(\d{4})-(\d{2})-(\d{2})/); return m?m[0]:null; }
+
+const STATUS_LABELS={ not_started:'Not started', in_progress:'In progress', done:'Done',
+  registered:'Registered', applied:'Applied', selected:'Selected', placed:'Placed', closed:'Closed',
+  drafting:'Drafting', requested:'Requested', received:'Received' };
+
+/* currency: rates = IDR per 1 unit. convert(amount, from) -> base currency */
+function toBase(amount, from){
+  const r=state.runway.rates||{}; const base=state.profile.baseCurrency||'USD';
+  const idr=(+amount||0)*(r[from]||0); const baseRate=r[base]||1;
+  return base==='IDR'?idr:idr/baseRate;
+}
+function fmtMoney(amount, cur){
+  const sym={USD:'$',IDR:'Rp ',AUD:'A$',EUR:'€',TWD:'NT$'}[cur]||'';
+  const dp=(cur==='IDR')?0:2;
+  return sym+(Math.round((+amount||0)*Math.pow(10,dp))/Math.pow(10,dp)).toLocaleString(undefined,{maximumFractionDigits:dp});
+}
+
+/* ----------------------------- done log + checkin ------------------------ */
+function addDone(text, tag){
+  mutate(s=>{ s.doneLog.unshift({ id:uid(), date:todayISO(), ts:Date.now(), text, tag:tag||'' }); });
+}
+function checkIn(){
+  const t=todayISO();
+  if(state.streak.lastCheckIn===t){ toast('Already checked in today 🌅 — streak '+state.streak.count); return; }
+  mutate(s=>{
+    const prev=s.streak.lastCheckIn;
+    const gap=prev?daysBetween(prev,t):null;
+    s.streak.count=(gap===1)?(s.streak.count+1):1;
+    s.streak.lastCheckIn=t;
+    s.doneLog.unshift({ id:uid(), date:t, ts:Date.now(), text:'Showed up — '+(s.streak.anchorLabel||'check-in'), tag:'home' });
+  });
+  toast('🔥 Checked in! Streak: '+state.streak.count);
+}
+
+/* --------------------------- one next action ----------------------------- */
+function nextAction(){
+  const s=state;
+  if((s.nextActionOverride||'').trim()) return { text:s.nextActionOverride.trim(), view:'home', custom:true };
+  const pass=s.documents.find(d=>d.id==='passport');
+  if(pass && pass.status!=='done') return { text:'Start your passport — apply via M-Paspor', view:'documents' };
+  const prog=s.documents.find(d=>d.status==='in_progress');
+  if(prog) return { text:'Finish: '+prog.label, view:'documents' };
+  const notStarted=s.documents.find(d=>d.status==='not_started');
+  if(notStarted) return { text:'Begin: '+notStarted.label, view:'documents' };
+  const tw=s.phase1.find(p=>p.lead);
+  if(tw && tw.status==='not_started') return { text:'Register Taiwan SP2T on SISKOP2MI', view:'phase1' };
+  if(s.phase2.decision==='undecided') return { text:'Decide your endgame: Germany or Australia', view:'phase2' };
+  if(s.phase2.decision==='germany'){
+    const lv=s.phase2.germany.germanLevel;
+    if(['A0','A1','A2'].includes(lv)) return { text:'Do today’s German — toward B1', view:'german' };
+    return { text:'Apply to one Ausbildung employer', view:'phase2' };
+  }
+  if(s.phase2.decision==='australia'){
+    if((+s.phase2.australia.savedAUD||0) < 5000) return { text:'Add to your AUD 5,000 buffer', view:'runway' };
+    return { text:'Progress your WHV 462 application', view:'phase2' };
+  }
+  return { text:'Open one section and ship one tiny thing.', view:'documents' };
+}
+
+/* --------------------------- calendar items ------------------------------ */
+function ageCapDate(birthDate){
+  const d=parseYMD(birthDate); if(!d) return null;
+  const cap=new Date(d.getFullYear()+31, d.getMonth(), d.getDate());
+  return cap.getFullYear()+'-'+String(cap.getMonth()+1).padStart(2,'0')+'-'+String(cap.getDate()).padStart(2,'0');
+}
+function monthsUntil(iso){ const d=parseYMD(iso); if(!d)return null; const now=new Date();
+  return (d.getFullYear()-now.getFullYear())*12 + (d.getMonth()-now.getMonth()); }
+function computeCalendarItems(s){
+  const items=[];
+  (s.documents||[]).forEach(d=>{
+    if(d.expiry && parseYMD(d.expiry)){
+      items.push({ uid:'doc-'+d.id+'-expiry', title:'⏰ '+d.label+' expires', date:d.expiry,
+        desc:'Your '+d.label+' validity ends — renew before this date.', alarmDays:[90,30,7,1] });
+    }
+  });
+  (s.phase1||[]).forEach(p=>{
+    const dt=firstDateIn(p.waveWindow);
+    if(dt) items.push({ uid:'p1-'+p.id+'-wave', title:'🌊 '+p.label+' window', date:dt,
+      desc:(p.waveWindow||'')+' · '+(p.nextStep||''), alarmDays:[14,3] });
+  });
+  const cap=ageCapDate(s.profile&&s.profile.birthDate);
+  if(cap && (s.phase2.decision==='australia'||s.phase2.decision==='undecided')){
+    items.push({ uid:'au-agecap', title:'🎂 Turn 31 — Australia WHV age cap', date:cap,
+      desc:'Last chance: WHV 462 must be applied for before you turn 31.', alarmDays:[180,90,30] });
+  }
+  if(s.settings && s.settings.dailyReminder!==false){
+    items.push({ uid:'daily-checkin', title:'🌅 '+(s.streak.anchorLabel||'Daily')+' — open your Escape plan',
+      date:todayISO(), rrule:'FREQ=DAILY', desc:'One tiny step today. Check in, do one thing, log it.', alarmDays:[] });
+  }
+  return items;
+}
+
+/* ============================ GOOGLE INTEGRATION ========================= */
+let _tokenClient=null, _accessToken='', _tokenExp=0;
+function gisReady(){ return typeof google!=='undefined' && google.accounts && google.accounts.oauth2; }
+function authH(t){ return { 'Authorization':'Bearer '+t }; }
+function getAccessToken(){
+  return new Promise((resolve,reject)=>{
+    const cid=(state.settings.googleClientId||'').trim();
+    if(!cid) return reject(new Error('Add your Google Client ID in Settings first.'));
+    if(_accessToken && Date.now()<_tokenExp-60000) return resolve(_accessToken);
+    if(!gisReady()) return reject(new Error('Google library not loaded — check your connection.'));
+    if(!_tokenClient || _tokenClient._cid!==cid){
+      _tokenClient=google.accounts.oauth2.initTokenClient({ client_id:cid, scope:CFG.SCOPES, callback:()=>{} });
+      _tokenClient._cid=cid;
+    }
+    _tokenClient.callback=(resp)=>{
+      if(resp.error) return reject(new Error(resp.error_description||resp.error));
+      _accessToken=resp.access_token; _tokenExp=Date.now()+(resp.expires_in||3600)*1000; resolve(_accessToken);
+    };
+    _tokenClient.requestAccessToken({ prompt:_accessToken?'':'consent' });
+  });
+}
+const CAL='https://www.googleapis.com/calendar/v3';
+async function ensureCalendar(t){
+  if(state.settings.calendarId){
+    const r=await fetch(CAL+'/calendars/'+encodeURIComponent(state.settings.calendarId),{headers:authH(t)});
+    if(r.ok) return state.settings.calendarId;
+  }
+  try{
+    const lr=await fetch(CAL+'/users/me/calendarList?minAccessRole=owner',{headers:authH(t)});
+    if(lr.ok){ const lj=await lr.json(); const f=(lj.items||[]).find(c=>c.summary===CFG.CAL_NAME);
+      if(f){ setSilent(s=>{s.settings.calendarId=f.id;}); return f.id; } }
+  }catch(e){}
+  const cr=await fetch(CAL+'/calendars',{ method:'POST', headers:{...authH(t),'Content-Type':'application/json'},
+    body:JSON.stringify({ summary:CFG.CAL_NAME, description:CFG.CAL_DESC, timeZone:tz() }) });
+  if(!cr.ok) throw new Error('Could not create the calendar ('+cr.status+').');
+  const cj=await cr.json(); setSilent(s=>{s.settings.calendarId=cj.id;}); return cj.id;
+}
+async function pushToGoogleCalendar(){
+  const t=await getAccessToken();
+  const calId=await ensureCalendar(t);
+  const items=computeCalendarItems(state);
+  const map={...(state.settings.eventMap||{})};
+  let created=0, updated=0;
+  for(const it of items){
+    const ev={ summary:it.title, description:it.desc||'', start:{date:it.date}, end:{date:addDaysISO(it.date,1)},
+      transparency:'transparent',
+      reminders:{ useDefault:false, overrides:(it.alarmDays||[]).slice(0,5).map(d=>({method:'popup',minutes:d*1440})) },
+      extendedProperties:{ private:{ escUid:it.uid } } };
+    if(it.rrule) ev.recurrence=['RRULE:'+it.rrule];
+    let id=map[it.uid], done=false;
+    if(id){
+      const r=await fetch(CAL+'/calendars/'+encodeURIComponent(calId)+'/events/'+encodeURIComponent(id),
+        { method:'PUT', headers:{...authH(t),'Content-Type':'application/json'}, body:JSON.stringify(ev) });
+      if(r.ok){ updated++; done=true; } else if(r.status===404||r.status===410){ id=null; }
+      else { done=true; }
+    }
+    if(!id && !done){
+      const r=await fetch(CAL+'/calendars/'+encodeURIComponent(calId)+'/events',
+        { method:'POST', headers:{...authH(t),'Content-Type':'application/json'}, body:JSON.stringify(ev) });
+      if(r.ok){ const j=await r.json(); map[it.uid]=j.id; created++; }
+    }
+  }
+  mutate(s=>{ s.settings.eventMap=map; });
+  return { created, updated, total:items.length };
+}
+/* drive */
+const DRV='https://www.googleapis.com/drive/v3';
+async function ensureDriveFolder(t){
+  if(state.settings.driveFolderId){
+    const r=await fetch(DRV+'/files/'+state.settings.driveFolderId+'?fields=id,trashed',{headers:authH(t)});
+    if(r.ok){ const j=await r.json(); if(!j.trashed) return state.settings.driveFolderId; }
+  }
+  const q="name='"+CFG.DRIVE_FOLDER.replace(/'/g,"\\'")+"' and mimeType='application/vnd.google-apps.folder' and trashed=false";
+  const sr=await fetch(DRV+'/files?q='+encodeURIComponent(q)+'&fields=files(id,name)',{headers:authH(t)});
+  if(sr.ok){ const sj=await sr.json(); if(sj.files&&sj.files[0]){ setSilent(s=>{s.settings.driveFolderId=sj.files[0].id;}); return sj.files[0].id; } }
+  const cr=await fetch(DRV+'/files',{ method:'POST', headers:{...authH(t),'Content-Type':'application/json'},
+    body:JSON.stringify({ name:CFG.DRIVE_FOLDER, mimeType:'application/vnd.google-apps.folder' }) });
+  if(!cr.ok) throw new Error('Could not create the Drive folder ('+cr.status+').');
+  const cj=await cr.json(); setSilent(s=>{s.settings.driveFolderId=cj.id;}); return cj.id;
+}
+async function driveUpload(file, docId){
+  const t=await getAccessToken();
+  const folderId=await ensureDriveFolder(t);
+  const meta={ name:file.name, parents:[folderId] };
+  const boundary='escp'+Math.random().toString(16).slice(2);
+  const head='--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+JSON.stringify(meta)+
+    '\r\n--'+boundary+'\r\nContent-Type: '+(file.type||'application/octet-stream')+'\r\n\r\n';
+  const tail='\r\n--'+boundary+'--';
+  const body=new Blob([head,file,tail]);
+  const r=await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink,name',
+    { method:'POST', headers:{...authH(t),'Content-Type':'multipart/related; boundary='+boundary}, body });
+  if(!r.ok) throw new Error('Upload failed ('+r.status+').');
+  const j=await r.json();
+  mutate(s=>{ const d=s.documents.find(x=>x.id===docId); if(d){ d.driveLink=j.webViewLink; d.driveFileId=j.id; } });
+  addDone('Uploaded "'+(j.name||'a file')+'" to Drive', 'documents');
+  return j;
+}
+
+/* ------------------------------- ICS (client) ---------------------------- */
+function buildICS(){
+  const items=computeCalendarItems(state);
+  const pad=n=>String(n).padStart(2,'0');
+  const now=new Date();
+  const stamp=now.getUTCFullYear()+pad(now.getUTCMonth()+1)+pad(now.getUTCDate())+'T'+pad(now.getUTCHours())+pad(now.getUTCMinutes())+pad(now.getUTCSeconds())+'Z';
+  const e=s=>String(s==null?'':s).replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\r?\n/g,'\\n');
+  const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Escape Pipeline//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH',
+    'X-WR-CALNAME:'+e(CFG.CAL_NAME),'X-WR-CALDESC:'+e(CFG.CAL_DESC)];
+  for(const it of items){
+    const d=it.date.replace(/-/g,'');
+    L.push('BEGIN:VEVENT','UID:'+e(it.uid)+'@escape.dhiya.id','DTSTAMP:'+stamp,
+      'DTSTART;VALUE=DATE:'+d,'DTEND;VALUE=DATE:'+addDaysISO(it.date,1).replace(/-/g,''),
+      'SUMMARY:'+e(it.title));
+    if(it.desc) L.push('DESCRIPTION:'+e(it.desc));
+    if(it.rrule) L.push('RRULE:'+it.rrule);
+    L.push('TRANSP:TRANSPARENT','END:VEVENT');
+  }
+  L.push('END:VCALENDAR');
+  return L.join('\r\n')+'\r\n';
+}
+function downloadICS(){
+  const blob=new Blob([buildICS()],{type:'text/calendar'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='escape-velocity.ics';
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+  toast('Downloaded escape-velocity.ics');
+}
+function addToGoogleLink(it){
+  const d=it.date.replace(/-/g,''); const dates=d+'/'+addDaysISO(it.date,1).replace(/-/g,'');
+  return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(it.title)+
+    '&dates='+dates+'&details='+encodeURIComponent(it.desc||'');
+}
+
+/* ------------------------------- FX rates -------------------------------- */
+async function fetchRates(){
+  const r=await fetch('https://open.er-api.com/v6/latest/USD');
+  if(!r.ok) throw new Error('FX fetch failed');
+  const j=await r.json(); const rt=j.rates||{}; const usdIdr=rt.IDR;
+  if(!usdIdr) throw new Error('No IDR rate');
+  mutate(s=>{
+    s.runway.rates={ IDR:1, USD:Math.round(usdIdr),
+      TWD:+(usdIdr/rt.TWD).toFixed(2), AUD:+(usdIdr/rt.AUD).toFixed(2), EUR:+(usdIdr/rt.EUR).toFixed(2) };
+    s.runway.ratesUpdated=todayISO();
+  });
+}
+
+/* ================================ RENDER ================================= */
+const NAV=[
+  { id:'home', label:'Home', ic:'🏠', primary:true },
+  { id:'documents', label:'Documents', ic:'📁', primary:true },
+  { id:'phase1', label:'Phase 1', ic:'💵', primary:true },
+  { id:'phase2', label:'Phase 2', ic:'🏛️', primary:true },
+  { id:'runway', label:'Runway', ic:'📈', primary:false },
+  { id:'german', label:'German', ic:'🇩🇪', primary:false },
+  { id:'donelog', label:'Done Log', ic:'✅', primary:false },
+  { id:'why', label:'Why', ic:'🔥', primary:false },
+  { id:'resources', label:'Resources', ic:'🔗', primary:false },
+  { id:'settings', label:'Settings', ic:'⚙️', primary:false },
+];
+function germanVisible(){ return ['germany','undecided'].includes(state.phase2.decision); }
+function navItems(){ return NAV.filter(n=> n.id==='german' ? germanVisible() : true); }
+
+function setView(id){ currentView=id; closeSheet(); render(); window.scrollTo({top:0,behavior:'smooth'}); }
+
+function render(){
+  // streak chip + title
+  $('#streakChip').innerHTML='🔥 '+(state.streak.count||0);
+  $('#topTitle').textContent = (NAV.find(n=>n.id===currentView)||{}).label || 'Escape';
+  // sidenav
+  $('#sidenav').innerHTML = navItems().map(n=>
+    '<button data-action="nav" data-view="'+n.id+'" class="'+(currentView===n.id?'on':'')+'"><span class="ic">'+n.ic+'</span>'+n.label+'</button>'
+  ).join('');
+  // bottom nav: primary + More
+  const prim=NAV.filter(n=>n.primary);
+  $('#bottomnav').innerHTML = prim.map(n=>
+    '<button data-action="nav" data-view="'+n.id+'" class="'+(currentView===n.id?'on':'')+'"><span class="ic">'+n.ic+'</span>'+n.label+'</button>'
+  ).join('') + '<button data-action="more" class="'+(prim.some(p=>p.id===currentView)?'':'on')+'"><span class="ic">⋯</span>More</button>';
+  // view
+  const fn={ home:viewHome, documents:viewDocuments, phase1:viewPhase1, phase2:viewPhase2, runway:viewRunway,
+    german:viewGerman, donelog:viewDoneLog, why:viewWhy, resources:viewResources, settings:viewSettings }[currentView]||viewHome;
+  $('#view').innerHTML=fn();
+}
+
+/* progress helpers */
+function docProgress(){ const d=state.documents; const done=d.filter(x=>x.status==='done').length; return {done, total:d.length, pct: d.length?Math.round(done/d.length*100):0}; }
+function bar(pct, gold){ return '<div class="bar'+(gold?' gold':'')+'"><i style="width:'+Math.max(0,Math.min(100,pct))+'%"></i></div>'; }
+
+function viewHome(){
+  const na=nextAction();
+  const dp=docProgress();
+  const lastDone=state.doneLog[0];
+  const daysSince=lastDone?daysBetween(lastDone.date, todayISO()):null;
+  const checkedToday=state.streak.lastCheckIn===todayISO();
+  // runway
+  const banked=state.runway.entries.reduce((a,e)=>a+toBase(e.amount,e.currency),0);
+  const audTarget=state.runway.targets.find(t=>t.currency==='AUD');
+  const audPct=audTarget?Math.min(100, banked/toBase(audTarget.amount,audTarget.currency)*100):0;
+  // phase2 status
+  const dec=state.phase2.decision;
+  const decLabel={undecided:'Undecided',germany:'Germany 🇩🇪',australia:'Australia 🇦🇺'}[dec];
+
+  let html='';
+  html+='<div class="card hero">'
+    +'<div class="label">The one next action</div>'
+    +'<div class="action" id="naText">'+esc(na.text)+'</div>'
+    +'<div class="sub">'+(na.custom?'Your custom focus.':'Auto-picked from where you’re stuck. Do just this.')+'</div>'
+    +'<div class="cta">'
+      +'<button class="btn primary" data-action="nav" data-view="'+na.view+'">Go do it →</button>'
+      +'<button class="btn ghost sm" data-action="editNA">✎ Set my own</button>'
+    +'</div>'
+    +'<div class="edit-inline" id="naEdit">'
+      +'<input id="naInput" placeholder="Type the single next thing…" value="'+esc(state.nextActionOverride)+'">'
+      +'<div class="btn-row mt-s"><button class="btn teal sm" data-action="saveNA">Save</button>'
+      +'<button class="btn ghost sm" data-action="clearNA">Clear (auto)</button></div>'
+    +'</div>'
+  +'</div>';
+
+  // check-in
+  html+='<div class="card">'
+    +'<div class="between"><div><h3>Daily check-in</h3><div class="sub">'+esc(state.streak.anchorLabel||'After Subuh')+' · streak <b style="color:var(--gold-soft)">'+state.streak.count+'</b> day'+(state.streak.count===1?'':'s')+'</div></div>'
+    +'<button class="btn '+(checkedToday?'ghost':'primary')+'" data-action="checkin" '+(checkedToday?'disabled':'')+'>'+(checkedToday?'✓ Done today':'I showed up')+'</button></div>'
+    + (daysSince!=null ? '<div class="sub mt-s">'+(daysSince===0?'You acted today. Keep the chain alive.':daysSince+' day'+(daysSince===1?'':'s')+' since your last logged action — a tiny one counts.')+'</div>':'')
+  +'</div>';
+
+  // snapshot
+  html+='<div class="card"><h3 class="mb">Where you stand</h3><div class="statgrid">'
+    +'<div class="stat"><span class="sub">Documents</span><span class="v">'+dp.pct+'%</span>'+bar(dp.pct)+'</div>'
+    +'<div class="stat"><span class="sub">Phase 1 lead</span><span class="v" style="font-size:15px">'+esc(STATUS_LABELS[(state.phase1.find(p=>p.lead)||{}).status]||'—')+'</span><span class="small faint">Taiwan SP2T</span></div>'
+    +'<div class="stat"><span class="sub">Phase 2</span><span class="v" style="font-size:15px">'+decLabel+'</span><span class="small faint">endgame</span></div>'
+    +'<div class="stat"><span class="sub">Banked</span><span class="v" style="font-size:16px">'+fmtMoney(banked, state.profile.baseCurrency)+'</span>'
+      + (audTarget?bar(audPct,true)+'<span class="small faint">'+Math.round(audPct)+'% to A$5k</span>':'') + '</div>'
+  +'</div></div>';
+
+  html+='<div class="card"><div class="between"><div><h3>Push your deadlines to a calendar</h3><div class="sub">Creates a separate “'+esc(CFG.CAL_NAME)+'” calendar — never touches your main one.</div></div></div>'
+    +'<div class="btn-row mt"><button class="btn teal" data-action="nav" data-view="settings">Set up calendar →</button>'
+    +'<button class="btn ghost sm" data-action="downloadICS">Download .ics</button></div></div>';
+
+  return html;
+}
+
+function statusBadge(status){
+  const cls = status==='done'?'ok':(status==='not_started'?'':'warn');
+  const dot = status==='done'?'s-done':(status==='not_started'?'s-not':'s-prog');
+  return '<span class="badge '+cls+' dot"><span class="status-dot '+dot+'"></span>'+esc(STATUS_LABELS[status]||status)+'</span>';
+}
+function viewDocuments(){
+  const dp=docProgress();
+  let html='<div class="card"><div class="between"><div><h2>Documents</h2><div class="sub">The gate. Everything downstream needs these.</div></div>'
+    +'<div class="stat" style="text-align:right"><span class="v">'+dp.done+'/'+dp.total+'</span></div></div>'
+    +'<div class="mt">'+bar(dp.pct)+'</div></div>';
+  html+='<div class="card">';
+  state.documents.forEach(d=>{
+    const exp=d.expiry, dleft=exp?daysBetween(todayISO(),exp):null;
+    let expBadge='';
+    if(exp){ if(dleft<0) expBadge='<span class="badge crit">expired</span>';
+      else if(dleft<=90) expBadge='<span class="badge warn">expires in '+dleft+'d</span>'; }
+    html+='<div class="item'+(d.critical?' crit':'')+'" data-doc="'+d.id+'">'
+      +'<div class="head"><div class="title">'+esc(d.label)
+        + (d.critical?' <span class="badge crit">critical path</span>':'')
+        + statusBadge(d.status) + expBadge
+        + (d.driveLink?' <a class="badge ok" href="'+esc(d.driveLink)+'" target="_blank" rel="noopener">📎 file</a>':'')
+        +'</div><span class="expander" data-action="toggleDoc" data-id="'+d.id+'">▾</span></div>'
+      +'<div class="detail" id="docd-'+d.id+'">'
+        +'<div class="field"><label>Status</label><select data-action="docStatus" data-id="'+d.id+'">'
+          + ['not_started','in_progress','done'].map(s=>'<option value="'+s+'" '+(d.status===s?'selected':'')+'>'+STATUS_LABELS[s]+'</option>').join('')
+          +'</select></div>'
+        +'<div class="grid2"><div class="field"><label>Expiry / valid until</label><input type="date" data-action="docExpiry" data-id="'+d.id+'" value="'+esc(d.expiry||'')+'"></div>'
+        +'<div class="field"><label>Drive file link</label><input data-action="docLink" data-id="'+d.id+'" placeholder="Paste a Google Drive link" value="'+esc(d.driveLink||'')+'"></div></div>'
+        +'<div class="field"><label>Notes</label><textarea data-action="docNotes" data-id="'+d.id+'" placeholder="Office, costs, appointment date…">'+esc(d.notes||'')+'</textarea></div>'
+        +'<div class="btn-row"><button class="btn teal sm" data-action="docUpload" data-id="'+d.id+'">⬆ Upload to Drive</button>'
+          +'<button class="btn ghost sm" data-action="docNextAction" data-id="'+d.id+'">★ Make this my next action</button></div>'
+      +'</div></div>';
+  });
+  html+='</div>';
+  html+='<div class="note gold">Tip: your <b>Passport</b> unlocks everything. If it isn’t done, the app keeps nudging you to it.</div>';
+  return html;
+}
+
+function viewPhase1(){
+  let html='<div class="card"><h2>Phase 1 — Cash Bridge</h2><div class="sub">Earn hard currency fast. This funds the real move.</div></div>';
+  html+='<div class="note gold mb">🏭 Taiwan = a cash machine, not a home. Earn, save, don’t over-invest emotionally.</div>';
+  html+='<div class="card">';
+  const opts=['not_started','registered','applied','selected','placed','closed'];
+  state.phase1.forEach(p=>{
+    html+='<div class="item" data-p1="'+p.id+'">'
+      +'<div class="head"><div class="title">'+esc(p.label)+(p.lead?' <span class="badge ok">lead</span>':'')+' '+statusBadge(p.status)+'</div>'
+        +'<span class="expander" data-action="toggleP1" data-id="'+p.id+'">▾</span></div>'
+      +'<div class="sub mt-s">'+esc(p.note||'')+'</div>'
+      +'<div class="detail" id="p1d-'+p.id+'">'
+        +'<div class="grid2"><div class="field"><label>Status</label><select data-action="p1Status" data-id="'+p.id+'">'
+          + opts.map(s=>'<option value="'+s+'" '+(p.status===s?'selected':'')+'>'+STATUS_LABELS[s]+'</option>').join('')+'</select></div>'
+        +'<div class="field"><label>Next step</label><input data-action="p1Next" data-id="'+p.id+'" value="'+esc(p.nextStep||'')+'"></div></div>'
+        +'<div class="field"><label>Wave / intake window <span class="faint">(use a date like 2026-08-01 to auto-add to your calendar)</span></label>'
+          +'<input data-action="p1Wave" data-id="'+p.id+'" placeholder="e.g. next wave 2026-08-01" value="'+esc(p.waveWindow||'')+'"></div>'
+        +'<div class="btn-row"><a class="btn ghost sm" href="'+esc(p.link)+'" target="_blank" rel="noopener">Open official site ↗</a>'
+          +'<button class="btn ghost sm" data-action="p1NextAction" data-id="'+p.id+'">★ Make this my next action</button></div>'
+      +'</div></div>';
+  });
+  html+='</div>';
+  return html;
+}
+
+function viewPhase2(){
+  const dec=state.phase2.decision;
+  let html='<div class="card"><h2>Phase 2 — Citizenship Endgame</h2><div class="sub">Where you actually build a life. Choose your path.</div>'
+    +'<div class="seg mt" >'
+      + ['undecided','germany','australia'].map(k=>'<button data-action="decision" data-val="'+k+'" class="'+(dec===k?'on':'')+'">'+({undecided:'Undecided',germany:'Germany 🇩🇪',australia:'Australia 🇦🇺'}[k])+'</button>').join('')
+    +'</div></div>';
+
+  // comparison
+  html+='<div class="card"><h3>Side-by-side</h3><div style="overflow-x:auto"><table class="cmp">'
+    +'<tr><th></th><th class="'+(dec==='germany'?'you':'')+'">Germany (Ausbildung)</th><th class="'+(dec==='australia'?'you':'')+'">Australia (WHV 462)</th></tr>'
+    +'<tr><th>Citizenship</th><td>~5 yrs, criteria-based (no lottery)</td><td>4 yrs + 1 yr PR; PR is the hard, competitive gate</td></tr>'
+    +'<tr><th>Language</th><td>German B1–B2</td><td>English only</td></tr>'
+    +'<tr><th>Pay during</th><td>training wage €724–1,490/mo</td><td>top minimum wage on earth (A$26.44/hr)</td></tr>'
+    +'<tr><th>Dual (their side)</th><td>allowed</td><td>allowed (Indonesia bars dual for adults)</td></tr>'
+    +'<tr><th>The catch</th><td>learn German</td><td>age-capped — apply before 31</td></tr>'
+    +'</table></div></div>';
+
+  html+='<div class="note mb">PR ≠ citizenship. PR frees you ~90%; citizenship is the capstone.</div>';
+
+  if(dec==='germany'){
+    const g=state.phase2.germany;
+    html+='<div class="card"><h3>🇩🇪 Germany sub-tracker</h3>'
+      +'<div class="field mt"><label>Ausbildung shortlist</label><div class="row wrap" id="ausbList">'
+        + g.ausbildungShortlist.map((x,i)=>'<span class="chip">'+esc(x)+' <button data-action="ausbRemove" data-i="'+i+'">×</button></span>').join('')
+        +'</div><div class="copywrap mt-s"><input id="ausbInput" placeholder="Add a field (e.g. Elderly care)"><button class="btn teal sm" data-action="ausbAdd">Add</button></div></div>'
+      +'<div class="field mt"><label>German level (toward B1)</label><div class="sub">Current: <b>'+esc(g.germanLevel)+'</b> — track it in the <a href="#" data-action="nav" data-view="german">German</a> tab.</div></div>'
+      +'<div class="field mt"><label>Employer applications</label><div id="empList">'
+        + (g.employers.length?g.employers.map(e=>'<div class="item"><div class="between"><div class="title">'+esc(e.name)+' '+statusBadge(e.status)+'</div><button class="btn ghost sm" data-action="empCycle" data-id="'+e.id+'">advance →</button></div></div>').join(''):'<div class="empty">No applications yet. Add your first employer.</div>')
+        +'</div><div class="copywrap mt-s"><input id="empInput" placeholder="Employer / company name"><button class="btn teal sm" data-action="empAdd">Add</button></div></div>'
+      +'<div class="field mt"><label>Sperrkonto note (~€11,904, often offset by wage)</label><textarea data-action="sperrNote" placeholder="Bank, status, whether your wage offsets it…">'+esc(g.sperrkontoNote||'')+'</textarea></div>'
+    +'</div>';
+  }
+  if(dec==='australia'){
+    const a=state.phase2.australia;
+    const cap=ageCapDate(state.profile.birthDate); const mUntil=monthsUntil(cap);
+    const audSaved=+a.savedAUD||0; const pct=Math.min(100, audSaved/5000*100);
+    html+='<div class="card"><h3>🇦🇺 Australia sub-tracker</h3>'
+      +'<div class="field mt"><label>Age-cap countdown</label><div class="between"><div class="stat"><span class="v" style="color:'+(mUntil<=12?'var(--red)':'var(--gold-soft)')+'">'+(mUntil!=null?mUntil+' months':'—')+'</span><span class="small faint">until you turn 31 ('+fmtDate(cap)+')</span></div>'
+        + (mUntil<=12?'<span class="badge crit">apply soon</span>':'')+'</div></div>'
+      +'<div class="field mt"><label>AUD 5,000 buffer checkpoint</label><div class="between mt-s"><input type="number" style="max-width:160px" data-action="audSaved" value="'+audSaved+'"><span class="muted">/ A$5,000</span></div>'+bar(pct,true)+'</div>'
+      +'<div class="grid2 mt"><div class="field"><label>SDUWHV letter status</label><select data-action="sduwhv">'
+        + ['not_started','drafting','requested','received'].map(s=>'<option value="'+s+'" '+(a.sduwhvStatus===s?'selected':'')+'>'+STATUS_LABELS[s]+'</option>').join('')+'</select></div>'
+        +'<div class="field"><label></label><div class="sub" style="padding-top:8px">SDUWHV = the Indonesian gov. support letter the 462 visa requires.</div></div></div>'
+      +'<div class="field mt"><label>WHV → PR strategy notes</label><textarea data-action="whvNotes" placeholder="Regional work, sponsor pathways, skills assessment…">'+esc(a.whvNotes||'')+'</textarea></div>'
+    +'</div>';
+  }
+  return html;
+}
+
+function viewRunway(){
+  const base=state.profile.baseCurrency;
+  const banked=state.runway.entries.reduce((a,e)=>a+toBase(e.amount,e.currency),0);
+  const idnMonthly=(state.why.wageComparison.find(w=>/indonesia/i.test(w.place))||{monthlyUSD:140}).monthlyUSD;
+  // banked, expressed in USD, for the "months of old salary" multiple
+  const bankedInUSD=state.runway.entries.reduce((a,e)=>{ const idr=(+e.amount||0)*(state.runway.rates[e.currency]||0); return a+ idr/(state.runway.rates.USD||1); },0);
+  const months=idnMonthly?(bankedInUSD/idnMonthly):0;
+
+  let html='<div class="card"><div class="between"><div><h2>Runway</h2><div class="sub">Every entry is fuel. Watch it stack.</div></div>'
+    +'<div class="stat" style="text-align:right"><span class="v">'+fmtMoney(banked,base)+'</span><span class="small faint">total banked</span></div></div>'
+    + (months>0?'<div class="note gold mt">= about <b>'+fmtNum(months)+'</b> months of your old Indonesian salary. That’s how much runway you’ve already bought.</div>':'')
+  +'</div>';
+
+  // targets
+  html+='<div class="card"><h3 class="mb">Targets</h3>';
+  state.runway.targets.forEach(t=>{
+    const targetBase=toBase(t.amount,t.currency);
+    const pct=targetBase>0?Math.min(100, banked/targetBase*100):0;
+    html+='<div style="margin-bottom:13px"><div class="between"><span>'+esc(t.label)+'</span><span class="small muted">'+fmtMoney(t.amount,t.currency)+'</span></div>'+bar(pct,true)+'<div class="small faint mt-s">'+Math.round(pct)+'% · '+fmtMoney(Math.min(targetBase,banked),base)+' of '+fmtMoney(targetBase,base)+'</div></div>';
+  });
+  html+='<div class="copywrap mt"><input id="tgtLabel" placeholder="New target name"><input id="tgtAmt" type="number" placeholder="Amount" style="max-width:110px"><select id="tgtCur" style="max-width:90px">'+['IDR','USD','TWD','AUD','EUR'].map(c=>'<option>'+c+'</option>').join('')+'</select><button class="btn teal sm" data-action="addTarget">Add</button></div></div>';
+
+  // ledger
+  html+='<div class="card"><h3 class="mb">Income / savings ledger</h3>'
+    +'<div class="copywrap"><input id="enDate" type="date" value="'+todayISO()+'" style="max-width:150px"><input id="enSource" placeholder="Source"><input id="enAmt" type="number" placeholder="Amount" style="max-width:110px"><select id="enCur" style="max-width:88px">'+['TWD','IDR','USD','AUD','EUR'].map(c=>'<option>'+c+'</option>').join('')+'</select><button class="btn teal sm" data-action="addEntry">Add</button></div>';
+  if(state.runway.entries.length){
+    html+='<div class="mt">'+state.runway.entries.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(e=>
+      '<div class="between" style="padding:8px 0;border-bottom:1px solid var(--line)"><div><b>'+fmtMoney(e.amount,e.currency)+'</b> <span class="small faint">'+esc(e.currency)+'</span><div class="small faint">'+esc(e.source||'—')+' · '+fmtDate(e.date)+'</div></div>'
+      +'<div class="row"><span class="small muted">'+fmtMoney(toBase(e.amount,e.currency),base)+'</span><button class="btn ghost sm" data-action="delEntry" data-id="'+e.id+'">✕</button></div></div>').join('')+'</div>';
+  } else html+='<div class="empty">No entries yet. Log your first paycheck or saving.</div>';
+  html+='</div>';
+
+  // rates
+  html+='<div class="card"><div class="between"><h3>Exchange rates</h3><button class="btn ghost sm" data-action="fetchFx">↻ Update online</button></div>'
+    +'<div class="sub">IDR per 1 unit. Editable — works offline. '+(state.runway.ratesUpdated?'Updated '+fmtDate(state.runway.ratesUpdated):'Using seed values')+'</div>'
+    +'<div class="grid2 mt">'+['USD','TWD','AUD','EUR'].map(c=>'<div class="field"><label>'+c+'</label><input type="number" data-action="rate" data-cur="'+c+'" value="'+(state.runway.rates[c]||0)+'"></div>').join('')+'</div>'
+    +'<div class="field mt"><label>Display everything in</label><select data-action="baseCur">'+['USD','IDR','AUD','EUR'].map(c=>'<option '+(base===c?'selected':'')+'>'+c+'</option>').join('')+'</select></div>'
+  +'</div>';
+  return html;
+}
+
+function viewGerman(){
+  if(!germanVisible()) return '<div class="card"><h2>German</h2><div class="empty">Hidden because your Phase 2 choice is Australia. Switch to Germany or Undecided to track German.</div></div>';
+  const g=state.phase2.germany;
+  const didToday=g.germanLastDay===todayISO();
+  let html='<div class="card"><div class="between"><div><h2>German</h2><div class="sub">B1 is the door. Small daily reps open it.</div></div>'
+    +'<div class="stat" style="text-align:right"><span class="v">🔥 '+(g.germanStreak||0)+'</span><span class="small faint">day streak</span></div></div>'
+    +'<div class="grid2 mt"><div class="field"><label>Current level</label><select data-action="germanLevel">'+['A0','A1','A2','B1','B2','C1'].map(l=>'<option '+(g.germanLevel===l?'selected':'')+'>'+l+'</option>').join('')+'</select></div>'
+    +'<div class="field"><label></label><button class="btn '+(didToday?'ghost':'primary')+' block" style="margin-top:24px" data-action="germanToday" '+(didToday?'disabled':'')+'>'+(didToday?'✓ Done today':'I did German today')+'</button></div></div>'
+  +'</div>';
+  html+='<div class="card"><h3 class="mb">Lesson log</h3><div class="copywrap"><input id="lessonText" placeholder="What did you study? (e.g. Nicos Weg A1-3, 20 Anki cards)"><button class="btn teal sm" data-action="addLesson">Log</button></div>';
+  if(g.lessons.length){ html+='<div class="mt">'+g.lessons.slice(0,40).map(l=>'<div style="padding:8px 0;border-bottom:1px solid var(--line)"><b class="small">'+fmtDate(l.date)+'</b> — '+esc(l.text)+'</div>').join('')+'</div>'; }
+  else html+='<div class="empty">No lessons logged yet.</div>';
+  html+='</div>';
+  html+='<div class="card"><h3>Free resources</h3><div class="btn-row mt"><a class="btn ghost sm" href="https://learngerman.dw.com" target="_blank" rel="noopener">DW Nicos Weg ↗</a><a class="btn ghost sm" href="https://apps.ankiweb.net" target="_blank" rel="noopener">Anki ↗</a></div></div>';
+  return html;
+}
+
+function viewDoneLog(){
+  let html='<div class="card"><h2>Done Log</h2><div class="sub">Proof you act — read this when you doubt yourself.</div>'
+    +'<div class="copywrap mt"><input id="doneText" placeholder="Log something you did"><button class="btn teal sm" data-action="addDoneManual">Add</button></div></div>';
+  if(!state.doneLog.length) return html+'<div class="card"><div class="empty">Empty for now. Check in or finish one tiny thing — watch this fill up.</div></div>';
+  // group by date
+  const groups={};
+  state.doneLog.forEach(e=>{ (groups[e.date]=groups[e.date]||[]).push(e); });
+  const dates=Object.keys(groups).sort((a,b)=>b.localeCompare(a));
+  html+='<div class="card">';
+  dates.forEach(dt=>{
+    html+='<div class="small faint mt" style="text-transform:uppercase;letter-spacing:.1em">'+fmtDate(dt)+'</div>';
+    groups[dt].forEach(e=>{ html+='<div class="between" style="padding:8px 0;border-bottom:1px solid var(--line)"><div>✅ '+esc(e.text)+'</div><button class="btn ghost sm" data-action="delDone" data-id="'+e.id+'">✕</button></div>'; });
+  });
+  html+='</div>';
+  html+='<div class="note gold">'+state.doneLog.length+' actions shipped. You are not someone who never finishes.</div>';
+  return html;
+}
+
+function viewWhy(){
+  const w=state.why.wageComparison; const max=Math.max(...w.map(x=>x.monthlyUSD),1);
+  let html='<div class="card"><h2>Why</h2><div class="sub">Refuel here when the drive dips.</div></div>';
+  html+='<div class="card"><h3 class="mb">The wage gap (monthly, USD)</h3><div class="wage">'
+    + w.map((x,i)=>'<div class="w"><span>'+esc(x.place)+'</span><div class="track"><i style="width:'+(x.monthlyUSD/max*100)+'%"></i></div><b>$'+fmtNum(x.monthlyUSD)+'</b></div>').join('')
+    +'</div><div class="small faint mt">Same hours. Wildly different lives. That difference is what you’re reaching for.</div></div>';
+  html+='<div class="card"><h3 class="mb">Your reasons</h3><div id="reasons">'
+    + state.why.reasons.map((r,i)=>'<div class="between" style="padding:8px 0;border-bottom:1px solid var(--line)"><div>“'+esc(r)+'”</div><button class="btn ghost sm" data-action="delReason" data-i="'+i+'">✕</button></div>').join('')
+    +'</div><div class="copywrap mt"><input id="reasonInput" placeholder="Add a reason you’re doing this"><button class="btn teal sm" data-action="addReason">Add</button></div></div>';
+  return html;
+}
+
+function viewResources(){
+  let html='<div class="card"><h2>Resources</h2><div class="sub">Official sources. Bookmark, don’t doom-scroll.</div></div><div class="card">';
+  state.resources.forEach((r,i)=>{ html+='<div class="between" style="padding:10px 0;border-bottom:1px solid var(--line)"><a href="'+esc(r.url)+'" target="_blank" rel="noopener">'+esc(r.label)+' ↗</a><button class="btn ghost sm" data-action="delResource" data-i="'+i+'">✕</button></div>'; });
+  html+='<div class="copywrap mt"><input id="resLabel" placeholder="Name"><input id="resUrl" placeholder="https://"><button class="btn teal sm" data-action="addResource">Add</button></div></div>';
+  return html;
+}
+
+function viewSettings(){
+  const s=state.settings;
+  const calConnected=!!s.calendarId;
+  const icsUrl=s.cloudToken?CFG.ICS_BASE+'?token='+s.cloudToken:'(enable cloud sync to get your feed link)';
+  let html='<div class="card"><h2>Settings</h2></div>';
+
+  // profile
+  html+='<div class="card"><h3 class="mb">You</h3>'
+    +'<div class="grid2"><div class="field"><label>Name</label><input data-action="setName" value="'+esc(state.profile.name)+'"></div>'
+    +'<div class="field"><label>Birth date (for age cap)</label><input type="date" data-action="setBirth" value="'+esc(state.profile.birthDate)+'"></div></div>'
+    +'<div class="field mt"><label>Check-in anchor label</label><input data-action="setAnchor" value="'+esc(state.streak.anchorLabel)+'"></div></div>';
+
+  // GOOGLE / CALENDAR
+  html+='<div class="card"><h3>📅 Google Calendar</h3><div class="sub">Two ways to get your deadlines into a calendar. Both create a dedicated “'+esc(CFG.CAL_NAME)+'” — your main calendar is never touched.</div>';
+
+  html+='<div class="divider"></div><h3 style="font-size:14px">Option A · Live subscription <span class="badge ok">no setup</span></h3>'
+    +'<div class="sub">Turn on cloud sync, then add one link to Google Calendar. It becomes a separate calendar that auto-syncs.</div>'
+    +'<div class="row between mt-s"><span>Cloud sync '+(s.cloudSync?'<span class="badge ok">on</span>':'<span class="badge">off</span>')+'</span>'
+      +'<button class="btn '+(s.cloudSync?'ghost':'teal')+' sm" data-action="toggleCloud">'+(s.cloudSync?'Turn off':'Turn on')+'</button></div>'
+    + (s.cloudSync?('<div class="field mt-s"><label>Your private calendar feed link</label><div class="copywrap"><input readonly value="'+esc(icsUrl)+'" id="icsField"><button class="btn teal sm" data-action="copyIcs">Copy</button></div></div>'
+      +'<ol class="steps"><li>Open Google Calendar on a computer.</li><li>Left side → <b>Other calendars</b> → <b>＋</b> → <b>From URL</b>.</li><li>Paste the link, click <b>Add calendar</b>.</li><li>Done — “'+esc(CFG.CAL_NAME)+'” appears as its own calendar and refreshes itself.</li></ol>'):'');
+
+  html+='<div class="divider"></div><h3 style="font-size:14px">Option B · One-tap push <span class="badge warn">5-min setup</span></h3>'
+    +'<div class="sub">Instant push from a button. Needs a free Google “Client ID” once.</div>'
+    +'<div class="field mt-s"><label>Google OAuth Client ID</label><input data-action="setClientId" placeholder="xxxxxx.apps.googleusercontent.com" value="'+esc(s.googleClientId)+'"></div>'
+    +'<button class="btn ghost sm mt-s" data-action="clientIdHelp">How do I get this? (step by step)</button>'
+    +'<div class="row between mt"><span>Dedicated calendar '+(calConnected?'<span class="badge ok">created</span>':'<span class="badge">not yet</span>')+'</span>'
+      +'<button class="btn primary sm" data-action="pushCal" '+(s.googleClientId?'':'disabled')+'>⚡ Push to my calendar</button></div>'
+    +'<label class="row mt-s" style="gap:8px;font-size:13px"><input type="checkbox" style="width:auto" data-action="toggleDailyReminder" '+(s.dailyReminder!==false?'checked':'')+'> Include a daily “'+esc(state.streak.anchorLabel)+'” reminder</label>';
+
+  html+='<div class="divider"></div><h3 style="font-size:14px">Option C · Plain file</h3><div class="btn-row mt-s"><button class="btn ghost sm" data-action="downloadICS">Download .ics</button></div>'
+    +'<div class="sub mt-s">Import into any calendar app. When importing in Google, pick a calendar to keep it separate.</div></div>';
+
+  // DRIVE
+  html+='<div class="card"><h3>📎 Google Drive (document files)</h3><div class="sub">Your scans live in your own Drive, in a folder the app creates: “'+esc(CFG.DRIVE_FOLDER)+'”. Uses the same Client ID as Option B.</div>'
+    +'<div class="row between mt"><span>Drive folder '+(s.driveFolderId?'<span class="badge ok">ready</span>':'<span class="badge">created on first upload</span>')+'</span>'
+    +'<button class="btn teal sm" data-action="connectDrive" '+(s.googleClientId?'':'disabled')+'>Connect Drive</button></div>'
+    + (s.googleClientId?'':'<div class="note mt">Add a Client ID above (Option B) to enable uploads. Until then, paste Drive links on each document.</div>')+'</div>';
+
+  // backup
+  html+='<div class="card"><h3 class="mb">Backup & data</h3><div class="btn-row">'
+    +'<button class="btn ghost sm" data-action="exportJson">⬇ Export JSON</button>'
+    +'<button class="btn ghost sm" data-action="importJson">⬆ Import JSON</button>'
+    +'<button class="btn ghost sm" data-action="resetAll" style="color:var(--red)">Reset everything</button></div>'
+    + (s.cloudSync?'<div class="btn-row mt-s"><button class="btn ghost sm" data-action="pullCloud">↻ Pull from cloud</button><button class="btn ghost sm" data-action="pushCloudNow">↑ Push to cloud</button></div>':'')
+    +'<div class="sub mt-s">Everything is stored privately in your browser first. Cloud sync (optional) keeps your phone & laptop in step and powers the calendar feed.</div></div>';
+
+  html+='<div class="center small faint" style="padding:10px">Escape Pipeline · built for momentum · v1</div>';
+  return html;
+}
+
+/* =============================== EVENTS ================================== */
+document.addEventListener('click', async (e)=>{
+  const t=e.target.closest('[data-action]');
+  const closeEl=e.target.closest('[data-close]');
+  if(closeEl && e.target===closeEl){ closeSheet(); closeModal(); return; }
+  if(!t) return;
+  const a=t.dataset.action, id=t.dataset.id, i=t.dataset.i, val=t.dataset.val, view=t.dataset.view, cur=t.dataset.cur;
+
+  switch(a){
+    case 'nav': e.preventDefault(); setView(view); break;
+    case 'more': openMore(); break;
+    case 'checkin': checkIn(); break;
+    case 'editNA': { const ed=$('#naEdit'); if(ed) ed.style.display=ed.style.display==='block'?'none':'block'; if(ed&&ed.style.display==='block') $('#naInput').focus(); break; }
+    case 'saveNA': setSilent(s=>{ s.nextActionOverride=$('#naInput').value.trim(); }); render(); toast('Next action set'); break;
+    case 'clearNA': mutate(s=>{ s.nextActionOverride=''; }); toast('Back to auto'); break;
+    case 'downloadICS': downloadICS(); break;
+
+    // documents
+    case 'toggleDoc': { const el=$('#docd-'+id); el.classList.toggle('open'); t.classList.toggle('open'); break; }
+    case 'docNextAction': { const d=state.documents.find(x=>x.id===id); mutate(s=>{ s.nextActionOverride='Finish: '+d.label; }); setView('home'); break; }
+    case 'docUpload': pickAndUpload(id); break;
+    case 'docNextActionClear': break;
+
+    // phase1
+    case 'toggleP1': { const el=$('#p1d-'+id); el.classList.toggle('open'); t.classList.toggle('open'); break; }
+    case 'p1NextAction': { const p=state.phase1.find(x=>x.id===id); mutate(s=>{ s.nextActionOverride=p.nextStep+' ('+p.label+')'; }); setView('home'); break; }
+
+    // phase2
+    case 'decision': mutate(s=>{ s.phase2.decision=val; }); addDone('Set Phase 2 direction: '+val,'phase2'); break;
+    case 'ausbAdd': { const v=$('#ausbInput').value.trim(); if(v) mutate(s=>{ s.phase2.germany.ausbildungShortlist.push(v); }); break; }
+    case 'ausbRemove': mutate(s=>{ s.phase2.germany.ausbildungShortlist.splice(+i,1); }); break;
+    case 'empAdd': { const v=$('#empInput').value.trim(); if(v) mutate(s=>{ s.phase2.germany.employers.push({id:uid(),name:v,status:'applied'}); }); break; }
+    case 'empCycle': { const order=['applied','selected','placed','closed']; mutate(s=>{ const em=s.phase2.germany.employers.find(x=>x.id===id); if(em){ const idx=order.indexOf(em.status); em.status=order[Math.min(order.length-1,idx+1)]; } }); break; }
+
+    // runway
+    case 'addTarget': { const l=$('#tgtLabel').value.trim(), am=+$('#tgtAmt').value, c=$('#tgtCur').value; if(l&&am) mutate(s=>{ s.runway.targets.push({id:uid(),label:l,amount:am,currency:c}); }); break; }
+    case 'addEntry': { const d=$('#enDate').value, src=$('#enSource').value.trim(), am=+$('#enAmt').value, c=$('#enCur').value; if(am){ mutate(s=>{ s.runway.entries.push({id:uid(),date:d||todayISO(),source:src,amount:am,currency:c}); }); addDone('Logged '+fmtMoney(am,c)+(src?' from '+src:''),'runway'); } break; }
+    case 'delEntry': mutate(s=>{ s.runway.entries=s.runway.entries.filter(x=>x.id!==id); }); break;
+    case 'fetchFx': toast('Fetching rates…'); try{ await fetchRates(); toast('Rates updated ✓'); }catch(err){ toast('Offline — kept your saved rates','err'); } break;
+
+    // german
+    case 'germanToday': { const tISO=todayISO(); mutate(s=>{ const g=s.phase2.germany; const gap=g.germanLastDay?daysBetween(g.germanLastDay,tISO):null; g.germanStreak=(gap===1)?g.germanStreak+1:1; g.germanLastDay=tISO; }); addDone('Did German (streak '+state.phase2.germany.germanStreak+')','german'); toast('🔥 German streak '+state.phase2.germany.germanStreak); break; }
+    case 'addLesson': { const v=$('#lessonText').value.trim(); if(v){ mutate(s=>{ s.phase2.germany.lessons.unshift({date:todayISO(),text:v}); }); addDone('German lesson: '+v,'german'); } break; }
+
+    // donelog
+    case 'addDoneManual': { const v=$('#doneText').value.trim(); if(v) addDone(v,'manual'); break; }
+    case 'delDone': mutate(s=>{ s.doneLog=s.doneLog.filter(x=>x.id!==id); }); break;
+
+    // why
+    case 'addReason': { const v=$('#reasonInput').value.trim(); if(v) mutate(s=>{ s.why.reasons.push(v); }); break; }
+    case 'delReason': mutate(s=>{ s.why.reasons.splice(+i,1); }); break;
+
+    // resources
+    case 'addResource': { const l=$('#resLabel').value.trim(), u=$('#resUrl').value.trim(); if(l&&u) mutate(s=>{ s.resources.push({label:l,url:/^https?:/.test(u)?u:'https://'+u}); }); break; }
+    case 'delResource': mutate(s=>{ s.resources.splice(+i,1); }); break;
+
+    // settings — google
+    case 'clientIdHelp': showClientIdHelp(); break;
+    case 'pushCal': toast('Connecting to Google…'); try{ const r=await pushToGoogleCalendar(); toast('Calendar synced ✓ ('+r.created+' new, '+r.updated+' updated)','ok'); }catch(err){ toast(err.message||'Push failed','err'); } break;
+    case 'connectDrive': toast('Connecting Drive…'); try{ const tk=await getAccessToken(); await ensureDriveFolder(tk); render(); toast('Drive folder ready ✓','ok'); }catch(err){ toast(err.message||'Drive failed','err'); } break;
+    case 'copyIcs': copyText($('#icsField').value); break;
+
+    // settings — cloud
+    case 'toggleCloud': await toggleCloud(); break;
+    case 'pullCloud': toast('Pulling…'); try{ const r=await pullCloud(); toast(r==='pulled'?'Pulled latest ✓':'Local is already newest'); }catch(err){ toast('Pull failed','err'); } break;
+    case 'pushCloudNow': toast('Pushing…'); try{ await pushCloud(); toast('Pushed ✓','ok'); }catch(err){ toast('Push failed','err'); } break;
+
+    // settings — backup
+    case 'exportJson': exportJson(); break;
+    case 'importJson': importJson(); break;
+    case 'resetAll': if(confirm('Erase ALL local data and start fresh? Export a backup first if unsure.')){ localStorage.removeItem(CFG.STORE_KEY); state=defaults(); saveLocal(); setView('home'); toast('Reset done'); } break;
+  }
+});
+
+/* change handlers for inputs/selects (fire on blur/commit) */
+document.addEventListener('change', (e)=>{
+  const t=e.target.closest('[data-action]'); if(!t) return;
+  const a=t.dataset.action, id=t.dataset.id, cur=t.dataset.cur, v=t.value;
+  switch(a){
+    case 'docStatus': { const wasDone=state.documents.find(x=>x.id===id).status==='done'; mutate(s=>{ const d=s.documents.find(x=>x.id===id); d.status=v; }); if(v==='done'&&!wasDone) addDone('Completed document: '+state.documents.find(x=>x.id===id).label,'documents'); break; }
+    case 'docExpiry': setSilent(s=>{ s.documents.find(x=>x.id===id).expiry=v; }); render(); break;
+    case 'docLink': setSilent(s=>{ s.documents.find(x=>x.id===id).driveLink=v; }); break;
+    case 'docNotes': setSilent(s=>{ s.documents.find(x=>x.id===id).notes=v; }); break;
+    case 'p1Status': { const p=state.phase1.find(x=>x.id===id); const was=p.status; mutate(s=>{ s.phase1.find(x=>x.id===id).status=v; }); if(v!==was) addDone(p.label+' → '+STATUS_LABELS[v],'phase1'); break; }
+    case 'p1Next': setSilent(s=>{ s.phase1.find(x=>x.id===id).nextStep=v; }); break;
+    case 'p1Wave': setSilent(s=>{ s.phase1.find(x=>x.id===id).waveWindow=v; }); break;
+    case 'sperrNote': setSilent(s=>{ s.phase2.germany.sperrkontoNote=v; }); break;
+    case 'audSaved': mutate(s=>{ s.phase2.australia.savedAUD=+v||0; }); break;
+    case 'sduwhv': mutate(s=>{ s.phase2.australia.sduwhvStatus=v; }); break;
+    case 'whvNotes': setSilent(s=>{ s.phase2.australia.whvNotes=v; }); break;
+    case 'germanLevel': mutate(s=>{ s.phase2.germany.germanLevel=v; }); break;
+    case 'rate': setSilent(s=>{ s.runway.rates[cur]=+v||0; }); render(); break;
+    case 'baseCur': mutate(s=>{ s.profile.baseCurrency=v; }); break;
+    case 'setName': setSilent(s=>{ s.profile.name=v; }); break;
+    case 'setBirth': mutate(s=>{ s.profile.birthDate=v; }); break;
+    case 'setAnchor': setSilent(s=>{ s.streak.anchorLabel=v; }); break;
+    case 'setClientId': setSilent(s=>{ s.settings.googleClientId=v.trim(); }); render(); break;
+    case 'toggleDailyReminder': mutate(s=>{ s.settings.dailyReminder=t.checked; }); break;
+  }
+});
+
+/* ============================ UI primitives ============================== */
+let toastTimer=null;
+function toast(msg,kind){ const el=$('#toast'); el.textContent=msg; el.className='toast show'+(kind==='err'?' err':kind==='ok'?' ok':''); clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.className='toast',2600); }
+function openMore(){
+  const back=$('#sheetBack'), sh=$('#sheet');
+  const rest=NAV.filter(n=>!n.primary && (n.id==='german'?germanVisible():true));
+  sh.innerHTML='<h3>More</h3><div class="navlist">'+rest.map(n=>'<button data-action="nav" data-view="'+n.id+'"><span style="font-size:18px">'+n.ic+'</span> '+n.label+'</button>').join('')+'</div>';
+  back.classList.add('show');
+}
+function closeSheet(){ $('#sheetBack').classList.remove('show'); }
+function openModal(html){ $('#modal').innerHTML=html; $('#modalBack').classList.add('show'); }
+function closeModal(){ $('#modalBack').classList.remove('show'); }
+function copyText(txt){ navigator.clipboard?navigator.clipboard.writeText(txt).then(()=>toast('Copied ✓'),()=>toast('Copy failed','err')):toast('Copy not supported','err'); }
+
+function showClientIdHelp(){
+  openModal('<h3>Get a Google Client ID (once)</h3>'
+    +'<div class="sub">Free. ~5 minutes. This lets the app push to your calendar and upload to your Drive directly.</div>'
+    +'<ol class="steps">'
+    +'<li>Go to <a href="https://console.cloud.google.com/projectcreate" target="_blank" rel="noopener">console.cloud.google.com</a> and create a project (any name).</li>'
+    +'<li>Search <b>“Google Calendar API”</b> → Enable. Then <b>“Google Drive API”</b> → Enable.</li>'
+    +'<li>Go to <b>APIs &amp; Services → OAuth consent screen</b>. Choose <b>External</b>, fill the app name + your email, Save. Under <b>Audience</b>, add your own Google email as a <b>Test user</b>.</li>'
+    +'<li>Go to <b>Credentials → Create credentials → OAuth client ID → Web application</b>.</li>'
+    +'<li>Under <b>Authorized JavaScript origins</b> add: <span class="kbd">https://dhiya.id</span></li>'
+    +'<li>Create → copy the <b>Client ID</b> (ends in <span class="kbd">.apps.googleusercontent.com</span>) → paste it in Settings.</li>'
+    +'</ol>'
+    +'<div class="note mt">No money, no card. The “unverified app” warning is normal for a personal tool — click <b>Advanced → continue</b>.</div>'
+    +'<button class="btn primary block mt" data-close="modal" onclick="document.getElementById(\'modalBack\').classList.remove(\'show\')">Got it</button>');
+}
+
+function pickAndUpload(docId){
+  if(!state.settings.googleClientId){ toast('Add a Client ID in Settings first','err'); setView('settings'); return; }
+  const inp=document.createElement('input'); inp.type='file';
+  inp.onchange=async()=>{ const f=inp.files[0]; if(!f) return; toast('Uploading "'+f.name+'"…'); try{ await driveUpload(f,docId); toast('Uploaded ✓','ok'); }catch(err){ toast(err.message||'Upload failed','err'); } };
+  inp.click();
+}
+async function toggleCloud(){
+  if(state.settings.cloudSync){ mutate(s=>{ s.settings.cloudSync=false; }); toast('Cloud sync off'); return; }
+  ensureToken(); mutate(s=>{ s.settings.cloudSync=true; });
+  toast('Syncing…'); try{ await pullCloud(); await pushCloud(); render(); toast('Cloud sync on ✓','ok'); }catch(err){ toast('Sync error — will retry','err'); }
+}
+function exportJson(){
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='escape-pipeline-backup-'+todayISO()+'.json';
+  document.body.appendChild(a); a.click(); a.remove(); toast('Backup downloaded');
+}
+function importJson(){
+  const inp=document.createElement('input'); inp.type='file'; inp.accept='application/json,.json';
+  inp.onchange=()=>{ const f=inp.files[0]; if(!f) return; const r=new FileReader();
+    r.onload=()=>{ try{ const obj=JSON.parse(r.result); state=deepMerge(defaults(),obj); state._ts=Date.now(); saveLocal(); scheduleCloud(); setView('home'); toast('Imported ✓','ok'); }catch(e){ toast('That file isn’t valid JSON','err'); } };
+    r.readAsText(f); };
+  inp.click();
+}
+
+/* ================================ INIT ================================== */
+function init(){
+  loadLocal();
+  render();
+  // service worker
+  if('serviceWorker' in navigator){ navigator.serviceWorker.register('/escape/sw.js').catch(()=>{}); }
+  // background cloud pull if enabled
+  if(state.settings.cloudSync){ pullCloud().catch(()=>{}); }
+}
+window.addEventListener('keydown',(e)=>{ if(e.key==='Escape'){ closeSheet(); closeModal(); } });
+init();
+</script>
+</body>
+</html>
