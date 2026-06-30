@@ -1286,12 +1286,14 @@ function showClientIdHelp(){
     +'<ol class="steps">'
     +'<li>Go to <a href="https://console.cloud.google.com/projectcreate" target="_blank" rel="noopener">console.cloud.google.com</a> and create a project (any name).</li>'
     +'<li>Search <b>“Google Calendar API”</b> → Enable. Then <b>“Google Drive API”</b> → Enable.</li>'
-    +'<li>Go to <b>APIs &amp; Services → OAuth consent screen</b>. Choose <b>External</b>, fill the app name + your email, Save. Under <b>Audience</b>, add your own Google email as a <b>Test user</b>.</li>'
+    +'<li>Go to <b>APIs &amp; Services → OAuth consent screen</b>. Choose <b>External</b>, fill the app name + your email, Save.</li>'
+    +'<li><b>Important:</b> open <b>Audience</b> → under <b>Test users</b> click <b>+ Add users</b> → add your own Gmail → Save. <span class="faint">(Skip this and sign-in is blocked with “access_denied”.)</span></li>'
     +'<li>Go to <b>Credentials → Create credentials → OAuth client ID → Web application</b>.</li>'
-    +'<li>Under <b>Authorized JavaScript origins</b> add: <span class="kbd">https://dhiya.id</span></li>'
+    +'<li>Under <b>Authorized JavaScript origins</b> click <b>+ Add URI</b> and add <b>both</b> (the site runs on www): <span class="kbd">https://www.dhiya.id</span> and <span class="kbd">https://dhiya.id</span></li>'
     +'<li>Create → copy the <b>Client ID</b> (ends in <span class="kbd">.apps.googleusercontent.com</span>) → paste it in Settings.</li>'
     +'</ol>'
-    +'<div class="note mt">No money, no card. The “unverified app” warning is normal for a personal tool — click <b>Advanced → continue</b>.</div>'
+    +'<div class="note mt">No money, no card. The “unverified app” warning is normal for a personal tool — click <b>Advanced → Continue</b>.</div>'
+    +'<div class="note gold mt-s"><b>If sign-in is blocked:</b><br>• <b>origin_mismatch</b> → you missed adding <span class="kbd">https://www.dhiya.id</span> as a JavaScript origin.<br>• <b>access_denied</b> → add your Gmail under <b>Audience → Test users</b>.<br>Changes can take a few minutes to take effect.</div>'
     +'<button class="btn primary block mt" data-close="modal" onclick="document.getElementById(\'modalBack\').classList.remove(\'show\')">Got it</button>');
 }
 
