@@ -187,9 +187,15 @@ textarea{resize:vertical;min-height:60px}
 .sheet{width:100%;max-width:520px;background:var(--panel);border:1px solid var(--line);border-radius:18px 18px 0 0;padding:14px 14px calc(18px + var(--safe-b));max-height:82dvh;overflow:auto}
 .modal{width:100%;max-width:480px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;max-height:84dvh;overflow:auto}
 .sheet h3{margin-bottom:8px}
-.navlist button{display:flex;align-items:center;gap:12px;width:100%;padding:12px;border-radius:10px;font-size:14.5px;color:var(--ink)}
+.navlist{display:flex;flex-direction:column;gap:2px}
+.navlist button{display:grid;grid-template-columns:24px 112px 1fr;align-items:center;gap:14px;width:100%;padding:12px 10px;border-radius:10px;color:var(--ink);text-align:left}
+.navlist button+button{border-top:1px solid rgba(246,191,82,.06)}
 .navlist button:hover{background:rgba(255,255,255,.04)}
-.navlist svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;opacity:.8}
+.navlist .nl-ic{display:inline-flex;align-items:center;justify-content:center}
+.navlist .nl-ic svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;opacity:.85}
+.navlist .nl-lbl{font-size:15px;font-weight:600;color:var(--ink)}
+.navlist .nl-hint{font-size:12px;color:var(--faint)}
+.navlist button.nl-wide .nl-lbl{grid-column:2/4;color:var(--amber-soft)}
 .toast{position:fixed;left:50%;bottom:calc(84px + var(--safe-b));transform:translateX(-50%) translateY(20px);z-index:80;
   background:linear-gradient(180deg,#191308,#0f0b05);border:1px solid var(--line2);color:var(--ink);padding:11px 16px;border-radius:10px;
   font-size:13px;box-shadow:var(--shadow);opacity:0;transition:.25s;pointer-events:none;max-width:90vw;text-align:center}
@@ -259,7 +265,8 @@ textarea{resize:vertical;min-height:60px}
 /* ---- info marker + tooltip ---- */
 .info{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;
   border:1px solid currentColor;font:700 8.5px/1 var(--body);cursor:pointer;opacity:.5;vertical-align:top;position:relative;top:-3px;
-  margin-left:2px;font-style:normal;color:var(--amber-dim);-webkit-tap-highlight-color:transparent}
+  margin-left:2px;font-style:normal;color:var(--amber-dim);-webkit-tap-highlight-color:transparent;
+  user-select:none;-webkit-user-select:none}
 .info:hover,.info:focus{opacity:1;outline:none;color:var(--amber-soft)}
 .tip{position:fixed;z-index:9999;max-width:250px;padding:10px 12px;border-radius:10px;font:500 12px/1.5 var(--body);
   background:#17110a;color:var(--cream);border:1px solid var(--line2);box-shadow:var(--shadow);opacity:0;transform:translateY(4px);
@@ -412,6 +419,7 @@ function defaults(){
       reminderTime:'05:00', dailyReminder:true,
       cloudSync:false, cloudToken:'',
       googleClientId:'', calendarId:'', driveFolderId:'', eventMap:{},
+      feedTopics:['taiwan','korea','japan','germany','australia','moves'], feedCustom:[],
     },
   };
 }
@@ -1126,6 +1134,21 @@ function viewMoney(){
 }
 
 /* ------------------------------- Tailwinds ------------------------------- */
+const FEED_SECTIONS=['Your routes','Gulf','Europe','Asia-Pacific','Americas','Themes'];
+const FEED_CATALOG={
+  taiwan:{flag:'🇹🇼',label:'Taiwan',section:'Your routes'}, korea:{flag:'🇰🇷',label:'Korea (EPS)',section:'Your routes'},
+  japan:{flag:'🇯🇵',label:'Japan (SSW)',section:'Your routes'}, germany:{flag:'🇩🇪',label:'Germany',section:'Your routes'},
+  australia:{flag:'🇦🇺',label:'Australia',section:'Your routes'},
+  gulf:{flag:'🕌',label:'Gulf (all)',section:'Gulf'}, saudi:{flag:'🇸🇦',label:'Saudi',section:'Gulf'}, qatar:{flag:'🇶🇦',label:'Qatar',section:'Gulf'},
+  uae:{flag:'🇦🇪',label:'UAE',section:'Gulf'}, oman:{flag:'🇴🇲',label:'Oman',section:'Gulf'}, kuwait:{flag:'🇰🇼',label:'Kuwait',section:'Gulf'},
+  europe:{flag:'🇪🇺',label:'Europe (all)',section:'Europe'}, netherlands:{flag:'🇳🇱',label:'Netherlands',section:'Europe'}, finland:{flag:'🇫🇮',label:'Finland',section:'Europe'},
+  norway:{flag:'🇳🇴',label:'Norway',section:'Europe'}, sweden:{flag:'🇸🇪',label:'Sweden',section:'Europe'}, denmark:{flag:'🇩🇰',label:'Denmark',section:'Europe'},
+  ireland:{flag:'🇮🇪',label:'Ireland',section:'Europe'}, poland:{flag:'🇵🇱',label:'Poland',section:'Europe'}, romania:{flag:'🇷🇴',label:'Romania',section:'Europe'}, portugal:{flag:'🇵🇹',label:'Portugal',section:'Europe'},
+  asia:{flag:'🌏',label:'Asia (all)',section:'Asia-Pacific'}, malaysia:{flag:'🇲🇾',label:'Malaysia',section:'Asia-Pacific'}, singapore:{flag:'🇸🇬',label:'Singapore',section:'Asia-Pacific'},
+  hongkong:{flag:'🇭🇰',label:'Hong Kong',section:'Asia-Pacific'}, newzealand:{flag:'🇳🇿',label:'New Zealand',section:'Asia-Pacific'},
+  northamerica:{flag:'🌎',label:'N. America (all)',section:'Americas'}, canada:{flag:'🇨🇦',label:'Canada',section:'Americas'}, usa:{flag:'🇺🇸',label:'USA',section:'Americas'},
+  moves:{flag:'🌐',label:'Openings & policy',section:'Themes'}, schengen:{flag:'🛂',label:'Schengen pathways',section:'Themes'},
+};
 let _feed=null, _feedTs=0, _feedFilter='all', _feedLoading=false;
 try{ const c=JSON.parse(localStorage.getItem('escapeFeed')||'null'); if(c){ _feed=c.data; _feedTs=c.ts||0; } }catch(e){}
 function timeAgo(s){
@@ -1138,7 +1161,9 @@ async function loadFeed(force){
   if(_feedLoading) return; if(!force && _feed && (Date.now()-_feedTs)<1800000) return;
   _feedLoading=true; if(currentView==='tailwinds') renderFeed();
   try{
-    const r=await fetch('/api/news',{cache:'no-store'});
+    const t=(state.settings.feedTopics||[]).join(',');
+    const c=(state.settings.feedCustom||[]).join(',');
+    const r=await fetch('/api/news?t='+encodeURIComponent(t)+'&c='+encodeURIComponent(c),{cache:'no-store'});
     if(!r.ok) throw new Error('feed '+r.status);
     const j=await r.json();
     _feed=j; _feedTs=Date.now();
@@ -1164,7 +1189,7 @@ function viewTailwinds(){
   const updated=_feedTs?'updated '+timeAgo(new Date(_feedTs).toISOString()):'';
   let html='<div class="panel"><div class="between"><div><h2 style="font-size:20px">Tailwinds'+info('Fresh news and live opportunities for the countries you’re eyeing — immigration rules, pay, visa windows, policy shifts. “Tailwinds” = the winds that speed your flight. Info is gold; this digs the mine for you.')+'</h2>'
     +'<div class="sub">Opportunities &amp; policy weather on your routes. Tap a story to read it.</div></div>'
-    +'<button class="btn ghost sm" data-action="refreshFeed">↻</button></div>'
+    +'<div class="row" style="gap:6px;flex:none"><button class="btn ghost sm" data-action="openCountries">🌍 Countries</button><button class="btn ghost sm" data-action="refreshFeed">↻</button></div></div>'
     +'<div class="row wrap mt" style="gap:6px">'+chips.map(c=>'<button class="btn '+(_feedFilter===c.id?'primary':'ghost')+' sm" data-action="feedFilter" data-f="'+c.id+'">'+esc(c.label)+'</button>').join('')+'</div>'
     +(updated?'<div class="faint small mt-s">'+updated+' · sources via Google News</div>':'')+'</div>';
   html+='<div id="feedBody"><div class="empty">Scanning the horizon…</div></div>';
@@ -1282,6 +1307,11 @@ document.addEventListener('click', async (e)=>{
     case 'guide': closeSheet(); openGuide(true); break;
     case 'feedFilter': _feedFilter=t.dataset.f||'all'; renderFeed(); { const cs=$$('#view [data-action="feedFilter"]'); cs.forEach(b=>b.classList.toggle('primary', b.dataset.f===_feedFilter)); cs.forEach(b=>b.classList.toggle('ghost', b.dataset.f!==_feedFilter)); } break;
     case 'refreshFeed': loadFeed(true); toast('Refreshing…'); break;
+    case 'openCountries': openCountries(); break;
+    case 'pickTopic': { const pid=t.dataset.id; if(_pickTopics.has(pid)){_pickTopics.delete(pid); t.classList.remove('primary'); t.classList.add('ghost');} else {_pickTopics.add(pid); t.classList.add('primary'); t.classList.remove('ghost');} break; }
+    case 'addCustom': { const el=$('#customCountry'); const v=el?el.value.trim():''; if(v && _pickCustom.indexOf(v)<0){ _pickCustom.push(v); openModal(pickerHTML()); } break; }
+    case 'rmCustom': _pickCustom.splice(+i,1); openModal(pickerHTML()); break;
+    case 'saveCountries': { const arr=[..._pickTopics]; mutate(s=>{ s.settings.feedTopics=arr; s.settings.feedCustom=_pickCustom.slice(); }); closeModal(); _feed=null; _feedTs=0; loadFeed(true); toast('Updated — pulling news…'); break; }
     case 'focusAdd': { const el=$('#enAmt'); if(el){ el.scrollIntoView({behavior:'smooth',block:'center'}); setTimeout(()=>el.focus(),300); } break; }
     case 'checkin': checkIn(); break;
     case 'editNA': { const ed=$('#naEdit'); if(ed){ ed.style.display=ed.style.display==='none'?'block':'none'; if(ed.style.display==='block') $('#naInput').focus(); } break; }
@@ -1358,8 +1388,9 @@ function toast(msg,kind){ const el=$('#toast'); el.textContent=msg; el.className
 function openMore(){
   const back=$('#sheetBack'), sh=$('#sheet');
   const rest=NAV.filter(n=>!BOTTOM.includes(n.id));
-  sh.innerHTML='<h3>More</h3><div class="navlist">'+rest.map(n=>'<button data-action="nav" data-view="'+n.id+'">'+icon(n.id)+' <span style="flex:1">'+n.label+'</span><span class="faint small">'+esc(n.hint||'')+'</span></button>').join('')
-    +'<button data-action="guide">'+icon('help')+' <span style="flex:1">How to use this app</span></button></div>';
+  sh.innerHTML='<h3>More</h3><div class="navlist">'
+    +rest.map(n=>'<button data-action="nav" data-view="'+n.id+'"><span class="nl-ic">'+icon(n.id)+'</span><span class="nl-lbl">'+n.label+'</span><span class="nl-hint">'+esc(n.hint||'')+'</span></button>').join('')
+    +'<button class="nl-wide" data-action="guide"><span class="nl-ic">'+icon('help')+'</span><span class="nl-lbl">How to use this app</span></button></div>';
   back.classList.add('show');
 }
 function closeSheet(){ $('#sheetBack').classList.remove('show'); }
@@ -1375,7 +1406,7 @@ function initTips(){
   const place=el=>{ const r=el.getBoundingClientRect(), tr=_tipEl.getBoundingClientRect();
     let left=r.left+r.width/2-tr.width/2; left=Math.max(8,Math.min(left,innerWidth-tr.width-8));
     let top=r.top-tr.height-9; if(top<8) top=r.bottom+9; _tipEl.style.left=left+'px'; _tipEl.style.top=top+'px'; };
-  const show=el=>{ const t=el.getAttribute('data-tip'); if(!t) return; _tipEl.textContent=t; _tipEl.style.opacity='0'; place(el); requestAnimationFrame(()=>{ place(el); _tipEl.classList.add('show'); }); };
+  const show=el=>{ const t=el.getAttribute('data-tip'); if(!t) return; _tipEl.textContent=t; _tipEl.classList.add('show'); place(el); requestAnimationFrame(()=>place(el)); };
   const hide=()=>{ _tipEl.classList.remove('show'); };
   document.addEventListener('mouseover',e=>{ const el=e.target.closest&&e.target.closest('[data-tip]'); if(el&&!_tipOpen) show(el); });
   document.addEventListener('mouseout',e=>{ const el=e.target.closest&&e.target.closest('[data-tip]'); if(el&&!_tipOpen) hide(); });
@@ -1398,6 +1429,29 @@ function openGuide(force){
     +'<div>Confused by a word? Tap the little <span class="info" style="position:static;top:0;margin:0 2px" data-tip="Exactly like this — a plain-language explainer. They’re sprinkled anywhere a term might trip you up.">i</span> beside it.</div>'
     +'</div>'
     +'<button class="btn primary block mt" data-action="nav" data-view="today">Show me Today →</button>');
+}
+
+/* Tailwinds country picker */
+let _pickTopics=null, _pickCustom=null;
+function openCountries(){
+  _pickTopics=new Set(state.settings.feedTopics||[]);
+  _pickCustom=(state.settings.feedCustom||[]).slice();
+  openModal(pickerHTML());
+}
+function pickerHTML(){
+  let h='<h3>Which countries?</h3><div class="sub">Pick the places you want news for — add your own too. Keep it to ~12 for speed.</div>';
+  FEED_SECTIONS.forEach(sec=>{
+    const ids=Object.keys(FEED_CATALOG).filter(id=>FEED_CATALOG[id].section===sec);
+    if(!ids.length) return;
+    h+='<div class="mt"><div class="eyebrow" style="padding:2px 0 6px">'+sec.toUpperCase()+'</div><div class="row wrap" style="gap:6px">'
+      +ids.map(id=>{ const c=FEED_CATALOG[id]; const on=_pickTopics.has(id);
+        return '<button class="btn '+(on?'primary':'ghost')+' sm" data-action="pickTopic" data-id="'+id+'">'+c.flag+' '+esc(c.label)+'</button>'; }).join('')+'</div></div>';
+  });
+  h+='<div class="mt"><div class="eyebrow" style="padding:2px 0 6px">YOUR OWN</div>';
+  if(_pickCustom.length) h+='<div class="row wrap" style="gap:6px;margin-bottom:8px">'+_pickCustom.map((x,i)=>'<span class="chip">🌍 '+esc(x)+' <button data-action="rmCustom" data-i="'+i+'">×</button></span>').join('')+'</div>';
+  h+='<div class="copywrap"><input id="customCountry" placeholder="e.g. Croatia, Bahrain…"><button class="btn ghost sm" data-action="addCustom">Add</button></div></div>';
+  h+='<button class="btn primary block mt" data-action="saveCountries">Save &amp; refresh</button>';
+  return h;
 }
 
 function showClientIdHelp(){

@@ -1,6 +1,6 @@
 /* Escape Pipeline service worker — offline-first app shell.
    Bump CACHE when you ship changes so clients pull the new version. */
-const CACHE = 'escape-v4';
+const CACHE = 'escape-v5';
 const SHELL = [
   '/escape',
   '/escape/',
