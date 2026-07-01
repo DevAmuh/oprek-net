@@ -89,7 +89,14 @@ async function fetchText(url, ms){
   } catch (e) { clearTimeout(to); return { ok: false, status: 0, text: '', err: String(e) }; }
 }
 const googleUrl = q => 'https://news.google.com/rss/search?q=' + encodeURIComponent(q) + '&hl=en-ID&gl=ID&ceid=ID:en';
+const bingUrl   = q => 'https://www.bing.com/news/search?q=' + encodeURIComponent(q) + '&format=rss';
 const slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '').slice(0, 24);
+function hostOf(link){ try{ return new URL(link).hostname.replace(/^www\./,''); }catch(e){ return ''; } }
+function mergeDedupe(a, b){
+  const out = a.slice(); const seen = new Set(a.map(x => x.title.toLowerCase().slice(0, 50)));
+  for (const it of b){ const k = it.title.toLowerCase().slice(0, 50); if (!seen.has(k)){ seen.add(k); out.push(it); } }
+  return out;
+}
 
 function buildTopics(req){
   const q = req.query || {};
@@ -113,9 +120,11 @@ module.exports = async (req, res) => {
   const TOPICS = buildTopics(req);
   try {
     const results = await Promise.all(TOPICS.map(async (t) => {
-      const r = await fetchText(googleUrl(t.q));
-      const items = r.ok ? parseItems(r.text, 7) : [];
-      return { id: t.id, flag: t.flag, label: t.label, items, _status: r.status };
+      const [g, b] = await Promise.all([ fetchText(googleUrl(t.q)), fetchText(bingUrl(t.q), 6000) ]);
+      let items = g.ok ? parseItems(g.text, 8) : [];
+      if (b.ok){ const bing = parseItems(b.text, 6).map(x => ({ ...x, source: x.source || hostOf(x.link) })); items = mergeDedupe(items, bing); }
+      items = items.sort((x, y) => y.ts - x.ts).slice(0, 8);
+      return { id: t.id, flag: t.flag, label: t.label, items, _status: g.status };
     }));
     let total = results.reduce((a, g) => a + g.items.length, 0);
     let source = 'google';

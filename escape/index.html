@@ -287,6 +287,33 @@ details.panel>summary{list-style:none}
 details.panel>summary::-webkit-details-marker{display:none}
 details.panel>summary::before{content:"▸ ";color:var(--amber-dim)}
 details.panel[open]>summary::before{content:"▾ "}
+/* full-row expandable items (Docs, Routes) — tap anywhere on the row */
+details.row-x>summary{list-style:none;cursor:pointer;user-select:none;-webkit-user-select:none;align-items:center}
+details.row-x>summary::-webkit-details-marker{display:none}
+details.row-x .chev{color:var(--faint);font-size:17px;transition:transform .2s;flex:none;padding-left:8px}
+details.row-x[open] .chev{transform:rotate(180deg);color:var(--amber-soft)}
+details.row-x .row-body{display:flex;flex-direction:column;gap:10px;margin-top:11px;cursor:default}
+details.row-x[open]{border-color:var(--line2)}
+/* ---- Tailwinds feed rows + Keep ---- */
+.feeditem{display:flex;align-items:flex-start;gap:8px;border:1px solid var(--line);border-radius:var(--radius-sm);padding:12px;margin-top:10px;background:rgba(255,255,255,.015);transition:border-color .2s}
+.feeditem:hover{border-color:var(--line2)}
+.feeditem .feed-t{flex:1;min-width:0;text-decoration:none;color:inherit}
+.keepbtn{flex:none;width:34px;height:34px;border-radius:9px;border:1px solid var(--line2);background:rgba(255,255,255,.03);color:var(--amber-dim);font-size:16px;line-height:1;transition:.15s}
+.keepbtn:hover{color:var(--amber-soft);border-color:var(--amber-dim);background:rgba(246,191,82,.08)}
+.keepbtn.kept{color:var(--green);border-color:rgba(95,208,138,.4);opacity:.85}
+
+/* ---- login gate ---- */
+.gate{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:22px;
+  background:radial-gradient(100% 70% at 50% -10%, rgba(246,191,82,.10), transparent 60%),linear-gradient(180deg,#0c0a06,#080604)}
+.gate.hide{display:none}
+.gate-inner{width:100%;max-width:380px}
+.gate-card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line2);border-radius:18px;padding:26px 22px;box-shadow:var(--shadow);text-align:center}
+.gate-logo{font-size:34px;margin-bottom:6px}
+.gate-card h2{font-size:22px;margin-bottom:6px}
+.gate-card .sub{font-size:13px}
+.gate-card input[type=password]{text-align:center;letter-spacing:.05em}
+.gate-err{color:var(--red);font-size:12.5px;min-height:16px;margin-top:8px}
+.gate-note{font-size:11.5px;color:var(--amber-dim);margin-top:12px;line-height:1.4}
 </style>
 </head>
 <body>
@@ -317,6 +344,8 @@ details.panel[open]>summary::before{content:"▾ "}
 </div>
 
 <nav class="tabbar" id="tabbar"></nav>
+
+<div id="gate" class="gate hide"></div>
 
 <div class="sheet-back" id="sheetBack" data-close="sheet"><div class="sheet" id="sheet"></div></div>
 <div class="modal-back" id="modalBack" data-close="modal"><div class="modal" id="modal"></div></div>
@@ -393,6 +422,7 @@ function defaults(){
       ratesUpdated:'',
     },
     doneLog:[],
+    saved:[],
     why:{
       reasons:[
         'The rupiah keeps shrinking — my hours are worth more abroad.',
@@ -467,9 +497,9 @@ function saveLocal(){ try{ localStorage.setItem(CFG.STORE_KEY, JSON.stringify(st
 
 let cloudTimer=null;
 function scheduleCloud(){
-  if(!state.settings.cloudSync) return;
+  if(!_unlocked) return;
   clearTimeout(cloudTimer);
-  cloudTimer=setTimeout(()=>pushCloud().catch(()=>{}), 1200);
+  cloudTimer=setTimeout(()=>vaultStore().catch(()=>{}), 1200);
 }
 function mutate(fn){
   try{ fn(state); }catch(e){ console.error(e); }
@@ -477,41 +507,28 @@ function mutate(fn){
 }
 function setSilent(fn){ try{ fn(state); }catch(e){} state._ts=Date.now(); saveLocal(); scheduleCloud(); }
 
-/* ------------------------------- cloud sync ------------------------------ */
-function ensureToken(){
-  if(!state.settings.cloudToken){
-    const a=new Uint8Array(24); crypto.getRandomValues(a);
-    state.settings.cloudToken=[...a].map(b=>b.toString(16).padStart(2,'0')).join('');
-  }
-  return state.settings.cloudToken;
-}
+/* ------------------- private vault (passphrase login) -------------------- */
+let _pass='', _feedToken='', _unlocked=false;
 async function rpc(fn, body){
   const r=await fetch(CFG.SUPA_URL+'/rest/v1/rpc/'+fn,{
     method:'POST',
     headers:{'Content-Type':'application/json','apikey':CFG.SUPA_KEY,'Authorization':'Bearer '+CFG.SUPA_KEY},
     body:JSON.stringify(body),
   });
-  if(!r.ok){ throw new Error('Cloud error '+r.status); }
-  const t=await r.text(); return t?JSON.parse(t):null;
+  const t=await r.text(); let j=null; try{ j=t?JSON.parse(t):null; }catch(e){}
+  if(!r.ok) throw new Error((j&&j.message)||('cloud '+r.status));
+  return j;
 }
-async function pushCloud(){
-  const token=ensureToken();
-  state.calendarItems=computeCalendarItems(state);
-  state._syncedTs=state._ts;
-  const payload={...state};
-  await rpc('escape_save',{ p_token:token, p_data:payload });
+async function vaultStore(){
+  if(!_unlocked) return;
+  state.calendarItems=computeCalendarItems(state); state._syncedTs=state._ts;
+  await rpc('escape_store',{ p_pass:_pass, p_data:{...state} });
 }
-async function pullCloud(){
-  const token=ensureToken();
-  const remote=await rpc('escape_load',{ p_token:token });
-  if(remote && typeof remote==='object'){
-    if((remote._ts||0) > (state._ts||0)){
-      state=deepMerge(defaults(), remote); migrate(); saveLocal(); render();
-      return 'pulled';
-    }
-    return 'local-newer';
-  }
-  return 'empty';
+async function vaultPull(){
+  const j=await rpc('escape_login',{ p_pass:_pass });
+  if(j){ _feedToken=j.feed_token||_feedToken;
+    if(j.data && (j.data._ts||0) > (state._ts||0)){ state=deepMerge(defaults(), j.data); migrate(); saveLocal(); render(); return 'pulled'; } }
+  return 'local-newer';
 }
 
 /* -------------------------------- helpers -------------------------------- */
@@ -1012,18 +1029,18 @@ function viewDocs(){
   state.documents.forEach(d=>{
     const exp=d.expiry, dleft=exp?daysBetween(todayISO(),exp):null;
     let expBadge=''; if(exp){ if(dleft<0) expBadge='<span class="badge crit">EXPIRED</span>'; else if(dleft<=90) expBadge='<span class="badge warn">'+dleft+'d</span>'; }
-    html+='<div class="item'+(d.critical?' crit':'')+'"><div class="between"><div class="title">'+esc(d.label)
+    html+='<details class="item row-x'+(d.critical?' crit':'')+'"><summary class="between"><span class="title">'+esc(d.label)
       +(d.critical?' <span class="badge crit">CRITICAL</span>':'')+statusBadge(d.status)+expBadge
-      +(d.driveLink?' <a class="badge live" href="'+esc(d.driveLink)+'" target="_blank" rel="noopener">📎 FILE</a>':'')
-      +'</div><span class="expander" data-action="toggleDoc" data-id="'+d.id+'">▾</span></div>'
-      +'<div class="detail" id="docd-'+d.id+'">'
+      +(d.driveLink?' <a class="badge live" href="'+esc(d.driveLink)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">📎 FILE</a>':'')
+      +'</span><span class="chev">▾</span></summary>'
+      +'<div class="row-body">'
       +'<div class="field"><label>Status</label><select data-action="docStatus" data-id="'+d.id+'">'
         +['not_started','in_progress','done'].map(s=>'<option value="'+s+'" '+(d.status===s?'selected':'')+'>'+STATUS_LABELS[s]+'</option>').join('')+'</select></div>'
       +'<div class="grid2"><div class="field"><label>Valid until</label><input type="date" data-action="docExpiry" data-id="'+d.id+'" value="'+esc(d.expiry||'')+'"></div>'
       +'<div class="field"><label>Drive link</label><input data-action="docLink" data-id="'+d.id+'" placeholder="Paste link" value="'+esc(d.driveLink||'')+'"></div></div>'
       +'<div class="field"><label>Notes</label><textarea data-action="docNotes" data-id="'+d.id+'" placeholder="Office, cost, appointment…">'+esc(d.notes||'')+'</textarea></div>'
       +'<div class="btn-row"><button class="btn primary sm" data-action="docUpload" data-id="'+d.id+'">⬆ Upload to Drive</button>'
-      +'<button class="btn ghost sm" data-action="docNextAction" data-id="'+d.id+'">★ Next move</button></div></div></div>';
+      +'<button class="btn ghost sm" data-action="docNextAction" data-id="'+d.id+'">★ Next move</button></div></div></details>';
   });
   html+='</div></div><div class="note">Your <b>Passport</b> is critical path — clear it and the app stops nagging you about it.</div>';
   return html;
@@ -1044,16 +1061,16 @@ function viewRoutes(){
   html+='<div class="note mt-s mb">🏭 Taiwan = a cash machine, not a home. Earn, bank it, don’t over-invest emotionally.</div>';
   html+='<div class="panel">';
   state.phase1.forEach(p=>{
-    html+='<div class="item"><div class="between"><div class="title">'+esc(p.label)+info(RINFO[p.id])+(p.lead?' <span class="badge live">LEAD</span>':'')+statusBadge(p.status)+'</div>'
-      +'<span class="expander" data-action="toggleP1" data-id="'+p.id+'">▾</span></div>'
+    html+='<details class="item row-x"><summary class="between"><span class="title">'+esc(p.label)+info(RINFO[p.id])+(p.lead?' <span class="badge live">LEAD</span>':'')+statusBadge(p.status)+'</span>'
+      +'<span class="chev">▾</span></summary>'
       +'<div class="sub mt-s">'+esc(p.note||'')+'</div>'
-      +'<div class="detail" id="p1d-'+p.id+'"><div class="grid2"><div class="field"><label>Status</label><select data-action="p1Status" data-id="'+p.id+'">'
+      +'<div class="row-body"><div class="grid2"><div class="field"><label>Status</label><select data-action="p1Status" data-id="'+p.id+'">'
         +opts.map(s=>'<option value="'+s+'" '+(p.status===s?'selected':'')+'>'+STATUS_LABELS[s]+'</option>').join('')+'</select></div>'
       +'<div class="field"><label>Next step</label><input data-action="p1Next" data-id="'+p.id+'" value="'+esc(p.nextStep||'')+'"></div></div>'
       +'<div class="field"><label>Wave / intake window <span class="faint">(a date like 2026-08-01 auto-adds to your calendar)</span></label>'
         +'<input data-action="p1Wave" data-id="'+p.id+'" placeholder="e.g. next wave 2026-08-01" value="'+esc(p.waveWindow||'')+'"></div>'
       +'<div class="btn-row"><a class="btn ghost sm" href="'+esc(p.link)+'" target="_blank" rel="noopener">Official site ↗</a>'
-        +'<button class="btn ghost sm" data-action="p1NextAction" data-id="'+p.id+'">★ Next move</button></div></div></div>';
+        +'<button class="btn ghost sm" data-action="p1NextAction" data-id="'+p.id+'">★ Next move</button></div></div></details>';
   });
   html+='</div>';
 
@@ -1150,6 +1167,7 @@ const FEED_CATALOG={
   moves:{flag:'🌐',label:'Openings & policy',section:'Themes'}, schengen:{flag:'🛂',label:'Schengen pathways',section:'Themes'},
 };
 let _feed=null, _feedTs=0, _feedFilter='all', _feedLoading=false;
+let _twMode='latest', _savedFilter='all', _savedSort='new', _savedFrom='', _savedTo='';
 try{ const c=JSON.parse(localStorage.getItem('escapeFeed')||'null'); if(c){ _feed=c.data; _feedTs=c.ts||0; } }catch(e){}
 function timeAgo(s){
   const t=s?Date.parse(s):0; if(!t) return '';
@@ -1157,6 +1175,8 @@ function timeAgo(s){
   if(d<=0) return 'today'; if(d===1) return 'yesterday'; if(d<7) return d+'d ago';
   if(d<30) return Math.floor(d/7)+'w ago'; if(d<365) return Math.floor(d/30)+'mo ago'; return Math.floor(d/365)+'y ago';
 }
+function niceDate(s){ const t=Date.parse(s); if(isNaN(t)) return ''; return new Date(t).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'}); }
+function isSaved(link){ return (state.saved||[]).some(x=>x.link===link); }
 async function loadFeed(force){
   if(_feedLoading) return; if(!force && _feed && (Date.now()-_feedTs)<1800000) return;
   _feedLoading=true; if(currentView==='tailwinds') renderFeed();
@@ -1178,22 +1198,59 @@ function renderFeed(){
   const groups=(_feed.groups||[]).filter(g=>g.items&&g.items.length && (_feedFilter==='all'||g.id===_feedFilter));
   if(!groups.length){ box.innerHTML='<div class="empty">Quiet on this route right now — check another, or back tomorrow.</div>'; return; }
   box.innerHTML=groups.map(g=>'<div style="margin-bottom:16px"><div class="eyebrow" style="padding:2px 0 8px">'+g.flag+' '+esc(g.label)+'</div>'
-    +g.items.map(it=>'<a href="'+esc(it.link)+'" target="_blank" rel="noopener" class="item" style="display:block;text-decoration:none;color:inherit">'
-      +'<div style="font-weight:600;font-size:14px;line-height:1.35;color:var(--cream)">'+esc(it.title)+'</div>'
-      +'<div class="faint small mt-s">'+esc(it.source||'News')+(it.date?' · '+timeAgo(it.date):'')+' ↗</div></a>').join('')
+    +g.items.map((it,idx)=>{ const kept=isSaved(it.link);
+      return '<div class="feeditem"><a href="'+esc(it.link)+'" target="_blank" rel="noopener" class="feed-t">'
+        +'<div style="font-weight:600;font-size:14px;line-height:1.35;color:var(--cream)">'+esc(it.title)+'</div>'
+        +'<div class="faint small mt-s">'+esc(it.source||'News')+(it.date?' · '+timeAgo(it.date):'')+' ↗</div></a>'
+        +'<button class="keepbtn'+(kept?' kept':'')+'" data-action="keepArticle" data-topic="'+g.id+'" data-idx="'+idx+'" '+(kept?'disabled':'')+' title="'+(kept?'Saved':'Keep this')+'">'+(kept?'✓':'☆')+'</button></div>';
+    }).join('')
     +'</div>').join('');
 }
 function ensureFeed(){ loadFeed(false); renderFeed(); }
+function savedHTML(){
+  const all=(state.saved||[]);
+  if(!all.length) return '<div class="panel"><div class="empty">Nothing kept yet.<br>In <b>Latest</b>, tap <b>☆</b> on any story worth remembering — then add your own note here.</div></div>';
+  const topics=[]; const seen=new Set();
+  all.forEach(s=>{ if(!seen.has(s.topicId)){ seen.add(s.topicId); topics.push({id:s.topicId,flag:s.flag,label:s.topicLabel}); } });
+  let list=all.filter(s=> _savedFilter==='all'||s.topicId===_savedFilter);
+  if(_savedFrom){ const f=Date.parse(_savedFrom); list=list.filter(s=>{ const d=s.date?Date.parse(s.date):s.savedAt; return isNaN(d)?true:d>=f; }); }
+  if(_savedTo){ const to=Date.parse(_savedTo)+86400000; list=list.filter(s=>{ const d=s.date?Date.parse(s.date):s.savedAt; return isNaN(d)?true:d<=to; }); }
+  list=list.slice().sort((a,b)=>{ const da=a.date?Date.parse(a.date):a.savedAt, db=b.date?Date.parse(b.date):b.savedAt; return _savedSort==='new'?(db-da):(da-db); });
+  let h='<div class="panel"><div class="row wrap" style="gap:6px">'
+    +'<button class="btn '+(_savedFilter==='all'?'primary':'ghost')+' sm" data-action="savedFilter" data-f="all">All ('+all.length+')</button>'
+    + topics.map(t=>'<button class="btn '+(_savedFilter===t.id?'primary':'ghost')+' sm" data-action="savedFilter" data-f="'+t.id+'">'+t.flag+' '+esc(t.label)+'</button>').join('')+'</div>'
+    +'<div class="row wrap mt-s" style="gap:8px;align-items:center">'
+      +'<button class="btn ghost sm" data-action="savedSort">'+(_savedSort==='new'?'↓ Newest first':'↑ Oldest first')+'</button>'
+      +'<span class="faint small">From</span><input type="date" data-action="savedFrom" value="'+esc(_savedFrom)+'" style="max-width:150px">'
+      +'<span class="faint small">to</span><input type="date" data-action="savedTo" value="'+esc(_savedTo)+'" style="max-width:150px">'
+      +((_savedFrom||_savedTo)?'<button class="btn ghost sm" data-action="clearDates">clear</button>':'')
+    +'</div></div>';
+  h+='<div class="panel">'+ (list.length? list.map(s=>
+      '<details class="item row-x"><summary class="between"><span class="title" style="flex-direction:column;align-items:flex-start;gap:3px;flex:1;min-width:0">'
+        +'<a href="'+esc(s.link)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-weight:600;color:var(--cream);line-height:1.35">'+esc(s.title)+'</a>'
+        +'<span class="faint small">'+s.flag+' '+esc(s.topicLabel)+' · '+esc(s.source||'')+(s.date?' · '+niceDate(s.date):'')+(s.note?' · 📝':'')+'</span></span><span class="chev">▾</span></summary>'
+        +'<div class="row-body"><div class="field"><label>Your note — why it matters, your next move…</label>'
+        +'<textarea data-action="saveNote" data-id="'+s.id+'" placeholder="e.g. Poland = cheaper Schengen foothold — check seasonal agri visa quotas & pay">'+esc(s.note||'')+'</textarea></div>'
+        +'<div class="btn-row"><a class="btn ghost sm" href="'+esc(s.link)+'" target="_blank" rel="noopener">Open ↗</a>'
+        +'<button class="btn ghost sm" data-action="unsave" data-id="'+s.id+'" style="color:var(--red)">Remove</button></div></div></details>'
+    ).join('') : '<div class="empty">No saved items match these filters.</div>')+'</div>';
+  return h;
+}
 function viewTailwinds(){
+  const savedCount=(state.saved||[]).length;
   const chips=[{id:'all',label:'All'}].concat((_feed&&_feed.groups?_feed.groups:[]).map(g=>({id:g.id,label:g.flag})));
   const updated=_feedTs?'updated '+timeAgo(new Date(_feedTs).toISOString()):'';
-  let html='<div class="panel"><div class="between"><div><h2 style="font-size:20px">Tailwinds'+info('Fresh news and live opportunities for the countries you’re eyeing — immigration rules, pay, visa windows, policy shifts. “Tailwinds” = the winds that speed your flight. Info is gold; this digs the mine for you.')+'</h2>'
-    +'<div class="sub">Opportunities &amp; policy weather on your routes. Tap a story to read it.</div></div>'
-    +'<div class="row" style="gap:6px;flex:none"><button class="btn ghost sm" data-action="openCountries">🌍 Countries</button><button class="btn ghost sm" data-action="refreshFeed">↻</button></div></div>'
-    +'<div class="row wrap mt" style="gap:6px">'+chips.map(c=>'<button class="btn '+(_feedFilter===c.id?'primary':'ghost')+' sm" data-action="feedFilter" data-f="'+c.id+'">'+esc(c.label)+'</button>').join('')+'</div>'
-    +(updated?'<div class="faint small mt-s">'+updated+' · sources via Google News</div>':'')+'</div>';
+  let html='<div class="panel"><div class="between"><div><h2 style="font-size:20px">Tailwinds'+info('Fresh news and live opportunities for the countries you’re eyeing — immigration rules, pay, visa windows, policy shifts. “Tailwinds” = the winds that speed your flight. Keep the golden ones and note why they matter.')+'</h2>'
+    +'<div class="sub">Opportunities &amp; policy weather on your routes.</div></div>'
+    +'<div class="row" style="gap:6px;flex:none"><button class="btn ghost sm" data-action="openCountries">🌍 Countries</button>'
+    +(_twMode==='latest'?'<button class="btn ghost sm" data-action="refreshFeed">↻</button>':'')+'</div></div>'
+    +'<div class="seg mt"><button data-action="twMode" data-m="latest" class="'+(_twMode==='latest'?'on':'')+'">Latest</button>'
+    +'<button data-action="twMode" data-m="saved" class="'+(_twMode==='saved'?'on':'')+'">Saved'+(savedCount?' ('+savedCount+')':'')+'</button></div></div>';
+  if(_twMode==='saved') return html+savedHTML();
+  html+='<div class="panel"><div class="row wrap" style="gap:6px">'+chips.map(c=>'<button class="btn '+(_feedFilter===c.id?'primary':'ghost')+' sm" data-action="feedFilter" data-f="'+c.id+'">'+esc(c.label)+'</button>').join('')+'</div>'
+    +(updated?'<div class="faint small mt-s">'+updated+' · aggregated via Google News</div>':'')+'</div>';
   html+='<div id="feedBody"><div class="empty">Scanning the horizon…</div></div>';
-  html+='<div class="note mt">Spot a better opportunity than your current plan? That’s the point — you can switch routes anytime in <b>Routes</b>. Info is gold.</div>';
+  html+='<div class="note mt">Spot a better opportunity than your current plan? Keep it (☆), note why — you can switch routes anytime in <b>Routes</b>. Info is gold.</div>';
   return html;
 }
 
@@ -1220,8 +1277,9 @@ function viewLanguages(){
 }
 
 function viewLog(){
-  let html='<div class="panel"><h2 style="font-size:20px">Log</h2><div class="sub">Proof you act — read this when you doubt yourself.</div>'
-    +'<div class="copywrap mt"><input id="doneText" placeholder="Log something you did"><button class="btn primary sm" data-action="addDoneManual">Add</button></div></div>';
+  let html='<div class="panel"><div class="between"><div><h2 style="font-size:20px">Log</h2><div class="sub">Your wins — real proof you act. Read it when you doubt yourself.'+info('Only genuine accomplishments land here (a document cleared, money banked, a check-in, a study session). Not every tap — this is fuel, not an audit trail.')+'</div></div>'
+    +(state.doneLog.length?'<button class="btn ghost sm" data-action="clearLog">Clear</button>':'')+'</div>'
+    +'<div class="copywrap mt"><input id="doneText" placeholder="Log a win — something you’re proud you did"><button class="btn primary sm" data-action="addDoneManual">Add</button></div></div>';
   if(!state.doneLog.length) return html+'<div class="panel"><div class="empty">Empty. Check in or finish one tiny thing — watch it fill.</div></div>';
   const groups={}; state.doneLog.forEach(e=>{ (groups[e.date]=groups[e.date]||[]).push(e); });
   html+='<div class="panel">';
@@ -1236,9 +1294,15 @@ function viewLog(){
 function viewSettings(){
   const s=state.settings;
   const calConnected=!!s.calendarId;
-  const icsUrl=s.cloudToken?CFG.ICS_BASE+'?token='+s.cloudToken:'(turn on cloud sync to get your feed link)';
+  const icsUrl=_feedToken?CFG.ICS_BASE+'?token='+_feedToken:'(reconnect online to get your feed link)';
   const w=state.why.wageComparison; const max=Math.max(...w.map(x=>x.monthlyUSD),1);
   let html='<div class="panel"><h2 style="font-size:20px">Settings</h2></div>';
+
+  // account / privacy
+  html+='<div class="panel"><h3 style="font-size:15px">🔒 Your private vault'+info('Your plan is locked to your passphrase. Nobody can see your data without it — not from the URL, not from the cloud. Only correct-passphrase requests can read or write it.')+'</h3>'
+    +'<div class="sub">Logged in · data is passphrase-encrypted in the cloud, and only you can unlock it.</div>'
+    +'<div class="btn-row mt"><button class="btn ghost sm" data-action="lockApp">Lock app</button>'
+    +'<button class="btn ghost sm" data-action="pushCloudNow">↑ Save now</button><button class="btn ghost sm" data-action="pullCloud">↻ Sync</button></div></div>';
 
   // WHY (folded in)
   html+='<div class="panel"><h3 style="font-size:15px">🔥 Why (refuel here)</h3>'
@@ -1256,10 +1320,8 @@ function viewSettings(){
   // calendar
   html+='<div class="panel"><h3 style="font-size:15px">📅 Google Calendar</h3><div class="sub">Both create a dedicated “'+esc(CFG.CAL_NAME)+'”. Your main calendar is never touched.</div>'
     +'<div class="divider"></div><h3 style="font-size:13px">A · Live subscription <span class="badge live">no setup</span></h3>'
-    +'<div class="row between mt-s"><span class="small">Cloud sync '+(s.cloudSync?'<span class="badge live">on</span>':'<span class="badge">off</span>')+'</span>'
-      +'<button class="btn '+(s.cloudSync?'ghost':'primary')+' sm" data-action="toggleCloud">'+(s.cloudSync?'Turn off':'Turn on')+'</button></div>'
-    +(s.cloudSync?('<div class="field mt-s"><label>Your private feed link</label><div class="copywrap"><input readonly value="'+esc(icsUrl)+'" id="icsField"><button class="btn primary sm" data-action="copyIcs">Copy</button></div></div>'
-      +'<ol class="steps"><li>Google Calendar on a computer.</li><li><b>Other calendars → + → From URL</b>.</li><li>Paste, <b>Add calendar</b>. It appears separately and self-syncs.</li></ol>'):'')
+    +'<div class="field mt-s"><label>Your private feed link</label><div class="copywrap"><input readonly value="'+esc(icsUrl)+'" id="icsField"><button class="btn primary sm" data-action="copyIcs">Copy</button></div></div>'
+    +'<ol class="steps"><li>Google Calendar on a computer.</li><li><b>Other calendars → + → From URL</b>.</li><li>Paste, <b>Add calendar</b>. It appears separately and self-syncs.</li></ol>'
     +'<div class="divider"></div><h3 style="font-size:13px">B · One-tap push <span class="badge warn">5-min setup</span></h3>'
     +'<div class="field mt-s"><label>Google OAuth Client ID</label><input data-action="setClientId" placeholder="xxxx.apps.googleusercontent.com" value="'+esc(s.googleClientId)+'"></div>'
     +'<button class="btn ghost sm mt-s" data-action="clientIdHelp">How do I get this?</button>'
@@ -1289,8 +1351,7 @@ function viewSettings(){
   html+='<div class="panel"><h3 class="mb" style="font-size:15px">Backup & data</h3><div class="btn-row">'
     +'<button class="btn ghost sm" data-action="exportJson">⬇ Export</button><button class="btn ghost sm" data-action="importJson">⬆ Import</button>'
     +'<button class="btn ghost sm" data-action="resetAll" style="color:var(--red)">Reset</button></div>'
-    +(s.cloudSync?'<div class="btn-row mt-s"><button class="btn ghost sm" data-action="pullCloud">↻ Pull</button><button class="btn ghost sm" data-action="pushCloudNow">↑ Push</button></div>':'')
-    +'<div class="sub mt-s">Stored privately in your browser first. Cloud sync (optional) keeps devices in step and powers the feed.</div></div>';
+    +'<div class="sub mt-s">Cached on this device for offline use, and synced privately to your passphrase-locked vault.</div></div>';
   html+='<div class="center small faint" style="padding:10px">Escape Pipeline · Departures edition · v2</div>';
   return html;
 }
@@ -1307,6 +1368,13 @@ document.addEventListener('click', async (e)=>{
     case 'guide': closeSheet(); openGuide(true); break;
     case 'feedFilter': _feedFilter=t.dataset.f||'all'; renderFeed(); { const cs=$$('#view [data-action="feedFilter"]'); cs.forEach(b=>b.classList.toggle('primary', b.dataset.f===_feedFilter)); cs.forEach(b=>b.classList.toggle('ghost', b.dataset.f!==_feedFilter)); } break;
     case 'refreshFeed': loadFeed(true); toast('Refreshing…'); break;
+    case 'twMode': _twMode=t.dataset.m; render(); break;
+    case 'keepArticle': { const g=(_feed&&_feed.groups||[]).find(x=>x.id===t.dataset.topic); const it=g&&g.items[+t.dataset.idx];
+      if(it && !isSaved(it.link)){ mutate(s=>{ (s.saved=s.saved||[]).unshift({ id:uid(), title:it.title, link:it.link, source:it.source||'', date:it.date||'', topicId:g.id, topicLabel:g.label, flag:g.flag, note:'', savedAt:Date.now() }); }); toast('Kept ✓ — see the Saved tab'); } break; }
+    case 'unsave': mutate(s=>{ s.saved=(s.saved||[]).filter(x=>x.id!==id); }); break;
+    case 'savedFilter': _savedFilter=t.dataset.f; render(); break;
+    case 'savedSort': _savedSort=_savedSort==='new'?'old':'new'; render(); break;
+    case 'clearDates': _savedFrom=''; _savedTo=''; render(); break;
     case 'openCountries': openCountries(); break;
     case 'pickTopic': { const pid=t.dataset.id; if(_pickTopics.has(pid)){_pickTopics.delete(pid); t.classList.remove('primary'); t.classList.add('ghost');} else {_pickTopics.add(pid); t.classList.add('primary'); t.classList.remove('ghost');} break; }
     case 'addCustom': { const el=$('#customCountry'); const v=el?el.value.trim():''; if(v && _pickCustom.indexOf(v)<0){ _pickCustom.push(v); openModal(pickerHTML()); } break; }
@@ -1323,7 +1391,7 @@ document.addEventListener('click', async (e)=>{
     case 'docUpload': pickAndUpload(id); break;
     case 'toggleP1': { const el=$('#p1d-'+id); if(el){el.classList.toggle('open'); t.classList.toggle('open');} break; }
     case 'p1NextAction': { const p=state.phase1.find(x=>x.id===id); mutate(s=>{ s.nextActionOverride=p.nextStep+' ('+p.label+')'; }); setView('today'); break; }
-    case 'decision': mutate(s=>{ s.phase2.decision=val; }); addDone('Set endgame direction: '+val,'routes'); break;
+    case 'decision': mutate(s=>{ s.phase2.decision=val; }); break;
     case 'ausbAdd': { const v=$('#ausbInput').value.trim(); if(v) mutate(s=>{ s.phase2.germany.ausbildungShortlist.push(v); }); break; }
     case 'ausbRemove': mutate(s=>{ s.phase2.germany.ausbildungShortlist.splice(+i,1); }); break;
     case 'empAdd': { const v=$('#empInput').value.trim(); if(v) mutate(s=>{ s.phase2.germany.employers.push({id:uid(),name:v,status:'applied'}); }); break; }
@@ -1336,6 +1404,7 @@ document.addEventListener('click', async (e)=>{
     case 'langLesson': { const el=$('#lesson-'+lang); const v=el?el.value.trim():''; if(v){ mutate(s=>{ s.languages[lang].lessons.unshift({date:todayISO(),text:v}); }); const meta=LANGS.find(m=>m.id===lang); addDone((meta?meta.label:lang)+' lesson: '+v,'languages'); } break; }
     case 'addDoneManual': { const v=$('#doneText').value.trim(); if(v) addDone(v,'manual'); break; }
     case 'delDone': mutate(s=>{ s.doneLog=s.doneLog.filter(x=>x.id!==id); }); break;
+    case 'clearLog': if(confirm('Clear the whole log? (Your other data stays.)')){ mutate(s=>{ s.doneLog=[]; }); toast('Log cleared'); } break;
     case 'addReason': { const v=$('#reasonInput').value.trim(); if(v) mutate(s=>{ s.why.reasons.push(v); }); break; }
     case 'delReason': mutate(s=>{ s.why.reasons.splice(+i,1); }); break;
     case 'addResource': { const l=$('#resLabel').value.trim(), u=$('#resUrl').value.trim(); if(l&&u) mutate(s=>{ s.resources.push({label:l,url:/^https?:/.test(u)?u:'https://'+u}); }); break; }
@@ -1344,9 +1413,11 @@ document.addEventListener('click', async (e)=>{
     case 'pushCal': toast('Connecting to Google…'); try{ const r=await pushToGoogleCalendar(); toast('Calendar synced ✓ ('+r.created+' new, '+r.updated+' upd)','ok'); }catch(err){ toast(err.message||'Push failed','err'); } break;
     case 'connectDrive': toast('Connecting Drive…'); try{ const tk=await getAccessToken(); await ensureDriveFolder(tk); render(); toast('Drive folder ready ✓','ok'); }catch(err){ toast(err.message||'Drive failed','err'); } break;
     case 'copyIcs': copyText($('#icsField').value); break;
-    case 'toggleCloud': await toggleCloud(); break;
-    case 'pullCloud': toast('Pulling…'); try{ const r=await pullCloud(); toast(r==='pulled'?'Pulled latest ✓':'Local is newest'); }catch(err){ toast('Pull failed','err'); } break;
-    case 'pushCloudNow': toast('Pushing…'); try{ await pushCloud(); toast('Pushed ✓','ok'); }catch(err){ toast('Push failed','err'); } break;
+    case 'doAuth': await doAuth(t.dataset.mode); break;
+    case 'lockApp': lockApp(); break;
+    case 'retryBoot': boot(); break;
+    case 'pullCloud': toast('Syncing…'); try{ const r=await vaultPull(); toast(r==='pulled'?'Pulled latest ✓':'Local is newest'); }catch(err){ toast('Sync failed','err'); } break;
+    case 'pushCloudNow': toast('Saving…'); try{ await vaultStore(); toast('Saved to cloud ✓','ok'); }catch(err){ toast('Save failed','err'); } break;
     case 'exportJson': exportJson(); break;
     case 'importJson': importJson(); break;
     case 'enableNotif': await enableNotifications(); break;
@@ -1363,7 +1434,7 @@ document.addEventListener('change', (e)=>{
     case 'docExpiry': setSilent(s=>{ s.documents.find(x=>x.id===id).expiry=v; }); render(); break;
     case 'docLink': setSilent(s=>{ s.documents.find(x=>x.id===id).driveLink=v; }); break;
     case 'docNotes': setSilent(s=>{ s.documents.find(x=>x.id===id).notes=v; }); break;
-    case 'p1Status': { const p=state.phase1.find(x=>x.id===id); const was=p.status; mutate(s=>{ s.phase1.find(x=>x.id===id).status=v; }); if(v!==was) addDone(p.label+' → '+STATUS_LABELS[v],'routes'); break; }
+    case 'p1Status': { mutate(s=>{ s.phase1.find(x=>x.id===id).status=v; }); break; }
     case 'p1Next': setSilent(s=>{ s.phase1.find(x=>x.id===id).nextStep=v; }); break;
     case 'p1Wave': setSilent(s=>{ s.phase1.find(x=>x.id===id).waveWindow=v; }); break;
     case 'sperrNote': setSilent(s=>{ s.phase2.germany.sperrkontoNote=v; }); break;
@@ -1379,6 +1450,9 @@ document.addEventListener('change', (e)=>{
     case 'setClientId': setSilent(s=>{ s.settings.googleClientId=v.trim(); }); render(); break;
     case 'toggleDailyReminder': mutate(s=>{ s.settings.dailyReminder=t.checked; }); break;
     case 'setReminderTime': setSilent(s=>{ s.settings.reminderTime=v; }); maybeNotify(); break;
+    case 'savedFrom': _savedFrom=v; render(); break;
+    case 'savedTo': _savedTo=v; render(); break;
+    case 'saveNote': setSilent(s=>{ const it=(s.saved||[]).find(x=>x.id===t.dataset.id); if(it) it.note=v; }); break;
   }
 });
 
@@ -1390,7 +1464,7 @@ function openMore(){
   const rest=NAV.filter(n=>!BOTTOM.includes(n.id));
   sh.innerHTML='<h3>More</h3><div class="navlist">'
     +rest.map(n=>'<button data-action="nav" data-view="'+n.id+'"><span class="nl-ic">'+icon(n.id)+'</span><span class="nl-lbl">'+n.label+'</span><span class="nl-hint">'+esc(n.hint||'')+'</span></button>').join('')
-    +'<button class="nl-wide" data-action="guide"><span class="nl-ic">'+icon('help')+'</span><span class="nl-lbl">How to use this app</span></button></div>';
+    +'</div>';
   back.classList.add('show');
 }
 function closeSheet(){ $('#sheetBack').classList.remove('show'); }
@@ -1475,11 +1549,6 @@ function pickAndUpload(docId){
   inp.onchange=async()=>{ const f=inp.files[0]; if(!f) return; toast('Uploading "'+f.name+'"…'); try{ await driveUpload(f,docId); toast('Uploaded ✓','ok'); }catch(err){ toast(err.message||'Upload failed','err'); } };
   inp.click();
 }
-async function toggleCloud(){
-  if(state.settings.cloudSync){ mutate(s=>{ s.settings.cloudSync=false; }); toast('Cloud sync off'); return; }
-  ensureToken(); mutate(s=>{ s.settings.cloudSync=true; });
-  toast('Syncing…'); try{ await pullCloud(); await pushCloud(); render(); toast('Cloud sync on ✓','ok'); }catch(err){ toast('Sync error — will retry','err'); }
-}
 function exportJson(){
   const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='escape-pipeline-backup-'+todayISO()+'.json';
@@ -1529,18 +1598,89 @@ function startReminderLoop(){
   window.addEventListener('focus', maybeNotify);
 }
 
+/* ============================= LOGIN GATE =============================== */
+function showGate(mode){
+  const g=$('#gate'); const app=document.querySelector('.app'); const tb=$('#tabbar');
+  if(app) app.style.display='none'; if(tb) tb.style.display='none';
+  g.classList.remove('hide');
+  let inner;
+  if(mode==='offline'){
+    inner='<div class="gate-card"><div class="gate-logo">🛫</div><h2>You’re offline</h2>'
+      +'<div class="sub">Connect to the internet to unlock your plan.</div>'
+      +'<button class="btn primary block mt" data-action="retryBoot">Retry</button></div>';
+  } else {
+    const create=mode==='create';
+    inner='<div class="gate-card"><div class="gate-logo">🛫</div>'
+      +'<h2>'+(create?'Set your passphrase':'Welcome back')+'</h2>'
+      +'<div class="sub">'+(create?'This locks your Escape plan to you alone. Pick something only you know.':'Enter your passphrase to unlock your plan.')+'</div>'
+      +'<input id="passInput" type="password" placeholder="Passphrase" autocomplete="'+(create?'new-password':'current-password')+'" style="margin-top:14px">'
+      +(create?'<input id="passInput2" type="password" placeholder="Repeat passphrase" style="margin-top:8px">':'')
+      +'<div id="gateErr" class="gate-err"></div>'
+      +'<button class="btn primary block" data-action="doAuth" data-mode="'+(create?'create':'login')+'">'+(create?'Create &amp; enter':'Unlock')+'</button>'
+      +'<label class="row mt-s small" style="gap:8px;justify-content:center"><input type="checkbox" id="rememberPass" style="width:auto" checked> Keep me signed in on this device</label>'
+      +(create?'<div class="gate-note">⚠ If you forget it, cloud access is lost. Export a backup from Settings once you’re in.</div>':'')
+      +'</div>';
+  }
+  g.innerHTML='<div class="gate-inner">'+inner+'</div>';
+  setTimeout(()=>{ const pi=$('#passInput'); if(pi) pi.focus(); },60);
+}
+async function doAuth(mode){
+  const pass=(($('#passInput')||{}).value||'').trim(); const err=$('#gateErr');
+  if(pass.length<6){ if(err) err.textContent='At least 6 characters.'; return; }
+  if(mode==='create'){ const p2=(($('#passInput2')||{}).value||'').trim(); if(pass!==p2){ if(err) err.textContent='Passphrases don’t match.'; return; } }
+  if(err) err.textContent='Working…';
+  try{
+    const j = mode==='create' ? await rpc('escape_register',{p_pass:pass}) : await rpc('escape_login',{p_pass:pass});
+    _pass=pass; _feedToken=(j&&j.feed_token)||''; _unlocked=true;
+    if(j && j.data && (j.data._ts||0) > (state._ts||0)){ state=deepMerge(defaults(), j.data); migrate(); saveLocal(); }
+    try{ if((($('#rememberPass')||{}).checked)) localStorage.setItem('escapeSession',pass); else localStorage.removeItem('escapeSession'); }catch(e){}
+    revealApp();
+    // push local up if it's newer than (or equal to) the cloud copy
+    if(mode==='create' || (state._ts||0) >= ((j&&j.data&&j.data._ts)||0)) vaultStore().catch(()=>{});
+  }catch(e){
+    const m=e.message||'';
+    if(err) err.textContent = /bad passphrase/i.test(m)?'Wrong passphrase.':(/already set up/i.test(m)?'Already set up — enter your passphrase.':(/short/i.test(m)?'Passphrase too short.':(m||'Something went wrong.')));
+  }
+}
+function revealApp(){
+  const g=$('#gate'), app=document.querySelector('.app'), tb=$('#tabbar');
+  if(g) g.classList.add('hide'); if(app) app.style.display=''; if(tb) tb.style.display='';
+  render(); tickClock();
+  loadFeed(false).catch(()=>{});
+  maybeNotify();
+  openGuide(false);
+}
+function lockApp(){
+  _unlocked=false; _pass='';
+  try{ localStorage.removeItem('escapeSession'); }catch(e){}
+  toast('Locked'); showGate('login');
+}
+async function boot(){
+  loadLocal();
+  let remembered=null; try{ remembered=localStorage.getItem('escapeSession'); }catch(e){}
+  if(remembered){
+    _pass=remembered; _unlocked=true; revealApp();
+    try{ const j=await rpc('escape_login',{p_pass:remembered}); _feedToken=(j&&j.feed_token)||'';
+      if(j&&j.data&&(j.data._ts||0)>(state._ts||0)){ state=deepMerge(defaults(),j.data); migrate(); saveLocal(); render(); } }
+    catch(e){ /* offline or passphrase changed — keep local */ }
+    return;
+  }
+  const app=document.querySelector('.app'), tb=$('#tabbar');
+  if(app) app.style.display='none'; if(tb) tb.style.display='none';
+  try{ const exists=await rpc('escape_status',{}); showGate(exists?'login':'create'); }
+  catch(e){ showGate('offline'); }
+}
+
 /* ================================ INIT ================================== */
 function init(){
-  loadLocal();
-  render(); tickClock(); setInterval(tickClock, 30000);
   initTips();
   if('serviceWorker' in navigator){ navigator.serviceWorker.register('/escape/sw.js').catch(()=>{}); }
-  if(state.settings.cloudSync){ pullCloud().catch(()=>{}); }
-  startReminderLoop(); maybeNotify();
-  loadFeed(false).catch(()=>{});          // warm the Tailwinds feed in the background
-  openGuide(false);                        // first-run walkthrough (once)
+  startReminderLoop();
+  setInterval(tickClock, 30000);
+  boot();
 }
 window.addEventListener('keydown',(e)=>{ if(e.key==='Escape'){ closeSheet(); closeModal(); } });
+document.addEventListener('keydown',(e)=>{ if(e.key==='Enter' && $('#passInput') && !$('#gate').classList.contains('hide')){ const b=$('#gate [data-action="doAuth"]'); if(b) b.click(); } });
 init();
 </script>
 </body>
