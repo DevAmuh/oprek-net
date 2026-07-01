@@ -245,6 +245,41 @@ textarea{resize:vertical;min-height:60px}
 @media(min-width:1160px){ .deskgrid{display:grid;grid-template-columns:1fr 340px;gap:22px;align-items:start} }
 @media(max-width:919px){ .desk-only{display:none} .col-fuel{display:none} }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---- Today = raised centre button ---- */
+.tabbar{overflow:visible}
+.tabbar button span{display:block}
+.tabbar button.center{color:var(--amber-soft)}
+.tabbar button.center svg{width:54px;height:54px;padding:15px;border-radius:50%;
+  background:linear-gradient(180deg,var(--amber-soft),var(--amber));stroke:#241a05;color:#241a05;
+  margin-top:-28px;box-shadow:0 10px 26px -8px rgba(246,191,82,.75),0 0 0 5px var(--bg)}
+.tabbar button.center.on::before,.tabbar button.center::before{display:none}
+.tabbar button.center span{margin-top:3px;font-size:9.5px}
+
+/* ---- info marker + tooltip ---- */
+.info{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;
+  border:1px solid currentColor;font:700 8.5px/1 var(--body);cursor:pointer;opacity:.5;vertical-align:top;position:relative;top:-3px;
+  margin-left:2px;font-style:normal;color:var(--amber-dim);-webkit-tap-highlight-color:transparent}
+.info:hover,.info:focus{opacity:1;outline:none;color:var(--amber-soft)}
+.tip{position:fixed;z-index:9999;max-width:250px;padding:10px 12px;border-radius:10px;font:500 12px/1.5 var(--body);
+  background:#17110a;color:var(--cream);border:1px solid var(--line2);box-shadow:var(--shadow);opacity:0;transform:translateY(4px);
+  transition:opacity .14s,transform .14s;pointer-events:none;text-align:left}
+.tip.show{opacity:1;transform:none}
+
+/* ---- help buttons + guide ---- */
+.iconbtn{width:28px;height:28px;border-radius:50%;border:1px solid var(--line2);color:var(--amber-dim);
+  font:700 14px var(--body);display:flex;align-items:center;justify-content:center;flex:none}
+.iconbtn:hover{color:var(--amber-soft);border-color:var(--amber-dim)}
+.rail-help{margin-top:auto;text-align:left;padding:11px 12px;color:var(--faint);font:700 11.5px var(--mono);letter-spacing:.04em;border-radius:9px}
+.rail-help:hover{background:rgba(255,255,255,.04);color:var(--amber-soft)}
+.guide-list{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.guide-list>div{font-size:13.5px;color:var(--muted);padding-left:13px;border-left:2px solid var(--line2);line-height:1.5}
+.guide-list>div b{color:var(--cream)}
+.guide-list>div.hi{border-left-color:var(--amber);color:var(--cream)}
+details.panel>summary{list-style:none}
+details.panel>summary::-webkit-details-marker{display:none}
+details.panel>summary::before{content:"▸ ";color:var(--amber-dim)}
+details.panel[open]>summary::before{content:"▾ "}
 </style>
 </head>
 <body>
@@ -256,12 +291,14 @@ textarea{resize:vertical;min-height:60px}
     <div class="streakbig" id="streakBig">🔥 0-day streak</div>
     <div class="gate-lbl">VIEWS</div>
     <nav id="railnav"></nav>
+    <button class="rail-help" data-action="guide">? How to use this</button>
   </aside>
 
   <main class="stage">
     <div class="topbar">
       <span class="flip">ESCAPE</span>
       <span class="clock" id="clock">05:14</span>
+      <button class="iconbtn" data-action="guide" aria-label="How to use this app">?</button>
       <button class="streakpill" data-action="nav" data-view="today" id="streakPill">🔥 0</button>
     </div>
     <div class="board-masthead">
@@ -381,7 +418,7 @@ function defaults(){
 
 /* --------------------------- state & persistence ------------------------- */
 let state = defaults();
-let currentView = 'board';
+let currentView = 'today';
 
 function deepMerge(base, over){
   if(Array.isArray(base)) return Array.isArray(over)&&over.length!==undefined?over:base;
@@ -534,7 +571,7 @@ function nextAction(){
     return { text:'Apply to one Ausbildung employer', via:'Germany endgame', view:'routes' };
   }
   if(s.phase2.decision==='australia'){
-    if((+s.phase2.australia.savedAUD||0) < 5000) return { text:'Add to your AUD 5,000 buffer', via:'Australia endgame', view:'fuel' };
+    if((+s.phase2.australia.savedAUD||0) < 5000) return { text:'Add to your AUD 5,000 buffer', via:'Australia endgame', view:'money' };
     return { text:'Progress your WHV 462 application', via:'Australia endgame', view:'routes' };
   }
   return { text:'Ship one tiny thing today', via:'Open any gate', view:'docs' };
@@ -730,6 +767,9 @@ const ICONS={
   ascent:'<svg viewBox="0 0 24 24"><path d="M12 21V6M12 6l4 4M12 6 8 10"/><circle cx="12" cy="4" r="1.6"/></svg>',
   docs:'<svg viewBox="0 0 24 24"><path d="M5 4h7l2 2.5h5V20H5z"/></svg>',
   routes:'<svg viewBox="0 0 24 24"><path d="M3 17.5 21 5M9 19l-2-5-5-2 4-2 2-5 2 5 5 2-4 2z"/></svg>',
+  tailwinds:'<svg viewBox="0 0 24 24"><path d="M3 8h11a2.5 2.5 0 1 0-2.5-2.5"/><path d="M3 12h15a2.5 2.5 0 1 1-2.5 2.5"/><path d="M3 16h9a2 2 0 1 1-2 2"/></svg>',
+  money:'<svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.4"/><path d="M6.5 12h.01M17.5 12h.01"/></svg>',
+  help:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.2 9.2a2.8 2.8 0 1 1 3.6 2.7c-.7.3-.8.8-.8 1.4v.3"/><path d="M12 17h.01"/></svg>',
   fuel:'<svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M7 15l4-4 3 3 5-6"/></svg>',
   languages:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.3 2.6 14.7 0 17M12 3.5c-2.6 2.3-2.6 14.7 0 17"/></svg>',
   log:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 12.3l2.3 2.3 4.7-4.9"/></svg>',
@@ -737,36 +777,44 @@ const ICONS={
   more:'<svg viewBox="0 0 24 24"><circle cx="6" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="18" cy="12" r="1.4"/></svg>',
 };
 function icon(id){ return ICONS[id]||''; }
+// Rail order (desktop, top→bottom). Mobile bottom bar is defined by BOTTOM.
 const NAV=[
-  { id:'board',     label:'Board',     primary:true },
-  { id:'today',     label:'Today',     primary:true },
-  { id:'ascent',    label:'Ascent',    primary:true },
-  { id:'routes',    label:'Routes',    primary:true },
-  { id:'docs',      label:'Docs',      primary:false },
-  { id:'fuel',      label:'Fuel',      primary:false },
-  { id:'languages', label:'Languages', primary:false },
-  { id:'log',       label:'Log',       primary:false },
-  { id:'settings',  label:'Settings',  primary:false },
+  { id:'today',     label:'Today',     hint:'The one thing to do today' },
+  { id:'board',     label:'Board',     hint:'Overview + your deadline calendar' },
+  { id:'tailwinds', label:'Tailwinds', hint:'Live news & opportunities' },
+  { id:'docs',      label:'Docs',      hint:'Your document checklist' },
+  { id:'money',     label:'Money',     hint:'What you’ve saved for the move' },
+  { id:'ascent',    label:'Ascent',    hint:'Your progress as a climb' },
+  { id:'routes',    label:'Routes',    hint:'The countries & how to get there' },
+  { id:'languages', label:'Languages', hint:'Korean · Japanese · German' },
+  { id:'log',       label:'Log',       hint:'Everything you’ve done' },
+  { id:'settings',  label:'Settings',  hint:'Calendar, backup, help' },
 ];
+// Mobile bottom bar — Today sits dead-centre and pops out.
+const BOTTOM=['board','tailwinds','today','docs','more'];
 
-function setView(id){ currentView=id; closeSheet(); render(); window.scrollTo({top:0,behavior:'smooth'}); }
+function setView(id){ currentView=id; closeSheet(); closeModal(); render(); window.scrollTo({top:0,behavior:'smooth'}); }
 
 function render(){
   const nm=(NAV.find(n=>n.id===currentView)||{}).label||'Board';
   const sp=$('#streakPill'); if(sp) sp.innerHTML='🔥 '+(state.streak.count||0);
   const sb=$('#streakBig'); if(sb) sb.textContent='🔥 '+(state.streak.count||0)+'-day streak';
   const vn=$('#vwName'); if(vn) vn.textContent=nm;
-  // rail nav (desktop)
+  // rail nav (desktop) — all views, with a one-line hint
   const rn=$('#railnav'); if(rn) rn.innerHTML=NAV.map(n=>
-    '<button data-action="nav" data-view="'+n.id+'" class="'+(currentView===n.id?'on':'')+'">'+icon(n.id)+n.label+'</button>').join('');
-  // tab bar (mobile): primary + More
-  const prim=NAV.filter(n=>n.primary);
-  const tb=$('#tabbar'); if(tb) tb.innerHTML=prim.map(n=>
-    '<button data-action="nav" data-view="'+n.id+'" class="'+(currentView===n.id?'on':'')+'">'+icon(n.id)+n.label+'</button>').join('')
-    +'<button data-action="more" class="'+(prim.some(p=>p.id===currentView)?'':'on')+'">'+icon('more')+'More</button>';
-  const fn={ board:viewBoard, today:viewToday, ascent:viewAscent, docs:viewDocs, routes:viewRoutes,
-    fuel:viewFuel, languages:viewLanguages, log:viewLog, settings:viewSettings }[currentView]||viewBoard;
+    '<button data-action="nav" data-view="'+n.id+'" class="'+(currentView===n.id?'on':'')+'" title="'+esc(n.hint||'')+'">'+icon(n.id)+n.label+'</button>').join('');
+  // tab bar (mobile) — Today dead-centre and raised
+  const barDirect=BOTTOM.filter(x=>x!=='more');
+  const tb=$('#tabbar'); if(tb) tb.innerHTML=BOTTOM.map(id=>{
+    if(id==='more'){ const onMore=!barDirect.includes(currentView); return '<button data-action="more" class="'+(onMore?'on':'')+'">'+icon('more')+'More</button>'; }
+    const n=NAV.find(x=>x.id===id)||{id,label:id};
+    const center=id==='today'?' center':'';
+    return '<button data-action="nav" data-view="'+id+'" class="'+(currentView===id?'on':'')+center+'">'+icon(id)+'<span>'+n.label+'</span></button>';
+  }).join('');
+  const fn={ board:viewBoard, today:viewToday, tailwinds:viewTailwinds, ascent:viewAscent, docs:viewDocs, routes:viewRoutes,
+    money:viewMoney, languages:viewLanguages, log:viewLog, settings:viewSettings }[currentView]||viewToday;
   const vw=$('#view'); vw.innerHTML=fn();
+  if(currentView==='tailwinds') ensureFeed();
   vw.classList.remove('fade'); void vw.offsetWidth; vw.classList.add('fade');
 }
 function tickClock(){
@@ -839,7 +887,7 @@ function viewBoard(){
 
   const stats='<div class="statstrip mt">'
     +'<div class="statcell"><div class="k">DOCS CLEARED</div><div class="v">'+String(dp.done).padStart(2,'0')+'/'+String(dp.total).padStart(2,'0')+'</div>'+bar(dp.pct)+'</div>'
-    +'<div class="statcell"><div class="k">FUEL BANKED</div><div class="v">'+fmtMoney(banked(),state.profile.baseCurrency)+'</div>'+bar(audPct,true)+'</div>'
+    +'<div class="statcell"><div class="k">MONEY SAVED</div><div class="v">'+fmtMoney(banked(),state.profile.baseCurrency)+'</div>'+bar(audPct,true)+'</div>'
     +'<div class="statcell"><div class="k">STREAK</div><div class="v">'+String(state.streak.count).padStart(2,'0')+' 🔥</div></div>'
     +'</div>';
 
@@ -847,10 +895,24 @@ function viewBoard(){
     +'<div class="sub">'+esc(state.streak.anchorLabel||'After Subuh')+' · streak <b style="color:var(--amber-soft)">'+state.streak.count+'</b></div></div>'
     +'<button class="btn '+(checkedToday?'ghost':'primary')+' mono sm" data-action="checkin" '+(checkedToday?'disabled':'')+'>'+(checkedToday?'✓ DONE':'I SHOWED UP')+'</button></div></div>';
 
-  const cal='<div class="panel"><div class="between"><div><div style="font-weight:600">Push deadlines to a calendar</div>'
-    +'<div class="sub">A separate “'+esc(CFG.CAL_NAME)+'” — never your main one.</div></div></div>'
-    +'<div class="btn-row mt"><button class="btn ghost sm" data-action="nav" data-view="settings">Set up →</button>'
-    +'<button class="btn ghost sm" data-action="downloadICS">.ics</button></div></div>';
+  // Calendar agenda — deadlines, in-app (mirrors the Escape Velocity Google calendar)
+  const agItems=computeCalendarItems(state).filter(i=>!i.rrule && i.date).sort((a,b)=>a.date.localeCompare(b.date));
+  let agRows;
+  if(agItems.length){
+    agRows='<div class="mt">'+agItems.slice(0,6).map(i=>{ const dl=daysBetween(todayISO(),i.date);
+      const when=dl===0?'today':(dl>0?'in '+dl+'d':Math.abs(dl)+'d ago');
+      const cls=dl!=null&&dl<0?'crit':(dl!=null&&dl<=30?'warn':'');
+      return '<div class="between" style="padding:8px 0;border-bottom:1px solid var(--line)"><div><div style="font-size:13px;font-weight:600">'+esc(i.title)+'</div><div class="faint small">'+fmtDate(i.date)+'</div></div><span class="badge '+cls+'">'+when+'</span></div>';
+    }).join('')+'</div>';
+  } else {
+    agRows='<div class="empty">No dated deadlines yet.<br>Add an expiry in <b>Docs</b>, or a wave date in <b>Routes</b>, and it shows here.</div>';
+  }
+  const cal='<div class="panel"><div class="between"><div style="font-weight:600">🗓 Your calendar'
+    +info('Your deadlines, right here in the app. This is the same list as the “'+CFG.CAL_NAME+'” Google calendar — sync it in Settings and these show in your phone’s calendar too, so you never have to leave.')+'</div>'
+    +'<button class="btn ghost sm" data-action="nav" data-view="settings">Sync ↗</button></div>'
+    +agRows
+    +'<div class="btn-row mt"><button class="btn ghost sm" data-action="downloadICS">⬇ .ics</button>'
+    +'<button class="btn ghost sm" data-action="nav" data-view="settings">Push to Google →</button></div></div>';
 
   // Desktop: 2-col wall (board + side). Mobile: stacked.
   return '<div class="deskgrid">'
@@ -925,7 +987,7 @@ function viewAscent(){
 
   html+='<div class="panel mt"><div class="between"><div><div class="k mono" style="font-size:9px;letter-spacing:.14em;color:var(--amber-faint)">FUEL BANKED</div>'
     +'<div style="font-family:var(--mono);font-weight:700;font-size:20px;color:var(--amber-soft)">'+fmtMoney(banked(),state.profile.baseCurrency)+'</div></div>'
-    +'<button class="btn primary mono sm" data-action="nav" data-view="fuel">+ LOG</button></div></div>';
+    +'<button class="btn primary mono sm" data-action="nav" data-view="money">+ LOG</button></div></div>';
   return html;
 }
 
@@ -936,7 +998,7 @@ function statusBadge(status){
 }
 function viewDocs(){
   const dp=docProgress();
-  let html='<div class="panel"><div class="between"><div><h2 style="font-size:20px">Documents</h2><div class="sub">The gate. Nothing downstream moves without these.</div></div>'
+  let html='<div class="panel"><div class="between"><div><h2 style="font-size:20px">Documents</h2><div class="sub">The gate — nothing downstream moves without these. <b>Tap any row</b> to set its status, add an expiry date, or upload a scan.</div></div>'
     +'<div style="text-align:right"><div style="font-family:var(--mono);font-weight:700;font-size:20px;color:var(--amber-soft)">'+dp.done+'/'+dp.total+'</div></div></div><div class="mt">'+bar(dp.pct)+'</div></div>';
   html+='<div class="panel"><div class="cols2">';
   state.documents.forEach(d=>{
@@ -962,14 +1024,19 @@ function viewDocs(){
 function viewRoutes(){
   const dec=state.phase2.decision;
   const opts=['not_started','registered','applied','selected','placed','closed'];
-  let html='<div class="panel"><h2 style="font-size:20px">Routes</h2><div class="sub">Two legs: a <b>cash bridge</b> to earn hard currency, then your <b>endgame</b> for citizenship.</div></div>';
+  const RINFO={
+    taiwan_sp2t:'SP2T = Taiwan’s government-to-government worker scheme. No agency fee, no language test — your fastest hard-currency bridge. ~NT$29,500/mo + overtime.',
+    korea_eps:'EPS = Korea’s Employment Permit System. Needs the EPS-TOPIK Korean test (~$28) before you can be placed.',
+    japan_ssw:'SSW = “Specified Skilled Worker” visa. Needs JFT-Basic A2 Japanese plus a skills test.'
+  };
+  let html='<div class="panel"><h2 style="font-size:20px">Routes'+info('The countries you could go to, and how. Leg 1 (“cash bridge”) is a quick job abroad to earn hard currency; Leg 2 (“endgame”) is where you settle for citizenship. Tap a row to open its details.')+'</h2><div class="sub">Two legs: a <b>cash bridge</b> to earn hard currency, then your <b>endgame</b> for citizenship. Tap any row to open it.</div></div>';
 
   // CASH BRIDGE
   html+='<div class="eyebrow" style="padding:2px 2px 8px">CASH BRIDGE — EARN FIRST</div>';
   html+='<div class="note mt-s mb">🏭 Taiwan = a cash machine, not a home. Earn, bank it, don’t over-invest emotionally.</div>';
   html+='<div class="panel">';
   state.phase1.forEach(p=>{
-    html+='<div class="item"><div class="between"><div class="title">'+esc(p.label)+(p.lead?' <span class="badge live">LEAD</span>':'')+statusBadge(p.status)+'</div>'
+    html+='<div class="item"><div class="between"><div class="title">'+esc(p.label)+info(RINFO[p.id])+(p.lead?' <span class="badge live">LEAD</span>':'')+statusBadge(p.status)+'</div>'
       +'<span class="expander" data-action="toggleP1" data-id="'+p.id+'">▾</span></div>'
       +'<div class="sub mt-s">'+esc(p.note||'')+'</div>'
       +'<div class="detail" id="p1d-'+p.id+'"><div class="grid2"><div class="field"><label>Status</label><select data-action="p1Status" data-id="'+p.id+'">'
@@ -1021,39 +1088,92 @@ function viewRoutes(){
   return html;
 }
 
-function viewFuel(){
+function viewMoney(){
   const base=state.profile.baseCurrency;
   const total=banked();
   const idnMonthly=(state.why.wageComparison.find(w=>/indonesia/i.test(w.place))||{monthlyUSD:140}).monthlyUSD;
   const months=idnMonthly?(bankedUSD()/idnMonthly):0;
-  let html='<div class="panel"><div class="between"><div><h2 style="font-size:20px">Fuel</h2><div class="sub">Every entry is runway. Watch it stack.</div></div>'
-    +'<div style="text-align:right"><div style="font-family:var(--mono);font-weight:700;font-size:20px;color:var(--amber-soft)">'+fmtMoney(total,base)+'</div><div class="faint small">banked</div></div></div>'
-    +(months>0?'<div class="note mt">≈ <b>'+fmtNum(months)+'</b> months of your old Indonesian salary — runway already bought.</div>':'')+'</div>';
-  html+='<div class="cols2">';
-  // targets
-  html+='<div class="panel"><h3 class="mb" style="font-size:15px">Targets</h3>';
-  state.runway.targets.forEach(t=>{ const tb=toBase(t.amount,t.currency); const pct=tb>0?Math.min(100,total/tb*100):0;
-    html+='<div style="margin-bottom:12px"><div class="between"><span class="small">'+esc(t.label)+'</span><span class="faint small">'+fmtMoney(t.amount,t.currency)+'</span></div>'+bar(pct,true)+'<div class="faint small mt-s">'+Math.round(pct)+'% · '+fmtMoney(Math.min(tb,total),base)+' of '+fmtMoney(tb,base)+'</div></div>'; });
-  html+='<div class="copywrap mt"><input id="tgtLabel" placeholder="Target"><input id="tgtAmt" type="number" placeholder="Amt" style="max-width:90px"><select id="tgtCur" style="max-width:82px">'+['IDR','USD','TWD','AUD','EUR'].map(c=>'<option>'+c+'</option>').join('')+'</select><button class="btn primary sm" data-action="addTarget">+</button></div></div>';
-  // rates
-  html+='<div class="panel"><div class="between"><h3 style="font-size:15px">Rates</h3><button class="btn ghost sm" data-action="fetchFx">↻ update</button></div>'
-    +'<div class="sub">IDR per 1 unit · editable · '+(state.runway.ratesUpdated?'upd '+fmtDate(state.runway.ratesUpdated):'seed')+'</div>'
-    +'<div class="grid2 mt">'+['USD','TWD','AUD','EUR'].map(c=>'<div class="field"><label>'+c+'</label><input type="number" data-action="rate" data-cur="'+c+'" value="'+(state.runway.rates[c]||0)+'"></div>').join('')+'</div>'
-    +'<div class="field mt"><label>Show all in</label><select data-action="baseCur">'+['USD','IDR','AUD','EUR'].map(c=>'<option '+(base===c?'selected':'')+'>'+c+'</option>').join('')+'</select></div></div>';
-  html+='</div>';
-  // ledger
-  html+='<div class="panel"><h3 class="mb" style="font-size:15px">Ledger</h3>'
-    +'<div class="copywrap"><input id="enDate" type="date" value="'+todayISO()+'" style="max-width:145px"><input id="enSource" placeholder="Source"><input id="enAmt" type="number" placeholder="Amt" style="max-width:90px"><select id="enCur" style="max-width:80px">'+['TWD','IDR','USD','AUD','EUR'].map(c=>'<option>'+c+'</option>').join('')+'</select><button class="btn primary sm" data-action="addEntry">+</button></div>';
+  const curOpts=['TWD','IDR','USD','AUD','EUR'].map(c=>'<option>'+c+'</option>').join('');
+
+  let html='<div class="panel"><h2 style="font-size:20px">Money'+info('Just your savings for the move — nothing Wall-Street about it. Log money as you set it aside; watch it climb toward each goal.')+'</h2>'
+    +'<div class="sub">What you’ve saved so far, and how close you are to each goal.</div>'
+    +'<div class="between mt"><div><div style="font-family:var(--mono);font-weight:700;font-size:26px;color:var(--amber-soft)">'+fmtMoney(total,base)+'</div><div class="faint small">saved so far</div></div>'
+    +'<button class="btn primary" data-action="focusAdd">＋ Add money</button></div>'
+    +(months>0?'<div class="note mt">≈ <b>'+fmtNum(months)+'</b> months of your old Indonesian salary'+info('At your old teaching pay (~$140/mo) this is how many months of income you have already banked. Motivation, quantified.')+' already banked.</div>':'')+'</div>';
+
+  // log form (the main input)
+  html+='<div class="panel"><h3 style="font-size:15px">Log what you saved</h3>'
+    +'<div class="sub mb">Add each amount you put aside — a paycheck, a transfer, anything. Pick the currency you saved it in.</div>'
+    +'<div class="copywrap"><input id="enDate" type="date" value="'+todayISO()+'" style="max-width:145px"><input id="enSource" placeholder="From (e.g. salary)"><input id="enAmt" type="number" placeholder="Amount" style="max-width:100px"><select id="enCur" style="max-width:80px">'+curOpts+'</select><button class="btn primary sm" data-action="addEntry">Add</button></div>';
   if(state.runway.entries.length){ html+='<div class="mt">'+state.runway.entries.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(e=>
     '<div class="between" style="padding:8px 0;border-bottom:1px solid var(--line)"><div><b>'+fmtMoney(e.amount,e.currency)+'</b> <span class="faint small">'+esc(e.currency)+'</span><div class="faint small">'+esc(e.source||'—')+' · '+fmtDate(e.date)+'</div></div>'
     +'<div class="row"><span class="muted small">'+fmtMoney(toBase(e.amount,e.currency),base)+'</span><button class="btn ghost sm" data-action="delEntry" data-id="'+e.id+'">✕</button></div></div>').join('')+'</div>'; }
-  else html+='<div class="empty">No entries yet. Log your first paycheck.</div>';
+  else html+='<div class="empty">Nothing logged yet. Tap “Add” above to record your first saving.</div>';
   html+='</div>';
+
+  // goals
+  html+='<div class="panel"><h3 class="mb" style="font-size:15px">Goals'+info('Money milestones your plan needs — e.g. the AUD 5,000 Australia buffer or your passport fee. The green bar shows how close you are.')+'</h3>';
+  state.runway.targets.forEach(t=>{ const tb=toBase(t.amount,t.currency); const pct=tb>0?Math.min(100,total/tb*100):0;
+    html+='<div style="margin-bottom:13px"><div class="between"><span class="small">'+esc(t.label)+'</span><span class="faint small">'+fmtMoney(t.amount,t.currency)+'</span></div>'+bar(pct,true)+'<div class="faint small mt-s">'+Math.round(pct)+'% · '+fmtMoney(Math.min(tb,total),base)+' of '+fmtMoney(tb,base)+'</div></div>'; });
+  html+='<div class="copywrap mt"><input id="tgtLabel" placeholder="New goal name"><input id="tgtAmt" type="number" placeholder="Amt" style="max-width:90px"><select id="tgtCur" style="max-width:82px">'+['IDR','USD','TWD','AUD','EUR'].map(c=>'<option>'+c+'</option>').join('')+'</select><button class="btn ghost sm" data-action="addTarget">Add</button></div></div>';
+
+  // advanced: rates (tucked away)
+  html+='<details class="panel"><summary style="cursor:pointer;font-weight:600;font-size:14px">⚙ Currency &amp; exchange rates'+info('Only matters if you save in several currencies. Sets how many rupiah each is worth so totals add up. Safe to ignore — pull live rates with one tap if you ever need it.')+'</summary>'
+    +'<div class="mt"><div class="between"><span class="sub">IDR per 1 unit · '+(state.runway.ratesUpdated?'updated '+fmtDate(state.runway.ratesUpdated):'seed values')+'</span><button class="btn ghost sm" data-action="fetchFx">↻ live rates</button></div>'
+    +'<div class="grid2 mt">'+['USD','TWD','AUD','EUR'].map(c=>'<div class="field"><label>'+c+'</label><input type="number" data-action="rate" data-cur="'+c+'" value="'+(state.runway.rates[c]||0)+'"></div>').join('')+'</div>'
+    +'<div class="field mt"><label>Show totals in</label><select data-action="baseCur">'+['USD','IDR','AUD','EUR'].map(c=>'<option '+(base===c?'selected':'')+'>'+c+'</option>').join('')+'</select></div></div></details>';
+  return html;
+}
+
+/* ------------------------------- Tailwinds ------------------------------- */
+let _feed=null, _feedTs=0, _feedFilter='all', _feedLoading=false;
+try{ const c=JSON.parse(localStorage.getItem('escapeFeed')||'null'); if(c){ _feed=c.data; _feedTs=c.ts||0; } }catch(e){}
+function timeAgo(s){
+  const t=s?Date.parse(s):0; if(!t) return '';
+  const d=Math.floor((Date.now()-t)/86400000);
+  if(d<=0) return 'today'; if(d===1) return 'yesterday'; if(d<7) return d+'d ago';
+  if(d<30) return Math.floor(d/7)+'w ago'; if(d<365) return Math.floor(d/30)+'mo ago'; return Math.floor(d/365)+'y ago';
+}
+async function loadFeed(force){
+  if(_feedLoading) return; if(!force && _feed && (Date.now()-_feedTs)<1800000) return;
+  _feedLoading=true; if(currentView==='tailwinds') renderFeed();
+  try{
+    const r=await fetch('/api/news',{cache:'no-store'});
+    if(!r.ok) throw new Error('feed '+r.status);
+    const j=await r.json();
+    _feed=j; _feedTs=Date.now();
+    try{ localStorage.setItem('escapeFeed', JSON.stringify({ts:_feedTs,data:_feed})); }catch(e){}
+  }catch(e){ if(!_feed) _feed={error:true}; }
+  _feedLoading=false; if(currentView==='tailwinds') renderFeed();
+}
+function renderFeed(){
+  const box=$('#feedBody'); if(!box) return;
+  if(_feedLoading && !_feed){ box.innerHTML='<div class="empty">Scanning the horizon…</div>'; return; }
+  if(!_feed || _feed.error){ box.innerHTML='<div class="empty">Couldn’t reach the news right now.<br><button class="btn ghost sm mt-s" data-action="refreshFeed">Try again</button><div class="faint small mt-s">(The live feed runs on dhiya.id — it won’t load in a local preview.)</div></div>'; return; }
+  const groups=(_feed.groups||[]).filter(g=>g.items&&g.items.length && (_feedFilter==='all'||g.id===_feedFilter));
+  if(!groups.length){ box.innerHTML='<div class="empty">Quiet on this route right now — check another, or back tomorrow.</div>'; return; }
+  box.innerHTML=groups.map(g=>'<div style="margin-bottom:16px"><div class="eyebrow" style="padding:2px 0 8px">'+g.flag+' '+esc(g.label)+'</div>'
+    +g.items.map(it=>'<a href="'+esc(it.link)+'" target="_blank" rel="noopener" class="item" style="display:block;text-decoration:none;color:inherit">'
+      +'<div style="font-weight:600;font-size:14px;line-height:1.35;color:var(--cream)">'+esc(it.title)+'</div>'
+      +'<div class="faint small mt-s">'+esc(it.source||'News')+(it.date?' · '+timeAgo(it.date):'')+' ↗</div></a>').join('')
+    +'</div>').join('');
+}
+function ensureFeed(){ loadFeed(false); renderFeed(); }
+function viewTailwinds(){
+  const chips=[{id:'all',label:'All'}].concat((_feed&&_feed.groups?_feed.groups:[]).map(g=>({id:g.id,label:g.flag})));
+  const updated=_feedTs?'updated '+timeAgo(new Date(_feedTs).toISOString()):'';
+  let html='<div class="panel"><div class="between"><div><h2 style="font-size:20px">Tailwinds'+info('Fresh news and live opportunities for the countries you’re eyeing — immigration rules, pay, visa windows, policy shifts. “Tailwinds” = the winds that speed your flight. Info is gold; this digs the mine for you.')+'</h2>'
+    +'<div class="sub">Opportunities &amp; policy weather on your routes. Tap a story to read it.</div></div>'
+    +'<button class="btn ghost sm" data-action="refreshFeed">↻</button></div>'
+    +'<div class="row wrap mt" style="gap:6px">'+chips.map(c=>'<button class="btn '+(_feedFilter===c.id?'primary':'ghost')+' sm" data-action="feedFilter" data-f="'+c.id+'">'+esc(c.label)+'</button>').join('')+'</div>'
+    +(updated?'<div class="faint small mt-s">'+updated+' · sources via Google News</div>':'')+'</div>';
+  html+='<div id="feedBody"><div class="empty">Scanning the horizon…</div></div>';
+  html+='<div class="note mt">Spot a better opportunity than your current plan? That’s the point — you can switch routes anytime in <b>Routes</b>. Info is gold.</div>';
   return html;
 }
 
 function viewLanguages(){
-  let html='<div class="panel"><h2 style="font-size:20px">Languages</h2><div class="sub">Each wakes with its route. Korean, Japanese and German on equal footing — none is “the” language until a route needs it.</div></div>';
+  let html='<div class="panel"><h2 style="font-size:20px">Languages'+info('Replaces the old “German-only” tab. Korean (for Korea/EPS), Japanese (for Japan/SSW) and German (for Germany/Ausbildung) are equals here. Each stays dormant until you actually take that route.')+'</h2><div class="sub">Each wakes with its route — none is “the” language until a route needs it.</div></div>';
   const anyLive=LANGS.some(l=>langActive(l)==='live');
   if(!anyLive) html+='<div class="note mb">No language is required yet — your lead route (Taiwan) is language-free. Pick a route that needs one and it goes live here.</div>';
   LANGS.forEach(l=>{
@@ -1159,6 +1279,10 @@ document.addEventListener('click', async (e)=>{
   switch(a){
     case 'nav': e.preventDefault(); setView(view); break;
     case 'more': openMore(); break;
+    case 'guide': closeSheet(); openGuide(true); break;
+    case 'feedFilter': _feedFilter=t.dataset.f||'all'; renderFeed(); { const cs=$$('#view [data-action="feedFilter"]'); cs.forEach(b=>b.classList.toggle('primary', b.dataset.f===_feedFilter)); cs.forEach(b=>b.classList.toggle('ghost', b.dataset.f!==_feedFilter)); } break;
+    case 'refreshFeed': loadFeed(true); toast('Refreshing…'); break;
+    case 'focusAdd': { const el=$('#enAmt'); if(el){ el.scrollIntoView({behavior:'smooth',block:'center'}); setTimeout(()=>el.focus(),300); } break; }
     case 'checkin': checkIn(); break;
     case 'editNA': { const ed=$('#naEdit'); if(ed){ ed.style.display=ed.style.display==='none'?'block':'none'; if(ed.style.display==='block') $('#naInput').focus(); } break; }
     case 'saveNA': setSilent(s=>{ s.nextActionOverride=$('#naInput').value.trim(); }); render(); toast('Next move set'); break;
@@ -1233,14 +1357,48 @@ let toastTimer=null;
 function toast(msg,kind){ const el=$('#toast'); el.textContent=msg; el.className='toast show'+(kind==='err'?' err':kind==='ok'?' ok':''); clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.className='toast',2600); }
 function openMore(){
   const back=$('#sheetBack'), sh=$('#sheet');
-  const rest=NAV.filter(n=>!n.primary);
-  sh.innerHTML='<h3>More</h3><div class="navlist">'+rest.map(n=>'<button data-action="nav" data-view="'+n.id+'">'+icon(n.id)+' '+n.label+'</button>').join('')+'</div>';
+  const rest=NAV.filter(n=>!BOTTOM.includes(n.id));
+  sh.innerHTML='<h3>More</h3><div class="navlist">'+rest.map(n=>'<button data-action="nav" data-view="'+n.id+'">'+icon(n.id)+' <span style="flex:1">'+n.label+'</span><span class="faint small">'+esc(n.hint||'')+'</span></button>').join('')
+    +'<button data-action="guide">'+icon('help')+' <span style="flex:1">How to use this app</span></button></div>';
   back.classList.add('show');
 }
 function closeSheet(){ $('#sheetBack').classList.remove('show'); }
 function openModal(html){ $('#modal').innerHTML=html; $('#modalBack').classList.add('show'); }
 function closeModal(){ $('#modalBack').classList.remove('show'); }
 function copyText(txt){ navigator.clipboard?navigator.clipboard.writeText(txt).then(()=>toast('Copied ✓'),()=>toast('Copy failed','err')):toast('Copy not supported','err'); }
+
+/* superscript info marker + floating tooltip */
+function info(txt){ if(!txt) return ''; return '<span class="info" data-tip="'+String(txt).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')+'" tabindex="0" role="button" aria-label="More info">i</span>'; }
+let _tipEl=null, _tipOpen=null;
+function initTips(){
+  _tipEl=document.createElement('div'); _tipEl.className='tip'; document.body.appendChild(_tipEl);
+  const place=el=>{ const r=el.getBoundingClientRect(), tr=_tipEl.getBoundingClientRect();
+    let left=r.left+r.width/2-tr.width/2; left=Math.max(8,Math.min(left,innerWidth-tr.width-8));
+    let top=r.top-tr.height-9; if(top<8) top=r.bottom+9; _tipEl.style.left=left+'px'; _tipEl.style.top=top+'px'; };
+  const show=el=>{ const t=el.getAttribute('data-tip'); if(!t) return; _tipEl.textContent=t; _tipEl.style.opacity='0'; place(el); requestAnimationFrame(()=>{ place(el); _tipEl.classList.add('show'); }); };
+  const hide=()=>{ _tipEl.classList.remove('show'); };
+  document.addEventListener('mouseover',e=>{ const el=e.target.closest&&e.target.closest('[data-tip]'); if(el&&!_tipOpen) show(el); });
+  document.addEventListener('mouseout',e=>{ const el=e.target.closest&&e.target.closest('[data-tip]'); if(el&&!_tipOpen) hide(); });
+  document.addEventListener('click',e=>{ const el=e.target.closest&&e.target.closest('[data-tip]');
+    if(el){ e.preventDefault(); if(_tipOpen===el){ hide(); _tipOpen=null; } else { show(el); _tipOpen=el; } }
+    else if(_tipOpen){ hide(); _tipOpen=null; } });
+  document.addEventListener('focusin',e=>{ const el=e.target.closest&&e.target.closest('[data-tip]'); if(el) show(el); });
+  addEventListener('scroll',()=>{ hide(); _tipOpen=null; },true);
+}
+function openGuide(force){
+  if(!force){ try{ if(localStorage.getItem('escapeGuideSeen')) return; }catch(e){} }
+  try{ localStorage.setItem('escapeGuideSeen','1'); }catch(e){}
+  openModal('<h3>How to use this 🛫</h3>'
+    +'<div class="sub">Your whole escape plan in one place. The 20-second version:</div>'
+    +'<div class="guide-list">'
+    +'<div class="hi"><b>Today</b> — the big centre button. It shows the <b>one</b> thing to do today. Do it, tap ✓. That’s the entire habit — don’t overthink the rest.</div>'
+    +'<div><b>Board</b> — your overview, plus a calendar of every deadline.</div>'
+    +'<div><b>Tailwinds</b> — fresh news &amp; live opportunities for Taiwan · Korea · Japan · Germany · Australia. Info is gold.</div>'
+    +'<div><b>Docs · Money · Languages · Routes</b> — your real info (some live under “More”). <b>Tap any row to open its fields.</b> You do <i>not</i> need to fill everything now.</div>'
+    +'<div>Confused by a word? Tap the little <span class="info" style="position:static;top:0;margin:0 2px" data-tip="Exactly like this — a plain-language explainer. They’re sprinkled anywhere a term might trip you up.">i</span> beside it.</div>'
+    +'</div>'
+    +'<button class="btn primary block mt" data-action="nav" data-view="today">Show me Today →</button>');
+}
 
 function showClientIdHelp(){
   openModal('<h3>Get a Google Client ID (once)</h3>'
@@ -1321,9 +1479,12 @@ function startReminderLoop(){
 function init(){
   loadLocal();
   render(); tickClock(); setInterval(tickClock, 30000);
+  initTips();
   if('serviceWorker' in navigator){ navigator.serviceWorker.register('/escape/sw.js').catch(()=>{}); }
   if(state.settings.cloudSync){ pullCloud().catch(()=>{}); }
   startReminderLoop(); maybeNotify();
+  loadFeed(false).catch(()=>{});          // warm the Tailwinds feed in the background
+  openGuide(false);                        // first-run walkthrough (once)
 }
 window.addEventListener('keydown',(e)=>{ if(e.key==='Escape'){ closeSheet(); closeModal(); } });
 init();
