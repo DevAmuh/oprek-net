@@ -83,9 +83,13 @@ textarea{resize:vertical;min-height:60px}
 .colrow{display:grid;grid-template-columns:1fr;gap:4px 10px;padding:9px 0;font-size:12px}
 .cc{font-family:var(--mono);font-weight:700;color:var(--amber-soft)}
 .cn{color:var(--faint);font-size:10.5px;white-space:nowrap}
-/* purchasing-power table */
-.coltab{width:100%;border-collapse:collapse;font-size:12px}
-.coltab th{font-family:var(--mono);font-weight:700;font-size:9px;letter-spacing:.1em;color:var(--amber-faint);text-align:left;padding:6px 10px 6px 0;border-bottom:1px solid var(--line2);white-space:nowrap}
+/* purchasing-power table — first row + first column frozen */
+.coltabwrap{overflow:auto;max-height:48vh;margin-top:10px}
+.coltab{width:100%;border-collapse:separate;border-spacing:0;font-size:12px}
+.coltab th{font-family:var(--mono);font-weight:700;font-size:9px;letter-spacing:.1em;color:var(--amber-faint);text-align:left;padding:6px 10px 6px 0;border-bottom:1px solid var(--line2);white-space:nowrap;
+  position:sticky;top:0;background:#151009;z-index:2}
+.coltab th:first-child{position:sticky;left:0;z-index:3}
+.coltab td:first-child{position:sticky;left:0;background:#151009;z-index:1;padding-right:12px}
 .coltab td{padding:8px 10px 8px 0;border-bottom:1px solid var(--line);vertical-align:top;white-space:nowrap;color:var(--cream)}
 .coltab td .rp{color:var(--faint);font-size:10.5px;font-family:var(--mono);margin-top:2px}
 .coltab .stash{color:var(--teal);font-family:var(--mono);font-weight:700}
@@ -555,6 +559,8 @@ function defaults(){
       aiContext:'',
       tickerCurrencies:['USD','TWD','AUD','EUR','KRW','JPY','SAR','QAR','PLN'],
       newsTicker:true, tickerSpeed:'normal',
+      bottomTabs:['board','tailwinds','today','docs'],
+      calShare:false,
     },
   };
 }
@@ -612,8 +618,36 @@ function mutate(fn){
 }
 function setSilent(fn){ try{ fn(state); }catch(e){} state._ts=Date.now(); saveLocal(); scheduleCloud(); }
 
-/* ------------------- private vault (passphrase login) -------------------- */
-let _pass='', _feedToken='', _unlocked=false;
+/* ------------------- private vault (multi-user, E2E-encrypted) -----------
+   Two keys are derived from username+passphrase IN THE BROWSER:
+   - authKey  → sent to the server, bcrypt-hashed there (proves who you are)
+   - encKey   → NEVER leaves the browser; AES-GCM encrypts your whole vault.
+   The database only ever stores ciphertext — nobody (including the site
+   owner looking at the Table Editor) can read anyone's data.               */
+function b64(buf){ const u=new Uint8Array(buf); let s=''; for(let i=0;i<u.length;i+=0x8000){ s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000)); } return btoa(s); }
+function unb64(s){ const bin=atob(s); const u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i); return u; }
+async function deriveBits(pass, salt){
+  const km=await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveBits']);
+  return crypto.subtle.deriveBits({ name:'PBKDF2', hash:'SHA-256', salt:new TextEncoder().encode(salt), iterations:150000 }, km, 256);
+}
+async function authKeyFor(uname, pass){
+  const bits=await deriveBits(pass, 'escape-auth:'+uname);
+  return [...new Uint8Array(bits)].map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+async function encKeyFor(uname, pass){
+  const bits=await deriveBits(pass, 'escape-enc:'+uname);
+  return crypto.subtle.importKey('raw', bits, 'AES-GCM', false, ['encrypt','decrypt']);
+}
+async function encryptJson(key, obj){
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, new TextEncoder().encode(JSON.stringify(obj)));
+  return { ct:b64(ct), iv:b64(iv) };
+}
+async function decryptJson(key, ctB64, ivB64){
+  const pt=await crypto.subtle.decrypt({name:'AES-GCM', iv:unb64(ivB64)}, key, unb64(ctB64));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+let _pass='', _uname='', _authKey='', _encKey=null, _feedToken='', _unlocked=false;
 async function rpc(fn, body){
   const r=await fetch(CFG.SUPA_URL+'/rest/v1/rpc/'+fn,{
     method:'POST',
@@ -625,14 +659,21 @@ async function rpc(fn, body){
   return j;
 }
 async function vaultStore(){
-  if(!_unlocked) return;
+  if(!_unlocked||!_uname||!_encKey) return;
   state.calendarItems=computeCalendarItems(state); state._syncedTs=state._ts;
-  await rpc('escape_store',{ p_pass:_pass, p_data:{...state} });
+  const enc=await encryptJson(_encKey, {...state});
+  await rpc('escape_u_store',{ p_uname:_uname, p_auth:_authKey, p_ct:enc.ct, p_iv:enc.iv,
+    p_cal: state.settings.calShare ? state.calendarItems : null, p_share: !!state.settings.calShare });
 }
 async function vaultPull(){
-  const j=await rpc('escape_login',{ p_pass:_pass });
+  const j=await rpc('escape_u_login',{ p_uname:_uname, p_auth:_authKey });
   if(j){ _feedToken=j.feed_token||_feedToken;
-    if(j.data && (j.data._ts||0) > (state._ts||0)){ state=deepMerge(defaults(), j.data); migrate(); saveLocal(); render(); return 'pulled'; } }
+    if(j.data_ct && j.iv){
+      try{
+        const data=await decryptJson(_encKey, j.data_ct, j.iv);
+        if((data._ts||0) > (state._ts||0)){ state=deepMerge(defaults(), data); migrate(); saveLocal(); render(); return 'pulled'; }
+      }catch(e){ /* corrupt or foreign ciphertext — keep local */ }
+    } }
   return 'local-newer';
 }
 /* AI brain — calls /api/ai (Claude + web search), gated by the passphrase.
@@ -641,7 +682,7 @@ function aiCfg(){ const a=state.settings.ai; return (a&&typeof a==='object')?a:{
 function fmtCost(c){ if(typeof c!=='number'||!(c>0)) return ''; return '≈$'+(Math.round(c*1000)/1000); }
 async function aiCall(action, extra){
   const ai=aiCfg();
-  const payload={ pass:_pass, action, model:ai.model||'haiku', effort:ai.effort||'low', ...(extra||{}) };
+  const payload={ uname:_uname, auth:_authKey, action, model:ai.model||'haiku', effort:ai.effort||'low', ...(extra||{}) };
   if(action!=='next' && !payload.profile){ try{ payload.profile=aiProfileContext(); }catch(e){} }
   const r=await fetch('/api/ai',{ method:'POST', headers:{'Content-Type':'application/json'},
     body:JSON.stringify(payload) });
@@ -1146,19 +1187,23 @@ const ICONS={
 function icon(id){ return ICONS[id]||''; }
 // Rail order (desktop, top→bottom). Mobile bottom bar is defined by BOTTOM.
 const NAV=[
-  { id:'today',     label:'Today',     hint:'The one thing to do today' },
-  { id:'board',     label:'Board',     hint:'Overview + your deadline calendar' },
-  { id:'tailwinds', label:'Tailwinds', hint:'Live news & opportunities' },
-  { id:'docs',      label:'Docs',      hint:'Your document checklist' },
-  { id:'money',     label:'Money',     hint:'What you’ve saved for the move' },
-  { id:'ascent',    label:'Ascent',    hint:'Your progress as a climb' },
-  { id:'routes',    label:'Routes',    hint:'The countries & how to get there' },
-  { id:'languages', label:'Languages', hint:'Korean · Japanese · German' },
+  { id:'today',     label:'Today',     hint:'The one thing to do today (or let the AI pick)' },
+  { id:'board',     label:'Board',     hint:'Departures wall · agent box · calendar' },
+  { id:'tailwinds', label:'Tailwinds', hint:'Fresh route news + ✨ AI briefing' },
+  { id:'docs',      label:'Docs',      hint:'The gate + per-country packs → Drive' },
+  { id:'money',     label:'Money',     hint:'Savings, goals — rates live in the top strip' },
+  { id:'ascent',    label:'Ascent',    hint:'Altitude % — your whole climb, live' },
+  { id:'routes',    label:'Routes',    hint:'Bridge · endgame · research any country' },
+  { id:'languages', label:'Languages', hint:'Any language, your own levels' },
   { id:'log',       label:'Log',       hint:'Everything you’ve done' },
-  { id:'settings',  label:'Settings',  hint:'Calendar, backup, help' },
+  { id:'settings',  label:'Settings',  hint:'AI, calendar, tickers, backup' },
 ];
-// Mobile bottom bar — Today sits dead-centre and pops out.
-const BOTTOM=['board','tailwinds','today','docs','more'];
+// Mobile bottom bar — user-arrangeable; slot 3 (index 2) is the raised spotlight.
+function bottomTabs(){
+  const t=state.settings.bottomTabs;
+  const ok=Array.isArray(t)&&t.length===4&&t.every(id=>NAV.some(n=>n.id===id))&&new Set(t).size===4;
+  return ok?t.slice():['board','tailwinds','today','docs'];
+}
 
 function setView(id){ currentView=id; closeSheet(); closeModal(); render(); window.scrollTo({top:0,behavior:'smooth'}); }
 
@@ -1170,12 +1215,13 @@ function render(){
   // rail nav (desktop) — all views, with a one-line hint
   const rn=$('#railnav'); if(rn) rn.innerHTML=NAV.map(n=>
     '<button data-action="nav" data-view="'+n.id+'" class="'+(currentView===n.id?'on':'')+'" title="'+esc(n.hint||'')+'">'+icon(n.id)+n.label+'</button>').join('');
-  // tab bar (mobile) — Today dead-centre and raised
-  const barDirect=BOTTOM.filter(x=>x!=='more');
-  const tb=$('#tabbar'); if(tb) tb.innerHTML=BOTTOM.map(id=>{
-    if(id==='more'){ const onMore=!barDirect.includes(currentView); return '<button data-action="more" class="'+(onMore?'on':'')+'">'+icon('more')+'More</button>'; }
+  // tab bar (mobile) — user's chosen four + More; slot 3 raised as the spotlight
+  const bt=bottomTabs();
+  const order=[bt[0],bt[1],bt[2],bt[3],'more'];
+  const tb=$('#tabbar'); if(tb) tb.innerHTML=order.map((id,ix)=>{
+    if(id==='more'){ const onMore=!bt.includes(currentView); return '<button data-action="more" class="'+(onMore?'on':'')+'">'+icon('more')+'More</button>'; }
     const n=NAV.find(x=>x.id===id)||{id,label:id};
-    const center=id==='today'?' center':'';
+    const center=ix===2?' center':'';
     return '<button data-action="nav" data-view="'+id+'" class="'+(currentView===id?'on':'')+center+'">'+icon(id)+'<span>'+n.label+'</span></button>';
   }).join('');
   const fn={ board:viewBoard, today:viewToday, tailwinds:viewTailwinds, ascent:viewAscent, docs:viewDocs, routes:viewRoutes,
@@ -1268,7 +1314,7 @@ function renderFxPanel(){
   const stash=sumIDR();
   const cell=(v,c,rate,suffix)=>{ if(!v&&v!==0) return '<td class="faint">—</td>';
     return '<td><div>'+fmtMoney(v,c)+(suffix||'')+'</div><div class="rp">Rp '+fmtNum(Math.round(v*rate))+'</div></td>'; };
-  h+='<div style="overflow-x:auto;margin-top:10px"><table class="coltab">'
+  h+='<div class="coltabwrap"><table class="coltab">'
     +'<tr><th>Country</th><th>Rate (Rp)</th><th>☕ Coffee</th><th>🍔 Meal</th><th>🏠 Rent/mo</th><th>🏥 Clinic</th><th>💵 Min wage/mo</th><th>Your stash'+info('Everything you have saved, expressed as months of that country’s minimum wage — a quick “how long could I survive / how fast could I bank” gauge.')+'</th></tr>'
     +tickerCurs().map(c=>{
       const cd=colFor(c); const rate=r[c]||0;
@@ -1312,7 +1358,10 @@ function initFxPanel(){
   const w=$('#fxwrap'); if(!w) return;
   w.addEventListener('click',e=>{
     if(e.target.closest('select,button,a,input,textarea,label')) return;
-    _fxPin=$('#fxpanel').hidden; fxPanelOpen($('#fxpanel').hidden);
+    const open=!$('#fxpanel').hidden;
+    if(!open){ _fxPin=true; fxPanelOpen(true); }      // closed → open + pin
+    else if(!_fxPin){ _fxPin=true; }                   // hover-opened → click PINS it (never closes)
+    else { fxPanelOpen(false); }                       // pinned → click closes
   });
   if(matchMedia('(hover: hover)').matches){
     w.addEventListener('mouseenter',()=>{ clearTimeout(_fxHoverT); _fxHoverT=setTimeout(()=>fxPanelOpen(true),350); });
@@ -1477,7 +1526,7 @@ function viewBoard(){
     +'<button data-action="calMode" data-m="year" class="'+(_calMode==='year'?'on':'')+'">Year</button></div>';
   const calBody = _calMode==='month' ? calMonthGridHTML(agItems) : (_calMode==='year' ? calYearHTML(agItems) : agRows);
   const cal='<div class="panel"><div class="between"><div style="font-weight:600">🗓 Your calendar'
-    +info('Your deadlines, right here in the app. This is the same list as the “'+CFG.CAL_NAME+'” Google calendar — sync it in Settings and these show in your phone’s calendar too, so you never have to leave.')+'</div>'
+    +info('Every deadline in one place: document expiries (incl. packs), route intake windows, the age cap, and ✨ AI-found dates. Agenda = list · Month = grid · Year = the whole year color-coded. “✨ AI: refresh dates” web-hunts current registration/exam dates. Syncs to the “'+CFG.CAL_NAME+'” Google calendar.')+'</div>'
     +'<button class="btn ghost sm" data-action="nav" data-view="settings">Sync ↗</button></div>'
     +calToggle+calBody
     +'<div class="btn-row mt"><button class="btn ghost sm" data-action="downloadICS">⬇ .ics</button>'
@@ -1777,7 +1826,7 @@ function viewRoutes(){
     korea_eps:'EPS = Korea’s Employment Permit System. Needs the EPS-TOPIK Korean test (~$28) before you can be placed.',
     japan_ssw:'SSW = “Specified Skilled Worker” visa. Needs JFT-Basic A2 Japanese plus a skills test.'
   };
-  let html='<div class="panel"><h2 style="font-size:20px">Routes'+info('The countries you could go to, and how. Leg 1 (“cash bridge”) is a quick job abroad to earn hard currency; Leg 2 (“endgame”) is where you settle for citizenship. Tap a row to open its details.')+'</h2><div class="sub">Two legs: a <b>cash bridge</b> to earn hard currency, then your <b>endgame</b> for citizenship. Tap any row to open it.</div></div>';
+  let html='<div class="panel"><h2 style="font-size:20px">Routes'+info('Leg 1 (“cash bridge”) = a quick job abroad to earn hard currency; Leg 2 (“endgame”) = where you settle for citizenship. Nothing is fixed: rename routes, choose your ★ lead, research ANY country with the AI below, and give it a role — watching, cash bridge, or endgame candidate.')+'</h2><div class="sub">Two legs: a <b>cash bridge</b> to earn hard currency, then your <b>endgame</b> for citizenship. Tap any row to open it — everything is editable.</div></div>';
 
   // CASH BRIDGE
   html+='<div class="eyebrow" style="padding:2px 2px 8px">CASH BRIDGE — EARN FIRST</div>';
@@ -2035,7 +2084,7 @@ function viewTailwinds(){
   const savedCount=(state.saved||[]).length;
   const chips=[{id:'all',label:'All'}].concat((_feed&&_feed.groups?_feed.groups:[]).map(g=>({id:g.id,label:g.flag})));
   const updated=_feedTs?'updated '+timeAgo(new Date(_feedTs).toISOString()):'';
-  let html='<div class="panel"><div class="between"><div><h2 style="font-size:20px">Tailwinds'+info('Fresh news and live opportunities for the countries you’re eyeing — immigration rules, pay, visa windows, policy shifts. “Tailwinds” = the winds that speed your flight. Keep the golden ones and note why they matter.')+'</h2>'
+  let html='<div class="panel"><div class="between"><div><h2 style="font-size:20px">Tailwinds'+info('Fresh news (last 60 days, Indonesian + English sources) for the countries you picked — visa rules, pay, intake windows, scam warnings. ✨ AI scan writes you a monthly briefing; ☆ keeps a story in Saved; the rolling footer shows headlines on every tab. Info is gold.')+'</h2>'
     +'<div class="sub">Opportunities &amp; policy weather on your routes.</div></div>'
     +'<div class="row" style="gap:6px;flex:none"><button class="btn ghost sm" data-action="openCountries">🌍 Countries</button>'
     +(_twMode==='latest'?'<button class="btn ghost sm" data-action="refreshFeed">↻</button>':'')+'</div></div>'
@@ -2130,8 +2179,9 @@ function viewSettings(){
   let html='<div class="panel"><h2 style="font-size:20px">Settings</h2></div>';
 
   // account / privacy
-  html+='<div class="panel"><h3 style="font-size:15px">🔒 Your private vault'+info('Your plan is locked to your passphrase. Nobody can see your data without it — not from the URL, not from the cloud. Only correct-passphrase requests can read or write it.')+'</h3>'
-    +'<div class="sub">Logged in · data is passphrase-encrypted in the cloud, and only you can unlock it.</div>'
+  html+='<div class="panel"><h3 style="font-size:15px">🔒 Your private vault'+info('End-to-end encrypted: your data is AES-encrypted IN YOUR BROWSER with a key derived from your passphrase — that key never leaves this device. The cloud (and even the site owner looking at the database) only ever sees unreadable ciphertext. Forget the passphrase = the cloud copy is gone forever, so keep a backup.')+'</h3>'
+    +'<div class="sub">Signed in as <b style="color:var(--amber-soft)">@'+esc(_uname||'—')+'</b> · everything is encrypted on this device before it leaves. The cloud stores only ciphertext.</div>'
+    +'<label class="row mt small" style="gap:8px"><input type="checkbox" style="width:auto" data-action="toggleCalShare" '+(s.calShare?'checked':'')+'> Share my calendar deadlines with the feed server'+info('The ONLY exception to full encryption, and it is off by default. The live Google-Calendar subscription link (below) needs the server to read your deadline list — titles and dates only, never your notes, money or documents. Leave it off and use the .ics download instead.')+'</label>'
     +'<div class="btn-row mt"><button class="btn ghost sm" data-action="lockApp">Lock app</button>'
     +'<button class="btn ghost sm" data-action="pushCloudNow">↑ Save now</button><button class="btn ghost sm" data-action="pullCloud">↻ Sync</button></div></div>';
 
@@ -2168,6 +2218,7 @@ function viewSettings(){
   // calendar
   html+='<div class="panel"><h3 style="font-size:15px">📅 Google Calendar</h3><div class="sub">Both create a dedicated “'+esc(CFG.CAL_NAME)+'”. Your main calendar is never touched.</div>'
     +'<div class="divider"></div><h3 style="font-size:13px">A · Live subscription <span class="badge live">no setup</span></h3>'
+    +(s.calShare?'':'<div class="note mt-s">Needs “Share my calendar deadlines” switched on in the vault panel above — otherwise this link serves nothing (your vault stays fully encrypted).</div>')
     +'<div class="field mt-s"><label>Your private feed link</label><div class="copywrap"><input readonly value="'+esc(icsUrl)+'" id="icsField"><button class="btn primary sm" data-action="copyIcs">Copy</button></div></div>'
     +'<ol class="steps"><li>Google Calendar on a computer.</li><li><b>Other calendars → + → From URL</b>.</li><li>Paste, <b>Add calendar</b>. It appears separately and self-syncs.</li></ol>'
     +'<div class="divider"></div><h3 style="font-size:13px">B · One-tap push <span class="badge warn">5-min setup</span></h3>'
@@ -2207,7 +2258,7 @@ function viewSettings(){
     +'<button class="btn ghost sm" data-action="exportJson">⬇ Export</button><button class="btn ghost sm" data-action="importJson">⬆ Import</button>'
     +'<button class="btn ghost sm" data-action="resetAll" style="color:var(--red)">Reset</button></div>'
     +'<div class="sub mt-s">Cached on this device for offline use, and synced privately to your passphrase-locked vault.</div></div>';
-  html+='<div class="center small faint" style="padding:10px">Escape Pipeline · Departures edition · v3.4</div>';
+  html+='<div class="center small faint" style="padding:10px">Escape Pipeline · Departures edition · v3.5 · E2E-encrypted</div>';
   return html;
 }
 
@@ -2220,6 +2271,8 @@ document.addEventListener('click', async (e)=>{
   switch(a){
     case 'nav': e.preventDefault(); setView(view); break;
     case 'more': openMore(); break;
+    case 'arrangeTabs': closeSheet(); openModal(arrangeHTML()); break;
+    case 'navSlotsReset': setSilent(s=>{ s.settings.bottomTabs=['board','tailwinds','today','docs']; }); render(); openModal(arrangeHTML()); break;
     case 'guide': closeSheet(); openGuide(true); break;
     case 'feedFilter': _feedFilter=t.dataset.f||'all'; renderFeed(); { const cs=$$('#view [data-action="feedFilter"]'); cs.forEach(b=>b.classList.toggle('primary', b.dataset.f===_feedFilter)); cs.forEach(b=>b.classList.toggle('ghost', b.dataset.f!==_feedFilter)); } break;
     case 'refreshFeed': loadFeed(true); toast('Refreshing…'); break;
@@ -2288,6 +2341,7 @@ document.addEventListener('click', async (e)=>{
     case 'connectDrive': toast('Connecting Drive…'); try{ const tk=await getAccessToken(); await ensureDriveFolder(tk); render(); toast('Drive folder ready ✓','ok'); }catch(err){ toast(err.message||'Drive failed','err'); } break;
     case 'copyIcs': copyText($('#icsField').value); break;
     case 'doAuth': await doAuth(t.dataset.mode); break;
+    case 'gateMode': e.preventDefault(); { const u=(($('#unameInput')||{}).value||''); showGate(t.dataset.mode); const ui=$('#unameInput'); if(ui&&u) ui.value=u; } break;
     case 'lockApp': lockApp(); break;
     case 'retryBoot': boot(); break;
     case 'pullCloud': toast('Syncing…'); try{ const r=await vaultPull(); toast(r==='pulled'?'Pulled latest ✓':'Local is newest'); }catch(err){ toast('Sync failed','err'); } break;
@@ -2361,7 +2415,11 @@ document.addEventListener('change', (e)=>{
     case 'clTarget': setSilent(s=>{ const c=(s.customLangs||[]).find(x=>x.id===id); if(c) c.target=v; }); break;
     case 'toggleDailyReminder': mutate(s=>{ s.settings.dailyReminder=t.checked; }); break;
     case 'toggleNewsbar': setSilent(s=>{ s.settings.newsTicker=t.checked; }); renderNewsbar(); break;
+    case 'toggleCalShare': mutate(s=>{ s.settings.calShare=t.checked; }); toast(t.checked?'Calendar feed enabled — deadlines (only) sync to the server':'Calendar sharing off — vault is 100% ciphertext'); break;
     case 'tickerSpeed': setSilent(s=>{ s.settings.tickerSpeed=v; }); break;
+    case 'navSlot': { const ix=+t.dataset.i; const bt=bottomTabs(); const dup=bt.indexOf(v);
+      if(dup>=0&&dup!==ix) bt[dup]=bt[ix]; // swap so the four stay distinct
+      bt[ix]=v; setSilent(s=>{ s.settings.bottomTabs=bt; }); render(); openModal(arrangeHTML()); break; }
     case 'setReminderTime': setSilent(s=>{ s.settings.reminderTime=v; }); maybeNotify(); break;
     case 'savedFrom': _savedFrom=v; render(); break;
     case 'savedTo': _savedTo=v; render(); break;
@@ -2374,11 +2432,24 @@ let toastTimer=null;
 function toast(msg,kind){ const el=$('#toast'); el.textContent=msg; el.className='toast show'+(kind==='err'?' err':kind==='ok'?' ok':''); clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.className='toast',2600); }
 function openMore(){
   const back=$('#sheetBack'), sh=$('#sheet');
-  const rest=NAV.filter(n=>!BOTTOM.includes(n.id));
+  const rest=NAV.filter(n=>!bottomTabs().includes(n.id));
   sh.innerHTML='<h3>More</h3><div class="navlist">'
     +rest.map(n=>'<button data-action="nav" data-view="'+n.id+'"><span class="nl-ic">'+icon(n.id)+'</span><span class="nl-lbl">'+n.label+'</span><span class="nl-hint">'+esc(n.hint||'')+'</span></button>').join('')
+    +'<button data-action="arrangeTabs" class="nl-wide"><span class="nl-ic">'+icon('settings')+'</span><span class="nl-lbl">⇄ Arrange tabs…</span></button>'
     +'</div>';
   back.classList.add('show');
+}
+/* Pick which four tabs live in the bottom bar — and which one is the
+   raised spotlight in the middle. Choosing a tab that's already used
+   swaps the two slots, so the four are always distinct. */
+function arrangeHTML(){
+  const bt=bottomTabs();
+  const names=['Slot 1','Slot 2','⭐ Spotlight (centre)','Slot 4'];
+  return '<h3>Arrange your tabs</h3><div class="sub">The four tabs on the bottom bar — the centre one is the big raised button. Everything else lives under “More”.</div>'
+    +bt.map((id,ix)=>'<div class="field mt"><label>'+names[ix]+'</label><select data-action="navSlot" data-i="'+ix+'">'
+      +NAV.map(n=>'<option value="'+n.id+'" '+(n.id===id?'selected':'')+'>'+n.label+'</option>').join('')+'</select></div>').join('')
+    +'<div class="btn-row mt"><button class="btn ghost sm" data-action="navSlotsReset">Reset to default</button>'
+    +'<button class="btn primary sm" data-close="modal" onclick="document.getElementById(\'modalBack\').classList.remove(\'show\')">Done</button></div>';
 }
 function closeSheet(){ $('#sheetBack').classList.remove('show'); }
 function openModal(html){ $('#modal').innerHTML=html; $('#modalBack').classList.add('show'); }
@@ -2407,13 +2478,16 @@ function openGuide(force){
   if(!force){ try{ if(localStorage.getItem('escapeGuideSeen')) return; }catch(e){} }
   try{ localStorage.setItem('escapeGuideSeen','1'); }catch(e){}
   openModal('<h3>How to use this 🛫</h3>'
-    +'<div class="sub">Your whole escape plan in one place. The 20-second version:</div>'
+    +'<div class="sub">Your whole escape plan in one place. The 30-second version:</div>'
     +'<div class="guide-list">'
-    +'<div class="hi"><b>Today</b> — the big centre button. It shows the <b>one</b> thing to do today. Do it, tap ✓. That’s the entire habit — don’t overthink the rest.</div>'
-    +'<div><b>Board</b> — your overview, plus a calendar of every deadline.</div>'
-    +'<div><b>Tailwinds</b> — fresh news &amp; live opportunities for Taiwan · Korea · Japan · Germany · Australia. Info is gold.</div>'
-    +'<div><b>Docs · Money · Languages · Routes</b> — your real info (some live under “More”). <b>Tap any row to open its fields.</b> You do <i>not</i> need to fill everything now.</div>'
-    +'<div><b>✨ AI</b> — in <b>Routes</b>, type any country and it researches the real labour pathway for you; on <b>Today</b>, let it pick your next move. (Needs the one-time key setup in Settings.)</div>'
+    +'<div class="hi"><b>Today</b> — the raised centre button. ONE thing to do today; do it, tap ✓. Stuck? <b>✨ let the AI pick</b> your move. That’s the entire habit.</div>'
+    +'<div><b>The top strip</b> — live exchange rates, always visible. <b>Tap it</b> for the converter, living costs per country (coffee → rent → min wage) and which currencies to show.</div>'
+    +'<div><b>Board</b> — the departures wall: every route’s status, 🧭 ask-your-agent box, and your calendar (Agenda · Month · Year — “✨ AI: refresh dates” hunts real deadlines for you).</div>'
+    +'<div><b>Tailwinds</b> — fresh Indonesian + English news on your routes, an ✨ AI monthly briefing, and the rolling headline footer on every tab.</div>'
+    +'<div><b>Docs</b> — the gate documents, plus per-country <b>packs</b> with their own Google Drive folders. “✨ AI: build this checklist” researches what each program really needs.</div>'
+    +'<div><b>Routes</b> — earn-first cash bridge + your endgame. Nothing is fixed: rename routes, pick your ★ lead, research ANY country with the AI and set its role — watching, bridge, or endgame candidate.</div>'
+    +'<div><b>Money · Ascent · Languages</b> — savings vs goals; your live altitude %; and any language with your own level scale.</div>'
+    +'<div><b>🤖 The AI</b> runs on your own key (Settings), knows your whole situation on every call, and shows what each tap costs — usually a few cents.</div>'
     +'<div>Confused by a word? Tap the little <span class="info" style="position:static;top:0;margin:0 2px" data-tip="Exactly like this — a plain-language explainer. They’re sprinkled anywhere a term might trip you up.">i</span> beside it.</div>'
     +'</div>'
     +'<button class="btn primary block mt" data-action="nav" data-view="today">Show me Today →</button>');
@@ -2525,35 +2599,65 @@ function showGate(mode){
   } else {
     const create=mode==='create';
     inner='<div class="gate-card"><div class="gate-logo">🛫</div>'
-      +'<h2>'+(create?'Set your passphrase':'Welcome back')+'</h2>'
-      +'<div class="sub">'+(create?'This locks your Escape plan to you alone. Pick something only you know.':'Enter your passphrase to unlock your plan.')+'</div>'
-      +'<input id="passInput" type="password" placeholder="Passphrase" autocomplete="'+(create?'new-password':'current-password')+'" style="margin-top:14px">'
+      +'<h2>'+(create?'Create your vault':'Welcome back')+'</h2>'
+      +'<div class="sub">'+(create?'Your own end-to-end-encrypted vault. Not even the site owner can read it.':'Unlock your end-to-end-encrypted vault.')+'</div>'
+      +'<input id="unameInput" placeholder="Username" autocomplete="username" autocapitalize="none" style="margin-top:14px;text-align:center">'
+      +'<input id="passInput" type="password" placeholder="Passphrase" autocomplete="'+(create?'new-password':'current-password')+'" style="margin-top:8px">'
       +(create?'<input id="passInput2" type="password" placeholder="Repeat passphrase" style="margin-top:8px">':'')
       +'<div id="gateErr" class="gate-err"></div>'
       +'<button class="btn primary block" data-action="doAuth" data-mode="'+(create?'create':'login')+'">'+(create?'Create &amp; enter':'Unlock')+'</button>'
       +'<label class="row mt-s small" style="gap:8px;justify-content:center"><input type="checkbox" id="rememberPass" style="width:auto" checked> Keep me signed in on this device</label>'
-      +(create?'<div class="gate-note">⚠ If you forget it, cloud access is lost. Export a backup from Settings once you’re in.</div>':'')
+      +(create
+        ?'<div class="gate-note">⚠ Your passphrase IS the encryption key. Forget it and the cloud copy is unrecoverable — export a backup from Settings once you’re in.</div><div class="gate-note">Already have a vault? <a href="#" data-action="gateMode" data-mode="login">Sign in</a></div>'
+        :'<div class="gate-note">First time here? <a href="#" data-action="gateMode" data-mode="create">Create your own vault</a> — free, private, encrypted.</div>')
       +'</div>';
   }
   g.innerHTML='<div class="gate-inner">'+inner+'</div>';
-  setTimeout(()=>{ const pi=$('#passInput'); if(pi) pi.focus(); },60);
+  setTimeout(()=>{ const ui=$('#unameInput'); const pi=$('#passInput'); if(ui&&!ui.value) ui.focus(); else if(pi) pi.focus(); },60);
 }
 async function doAuth(mode){
+  const uname=(($('#unameInput')||{}).value||'').trim().toLowerCase();
   const pass=(($('#passInput')||{}).value||'').trim(); const err=$('#gateErr');
-  if(pass.length<6){ if(err) err.textContent='At least 6 characters.'; return; }
+  if(!/^[a-z0-9_]{3,24}$/.test(uname)){ if(err) err.textContent='Username: 3–24 letters, numbers or _'; return; }
+  if(pass.length<6){ if(err) err.textContent='Passphrase: at least 6 characters.'; return; }
   if(mode==='create'){ const p2=(($('#passInput2')||{}).value||'').trim(); if(pass!==p2){ if(err) err.textContent='Passphrases don’t match.'; return; } }
-  if(err) err.textContent='Working…';
+  if(err) err.textContent='Deriving your keys…';
   try{
-    const j = mode==='create' ? await rpc('escape_register',{p_pass:pass}) : await rpc('escape_login',{p_pass:pass});
-    _pass=pass; _feedToken=(j&&j.feed_token)||''; _unlocked=true;
-    if(j && j.data && (j.data._ts||0) > (state._ts||0)){ state=deepMerge(defaults(), j.data); migrate(); saveLocal(); }
-    try{ if((($('#rememberPass')||{}).checked)) localStorage.setItem('escapeSession',pass); else localStorage.removeItem('escapeSession'); }catch(e){}
+    const auth=await authKeyFor(uname,pass); const enc=await encKeyFor(uname,pass);
+    if(err) err.textContent='Working…';
+    let j=null, migrated=false;
+    if(mode==='create'){
+      j=await rpc('escape_u_register',{ p_uname:uname, p_auth:auth });
+    } else {
+      try{ j=await rpc('escape_u_login',{ p_uname:uname, p_auth:auth }); }
+      catch(e){
+        if(/no such user/i.test(e.message||'')){
+          // One-time upgrade path: same passphrase as the old single-owner vault?
+          const old=await rpc('escape_login',{ p_pass:pass }); // throws if it isn't
+          j=await rpc('escape_u_register',{ p_uname:uname, p_auth:auth });
+          if(old && old.data && (old.data._ts||0) > (state._ts||0)){ state=deepMerge(defaults(), old.data); migrate(); saveLocal(); }
+          state.settings.calShare=true; // keep the existing ICS subscription alive
+          migrated=true;
+        } else { throw e; }
+      }
+    }
+    _uname=uname; _pass=pass; _authKey=auth; _encKey=enc; _feedToken=(j&&j.feed_token)||''; _unlocked=true;
+    if(j && j.data_ct && j.iv){
+      try{ const data=await decryptJson(enc, j.data_ct, j.iv);
+        if((data._ts||0) > (state._ts||0)){ state=deepMerge(defaults(), data); migrate(); saveLocal(); } }catch(e){}
+    }
+    try{ if((($('#rememberPass')||{}).checked)) localStorage.setItem('escapeSession',JSON.stringify({u:uname,p:pass})); else localStorage.removeItem('escapeSession'); }catch(e){}
     revealApp();
-    // push local up if it's newer than (or equal to) the cloud copy
-    if(mode==='create' || (state._ts||0) >= ((j&&j.data&&j.data._ts)||0)) vaultStore().catch(()=>{});
+    vaultStore().catch(()=>{});
+    if(migrated) toast('✓ Vault upgraded — now end-to-end encrypted','ok');
   }catch(e){
     const m=e.message||'';
-    if(err) err.textContent = /bad passphrase/i.test(m)?'Wrong passphrase.':(/already set up/i.test(m)?'Already set up — enter your passphrase.':(/short/i.test(m)?'Passphrase too short.':(m||'Something went wrong.')));
+    if(err) err.textContent =
+      /bad passphrase/i.test(m)?'Wrong passphrase.'
+      :(/no such user/i.test(m)?'No vault with that username — create one below.'
+      :(/username taken/i.test(m)?'That username is taken — pick another.'
+      :(/bad username/i.test(m)?'Username: 3–24 letters, numbers or _'
+      :(m||'Something went wrong.'))));
   }
 }
 function revealApp(){
@@ -2567,24 +2671,33 @@ function revealApp(){
   openGuide(false);
 }
 function lockApp(){
-  _unlocked=false; _pass='';
+  _unlocked=false; _pass=''; _uname=''; _authKey=''; _encKey=null;
   try{ localStorage.removeItem('escapeSession'); }catch(e){}
   toast('Locked'); showGate('login');
 }
 async function boot(){
   loadLocal();
-  let remembered=null; try{ remembered=localStorage.getItem('escapeSession'); }catch(e){}
-  if(remembered){
-    _pass=remembered; _unlocked=true; revealApp();
-    try{ const j=await rpc('escape_login',{p_pass:remembered}); _feedToken=(j&&j.feed_token)||'';
-      if(j&&j.data&&(j.data._ts||0)>(state._ts||0)){ state=deepMerge(defaults(),j.data); migrate(); saveLocal(); render(); } }
-    catch(e){ /* offline or passphrase changed — keep local */ }
+  let remembered=null;
+  try{
+    const raw=localStorage.getItem('escapeSession');
+    if(raw && raw[0]==='{'){ remembered=JSON.parse(raw); }
+    else if(raw){ localStorage.removeItem('escapeSession'); } // pre-multi-user session — one fresh sign-in upgrades it
+  }catch(e){}
+  if(remembered && remembered.u && remembered.p){
+    _uname=remembered.u; _pass=remembered.p; _unlocked=true; revealApp();
+    try{
+      _authKey=await authKeyFor(_uname,_pass); _encKey=await encKeyFor(_uname,_pass);
+      const j=await rpc('escape_u_login',{ p_uname:_uname, p_auth:_authKey }); _feedToken=(j&&j.feed_token)||'';
+      if(j && j.data_ct && j.iv){
+        const data=await decryptJson(_encKey, j.data_ct, j.iv);
+        if((data._ts||0)>(state._ts||0)){ state=deepMerge(defaults(),data); migrate(); saveLocal(); render(); }
+      }
+    }catch(e){ /* offline or changed elsewhere — keep local */ }
     return;
   }
   const app=document.querySelector('.app'), tb=$('#tabbar');
   if(app) app.style.display='none'; if(tb) tb.style.display='none';
-  try{ const exists=await rpc('escape_status',{}); showGate(exists?'login':'create'); }
-  catch(e){ showGate('offline'); }
+  showGate('login');
 }
 
 /* ================================ INIT ================================== */

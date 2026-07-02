@@ -40,6 +40,20 @@ async function verifyPass(pass){
     return r.ok;
   } catch (e) { return false; }
 }
+// Multi-user auth: uname + PBKDF2-derived auth key, verified via the
+// escape_u_login RPC (bcrypt server-side). Data stays E2E-encrypted;
+// this only proves the caller owns the vault before spending the AI key.
+async function verifyUser(uname, auth){
+  if (!uname || !auth || String(auth).length < 32) return false;
+  try {
+    const r = await fetch(SUPA_URL + '/rest/v1/rpc/escape_u_login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SUPA_KEY, Authorization: 'Bearer ' + SUPA_KEY },
+      body: JSON.stringify({ p_uname: uname, p_auth: auth }),
+    });
+    return r.ok;
+  } catch (e) { return false; }
+}
 // Temporary maintenance gate: a short-lived token that lives ONLY in the
 // database (escape_test_ok RPC). Once the row is deleted this always fails.
 async function verifyTestToken(t){
@@ -142,7 +156,7 @@ module.exports = async (req, res) => {
     if (!process.env.ANTHROPIC_API_KEY) {
       return res.status(500).json({ error: 'AI not set up yet — add ANTHROPIC_API_KEY in Vercel → Settings → Environment Variables, then redeploy.' });
     }
-    if (!(await verifyPass(body.pass)) && !(await verifyTestToken(body.testToken))) {
+    if (!(await verifyUser(body.uname, body.auth)) && !(await verifyPass(body.pass)) && !(await verifyTestToken(body.testToken))) {
       return res.status(401).json({ error: 'Locked — unlock the app first.' });
     }
 
