@@ -150,7 +150,15 @@ module.exports = async (req, res) => {
     const model = MODELS[modelKey];
     const effort = EFFORTS.includes(body.effort) ? body.effort : 'low';
     const action = body.action || 'country';
-    const send = (data, costUSD) => res.status(200).json({ ok: true, data, costUSD: costUSD || 0, modelUsed: modelKey });
+    // The model sometimes embeds <cite index="..."> markers inside JSON string
+    // values when it cites search results — strip them from every string.
+    const stripCites = (x) => {
+      if (typeof x === 'string') return x.replace(/<\/?cite[^>]*>/g, '');
+      if (Array.isArray(x)) return x.map(stripCites);
+      if (x && typeof x === 'object') { const o = {}; for (const k of Object.keys(x)) o[k] = stripCites(x[k]); return o; }
+      return x;
+    };
+    const send = (data, costUSD) => res.status(200).json({ ok: true, data: stripCites(data), costUSD: costUSD || 0, modelUsed: modelKey });
     // His situation (the 5W1H): the client sends a live snapshot built from the
     // whole tracker + his own "About me" notes; fall back to the baseline.
     const BASE_PERSONA = 'Amuh, a 26-year-old Indonesian citizen (Muslim) with NO recognized professional credentials or work experience — realistically he can only take LABOR work: agriculture, factory/manufacturing, hospitality, care, construction, dishwashing, warehouse. He is escaping the weak Indonesian rupiah for a strong-currency country.';
