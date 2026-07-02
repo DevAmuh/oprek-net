@@ -40,6 +40,20 @@ async function verifyPass(pass){
     return r.ok;
   } catch (e) { return false; }
 }
+// Temporary maintenance gate: a short-lived token that lives ONLY in the
+// database (escape_test_ok RPC). Once the row is deleted this always fails.
+async function verifyTestToken(t){
+  if (!t || String(t).length < 20) return false;
+  try {
+    const r = await fetch(SUPA_URL + '/rest/v1/rpc/escape_test_ok', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SUPA_KEY, Authorization: 'Bearer ' + SUPA_KEY },
+      body: JSON.stringify({ p_t: t }),
+    });
+    if (!r.ok) return false;
+    return (await r.text()).indexOf('true') >= 0;
+  } catch (e) { return false; }
+}
 
 async function callClaude(body){
   const r = await fetch('https://api.anthropic.com/v1/messages', {
@@ -56,20 +70,26 @@ async function callClaude(body){
   return j;
 }
 
+// IMPORTANT: when Claude cites web-search results, its answer arrives SPLIT
+// across many text blocks (one per citation span) — join with '' (not '\n')
+// or literal newlines land inside JSON string values and break JSON.parse.
+function textOf(msg){ return (msg.content || []).filter(b => b.type === 'text').map(b => b.text).join(''); }
+
 // Run a request, following the server-tool loop (web search) with hard
 // budgets: max 3 rounds, max 3 searches, ~40s wall clock. Accumulates
-// token/search usage across rounds and returns the estimated cost.
+// token/search usage AND text across rounds; returns the estimated cost.
 async function runClaude(userText, opts){
   const m = opts.model;
   const msgs = [{ role: 'user', content: userText }];
   const used = { input: 0, output: 0, searches: 0 };
   const t0 = Date.now();
-  let last;
+  let last, allText = '';
   for (let i = 0; i < 3; i++) {
     const body = { model: m.id, max_tokens: opts.maxTokens || 2500, messages: msgs };
     if (m.effortOK) body.output_config = { effort: opts.effort || 'low' };
     if (opts.useWeb) body.tools = [{ type: m.search, name: 'web_search', max_uses: 3 }];
     last = await callClaude(body);
+    allText += textOf(last);
     if (last.usage) {
       used.input  += last.usage.input_tokens  || 0;
       used.output += last.usage.output_tokens || 0;
@@ -83,11 +103,35 @@ async function runClaude(userText, opts){
     break;
   }
   const cost = used.input * m.inPerM / 1e6 + used.output * m.outPerM / 1e6 + used.searches * 0.01;
-  return { msg: last, costUSD: Math.round(cost * 10000) / 10000 };
+  return { msg: last, text: allText, stop: last && last.stop_reason,
+    costUSD: Math.round(cost * 10000) / 10000 };
 }
 
-function textOf(msg){ return (msg.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n'); }
-function extractJson(t){ const m = t && t.match(/\{[\s\S]*\}/); if (!m) return null; try { return JSON.parse(m[0]); } catch (e) { return null; } }
+// Tolerant JSON extraction: try the greedy {...} match as-is, then with
+// control characters inside repaired to spaces, then from the LAST '{'.
+function tryParse(s){ try { return JSON.parse(s); } catch (e) { return null; } }
+function extractJson(t){
+  if (!t) return null;
+  const m = t.match(/\{[\s\S]*\}/);
+  if (!m) return null;
+  const raw = m[0];
+  let j = tryParse(raw);
+  if (!j) j = tryParse(raw.replace(/[\r\n\t]+/g, ' '));
+  if (!j) {
+    const i = t.lastIndexOf('{');
+    if (i >= 0) j = tryParse(t.slice(i).replace(/[\r\n\t]+/g, ' '));
+  }
+  return j;
+}
+
+// Uniform failure reply: log detail to Vercel runtime logs + expose a small
+// debug hint so the problem is diagnosable from the response itself.
+function parseFail(res, r, friendly){
+  const t = r.text || '';
+  console.error('AI parse fail', { stop: r.stop, len: t.length, head: t.slice(0, 200), tail: t.slice(-200) });
+  const msg = r.stop === 'max_tokens' ? 'The answer got cut off mid-write — tap again (it usually fits on retry).' : friendly;
+  return res.status(502).json({ error: msg, debug: { stop: r.stop, len: t.length, tail: t.slice(-160) } });
+}
 
 module.exports = async (req, res) => {
   try {
@@ -98,7 +142,7 @@ module.exports = async (req, res) => {
     if (!process.env.ANTHROPIC_API_KEY) {
       return res.status(500).json({ error: 'AI not set up yet — add ANTHROPIC_API_KEY in Vercel → Settings → Environment Variables, then redeploy.' });
     }
-    if (!(await verifyPass(body.pass))) {
+    if (!(await verifyPass(body.pass)) && !(await verifyTestToken(body.testToken))) {
       return res.status(401).json({ error: 'Locked — unlock the app first.' });
     }
 
@@ -107,7 +151,12 @@ module.exports = async (req, res) => {
     const effort = EFFORTS.includes(body.effort) ? body.effort : 'low';
     const action = body.action || 'country';
     const send = (data, costUSD) => res.status(200).json({ ok: true, data, costUSD: costUSD || 0, modelUsed: modelKey });
-    const persona = 'Amuh, a 26-year-old Indonesian citizen (Muslim) with NO recognized professional credentials or work experience — realistically he can only take LABOR work: agriculture, factory/manufacturing, hospitality, care, construction, dishwashing, warehouse. He is escaping the weak Indonesian rupiah for a strong-currency country.';
+    // His situation (the 5W1H): the client sends a live snapshot built from the
+    // whole tracker + his own "About me" notes; fall back to the baseline.
+    const BASE_PERSONA = 'Amuh, a 26-year-old Indonesian citizen (Muslim) with NO recognized professional credentials or work experience — realistically he can only take LABOR work: agriculture, factory/manufacturing, hospitality, care, construction, dishwashing, warehouse. He is escaping the weak Indonesian rupiah for a strong-currency country.';
+    const profile = String(body.profile || '').slice(0, 2500).trim();
+    const persona = profile ? (BASE_PERSONA + '\nHis current situation (live from his tracker):\n' + profile + '\n') : BASE_PERSONA;
+    const NO_NARRATE = ' Do not narrate your searching or thinking. After searching, output ONLY the JSON object.';
 
     if (action === 'country') {
       const country = String(body.country || '').slice(0, 60).trim();
@@ -116,10 +165,11 @@ module.exports = async (req, res) => {
         'You are a relocation research assistant for ' + persona + ' ' +
         'Research the CURRENT, REAL 2026 pathway for him to LEGALLY work in ' + country + '. Use web search (English and Indonesian sources) for up-to-date facts: the exact visa/program name, whether a no-degree labor route exists, the language requirement, realistic monthly pay (with currency), any age cap, the concrete first step, an official link, and the main risk. ' +
         'Respond with ONLY one JSON object — no markdown, no code fence, no text before or after. Schema (keep every string short):\n' +
-        '{"name": short UPPERCASE label (e.g. "QATAR"), "tag": "<program> · <sector>", "langLabel": e.g. "— none" or "🇩🇪 B1" or "🇸🇦 Arabic", "langNote": one line, "next": one concrete next step, "pay": monthly pay with an "≈ $X/mo" hint, "timeline": e.g. "intake opens Q3 2026" or "year-round", "laborEligible": true or false (can he do it with NO credentials?), "ageCap": text or null, "why": 1-2 sentences on why it is worth considering for a labor migrant, "risk": one sentence, "link": official URL}';
-      const r = await runClaude(prompt, { model, effort, useWeb: true, maxTokens: 2500 });
-      const data = extractJson(textOf(r.msg));
-      if (!data) return res.status(502).json({ error: 'AI returned no usable result — try again.' });
+        '{"name": short UPPERCASE label (e.g. "QATAR"), "tag": "<program> · <sector>", "langLabel": e.g. "— none" or "🇩🇪 B1" or "🇸🇦 Arabic", "langNote": one line, "next": one concrete next step, "pay": monthly pay with an "≈ $X/mo" hint, "timeline": e.g. "intake opens Q3 2026" or "year-round", "laborEligible": true or false (can he do it with NO credentials?), "ageCap": text or null, "why": 1-2 sentences on why it is worth considering for a labor migrant, "risk": one sentence, "link": official URL}' +
+        NO_NARRATE;
+      const r = await runClaude(prompt, { model, effort, useWeb: true, maxTokens: 3000 });
+      const data = extractJson(r.text);
+      if (!data) return parseFail(res, r, 'AI returned no usable result — try again.');
       return send(data, r.costUSD);
     }
 
@@ -130,8 +180,8 @@ module.exports = async (req, res) => {
         ctx +
         '\n\nRespond with ONLY one JSON object: {"text": the one next action (imperative, max 8 words), "why": one short, warm, encouraging sentence}. No other text.';
       const r = await runClaude(prompt, { model, effort, useWeb: false, maxTokens: 800 });
-      const data = extractJson(textOf(r.msg));
-      if (!data) return res.status(502).json({ error: 'AI had nothing — try again.' });
+      const data = extractJson(r.text);
+      if (!data) return parseFail(res, r, 'AI had nothing — try again.');
       return send(data, r.costUSD);
     }
 
@@ -141,10 +191,11 @@ module.exports = async (req, res) => {
         '1. Taiwan SP2T (government-to-government via SISKOP2MI)\n' +
         '2. Korea EPS — the next EPS-TOPIK registration/exam round for Indonesians\n' +
         '3. Japan SSW — the next JFT-Basic / skills-test schedule in Indonesia\n' +
-        'Respond with ONLY one JSON object: {"routes":[{"id":"taiwan_sp2t"|"korea_eps"|"japan_ssw","window":"short current status — include a date in YYYY-MM-DD form if one is known","next":"one concrete step","link":"official URL"}],"note":"one line overall"}. Include all three routes even if a window is closed (say so).';
-      const r = await runClaude(prompt, { model, effort, useWeb: true, maxTokens: 1500 });
-      const data = extractJson(textOf(r.msg));
-      if (!data || !Array.isArray(data.routes)) return res.status(502).json({ error: 'No window info found — try again.' });
+        'Respond with ONLY one JSON object: {"routes":[{"id":"taiwan_sp2t"|"korea_eps"|"japan_ssw","window":"short current status — include a date in YYYY-MM-DD form if one is known","next":"one concrete step","link":"official URL"}],"note":"one line overall"}. Include all three routes even if a window is closed (say so).' +
+        NO_NARRATE;
+      const r = await runClaude(prompt, { model, effort, useWeb: true, maxTokens: 1800 });
+      const data = extractJson(r.text);
+      if (!data || !Array.isArray(data.routes)) return parseFail(res, r, 'No window info found — try again.');
       return send(data, r.costUSD);
     }
 
@@ -154,10 +205,11 @@ module.exports = async (req, res) => {
         'You are a news scout for ' + persona + ' ' +
         'Web-search (Indonesian AND English sources) for the most useful developments of the LAST 30 DAYS for Indonesian migrant workers heading to: ' + topics + '. ' +
         'Prioritize: new visa rules, intake/registration openings, quota changes, pay/minimum-wage changes, warnings (scams, bans). Skip India-focused content and consultancy ads. ' +
-        'Respond with ONLY one JSON object: {"summary":"1-2 sentences — the big picture this month","items":[{"title":"short headline","gist":"one line on why it matters to him","link":"source URL","country":"country name"}]}. Max 6 items, most useful first. If a route has nothing new, leave it out.';
-      const r = await runClaude(prompt, { model, effort, useWeb: true, maxTokens: 1800 });
-      const data = extractJson(textOf(r.msg));
-      if (!data || !Array.isArray(data.items)) return res.status(502).json({ error: 'Scan came back empty — try again.' });
+        'Respond with ONLY one JSON object: {"summary":"1-2 sentences — the big picture this month","items":[{"title":"short headline","gist":"one line on why it matters to him","link":"source URL","country":"country name"}]}. Max 6 items, most useful first. If a route has nothing new, leave it out.' +
+        NO_NARRATE;
+      const r = await runClaude(prompt, { model, effort, useWeb: true, maxTokens: 2000 });
+      const data = extractJson(r.text);
+      if (!data || !Array.isArray(data.items)) return parseFail(res, r, 'Scan came back empty — try again.');
       return send(data, r.costUSD);
     }
 
@@ -167,10 +219,11 @@ module.exports = async (req, res) => {
       const prompt =
         'You answer one question for ' + persona + ' ' +
         'Use web search if the answer needs current facts (fees, dates, rules). Be concrete and current — name amounts, dates and offices. His question:\n"' + q.replace(/"/g, "'") + '"\n' +
-        'Respond with ONLY one JSON object: {"answer":"plain-text answer, max 120 words, warm but factual","links":[{"t":"short source label","u":"URL"}]}. Max 3 links.';
+        'Respond with ONLY one JSON object: {"answer":"plain-text answer, max 120 words, warm but factual","links":[{"t":"short source label","u":"URL"}]}. Max 3 links.' +
+        NO_NARRATE;
       const r = await runClaude(prompt, { model, effort, useWeb: true, maxTokens: 1200 });
-      const data = extractJson(textOf(r.msg));
-      if (!data || !data.answer) return res.status(502).json({ error: 'No answer came back — try again.' });
+      const data = extractJson(r.text);
+      if (!data || !data.answer) return parseFail(res, r, 'No answer came back — try again.');
       return send(data, r.costUSD);
     }
 

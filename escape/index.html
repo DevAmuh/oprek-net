@@ -472,6 +472,7 @@ function defaults(){
       googleClientId:'', calendarId:'', driveFolderId:'', eventMap:{},
       feedTopics:['taiwan','korea','japan','germany','australia','moves'], feedCustom:[],
       ai:{ model:'haiku', effort:'low', spendUSD:0, spendSince:'' },
+      aiContext:'',
     },
   };
 }
@@ -558,8 +559,10 @@ function aiCfg(){ const a=state.settings.ai; return (a&&typeof a==='object')?a:{
 function fmtCost(c){ if(typeof c!=='number'||!(c>0)) return ''; return '≈$'+(Math.round(c*1000)/1000); }
 async function aiCall(action, extra){
   const ai=aiCfg();
+  const payload={ pass:_pass, action, model:ai.model||'haiku', effort:ai.effort||'low', ...(extra||{}) };
+  if(action!=='next' && !payload.profile){ try{ payload.profile=aiProfileContext(); }catch(e){} }
   const r=await fetch('/api/ai',{ method:'POST', headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({ pass:_pass, action, model:ai.model||'haiku', effort:ai.effort||'low', ...(extra||{}) }) });
+    body:JSON.stringify(payload) });
   const t=await r.text(); let j=null; try{ j=t?JSON.parse(t):null; }catch(e){}
   if(!r.ok){
     let m=(j&&j.error)||({404:'AI backend not live here — it works on dhiya.id/escape once deployed.',504:'The research took too long — tap again to retry.'}[r.status]||('AI error '+r.status));
@@ -572,21 +575,30 @@ async function aiCall(action, extra){
   }
   return j;
 }
-function aiStateSummary(){
+/* The 5W1H snapshot — everything the AI should know about HIS situation,
+   rebuilt live from the whole tracker on every call, plus his own planted
+   "About me" notes. This is what makes the built-in AI answer for HIM, not
+   for a generic reader. */
+function aiProfileContext(){
+  const L=[]; const p=state.profile;
+  const bd=parseYMD(p.birthDate); let age=null;
+  if(bd){ const n=new Date(); age=n.getFullYear()-bd.getFullYear(); const m=n.getMonth()-bd.getMonth(); if(m<0||(m===0&&n.getDate()<bd.getDate())) age--; }
+  L.push('Name: '+(p.name||'Amuh')+(age!=null?' · age '+age:'')+' · Indonesian citizen, currently in Indonesia.');
+  const about=(state.settings.aiContext||'').trim();
+  if(about) L.push('About him, in his own words: '+about);
   const dp=docProgress();
-  const lines=[];
-  lines.push('Documents: '+dp.done+'/'+dp.total+' done'+(state.documents.find(d=>d.id==='passport'&&d.status!=='done')?' (passport NOT done — the gate)':''));
-  lines.push('Cash routes: '+state.phase1.map(p=>p.label+'='+STATUS_LABELS[p.status]).join(', '));
-  lines.push('Endgame decision: '+state.phase2.decision);
-  lines.push('Money saved: '+fmtMoney(banked(),state.profile.baseCurrency));
-  const cap=ageCapDate(state.profile.birthDate); const mU=monthsUntil(cap);
-  if(mU!=null) lines.push('Australia age-cap: '+mU+' months to 31');
-  lines.push('Streak: '+state.streak.count+' days');
-  const up=computeCalendarItems(state).filter(i=>!i.rrule).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,3);
-  if(up.length) lines.push('Next deadlines: '+up.map(i=>i.title+' ('+i.date+')').join('; '));
-  if((state.customRoutes||[]).length) lines.push('Countries he is exploring (AI-researched): '+state.customRoutes.map(c=>c.name+'='+(STATUS_LABELS[c.status]||c.status||'?')).join(', '));
-  lines.push('He can only do labor work (no credentials).');
-  return lines.join('\n');
+  L.push('Documents: '+dp.done+'/'+dp.total+' done'+(state.documents.find(d=>d.id==='passport'&&d.status!=='done')?' — passport NOT done yet (the gate blocking every route)':' — passport cleared'));
+  L.push('Cash-bridge routes: '+state.phase1.map(x=>x.label+'='+(STATUS_LABELS[x.status]||x.status)+(x.waveWindow?' ['+x.waveWindow+']':'')).join(', '));
+  if((state.customRoutes||[]).length) L.push('Also exploring: '+state.customRoutes.map(c=>c.name+'='+(STATUS_LABELS[c.status]||c.status||'?')).join(', '));
+  L.push('Endgame decision: '+state.phase2.decision+(state.phase2.decision==='australia'?' (AUD buffer saved: '+(+state.phase2.australia.savedAUD||0)+'/5000)':''));
+  L.push('Money saved for the move: '+fmtMoney(banked(),p.baseCurrency)+'.');
+  const cap=ageCapDate(p.birthDate); const mU=monthsUntil(cap);
+  if(mU!=null) L.push('Australia WHV age-cap: '+mU+' months left until he turns 31.');
+  L.push('Languages: '+LANGS.map(l=>l.label+' '+(state.languages[l.id].level||'None')).join(', ')+'.');
+  const up=computeCalendarItems(state).filter(i=>!i.rrule).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,4);
+  if(up.length) L.push('Upcoming deadlines: '+up.map(i=>i.title+' ('+i.date+')').join('; ')+'.');
+  L.push('Check-in streak: '+state.streak.count+' days.');
+  return L.join('\n').slice(0,2400);
 }
 /* Research a country via AI and file it into state.customRoutes.
    existingId set => refresh that route in place; otherwise add a new one. */
@@ -625,7 +637,7 @@ async function aiAddCountry(name, existingId, btnEl){
 async function aiNextMove(btn){
   const old=btn?btn.textContent:''; if(btn){ btn.disabled=true; btn.textContent='… thinking'; }
   try{
-    const j=await aiCall('next',{ context:aiStateSummary() });
+    const j=await aiCall('next',{ context:aiProfileContext() });
     const d=j.data||{};
     if(!d.text) throw new Error('No suggestion');
     mutate(s=>{ s.nextActionOverride=String(d.text).slice(0,140); s.nextActionVia=d.why?('✨ '+String(d.why).slice(0,160)):'✨ Picked by your AI coach'; });
@@ -1596,6 +1608,8 @@ function viewSettings(){
       +[['haiku','Haiku 4.5 — fast & cheap (~$0.05/research)'],['sonnet','Sonnet 5 — balanced (~$0.09)'],['opus','Opus 4.8 — deepest (~$0.15+, slow)']].map(o=>'<option value="'+o[0]+'" '+(ai.model===o[0]?'selected':'')+'>'+o[1]+'</option>').join('')+'</select></div>'
     +'<div class="field"><label>Effort <span class="faint">(Haiku ignores this)</span></label><select data-action="aiEffort">'
       +['low','medium','high'].map(v=>'<option '+(ai.effort===v?'selected':'')+'>'+v+'</option>').join('')+'</select></div></div>'
+    +'<div class="field mt"><label>🧬 About me — the AI reads this before every answer'+info('Plant anything the AI should always know about your situation: where you live, family, savings target, deal-breakers, preferences. It is combined with the live facts from your tracker (docs, routes, money, deadlines) on every AI call, so answers always fit YOUR case.')+'</label>'
+    +'<textarea data-action="aiContext" placeholder="e.g. I live in East Java. I can leave within 2 months. I prefer workplaces with halal food access. My priority is banking cash fast…">'+esc(s.aiContext||'')+'</textarea></div>'
     +'<div class="between mt"><span class="small">Spent ≈ <b class="mono" style="color:var(--amber-soft)">$'+(+(ai.spendUSD||0)).toFixed(2)+'</b>'+(ai.spendSince?' <span class="faint">since '+fmtDate(ai.spendSince)+'</span>':'')+'</span>'
     +'<button class="btn ghost sm" data-action="aiSpendReset">Reset</button></div>'
     +'<div class="faint small mt-s">Estimates only — your real balance lives at console.anthropic.com.</div>'
@@ -1762,6 +1776,7 @@ document.addEventListener('change', (e)=>{
     case 'setClientId': setSilent(s=>{ s.settings.googleClientId=v.trim(); }); render(); break;
     case 'aiModel': setSilent(s=>{ (s.settings.ai=s.settings.ai||{}).model=v; }); toast('AI model: '+v); break;
     case 'aiEffort': setSilent(s=>{ (s.settings.ai=s.settings.ai||{}).effort=v; }); break;
+    case 'aiContext': setSilent(s=>{ s.settings.aiContext=v; }); break;
     case 'toggleDailyReminder': mutate(s=>{ s.settings.dailyReminder=t.checked; }); break;
     case 'setReminderTime': setSilent(s=>{ s.settings.reminderTime=v; }); maybeNotify(); break;
     case 'savedFrom': _savedFrom=v; render(); break;
