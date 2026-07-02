@@ -98,7 +98,7 @@ function hostOf(link){ try{ return new URL(link).hostname.replace(/^www\./,''); 
 
 // Quality gate: fresh (≤60 days, dated), not from blocked SEO farms, and not
 // India-targeted content (the reader is Indonesian) unless it mentions Indonesia.
-const BLOCK = ['y-axis.com', 'y-axis'];
+const BLOCK = ['y-axis.com', 'y-axis', 'instagram.com', 'facebook.com', 'tiktok.com', 'youtube.com', 'twitter.com', 'x.com'];
 const MAX_AGE_MS = 60 * 86400000;
 function keepItem(it){
   if (!it.ts || (Date.now() - it.ts) > MAX_AGE_MS) return false;
