@@ -43,6 +43,10 @@
   .dot-unsaved{display:none;width:8px;height:8px;border-radius:50%;background:#d29922}
   body.dirty .dot-unsaved{display:inline-block}
 
+  /* ---- setup warning banner ---- */
+  .warnbar{background:#2d2312;border-bottom:1px solid #6b5418;color:#e8c56a;
+    padding:9px 14px;font-size:13px;line-height:1.5}
+
   /* ---- view tabs (mobile) ---- */
   .tabs{display:none;gap:6px;padding:8px 14px;background:var(--panel);border-bottom:1px solid var(--line)}
   .tabs button{flex:1}
@@ -94,7 +98,10 @@
   <header>
     <div class="brand">✏️ Editor <small>oprek.net</small></div>
     <select id="page" title="Which page to edit">
-      <option value="graduation">/graduation</option>
+      <option value="graduation">/graduation — thank-you</option>
+      <option value="graduation-login">/graduation/login</option>
+      <option value="graduation-chart">/graduation/chart — seats</option>
+      <option value="escape">/escape</option>
       <option value="english">/english</option>
       <option value="fireplace">/fireplace</option>
       <option value="lab">/lab</option>
@@ -105,6 +112,8 @@
     <span id="status"></span>
     <button id="publish" class="btn-publish">⬆ Publish</button>
   </header>
+
+  <div id="setupWarn" class="warnbar hide"></div>
 
   <div class="tabs">
     <button id="tabCode" class="active">Code</button>
@@ -153,9 +162,72 @@
     });
   }
 
+  // ---- setup self-check: shows a plain-English banner if any
+  //      link in the publish chain is broken ----
+  function checkSetup(){
+    fetch('/api/edit?health=1')
+      .then(safeJson)
+      .then(function(res){
+        if(!res.ok) return;              // can't reach the check itself; stay quiet
+        var h = res.j || {}, problems = [];
+        if(!h.ghToken){
+          problems.push('GH_TOKEN is missing in Vercel — loading and publishing won’t work. Add it under Settings → Environment Variables, then redeploy.');
+        } else if(!h.canRead){
+          problems.push('The GitHub token isn’t working (expired, or made for the wrong repo). Create a new fine-grained token for DevAmuh/oprek-net with Contents: Read and write.');
+        } else if(!h.canWrite){
+          problems.push('The GitHub token can READ but not WRITE, so Publish will fail. Fix on GitHub: Settings → Developer settings → your token → Permissions → Contents → change to “Read and write”.');
+        }
+        if(!h.editPassword){
+          problems.push('EDIT_PASSWORD is not set in Vercel, so Publish will fail. Add it under Settings → Environment Variables, then redeploy.');
+        }
+        var bar = document.getElementById('setupWarn');
+        if(problems.length){ bar.textContent = '⚠ ' + problems.join(' '); bar.classList.remove('hide'); }
+        else { bar.classList.add('hide'); }
+      })
+      .catch(function(){});
+  }
+
+  // ---- after publishing, watch the live site until the change
+  //      is actually deployed ----
+  // slug -> the URL the page is served at (differs for sub-pages)
+  var LIVE_PATH = {
+    'graduation':       '/graduation',
+    'graduation-login': '/graduation/login',
+    'graduation-chart': '/graduation/chart',
+    'escape':           '/escape',
+    'english':          '/english',
+    'fireplace':        '/fireplace',
+    'lab':              '/lab'
+  };
+  var deployTimer = null;
+  function normDoc(s){ return String(s).replace(/\r\n?/g,'\n').trim(); }
+  function trackDeploy(slug, published){
+    clearInterval(deployTimer);
+    var started = Date.now();
+    var want = normDoc(published);
+    var path = LIVE_PATH[slug] || ('/' + slug);
+    deployTimer = setInterval(function(){
+      var secs = Math.round((Date.now() - started) / 1000);
+      setStatus('✓ Saved to GitHub. Deploying… ' + secs + 's', 'work');
+      fetch(path + '?live=' + Date.now(), { cache:'no-store' })
+        .then(function(r){ return r.text(); })
+        .then(function(t){
+          if(normDoc(t) === want){
+            clearInterval(deployTimer);
+            setStatus('✓ LIVE at oprek.net' + path + ' (took ' + secs + 's)', 'ok');
+          } else if(secs > 180){
+            clearInterval(deployTimer);
+            setStatus('Saved to GitHub ✓ — deploy is taking longer than usual. Check oprek.net' + path + ' in a minute.', 'ok');
+          }
+        })
+        .catch(function(){});
+    }, 5000);
+  }
+
   // ---- load a page from the server ----
   function loadPage(){
     var slug = pageSel.value;
+    clearInterval(deployTimer);
     setStatus('Loading /' + slug + '…', 'work');
     code.value = '';
     fetch('/api/edit?page=' + encodeURIComponent(slug))
@@ -195,7 +267,8 @@
         }
         lastLoaded = code.value;
         markDirty();
-        setStatus('✓ Published! Live at oprek.net/' + slug + ' in ~1 min.', 'ok');
+        setStatus('✓ Saved to GitHub. Deploying…', 'work');
+        trackDeploy(slug, code.value);
       })
       .catch(function(e){ btn.disabled = false; setStatus(e.message, 'err'); });
   }
@@ -258,6 +331,8 @@
   }
   $('#enter').addEventListener('click', function(){ if(pwInput.value) unlock(pwInput.value); });
   pwInput.addEventListener('keydown', function(e){ if(e.key==='Enter' && pwInput.value) unlock(pwInput.value); });
+
+  checkSetup();
 
   var saved = '';
   try{ saved = localStorage.getItem('edit_pw') || ''; }catch(e){}
