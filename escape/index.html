@@ -60,20 +60,45 @@ textarea{resize:vertical;min-height:60px}
 .streakpill{display:inline-flex;align-items:center;gap:5px;background:rgba(246,191,82,.1);border:1px solid rgba(246,191,82,.3);color:var(--amber-soft);
   padding:5px 10px;border-radius:6px;font-family:var(--mono);font-weight:700;font-size:12px}
 
-/* ---------------- FX ticker (broker strip under the header) ---------------- */
-.fxbar{margin:-4px -14px 12px;padding:7px 14px;border-bottom:1px solid var(--line);background:rgba(0,0,0,.25);overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+/* ---------------- FX ticker (frozen broker strip + panel) ---------------- */
+.topbar{height:52px}
+.fxwrap{position:sticky;top:52px;z-index:29;margin:0 -14px 12px;background:linear-gradient(180deg,#0d0a07,#0b0805);cursor:pointer}
+.fxbar{padding:7px 14px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;user-select:none;-webkit-user-select:none}
 .fxbar::-webkit-scrollbar{display:none}
-.fxrow{display:flex;align-items:center;gap:8px;white-space:nowrap;font-family:var(--mono);font-size:11px}
+.fxtrack{display:flex}
+.fxrow{display:flex;align-items:center;gap:8px;white-space:nowrap;font-family:var(--mono);font-size:11px;flex:none;padding-right:8px}
 .fxlbl{color:var(--amber-faint);font-weight:700;font-size:9px;letter-spacing:.12em;flex:none}
 .fxpill{color:var(--muted);flex:none;padding:3px 8px;border:1px solid var(--line);border-radius:6px;background:rgba(255,255,255,.02)}
 .fxpill b{color:var(--amber-soft);font-weight:700;margin-right:4px}
 .fxpill.gold{border-color:rgba(246,191,82,.4);background:rgba(246,191,82,.07);color:var(--amber-soft)}
-.fxctl{display:inline-flex;align-items:center;gap:5px;flex:none}
-.fxctl select{width:auto;padding:3px 24px 3px 8px;font-size:11px;font-family:var(--mono);border-radius:6px;background-position:right 7px center}
-.fxctl button{color:var(--amber-dim);border:1px solid var(--line);border-radius:6px;padding:3px 8px;font-size:12px;line-height:1}
-.fxctl button:hover{color:var(--amber-soft)}
 .fxupd{color:var(--faint);font-size:9.5px;flex:none}
-@media(min-width:920px){ .fxbar{margin:-8px 0 16px;padding:8px 2px} }
+.fx-more{position:absolute;right:0;top:0;bottom:auto;height:33px;display:flex;align-items:center;padding:0 8px 0 26px;color:var(--amber-dim);font-size:10px;pointer-events:none;
+  background:linear-gradient(90deg,transparent,#0b0805 55%)}
+.fxpanel{position:absolute;left:0;right:0;top:100%;z-index:50;background:linear-gradient(180deg,#141009,#0e0a06);border-bottom:1px solid var(--line2);
+  box-shadow:0 30px 60px -20px rgba(0,0,0,.85);padding:12px 14px;max-height:min(66dvh,540px);overflow:auto;cursor:default}
+.fxpanel .cv{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-family:var(--mono);font-size:12px}
+.fxpanel .cv input{max-width:110px;font-family:var(--mono)}
+.fxpanel .cv select{width:auto;padding-right:26px;font-family:var(--mono)}
+.fxpanel .cv b{color:var(--amber-soft)}
+.colrow{display:grid;grid-template-columns:88px 1fr;gap:4px 10px;padding:9px 0;border-top:1px solid var(--line);font-size:12px}
+.colrow .cc{font-family:var(--mono);font-weight:700;color:var(--amber-soft)}
+.colrow .cn{color:var(--faint);font-size:10.5px}
+.colrow .cd{color:var(--muted);line-height:1.55}
+.colrow .cd b{color:var(--cream);font-weight:600}
+.colrow .stash{color:var(--teal)}
+@media(min-width:920px){ .fxwrap{top:0;margin:-8px 0 16px} .fxbar{padding:8px 2px} .fx-more{height:35px} }
+
+/* ---------------- News footer ticker ---------------- */
+.newsbar{position:fixed;left:0;right:0;bottom:0;z-index:35;background:rgba(8,6,4,.96);backdrop-filter:blur(8px);border-top:1px solid var(--line);
+  overflow-x:auto;scrollbar-width:none;padding:7px 10px;user-select:none;-webkit-user-select:none}
+.newsbar::-webkit-scrollbar{display:none}
+.nb-row{display:flex;align-items:center;gap:14px;white-space:nowrap;font-size:12px;flex:none;padding-right:14px}
+.nb-item{color:var(--muted);text-decoration:none}
+.nb-item:hover{color:var(--amber-soft);text-decoration:none}
+.nb-lead{font-family:var(--mono);font-weight:700;font-size:9.5px;letter-spacing:.14em;color:var(--amber);cursor:pointer;flex:none}
+.nb-sep{color:var(--faint)}
+@media(max-width:919px){ .newsbar{bottom:calc(66px + var(--safe-b));padding:6px 10px} body.has-newsbar .stage{padding-bottom:calc(126px + var(--safe-b))} }
+@media(min-width:920px){ body.has-newsbar .stage{padding-bottom:86px} }
 
 /* ---------------- Departures board ---------------- */
 .board-masthead{display:none}
@@ -372,12 +397,17 @@ details.row-x[open]{border-color:var(--line2)}
       <div><div class="big">DEPARTURES</div><div class="vwname" id="vwName">Board</div></div>
       <div class="rt"><span id="clockRt">05:14 WIB</span><br><span id="dateRt"></span></div>
     </div>
-    <div id="fxbar" class="fxbar"></div>
+    <div id="fxwrap" class="fxwrap">
+      <div id="fxbar" class="fxbar"></div>
+      <div class="fx-more">▾</div>
+      <div id="fxpanel" class="fxpanel" hidden></div>
+    </div>
     <div id="view"></div>
   </main>
 </div>
 
 <nav class="tabbar" id="tabbar"></nav>
+<div id="newsbar" class="newsbar" style="display:none"></div>
 
 <div id="gate" class="gate hide"></div>
 
@@ -461,6 +491,7 @@ function defaults(){
     aiScan:null,
     lastAsk:null,
     customLangs:[],
+    docPacks:[],
     why:{
       reasons:[
         'The rupiah keeps shrinking — my hours are worth more abroad.',
@@ -490,6 +521,8 @@ function defaults(){
       feedTopics:['taiwan','korea','japan','germany','australia','moves'], feedCustom:[],
       ai:{ model:'haiku', effort:'low', spendUSD:0, spendSince:'' },
       aiContext:'',
+      tickerCurrencies:['USD','TWD','AUD','EUR','KRW','JPY','SAR','QAR','PLN'],
+      newsTicker:true,
     },
   };
 }
@@ -606,8 +639,10 @@ function aiProfileContext(){
   const dp=docProgress();
   L.push('Documents: '+dp.done+'/'+dp.total+' done'+(state.documents.find(d=>d.id==='passport'&&d.status!=='done')?' — passport NOT done yet (the gate blocking every route)':' — passport cleared'));
   L.push('Cash-bridge routes: '+state.phase1.map(x=>x.label+'='+(STATUS_LABELS[x.status]||x.status)+(x.waveWindow?' ['+x.waveWindow+']':'')).join(', '));
+  if((state.docPacks||[]).length) L.push('Purpose doc-packs: '+state.docPacks.map(p=>p.label+' '+packProgress(p)).join(', ')+'.');
   if((state.customRoutes||[]).length) L.push('Also exploring: '+state.customRoutes.map(c=>c.name+'='+(STATUS_LABELS[c.status]||c.status||'?')).join(', '));
-  L.push('Endgame decision: '+state.phase2.decision+(state.phase2.decision==='australia'?' (AUD buffer saved: '+(+state.phase2.australia.savedAUD||0)+'/5000)':''));
+  const decCR=(state.customRoutes||[]).find(c=>c.id===state.phase2.decision);
+  L.push('Endgame decision: '+(decCR?decCR.name:state.phase2.decision)+(state.phase2.decision==='australia'?' (AUD buffer saved: '+(+state.phase2.australia.savedAUD||0)+'/5000)':''));
   L.push('Money saved for the move: '+fmtMoney(banked(),p.baseCurrency)+'.');
   const cap=ageCapDate(p.birthDate); const mU=monthsUntil(cap);
   if(mU!=null) L.push('Australia WHV age-cap: '+mU+' months left until he turns 31.');
@@ -635,6 +670,7 @@ async function aiAddCountry(name, existingId, btnEl){
         name: (d.name||name).toString().toUpperCase().slice(0,40),
         tag: d.tag||'AI route', langLabel: d.langLabel||'—', langNote: d.langNote||'',
         status: (existingId&&(s.customRoutes.find(x=>x.id===existingId)||{}).status)||'not_started',
+        role: (existingId&&(s.customRoutes.find(x=>x.id===existingId)||{}).role)||'watch',
         next: d.next||'', pay: d.pay||'', timeline: d.timeline||'',
         laborEligible: (typeof d.laborEligible==='boolean')?d.laborEligible:null,
         ageCap: d.ageCap||'', why: d.why||'', risk: d.risk||'', link: d.link||'',
@@ -715,6 +751,29 @@ async function aiScanRun(btn){
     if(btn){ btn.disabled=false; btn.textContent=old; }
   }
 }
+/* Docs: AI researches the required paperwork for a pack's purpose. */
+async function aiDocpackFill(btn, pkId){
+  const pack=(state.docPacks||[]).find(x=>x.id===pkId); if(!pack) return;
+  const old=btn?btn.textContent:''; if(btn){ btn.disabled=true; btn.textContent='… researching'; }
+  try{
+    const route=state.phase1.find(p=>p.id===pack.routeId)||(state.customRoutes||[]).find(c=>c.id===pack.routeId);
+    const purpose=pack.label+(route?(' ('+(route.label||route.name)+' route)'):'')+' — working abroad from Indonesia';
+    const j=await aiCall('docpack',{ purpose });
+    const d=j.data||{}; const list=Array.isArray(d.docs)?d.docs:[];
+    if(!list.length) throw new Error('No checklist came back — try again.');
+    const have=new Set([...pack.docs.map(x=>x.label.toLowerCase()), ...state.documents.map(x=>x.label.toLowerCase())]);
+    let added=0;
+    mutate(s=>{ const p=(s.docPacks||[]).find(x=>x.id===pkId); if(!p) return;
+      list.slice(0,10).forEach(it=>{ const lb=String(it.label||'').slice(0,60); if(!lb||have.has(lb.toLowerCase())) return;
+        p.docs.push({ id:uid(), label:lb, status:'not_started', expiry:'', driveLink:'', critical:!!it.critical, notes:String(it.why||'').slice(0,140) });
+        have.add(lb.toLowerCase()); added++; });
+    });
+    toast(added?('✨ '+added+' documents added'+(d.note?' — '+String(d.note).slice(0,80):'')+(fmtCost(j.costUSD)?' · '+fmtCost(j.costUSD):'')):'Checklist matched what you already have ✓', 'ok');
+  }catch(err){
+    toast('⚠ '+(err.message||'AI failed'),'err');
+    if(btn){ btn.disabled=false; btn.textContent=old; }
+  }
+}
 /* Power-up 3: ask-anything — one web-searched answer, kept until the next. */
 async function aiAsk(btn){
   const el=$('#askInput'); const q=el?el.value.trim():'';
@@ -744,7 +803,7 @@ function addDaysISO(iso,n){ const d=parseYMD(iso)||new Date(); d.setDate(d.getDa
 function daysBetween(aISO,bISO){ const a=parseYMD(aISO), b=parseYMD(bISO); if(!a||!b)return null; return Math.round((b-a)/86400000); }
 function fmtDate(iso){ const d=parseYMD(iso); if(!d)return ''; return d.toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'}); }
 function tz(){ try{ return Intl.DateTimeFormat().resolvedOptions().timeZone||'Asia/Jakarta'; }catch(e){ return 'Asia/Jakarta'; } }
-function fmtNum(n){ return (Math.round((+n||0)*100)/100).toLocaleString(undefined,{maximumFractionDigits:2}); }
+function fmtNum(n){ return (Math.round((+n||0)*100)/100).toLocaleString('en-US',{maximumFractionDigits:2}); }
 function firstDateIn(text){ const m=String(text||'').match(/(\d{4})-(\d{2})-(\d{2})/); return m?m[0]:null; }
 
 const STATUS_LABELS={ not_started:'Not started', in_progress:'In progress', done:'Done',
@@ -757,9 +816,10 @@ function toBase(amount, from){
   return base==='IDR'?idr:idr/baseRate;
 }
 function fmtMoney(amount, cur){
-  const sym={USD:'$',IDR:'Rp ',AUD:'A$',EUR:'€',TWD:'NT$'}[cur]||'';
-  const dp=(cur==='IDR')?0:2;
-  return sym+(Math.round((+amount||0)*Math.pow(10,dp))/Math.pow(10,dp)).toLocaleString(undefined,{maximumFractionDigits:dp});
+  const sym={USD:'$',IDR:'Rp ',AUD:'A$',EUR:'€',TWD:'NT$',JPY:'¥',KRW:'₩',GBP:'£'}[cur];
+  const dp=(cur==='IDR'||cur==='KRW'||cur==='JPY')?0:2;
+  const v=(Math.round((+amount||0)*Math.pow(10,dp))/Math.pow(10,dp)).toLocaleString('en-US',{maximumFractionDigits:dp});
+  return sym!==undefined ? sym+v : v+' '+(cur||'');
 }
 
 /* ----------------------------- done log + checkin ------------------------ */
@@ -801,6 +861,8 @@ function nextAction(){
     if((+s.phase2.australia.savedAUD||0) < 5000) return { text:'Add to your AUD 5,000 buffer', via:'Australia endgame', view:'money' };
     return { text:'Progress your WHV 462 application', via:'Australia endgame', view:'routes' };
   }
+  const decC=(s.customRoutes||[]).find(c=>c.id===s.phase2.decision);
+  if(decC) return { text:(decC.next||('Progress your '+decC.name+' application')), via:decC.name+' endgame', view:'routes' };
   return { text:'Ship one tiny thing today', via:'Open any gate', view:'docs' };
 }
 
@@ -819,6 +881,14 @@ function computeCalendarItems(s){
       items.push({ uid:'doc-'+d.id+'-expiry', title:'⏰ '+d.label+' expires', date:d.expiry,
         desc:'Your '+d.label+' validity ends — renew before this date.', alarmDays:[90,30,7,1] });
     }
+  });
+  (s.docPacks||[]).forEach(p=>{
+    (p.docs||[]).forEach(d=>{
+      if(d.expiry && parseYMD(d.expiry)){
+        items.push({ uid:'pk-'+p.id+'-'+d.id, title:'⏰ '+d.label+' ('+p.label+')', date:d.expiry,
+          desc:'From your "'+p.label+'" pack — validity ends.', alarmDays:[60,14,3] });
+      }
+    });
   });
   (s.phase1||[]).forEach(p=>{
     const dt=firstDateIn(p.waveWindow);
@@ -916,9 +986,26 @@ async function ensureDriveFolder(t){
   if(!cr.ok) throw new Error('Could not create the Drive folder ('+cr.status+').');
   const cj=await cr.json(); setSilent(s=>{s.settings.driveFolderId=cj.id;}); return cj.id;
 }
-async function driveUpload(file, docId){
+/* Each purpose pack gets its own folder INSIDE the main Documents folder. */
+async function ensurePackFolder(t, pack){
+  const mainId=await ensureDriveFolder(t);
+  if(pack.driveFolderId){
+    const r=await fetch(DRV+'/files/'+pack.driveFolderId+'?fields=id,trashed',{headers:authH(t)});
+    if(r.ok){ const j=await r.json(); if(!j.trashed) return pack.driveFolderId; }
+  }
+  const q="name='"+pack.label.replace(/'/g,"\\'")+"' and '"+mainId+"' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false";
+  const sr=await fetch(DRV+'/files?q='+encodeURIComponent(q)+'&fields=files(id)',{headers:authH(t)});
+  if(sr.ok){ const sj=await sr.json(); if(sj.files&&sj.files[0]){ setSilent(s=>{ const p=(s.docPacks||[]).find(x=>x.id===pack.id); if(p) p.driveFolderId=sj.files[0].id; }); return sj.files[0].id; } }
+  const cr=await fetch(DRV+'/files',{ method:'POST', headers:{...authH(t),'Content-Type':'application/json'},
+    body:JSON.stringify({ name:pack.label, mimeType:'application/vnd.google-apps.folder', parents:[mainId] }) });
+  if(!cr.ok) throw new Error('Could not create the pack folder ('+cr.status+').');
+  const cj=await cr.json(); setSilent(s=>{ const p=(s.docPacks||[]).find(x=>x.id===pack.id); if(p) p.driveFolderId=cj.id; });
+  return cj.id;
+}
+async function driveUpload(file, docId, packId){
   const t=await getAccessToken();
-  const folderId=await ensureDriveFolder(t);
+  const pack=packId?(state.docPacks||[]).find(x=>x.id===packId):null;
+  const folderId=pack?await ensurePackFolder(t, pack):await ensureDriveFolder(t);
   const meta={ name:file.name, parents:[folderId] };
   const boundary='escp'+Math.random().toString(16).slice(2);
   const head='--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+JSON.stringify(meta)+
@@ -929,8 +1016,8 @@ async function driveUpload(file, docId){
     { method:'POST', headers:{...authH(t),'Content-Type':'multipart/related; boundary='+boundary}, body });
   if(!r.ok) throw new Error('Upload failed ('+r.status+').');
   const j=await r.json();
-  mutate(s=>{ const d=s.documents.find(x=>x.id===docId); if(d){ d.driveLink=j.webViewLink; d.driveFileId=j.id; } });
-  addDone('Uploaded "'+(j.name||'a file')+'" to Drive', 'documents');
+  mutate(s=>{ const d=docRefIn(s,docId,packId); if(d){ d.driveLink=j.webViewLink; d.driveFileId=j.id; } });
+  addDone('Uploaded "'+(j.name||'a file')+'" to Drive'+(pack?' → '+pack.label:''), 'documents');
   return j;
 }
 
@@ -963,14 +1050,24 @@ function downloadICS(){
 }
 
 /* ------------------------------- FX rates -------------------------------- */
+const CORE_CURS=['USD','TWD','AUD','EUR'];   // money math depends on these
+function tickerCurs(){
+  const t=state.settings.tickerCurrencies;
+  return (Array.isArray(t)&&t.length)?t:['USD','TWD','AUD','EUR','KRW','JPY','SAR','QAR','PLN'];
+}
+function fxCodes(){ try{ return JSON.parse(localStorage.getItem('escapeFxCodes')||'[]'); }catch(e){ return []; } }
 async function fetchRates(){
   const r=await fetch('https://open.er-api.com/v6/latest/USD');
   if(!r.ok) throw new Error('FX fetch failed');
   const j=await r.json(); const rt=j.rates||{}; const usdIdr=rt.IDR;
   if(!usdIdr) throw new Error('No IDR rate');
+  try{ localStorage.setItem('escapeFxCodes', JSON.stringify(Object.keys(rt).sort())); }catch(e){}
   mutate(s=>{
-    s.runway.rates={ IDR:1, USD:Math.round(usdIdr),
-      TWD:+(usdIdr/rt.TWD).toFixed(2), AUD:+(usdIdr/rt.AUD).toFixed(2), EUR:+(usdIdr/rt.EUR).toFixed(2) };
+    const fresh={ IDR:1, USD:Math.round(usdIdr) };
+    new Set([...CORE_CURS, ...tickerCurs()]).forEach(c=>{
+      if(c!=='IDR'&&c!=='USD'&&rt[c]) fresh[c]=+(usdIdr/rt[c]).toFixed(2);
+    });
+    s.runway.rates={ ...s.runway.rates, ...fresh };
     s.runway.ratesUpdated=todayISO();
   });
 }
@@ -1045,18 +1142,171 @@ function render(){
   if(currentView==='tailwinds') ensureFeed();
   vw.classList.remove('fade'); void vw.offsetWidth; vw.classList.add('fade');
 }
-/* Broker-style rate strip, latched beneath the header on every view. */
+/* ---- marquee engine: auto-flow, pause on hover/touch, drag to scrub ---- */
+function marquee(el){
+  if(!el) return;
+  if(el._mq){ el._mq.measure(); return; }
+  const st={ paused:false, idleT:null, half:0 };
+  const hold=()=>{ st.paused=true; clearTimeout(st.idleT); };
+  const release=(ms)=>{ clearTimeout(st.idleT); st.idleT=setTimeout(()=>{ st.paused=false; }, ms==null?2000:ms); };
+  el.addEventListener('mouseenter',hold);
+  el.addEventListener('mouseleave',()=>release(700));
+  el.addEventListener('touchstart',()=>{ hold(); release(3500); },{passive:true});
+  el.addEventListener('wheel',()=>{ hold(); release(2500); },{passive:true});
+  let drag=false,sx=0,sl=0;
+  el.addEventListener('pointerdown',e=>{ drag=true; sx=e.clientX; sl=el.scrollLeft; hold(); });
+  document.addEventListener('pointermove',e=>{ if(drag) el.scrollLeft=sl-(e.clientX-sx); });
+  document.addEventListener('pointerup',()=>{ if(drag){ drag=false; release(2000); } });
+  st.measure=()=>{ st.half=el.scrollWidth/2; };
+  el._mq=st; st.measure();
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+  (function step(){
+    if(!document.hidden && !st.paused && !reduce.matches && st.half>el.clientWidth+16){
+      el.scrollLeft+=0.5;
+      if(el.scrollLeft>=st.half) el.scrollLeft-=st.half;
+    }
+    requestAnimationFrame(step);
+  })();
+}
+
+/* ---- FX ticker: frozen broker strip; tap/hover opens the money panel ---- */
 function renderFx(){
   const el=$('#fxbar'); if(!el) return;
   const r=state.runway.rates||{}; const base=state.profile.baseCurrency;
-  el.innerHTML='<div class="fxrow">'
+  const row='<div class="fxrow">'
     +'<span class="fxlbl">IDR / 1</span>'
-    +['USD','TWD','AUD','EUR'].map(c=>'<span class="fxpill"><b>'+c+'</b>'+fmtNum(r[c]||0)+'</span>').join('')
+    +tickerCurs().map(c=>'<span class="fxpill"><b>'+esc(c)+'</b>'+(r[c]?fmtNum(r[c]):'…')+'</span>').join('')
     +'<span class="fxpill gold"><b>SAVED</b>'+fmtMoney(banked(),base)+'</span>'
-    +'<span class="fxctl"><select data-action="baseCur" title="Show all totals in…">'+['USD','IDR','TWD','AUD','EUR'].map(c=>'<option '+(base===c?'selected':'')+'>'+c+'</option>').join('')+'</select>'
-    +'<button data-action="fetchFx" title="Pull live rates">↻</button></span>'
     +(state.runway.ratesUpdated?'<span class="fxupd">upd '+esc(fmtDate(state.runway.ratesUpdated))+'</span>':'<span class="fxupd">seed rates</span>')
     +'</div>';
+  el.innerHTML='<div class="fxtrack">'+row+row+'</div>';
+  marquee(el);
+  if(!$('#fxpanel').hidden) renderFxPanel();
+  renderNewsbar();
+}
+
+/* Purchasing-power seed (LOCAL currency; “≈” until refreshed with AI). */
+const COL_SEED={
+  IDR:{country:'Indonesia',meal:25000,coffee:20000,minWage:3300000,note:'UMR varies a lot by province'},
+  USD:{country:'United States',meal:15,coffee:5,minWage:1257,note:'federal floor — most states pay more'},
+  TWD:{country:'Taiwan',meal:120,coffee:60,minWage:28590},
+  KRW:{country:'South Korea',meal:9000,coffee:4800,minWage:2156880},
+  JPY:{country:'Japan',meal:1000,coffee:450,minWage:180000},
+  EUR:{country:'Germany (€ ref)',meal:12,coffee:3.5,minWage:2200},
+  AUD:{country:'Australia',meal:20,coffee:5.5,minWage:4400},
+  SAR:{country:'Saudi Arabia',meal:25,coffee:12,minWage:4000,note:'SR floor is for Saudis; expat labor pay is lower'},
+  QAR:{country:'Qatar',meal:25,coffee:15,minWage:1000,note:'+ food & housing allowances'},
+  PLN:{country:'Poland',meal:35,coffee:15,minWage:4806},
+};
+function colFor(c){ return (state.colData&&state.colData[c])||COL_SEED[c]||null; }
+function sumIDR(){ const r=state.runway.rates||{}; return state.runway.entries.reduce((a,e)=>a+(+e.amount||0)*(r[e.currency]||0),0); }
+
+function renderFxPanel(){
+  const p=$('#fxpanel'); if(!p) return;
+  const r=state.runway.rates||{}; const base=state.profile.baseCurrency;
+  const codes=fxCodes();
+  const amt=(p._amt!=null)?p._amt:100; const cur=p._cur||'USD';
+  const idr=(+amt||0)*(r[cur]||0);
+  const inBase=base==='IDR'?idr:idr/(r[base]||1);
+  let h='<div class="cv">Convert <input id="cvAmt" type="number" value="'+esc(amt)+'"> '
+    +'<select id="cvCur">'+[...new Set(['USD','IDR',...tickerCurs()])].map(c=>'<option '+(c===cur?'selected':'')+'>'+esc(c)+'</option>').join('')+'</select>'
+    +'<span>= <b>Rp '+fmtNum(Math.round(idr))+'</b>'+(base!=='IDR'?' <span class="faint">≈ '+fmtMoney(inBase,base)+'</span>':'')+'</span></div>';
+  // purchasing power rows
+  const stash=sumIDR();
+  h+=tickerCurs().map(c=>{
+    const cd=colFor(c); const rate=r[c]||0;
+    let d='<b>1 '+esc(c)+' = Rp '+fmtNum(rate)+'</b>';
+    if(cd){
+      const line=[];
+      if(cd.coffee) line.push('☕ '+fmtMoney(cd.coffee,c)+' <span class="faint">(Rp '+fmtNum(Math.round(cd.coffee*rate))+')</span>');
+      if(cd.meal) line.push('🍔 '+fmtMoney(cd.meal,c)+' <span class="faint">(Rp '+fmtNum(Math.round(cd.meal*rate))+')</span>');
+      d+='<br>'+line.join(' · ');
+      if(cd.minWage){
+        d+='<br>min wage <b>'+fmtMoney(cd.minWage,c)+'/mo</b> <span class="faint">(Rp '+fmtNum(Math.round(cd.minWage*rate))+')</span>';
+        const mo=stash>0&&rate>0?stash/(cd.minWage*rate):0;
+        if(mo>0) d+=' · <span class="stash">your stash ≈ '+ (Math.round(mo*10)/10)+' mo there</span>';
+      }
+      if(cd.note) d+='<br><span class="faint">'+esc(cd.note)+'</span>';
+    } else d+='<br><span class="faint">no living-cost data — tap ✨ refresh below</span>';
+    return '<div class="colrow"><div><div class="cc">'+esc(c)+'</div><div class="cn">'+esc((cd&&cd.country)||'')+'</div></div><div class="cd">'+d+'</div></div>';
+  }).join('');
+  // currency chips editor + controls
+  h+='<div class="colrow" style="grid-template-columns:1fr"><div>'
+    +'<div class="row wrap" style="gap:6px">'+tickerCurs().map(c=>'<span class="chip">'+esc(c)+' <button data-action="tkRemove" data-id="'+esc(c)+'">×</button></span>').join('')
+    +'</div><div class="copywrap mt-s"><input id="tkInput" list="tkCodes" placeholder="Add a currency (e.g. NOK)" style="max-width:220px;text-transform:uppercase">'
+    +'<datalist id="tkCodes">'+codes.map(c=>'<option value="'+esc(c)+'">').join('')+'</datalist>'
+    +'<button class="btn ghost sm" data-action="tkAdd">Add</button>'
+    +'<select data-action="baseCur" style="max-width:120px" title="Show all totals in…">'+['USD','IDR','TWD','AUD','EUR'].map(c=>'<option '+(base===c?'selected':'')+'>'+c+'</option>').join('')+'</select>'
+    +'<button class="btn ghost sm" data-action="fetchFx">↻ rates</button></div>'
+    +'<div class="between mt-s"><span class="faint small">'+(state.colDataUpdated?'living costs AI-updated '+esc(fmtDate(state.colDataUpdated)):'living costs = rough seed values')+'</span>'
+    +(_unlocked?'<button class="btn ghost sm" data-action="aiCol">✨ Refresh with AI</button>':'')+'</div>'
+    +'</div></div>';
+  p.innerHTML=h;
+}
+let _fxPin=false, _fxHoverT=null;
+function fxPanelOpen(open){
+  const p=$('#fxpanel'); if(!p) return;
+  if(open && p.hidden){ renderFxPanel(); p.hidden=false; }
+  if(!open && !p.hidden){ p.hidden=true; _fxPin=false; }
+}
+function initFxPanel(){
+  const w=$('#fxwrap'); if(!w) return;
+  w.addEventListener('click',e=>{
+    if(e.target.closest('select,button,a,input,textarea,label')) return;
+    _fxPin=$('#fxpanel').hidden; fxPanelOpen($('#fxpanel').hidden);
+  });
+  if(matchMedia('(hover: hover)').matches){
+    w.addEventListener('mouseenter',()=>{ clearTimeout(_fxHoverT); _fxHoverT=setTimeout(()=>fxPanelOpen(true),350); });
+    w.addEventListener('mouseleave',()=>{ clearTimeout(_fxHoverT); if(!_fxPin) _fxHoverT=setTimeout(()=>fxPanelOpen(false),350); });
+  }
+  document.addEventListener('click',e=>{ if(!$('#fxpanel').hidden && !e.target.closest('#fxwrap')) fxPanelOpen(false); });
+  document.addEventListener('input',e=>{
+    if(e.target&&e.target.id==='cvAmt'){ $('#fxpanel')._amt=e.target.value; refreshCv(); }
+  });
+  document.addEventListener('change',e=>{
+    if(e.target&&e.target.id==='cvCur'){ $('#fxpanel')._cur=e.target.value; refreshCv(); }
+  });
+  function refreshCv(){
+    const p=$('#fxpanel'); const r=state.runway.rates||{}; const base=state.profile.baseCurrency;
+    const idr=(+p._amt||0)*(r[p._cur||'USD']||0);
+    const b=p.querySelector('.cv b'); if(b) b.textContent='Rp '+fmtNum(Math.round(idr));
+    const f=p.querySelector('.cv .faint'); if(f&&base!=='IDR') f.textContent='≈ '+fmtMoney(base==='IDR'?idr:idr/(r[base]||1),base);
+  }
+}
+/* AI refresh of the living-cost table for the chosen currencies. */
+async function aiColRefresh(btn){
+  const old=btn?btn.textContent:''; if(btn){ btn.disabled=true; btn.textContent='… researching'; }
+  try{
+    const list=tickerCurs().map(c=>c+(colFor(c)&&colFor(c).country?' ('+colFor(c).country+')':'')).join(', ');
+    const j=await aiCall('col',{ currencies:list });
+    const d=(j.data&&typeof j.data==='object')?j.data:{};
+    const keys=Object.keys(d).filter(k=>/^[A-Z]{3}$/.test(k));
+    if(!keys.length) throw new Error('No cost data came back — try again.');
+    mutate(s=>{ s.colData=s.colData||{}; keys.forEach(k=>{ s.colData[k]={...d[k], updated:todayISO()}; }); s.colDataUpdated=todayISO(); });
+    renderFxPanel();
+    toast('✨ Living costs updated ('+keys.length+' currencies)'+(fmtCost(j.costUSD)?' · '+fmtCost(j.costUSD):''),'ok');
+  }catch(err){
+    toast('⚠ '+(err.message||'AI failed'),'err');
+    if(btn){ btn.disabled=false; btn.textContent=old; }
+  }
+}
+
+/* ---- News footer ticker: today's tailwinds, on every tab ---- */
+function renderNewsbar(){
+  const el=$('#newsbar'); if(!el) return;
+  const on=state.settings.newsTicker!==false && _unlocked;
+  const items=[];
+  (((_feed&&_feed.groups)||[])).forEach(g=>(g.items||[]).forEach(it=>items.push({flag:g.flag,title:it.title,link:it.link,ts:Date.parse(it.date)||0})));
+  items.sort((a,b)=>b.ts-a.ts);
+  const top=items.slice(0,12);
+  if(!on||!top.length){ el.style.display='none'; document.body.classList.remove('has-newsbar'); return; }
+  const row='<div class="nb-row"><span class="nb-lead" data-action="nav" data-view="tailwinds">▸ TAILWINDS</span>'
+    +top.map(it=>'<a class="nb-item" href="'+esc(it.link)+'" target="_blank" rel="noopener">'+it.flag+' '+esc(it.title)+'</a>').join('<span class="nb-sep">·</span>')
+    +'</div>';
+  el.innerHTML='<div class="fxtrack">'+row+row+'</div>';
+  el.style.display='';
+  document.body.classList.add('has-newsbar');
+  marquee(el);
 }
 function tickClock(){
   const d=new Date(); const hh=String(d.getHours()).padStart(2,'0'), mm=String(d.getMinutes()).padStart(2,'0');
@@ -1088,9 +1338,16 @@ function routeFlights(){
   flights.push({ kind:'end', id:'australia', name:'AUSTRALIA', tag:'WHV 462 · endgame', lang:{t:'🇬🇧 EN',c:'--teal'},
     status: dec==='australia'?{t:'BOARDING',c:'st-boarding'}:(mU!=null&&mU<=18?{t:'GATE 31',c:'st-gate'}:{t:'SCHEDULED',c:'st-scheduled'}), next:'AUD 5k → apply before 31' });
   (state.customRoutes||[]).forEach(c=>{
-    flights.push({ kind:'custom', id:c.id, name:c.name||'?', tag:c.tag||'AI route',
-      lang:{t:c.langLabel||'—',c:'--violet'}, status:statusToFlight(c.status||'not_started'), next:c.next||'' });
+    const role=c.role||'watch';
+    const status = role==='endgame'
+      ? (dec===c.id?{t:'BOARDING',c:'st-boarding'}:{t:'SCHEDULED',c:'st-scheduled'})
+      : statusToFlight(c.status||'not_started');
+    flights.push({ kind:role, id:c.id, name:c.name||'?', tag:c.tag||'AI route',
+      lang:{t:c.langLabel||'—',c:'--violet'}, status, next:c.next||'' });
   });
+  // board order: cash bridge (built-ins + bridge customs) → endgames → watching
+  const ord={cash:0,bridge:1,end:2,endgame:3,watch:4};
+  flights.sort((a,b)=>(ord[a.kind]||9)-(ord[b.kind]||9));
   return flights;
 }
 function statusToFlight(s){
@@ -1298,11 +1555,14 @@ function viewAscent(){
 
   html+='<div class="rail-wrap"><div class="rail-line"></div>';
   // Stage 3 endgame (top) — tap to open Routes
+  const decCust=(state.customRoutes||[]).find(c=>c.id===dec);
   const endSub = dec==='australia'
     ? 'Chosen: Australia · A$'+fmtNum(+state.phase2.australia.savedAUD||0)+' / 5,000 buffer · '+(monthsUntil(ageCapDate(state.profile.birthDate))||'—')+' mo to the age cap.'
     : dec==='germany'
       ? 'Chosen: Germany · German '+esc(state.languages.german.level||'A0')+' → B1.'
-      : 'Undecided — pick when the cash is flowing.';
+      : decCust
+        ? 'Chosen: '+esc(decCust.name)+(decCust.timeline?' · '+esc(decCust.timeline):'')+'.'
+        : 'Undecided — pick when the cash is flowing.';
   html+='<div class="stage-node '+(hereStage===3?'here':(endLive?'done':''))+'" data-action="nav" data-view="routes" style="cursor:pointer"><div class="dot"></div>'
     +'<div class="stage-lbl">STAGE 3 · ENDGAME'+(hereStage===3?' — YOU ARE HERE':'')+' <span class="faint">↗</span></div>'
     +'<div style="font-family:var(--disp);font-size:17px;margin:3px 0 7px">Citizenship</div>'
@@ -1341,28 +1601,64 @@ function statusBadge(status){
   const dot=status==='done'?'s-done':(status==='not_started'?'s-not':'s-prog');
   return '<span class="badge '+cls+'"><span class="status-dot '+dot+'"></span>'+esc(STATUS_LABELS[status]||status)+'</span>';
 }
+/* One document row — used by the General gate AND every purpose pack. */
+function docRowHTML(d, pk){
+  const pkAttr=pk?(' data-pk="'+pk+'"'):'';
+  const exp=d.expiry, dleft=exp?daysBetween(todayISO(),exp):null;
+  let expBadge=''; if(exp){ if(dleft<0) expBadge='<span class="badge crit">EXPIRED</span>'; else if(dleft<=90) expBadge='<span class="badge warn">'+dleft+'d</span>'; }
+  return '<details class="item row-x'+(d.critical?' crit':'')+'"><summary class="between"><span class="title">'+esc(d.label)
+    +(d.critical?' <span class="badge crit">CRITICAL</span>':'')+statusBadge(d.status)+expBadge
+    +(d.driveLink?' <a class="badge live" href="'+esc(d.driveLink)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">📎 FILE</a>':'')
+    +'</span><span class="chev">▾</span></summary>'
+    +(d.notes&&pk?'<div class="sub mt-s">'+esc(d.notes)+'</div>':'')
+    +'<div class="row-body">'
+    +'<div class="field"><label>Status</label><select data-action="docStatus" data-id="'+d.id+'"'+pkAttr+'>'
+      +['not_started','in_progress','done'].map(s=>'<option value="'+s+'" '+(d.status===s?'selected':'')+'>'+STATUS_LABELS[s]+'</option>').join('')+'</select></div>'
+    +'<div class="grid2"><div class="field"><label>Valid until</label><input type="date" data-action="docExpiry" data-id="'+d.id+'"'+pkAttr+' value="'+esc(d.expiry||'')+'"></div>'
+    +'<div class="field"><label>Drive link</label><input data-action="docLink" data-id="'+d.id+'"'+pkAttr+' placeholder="Paste link" value="'+esc(d.driveLink||'')+'"></div></div>'
+    +'<div class="field"><label>Notes</label><textarea data-action="docNotes" data-id="'+d.id+'"'+pkAttr+' placeholder="Office, cost, appointment…">'+esc(d.notes||'')+'</textarea></div>'
+    +'<div class="btn-row"><button class="btn primary sm" data-action="docUpload" data-id="'+d.id+'"'+pkAttr+'>⬆ Upload to Drive</button>'
+    +'<button class="btn ghost sm" data-action="docNextAction" data-id="'+d.id+'"'+pkAttr+'>★ Next move</button>'
+    +(pk?'<button class="btn ghost sm danger" data-action="pdRemove" data-id="'+d.id+'"'+pkAttr+'>Remove</button>':'')
+    +'</div></div></details>';
+}
+function packProgress(p){ const done=(p.docs||[]).filter(d=>d.status==='done').length; return done+'/'+(p.docs||[]).length; }
 function viewDocs(){
   const dp=docProgress();
   let html='<div class="panel"><div class="between"><div><h2 style="font-size:20px">Documents</h2><div class="sub">The gate — nothing downstream moves without these. <b>Tap any row</b> to set its status, add an expiry date, or upload a scan.</div></div>'
     +'<div style="text-align:right"><div style="font-family:var(--mono);font-weight:700;font-size:20px;color:var(--amber-soft)">'+dp.done+'/'+dp.total+'</div></div></div><div class="mt">'+bar(dp.pct)+'</div></div>';
+
+  // GENERAL — the universal gate (drives the big progress + next action)
+  html+='<div class="eyebrow" style="padding:2px 2px 8px">GENERAL — THE GATE'+info('The universal Indonesian documents every route needs. These drive your Docs progress and the “one thing today”. Purpose packs below hold route-specific paperwork on top of these.')+'</div>';
   html+='<div class="panel"><div class="cols2">';
-  state.documents.forEach(d=>{
-    const exp=d.expiry, dleft=exp?daysBetween(todayISO(),exp):null;
-    let expBadge=''; if(exp){ if(dleft<0) expBadge='<span class="badge crit">EXPIRED</span>'; else if(dleft<=90) expBadge='<span class="badge warn">'+dleft+'d</span>'; }
-    html+='<details class="item row-x'+(d.critical?' crit':'')+'"><summary class="between"><span class="title">'+esc(d.label)
-      +(d.critical?' <span class="badge crit">CRITICAL</span>':'')+statusBadge(d.status)+expBadge
-      +(d.driveLink?' <a class="badge live" href="'+esc(d.driveLink)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">📎 FILE</a>':'')
-      +'</span><span class="chev">▾</span></summary>'
-      +'<div class="row-body">'
-      +'<div class="field"><label>Status</label><select data-action="docStatus" data-id="'+d.id+'">'
-        +['not_started','in_progress','done'].map(s=>'<option value="'+s+'" '+(d.status===s?'selected':'')+'>'+STATUS_LABELS[s]+'</option>').join('')+'</select></div>'
-      +'<div class="grid2"><div class="field"><label>Valid until</label><input type="date" data-action="docExpiry" data-id="'+d.id+'" value="'+esc(d.expiry||'')+'"></div>'
-      +'<div class="field"><label>Drive link</label><input data-action="docLink" data-id="'+d.id+'" placeholder="Paste link" value="'+esc(d.driveLink||'')+'"></div></div>'
-      +'<div class="field"><label>Notes</label><textarea data-action="docNotes" data-id="'+d.id+'" placeholder="Office, cost, appointment…">'+esc(d.notes||'')+'</textarea></div>'
-      +'<div class="btn-row"><button class="btn primary sm" data-action="docUpload" data-id="'+d.id+'">⬆ Upload to Drive</button>'
-      +'<button class="btn ghost sm" data-action="docNextAction" data-id="'+d.id+'">★ Next move</button></div></div></details>';
+  state.documents.forEach(d=>{ html+=docRowHTML(d,null); });
+  html+='</div></div>';
+
+  // PURPOSE PACKS — per country / program, each with its own Drive folder
+  html+='<div class="eyebrow" style="padding:14px 2px 8px">PURPOSE PACKS — PER COUNTRY / PROGRAM</div>';
+  const routeOpts=(pk)=>{ // link a pack to a route (for context + AI)
+    const opts=[['','— no route —']]
+      .concat(state.phase1.map(p=>[p.id,p.label]))
+      .concat((state.customRoutes||[]).map(c=>[c.id,c.name]));
+    return opts.map(o=>'<option value="'+esc(o[0])+'" '+((pk.routeId||'')===o[0]?'selected':'')+'>'+esc(o[1])+'</option>').join('');
+  };
+  (state.docPacks||[]).forEach(pk=>{
+    html+='<details class="panel" open><summary style="cursor:pointer;font-weight:600;font-size:15px">📁 '+esc(pk.label)
+      +' <span class="badge">'+packProgress(pk)+'</span>'
+      +(pk.driveFolderId?' <span class="badge live">Drive ✓</span>':'')+'</summary>'
+      +'<div class="grid2 mt"><div class="field"><label>Pack name (= Drive folder name)</label><input data-action="packRename" data-id="'+pk.id+'" value="'+esc(pk.label)+'"></div>'
+      +'<div class="field"><label>Linked route</label><select data-action="packRoute" data-id="'+pk.id+'">'+routeOpts(pk)+'</select></div></div>'
+      +((pk.docs&&pk.docs.length)?pk.docs.map(d=>docRowHTML(d,pk.id)).join(''):'<div class="empty">Empty — add documents below, or let the AI build the checklist.</div>')
+      +'<div class="copywrap mt"><input id="pd-'+pk.id+'" placeholder="Add a document (e.g. Apostilled ijazah)"><button class="btn ghost sm" data-action="pdAdd" data-id="'+pk.id+'">Add</button></div>'
+      +'<div class="btn-row mt">'
+      +(_unlocked?'<button class="btn primary sm" data-action="aiDocpack" data-id="'+pk.id+'">✨ AI: build this checklist</button>':'')
+      +'<button class="btn ghost sm danger" data-action="packRemove" data-id="'+pk.id+'">Remove pack</button></div>'
+      +'</details>';
   });
-  html+='</div></div><div class="note">Your <b>Passport</b> is critical path — clear it and the app stops nagging you about it.</div>';
+  html+='<div class="panel"><h3 style="font-size:15px">＋ New pack</h3><div class="sub">One pack per purpose — “Taiwan SP2T”, “Korea EPS”, “Ausbildung visa”… Uploads land in a matching folder inside your Drive “'+esc(CFG.DRIVE_FOLDER)+'”.</div>'
+    +'<div class="copywrap mt-s"><input id="npName" placeholder="e.g. Taiwan SP2T"><button class="btn primary sm" data-action="packAdd">Create</button></div></div>';
+
+  html+='<div class="note">Your <b>Passport</b> is critical path — clear it and the app stops nagging you about it.</div>';
   return html;
 }
 
@@ -1382,7 +1678,7 @@ function viewRoutes(){
   html+='<div class="panel">';
   if(_unlocked) html+='<div class="between" style="padding-bottom:2px"><span class="sub">Registration windows move — let the AI check the current ones.'+info('One tap: the AI searches the official Indonesian sources (SISKOP2MI, HRD-Korea, JFT-Basic) for the CURRENT SP2T / EPS-TOPIK / SSW registration windows and writes them into these rows. Dates flow to your calendar automatically. Costs a few cents.')+'</span><button class="btn ghost sm" style="flex:none" data-action="aiWindows">🗓 Check (AI)</button></div>';
   state.phase1.forEach(p=>{
-    html+='<details class="item row-x"><summary class="between"><span class="title">'+esc(p.label)+info(RINFO[p.id])+(p.lead?' <span class="badge live">LEAD</span>':'')+statusBadge(p.status)+'</span>'
+    html+='<details class="item row-x"><summary class="between"><span class="title">'+esc(p.label)+(RINFO[p.id]?info(RINFO[p.id]):'')+(p.lead?' <span class="badge live">★ LEAD</span>':'')+statusBadge(p.status)+'</span>'
       +'<span class="chev">▾</span></summary>'
       +'<div class="sub mt-s">'+esc(p.note||'')+'</div>'
       +'<div class="row-body"><div class="grid2"><div class="field"><label>Status</label><select data-action="p1Status" data-id="'+p.id+'">'
@@ -1390,15 +1686,25 @@ function viewRoutes(){
       +'<div class="field"><label>Next step</label><input data-action="p1Next" data-id="'+p.id+'" value="'+esc(p.nextStep||'')+'"></div></div>'
       +'<div class="field"><label>Wave / intake window <span class="faint">(a date like 2026-08-01 auto-adds to your calendar)</span></label>'
         +'<input data-action="p1Wave" data-id="'+p.id+'" placeholder="e.g. next wave 2026-08-01" value="'+esc(p.waveWindow||'')+'"></div>'
+      +'<div class="grid2"><div class="field"><label>Name <span class="faint">(yours to change)</span></label><input data-action="p1Label" data-id="'+p.id+'" value="'+esc(p.label)+'"></div>'
+      +'<div class="field"><label>Official link</label><input data-action="p1Link" data-id="'+p.id+'" value="'+esc(p.link||'')+'"></div></div>'
+      +'<div class="field"><label>Note</label><input data-action="p1Note" data-id="'+p.id+'" value="'+esc(p.note||'')+'"></div>'
       +'<div class="btn-row"><a class="btn ghost sm" href="'+esc(p.link)+'" target="_blank" rel="noopener">Official site ↗</a>'
+        +'<button class="btn ghost sm" data-action="p1Lead" data-id="'+p.id+'">'+(p.lead?'★ Lead route':'☆ Make lead')+'</button>'
         +'<button class="btn ghost sm" data-action="p1NextAction" data-id="'+p.id+'">★ Next move</button></div></div></details>';
   });
+  // AI-researched countries assigned to the cash bridge
+  (state.customRoutes||[]).filter(c=>(c.role||'watch')==='bridge').forEach(c=>{ html+=customRouteCard(c); });
   html+='</div>';
 
-  // ENDGAME
-  html+='<div class="eyebrow" style="padding:14px 2px 8px">ENDGAME — WHERE YOU SETTLE</div>';
-  html+='<div class="panel"><div class="seg">'
-    +['undecided','germany','australia'].map(k=>'<button data-action="decision" data-val="'+k+'" class="'+(dec===k?'on':'')+'">'+({undecided:'Undecided',germany:'Germany 🇩🇪',australia:'Australia 🇦🇺'}[k])+'</button>').join('')+'</div>'
+  // ENDGAME — candidates are Germany, Australia, plus any AI route you promote
+  const endCustoms=(state.customRoutes||[]).filter(c=>(c.role||'watch')==='endgame');
+  const decCustom=endCustoms.find(c=>c.id===dec)||((state.customRoutes||[]).find(c=>c.id===dec));
+  html+='<div class="eyebrow" style="padding:14px 2px 8px">ENDGAME — WHERE YOU SETTLE'+info('Candidates: Germany and Australia come researched out of the box, and any country you research below can be promoted to an endgame candidate (set its role). Choose one — the Board, Languages and your next actions follow it.')+'</div>';
+  html+='<div class="panel"><div class="seg" style="flex-wrap:wrap">'
+    +['undecided','germany','australia'].map(k=>'<button data-action="decision" data-val="'+k+'" class="'+(dec===k?'on':'')+'" style="min-width:110px">'+({undecided:'Undecided',germany:'Germany 🇩🇪',australia:'Australia 🇦🇺'}[k])+'</button>').join('')
+    +endCustoms.map(c=>'<button data-action="decision" data-val="'+c.id+'" class="'+(dec===c.id?'on':'')+'" style="min-width:110px">'+esc(c.name)+'</button>').join('')
+    +'</div>'
     +'<div style="overflow-x:auto"><table class="cmp">'
     +'<tr><th></th><th class="'+(dec==='germany'?'you':'')+'">GERMANY</th><th class="'+(dec==='australia'?'you':'')+'">AUSTRALIA</th></tr>'
     +'<tr><th>Citizenship</th><td>~5 yrs, criteria-based</td><td>4 yrs + 1 yr PR (hard gate)</td></tr>'
@@ -1430,38 +1736,52 @@ function viewRoutes(){
       +'<div class="sub mt-s">SDUWHV = the Indonesian government support letter the 462 visa needs.</div></div>'
       +'<div class="field mt"><label>WHV → PR notes</label><textarea data-action="whvNotes" placeholder="Regional work, sponsors, skills assessment…">'+esc(a.whvNotes||'')+'</textarea></div>';
   }
+  if(decCustom){
+    html+='<div class="divider"></div><h3 style="font-size:15px">🎯 Chosen endgame: '+esc(decCustom.name)+'</h3>'
+      +'<div class="sub mt-s">Everything follows this now — the Board shows it BOARDING, and your next actions point here.</div>'
+      +customRouteCard(decCustom);
+  }
+  // other endgame candidates (not chosen), parked here for comparison
+  const otherEnd=endCustoms.filter(c=>c.id!==dec);
+  if(otherEnd.length){ html+='<div class="divider"></div><div class="eyebrow" style="padding:0 0 6px">OTHER CANDIDATES</div>'+otherEnd.map(customRouteCard).join(''); }
   html+='</div>';
 
-  // EXPLORE A NEW COUNTRY — AI research
+  // EXPLORE A NEW COUNTRY — AI research (watch-role routes live here)
   html+='<div class="eyebrow" style="padding:14px 2px 8px">EXPLORE — ADD ANY COUNTRY</div>';
   html+='<div class="panel">'
-    +'<div class="sub">Type a country. The AI'+info('Uses your own Claude API key (set once in Settings). It searches the live web for the real 2026 labour route, pay, language, age cap and next step — then files it here and on the Board.')+' searches the live web and files its real 2026 labour route, pay and next step here + on the Board.</div>'
+    +'<div class="sub">Type a country. The AI'+info('Uses your own Claude API key (set once in Settings). It searches the live web for the real 2026 labour route, pay, language, age cap and next step — then files it here and on the Board. Set its role to move it into Cash Bridge or Endgame.')+' researches its real 2026 labour route — then set its <b>role</b>: keep watching, cash bridge, or endgame candidate.</div>'
     +'<div class="copywrap mt"><input id="aiCountryInput" placeholder="e.g. Oman, Poland, Canada…" autocomplete="off"><button class="btn primary sm" data-action="aiAddCountry">🔎 Research</button></div>'
     +'<div id="aiCountryMsg" class="sub mt-s" style="min-height:0"></div>';
-  const cr=state.customRoutes||[];
-  if(cr.length){
-    html+='<div class="divider"></div>';
-    cr.forEach(c=>{
-      const badge = c.laborEligible===false
-        ? '<span class="badge crit">needs skills</span>'
-        : (c.laborEligible===true ? '<span class="badge live">labour-OK</span>' : '');
-      html+='<details class="item row-x"><summary class="between"><span class="title">'+esc(c.name||'?')+' '+badge+statusBadge(c.status||'not_started')+'</span><span class="chev">▾</span></summary>'
-        +'<div class="sub mt-s">'+esc(c.tag||'')+(c.langLabel?' · '+esc(c.langLabel):'')+(c.pay?' · '+esc(c.pay):'')+'</div>'
-        +'<div class="row-body">'
-        +(c.why?'<div class="note mt-s">'+esc(c.why)+'</div>':'')
-        +(c.timeline?'<div class="sub mt-s">🗓 '+esc(c.timeline)+'</div>':'')
-        +(c.ageCap?'<div class="sub mt-s">⏳ '+esc(c.ageCap)+'</div>':'')
-        +(c.risk?'<div class="note amber mt-s">⚠ '+esc(c.risk)+'</div>':'')
-        +'<div class="grid2 mt"><div class="field"><label>Status</label><select data-action="crStatus" data-id="'+c.id+'">'
-          +opts.map(s=>'<option value="'+s+'" '+((c.status||'not_started')===s?'selected':'')+'>'+STATUS_LABELS[s]+'</option>').join('')+'</select></div>'
-        +'<div class="field"><label>Next step</label><input data-action="crNext" data-id="'+c.id+'" value="'+esc(c.next||'')+'"></div></div>'
-        +'<div class="btn-row">'+(c.link?'<a class="btn ghost sm" href="'+esc(c.link)+'" target="_blank" rel="noopener">Official site ↗</a>':'')
-          +'<button class="btn ghost sm" data-action="crRefresh" data-id="'+c.id+'">↻ Re-research</button>'
-          +'<button class="btn ghost sm danger" data-action="crRemove" data-id="'+c.id+'">Remove</button></div></div></details>';
-    });
-  }
+  const watch=(state.customRoutes||[]).filter(c=>(c.role||'watch')==='watch');
+  if(watch.length){ html+='<div class="divider"></div>'+watch.map(customRouteCard).join(''); }
   html+='</div>';
   return html;
+}
+
+/* One AI-researched country card — used in Explore, Cash Bridge and Endgame. */
+function customRouteCard(c){
+  const opts=['not_started','registered','applied','selected','placed','closed'];
+  const badge = c.laborEligible===false
+    ? '<span class="badge crit">needs skills</span>'
+    : (c.laborEligible===true ? '<span class="badge live">labour-OK</span>' : '');
+  const roleLbl={watch:'👀 watching',bridge:'🏭 cash bridge',endgame:'🎯 endgame'};
+  return '<details class="item row-x"><summary class="between"><span class="title">'+esc(c.name||'?')+' '+badge
+      +((c.role||'watch')!=='watch'?'<span class="badge warn">'+roleLbl[c.role]+'</span>':'')
+      +statusBadge(c.status||'not_started')+'</span><span class="chev">▾</span></summary>'
+    +'<div class="sub mt-s">'+esc(c.tag||'')+(c.langLabel?' · '+esc(c.langLabel):'')+(c.pay?' · '+esc(c.pay):'')+'</div>'
+    +'<div class="row-body">'
+    +(c.why?'<div class="note mt-s">'+esc(c.why)+'</div>':'')
+    +(c.timeline?'<div class="sub mt-s">🗓 '+esc(c.timeline)+'</div>':'')
+    +(c.ageCap?'<div class="sub mt-s">⏳ '+esc(c.ageCap)+'</div>':'')
+    +(c.risk?'<div class="note amber mt-s">⚠ '+esc(c.risk)+'</div>':'')
+    +'<div class="grid2 mt"><div class="field"><label>Status</label><select data-action="crStatus" data-id="'+c.id+'">'
+      +opts.map(s=>'<option value="'+s+'" '+((c.status||'not_started')===s?'selected':'')+'>'+STATUS_LABELS[s]+'</option>').join('')+'</select></div>'
+    +'<div class="field"><label>Role'+info('Where this country sits in YOUR plan. Cash bridge = earn-first leg (shows with Taiwan/Korea/Japan). Endgame = candidate to settle in (joins the decision chips). Watching = parked here.')+'</label><select data-action="crRole" data-id="'+c.id+'">'
+      +[['watch','Just watching'],['bridge','Cash bridge'],['endgame','Endgame candidate']].map(o=>'<option value="'+o[0]+'" '+((c.role||'watch')===o[0]?'selected':'')+'>'+o[1]+'</option>').join('')+'</select></div></div>'
+    +'<div class="field"><label>Next step</label><input data-action="crNext" data-id="'+c.id+'" value="'+esc(c.next||'')+'"></div>'
+    +'<div class="btn-row">'+(c.link?'<a class="btn ghost sm" href="'+esc(c.link)+'" target="_blank" rel="noopener">Official site ↗</a>':'')
+      +'<button class="btn ghost sm" data-action="crRefresh" data-id="'+c.id+'">↻ Re-research</button>'
+      +'<button class="btn ghost sm danger" data-action="crRemove" data-id="'+c.id+'">Remove</button></div></div></details>';
 }
 
 function viewMoney(){
@@ -1542,6 +1862,7 @@ async function loadFeed(force){
     try{ localStorage.setItem('escapeFeed', JSON.stringify({ts:_feedTs,data:_feed})); }catch(e){}
   }catch(e){ if(!_feed) _feed={error:true}; }
   _feedLoading=false; if(currentView==='tailwinds') renderFeed();
+  renderNewsbar();
 }
 function renderFeed(){
   const box=$('#feedBody'); if(!box) return;
@@ -1740,6 +2061,11 @@ function viewSettings(){
     +'<div class="row between mt"><span class="small">Folder '+(s.driveFolderId?'<span class="badge live">ready</span>':'<span class="badge">on first upload</span>')+'</span>'
     +'<button class="btn primary sm" data-action="connectDrive" '+(s.googleClientId?'':'disabled')+'>Connect</button></div></div>';
 
+  // tickers
+  html+='<div class="panel"><h3 style="font-size:15px">📰 Tickers</h3>'
+    +'<label class="row mt-s small" style="gap:8px"><input type="checkbox" style="width:auto" data-action="toggleNewsbar" '+(s.newsTicker!==false?'checked':'')+'> Rolling news footer (today’s Tailwinds headlines on every tab)</label>'
+    +'<div class="sub mt-s">The currency strip up top: tap it for the money panel — converter, living costs, and which currencies to show.</div></div>';
+
   // reminders
   const notifOn=s.notifEnabled&&(typeof Notification!=='undefined')&&Notification.permission==='granted';
   html+='<div class="panel"><h3 style="font-size:15px">🔔 Daily reminder</h3><div class="sub">A nudge on this device if you haven’t checked in by your time. Best with the app installed / open.</div>'
@@ -1757,7 +2083,7 @@ function viewSettings(){
     +'<button class="btn ghost sm" data-action="exportJson">⬇ Export</button><button class="btn ghost sm" data-action="importJson">⬆ Import</button>'
     +'<button class="btn ghost sm" data-action="resetAll" style="color:var(--red)">Reset</button></div>'
     +'<div class="sub mt-s">Cached on this device for offline use, and synced privately to your passphrase-locked vault.</div></div>';
-  html+='<div class="center small faint" style="padding:10px">Escape Pipeline · Departures edition · v3.2</div>';
+  html+='<div class="center small faint" style="padding:10px">Escape Pipeline · Departures edition · v3.3</div>';
   return html;
 }
 
@@ -1766,7 +2092,7 @@ document.addEventListener('click', async (e)=>{
   const closeEl=e.target.closest('[data-close]');
   if(closeEl && e.target===closeEl){ closeSheet(); closeModal(); return; }
   const t=e.target.closest('[data-action]'); if(!t) return;
-  const a=t.dataset.action, id=t.dataset.id, i=t.dataset.i, val=t.dataset.val, view=t.dataset.view, lang=t.dataset.lang;
+  const a=t.dataset.action, id=t.dataset.id, i=t.dataset.i, val=t.dataset.val, view=t.dataset.view, lang=t.dataset.lang, pk=t.dataset.pk;
   switch(a){
     case 'nav': e.preventDefault(); setView(view); break;
     case 'more': openMore(); break;
@@ -1794,10 +2120,19 @@ document.addEventListener('click', async (e)=>{
     case 'clearNA': mutate(s=>{ s.nextActionOverride=''; s.nextActionVia=''; }); toast('Back to auto'); break;
     case 'downloadICS': downloadICS(); break;
     case 'toggleDoc': { const el=$('#docd-'+id); if(el){el.classList.toggle('open'); t.classList.toggle('open');} break; }
-    case 'docNextAction': { const d=state.documents.find(x=>x.id===id); mutate(s=>{ s.nextActionOverride='Finish: '+d.label; s.nextActionVia=''; }); setView('today'); break; }
-    case 'docUpload': pickAndUpload(id); break;
+    case 'docNextAction': { const d=docRefIn(state,id,pk); if(d) mutate(s=>{ s.nextActionOverride='Finish: '+d.label; s.nextActionVia=''; }); setView('today'); break; }
+    case 'docUpload': pickAndUpload(id, pk); break;
+    case 'packAdd': { const el=$('#npName'); const n=el?el.value.trim():''; if(!n){ if(el) el.focus(); break; }
+      mutate(s=>{ (s.docPacks=s.docPacks||[]).push({ id:uid(), label:n.slice(0,50), routeId:'', driveFolderId:'', docs:[] }); }); toast('📁 Pack created'); break; }
+    case 'packRemove': { const p=(state.docPacks||[]).find(x=>x.id===id);
+      if(p && confirm('Remove pack "'+p.label+'"? Files already in Drive stay in Drive.')){ mutate(s=>{ s.docPacks=(s.docPacks||[]).filter(x=>x.id!==id); }); } break; }
+    case 'pdAdd': { const el=$('#pd-'+id); const n=el?el.value.trim():''; if(!n){ if(el) el.focus(); break; }
+      mutate(s=>{ const p=(s.docPacks||[]).find(x=>x.id===id); if(p) p.docs.push({ id:uid(), label:n.slice(0,60), status:'not_started', expiry:'', notes:'', driveLink:'' }); }); break; }
+    case 'pdRemove': mutate(s=>{ const p=(s.docPacks||[]).find(x=>x.id===pk); if(p) p.docs=p.docs.filter(d=>d.id!==id); }); break;
+    case 'aiDocpack': await aiDocpackFill(t, id); break;
     case 'toggleP1': { const el=$('#p1d-'+id); if(el){el.classList.toggle('open'); t.classList.toggle('open');} break; }
     case 'p1NextAction': { const p=state.phase1.find(x=>x.id===id); mutate(s=>{ s.nextActionOverride=p.nextStep+' ('+p.label+')'; s.nextActionVia=''; }); setView('today'); break; }
+    case 'p1Lead': mutate(s=>{ s.phase1.forEach(x=>{ x.lead=(x.id===id); }); }); toast('★ Lead route set'); break;
     case 'decision': mutate(s=>{ s.phase2.decision=val; }); break;
     case 'ausbAdd': { const v=$('#ausbInput').value.trim(); if(v) mutate(s=>{ s.phase2.germany.ausbildungShortlist.push(v); }); break; }
     case 'ausbRemove': mutate(s=>{ s.phase2.germany.ausbildungShortlist.splice(+i,1); }); break;
@@ -1844,21 +2179,41 @@ document.addEventListener('click', async (e)=>{
     case 'aiScan': await aiScanRun(t); break;
     case 'askAI': await aiAsk(t); break;
     case 'aiSpendReset': setSilent(s=>{ const a=s.settings.ai=s.settings.ai||{}; a.spendUSD=0; a.spendSince=todayISO(); }); render(); toast('Spend meter reset'); break;
+    case 'tkRemove': { const c=id; setSilent(s=>{ s.settings.tickerCurrencies=tickerCurs().filter(x=>x!==c); }); renderFx(); renderFxPanel(); break; }
+    case 'tkAdd': { const el=$('#tkInput'); const c=(el?el.value.trim().toUpperCase():'').slice(0,3);
+      if(!/^[A-Z]{3}$/.test(c)){ toast('Use a 3-letter code like NOK','err'); break; }
+      if(tickerCurs().includes(c)){ if(el) el.value=''; break; }
+      setSilent(s=>{ s.settings.tickerCurrencies=[...tickerCurs(),c]; });
+      renderFx(); renderFxPanel(); toast('＋ '+c+' — pulling its rate…'); fetchRates().catch(()=>toast('Offline — rate comes when you reconnect','err')); break; }
+    case 'aiCol': await aiColRefresh(t); break;
     case 'resetAll': if(confirm('Erase ALL local data and start fresh? Export a backup first if unsure.')){ localStorage.removeItem(CFG.STORE_KEY); state=defaults(); saveLocal(); setView('board'); toast('Reset done'); } break;
   }
 });
 
+/* Find a document in the General gate (no pk) or inside a purpose pack. */
+function docRefIn(s, id, pk){
+  if(pk){ const p=(s.docPacks||[]).find(x=>x.id===pk); return p&&(p.docs||[]).find(d=>d.id===id); }
+  return s.documents.find(d=>d.id===id);
+}
 document.addEventListener('change', (e)=>{
   const t=e.target.closest('[data-action]'); if(!t) return;
-  const a=t.dataset.action, id=t.dataset.id, cur=t.dataset.cur, lang=t.dataset.lang, v=t.value;
+  const a=t.dataset.action, id=t.dataset.id, cur=t.dataset.cur, lang=t.dataset.lang, pk=t.dataset.pk, v=t.value;
   switch(a){
-    case 'docStatus': { const wasDone=state.documents.find(x=>x.id===id).status==='done'; mutate(s=>{ s.documents.find(x=>x.id===id).status=v; }); if(v==='done'&&!wasDone) addDone('Completed document: '+state.documents.find(x=>x.id===id).label,'documents'); break; }
-    case 'docExpiry': setSilent(s=>{ s.documents.find(x=>x.id===id).expiry=v; }); render(); break;
-    case 'docLink': setSilent(s=>{ s.documents.find(x=>x.id===id).driveLink=v; }); break;
-    case 'docNotes': setSilent(s=>{ s.documents.find(x=>x.id===id).notes=v; }); break;
+    case 'docStatus': { const ref=docRefIn(state,id,pk); const wasDone=ref&&ref.status==='done';
+      mutate(s=>{ const d=docRefIn(s,id,pk); if(d) d.status=v; });
+      if(v==='done'&&!wasDone&&ref) addDone('Completed document: '+ref.label,'documents'); break; }
+    case 'docExpiry': setSilent(s=>{ const d=docRefIn(s,id,pk); if(d) d.expiry=v; }); render(); break;
+    case 'docLink': setSilent(s=>{ const d=docRefIn(s,id,pk); if(d) d.driveLink=v; }); break;
+    case 'docNotes': setSilent(s=>{ const d=docRefIn(s,id,pk); if(d) d.notes=v; }); break;
+    case 'packRename': mutate(s=>{ const p=(s.docPacks||[]).find(x=>x.id===id); if(p){ p.label=v.slice(0,50)||p.label; p.driveFolderId=''; } }); break;
+    case 'packRoute': setSilent(s=>{ const p=(s.docPacks||[]).find(x=>x.id===id); if(p) p.routeId=v; }); break;
     case 'p1Status': { mutate(s=>{ s.phase1.find(x=>x.id===id).status=v; }); break; }
     case 'crStatus': { mutate(s=>{ const c=(s.customRoutes||[]).find(x=>x.id===id); if(c) c.status=v; }); break; }
     case 'crNext': setSilent(s=>{ const c=(s.customRoutes||[]).find(x=>x.id===id); if(c) c.next=v; }); break;
+    case 'crRole': mutate(s=>{ const c=(s.customRoutes||[]).find(x=>x.id===id); if(c){ c.role=v; if(v!=='endgame'&&s.phase2.decision===id) s.phase2.decision='undecided'; } }); break;
+    case 'p1Label': mutate(s=>{ const p=s.phase1.find(x=>x.id===id); if(p&&v.trim()) p.label=v.trim().slice(0,40); }); break;
+    case 'p1Link': setSilent(s=>{ const p=s.phase1.find(x=>x.id===id); if(p) p.link=/^https?:/.test(v)?v:(v?'https://'+v:''); }); break;
+    case 'p1Note': setSilent(s=>{ const p=s.phase1.find(x=>x.id===id); if(p) p.note=v.slice(0,140); }); break;
     case 'p1Next': setSilent(s=>{ s.phase1.find(x=>x.id===id).nextStep=v; }); break;
     case 'p1Wave': setSilent(s=>{ s.phase1.find(x=>x.id===id).waveWindow=v; }); break;
     case 'sperrNote': setSilent(s=>{ s.phase2.germany.sperrkontoNote=v; }); break;
@@ -1878,6 +2233,7 @@ document.addEventListener('change', (e)=>{
     case 'clLevel': setSilent(s=>{ const c=(s.customLangs||[]).find(x=>x.id===id); if(c) c.level=v; }); break;
     case 'clTarget': setSilent(s=>{ const c=(s.customLangs||[]).find(x=>x.id===id); if(c) c.target=v; }); break;
     case 'toggleDailyReminder': mutate(s=>{ s.settings.dailyReminder=t.checked; }); break;
+    case 'toggleNewsbar': setSilent(s=>{ s.settings.newsTicker=t.checked; }); renderNewsbar(); break;
     case 'setReminderTime': setSilent(s=>{ s.settings.reminderTime=v; }); maybeNotify(); break;
     case 'savedFrom': _savedFrom=v; render(); break;
     case 'savedTo': _savedTo=v; render(); break;
@@ -1973,10 +2329,10 @@ function showClientIdHelp(){
     +'<div class="note mt-s"><b>If blocked:</b> origin_mismatch → add <span class="kbd">https://www.dhiya.id</span>. access_denied → add your Gmail as a Test user.</div>'
     +'<button class="btn primary block mt" onclick="document.getElementById(\'modalBack\').classList.remove(\'show\')">Got it</button>');
 }
-function pickAndUpload(docId){
+function pickAndUpload(docId, packId){
   if(!state.settings.googleClientId){ toast('Add a Client ID in Settings first','err'); setView('settings'); return; }
   const inp=document.createElement('input'); inp.type='file';
-  inp.onchange=async()=>{ const f=inp.files[0]; if(!f) return; toast('Uploading "'+f.name+'"…'); try{ await driveUpload(f,docId); toast('Uploaded ✓','ok'); }catch(err){ toast(err.message||'Upload failed','err'); } };
+  inp.onchange=async()=>{ const f=inp.files[0]; if(!f) return; toast('Uploading "'+f.name+'"…'); try{ await driveUpload(f,docId,packId); toast('Uploaded ✓','ok'); }catch(err){ toast(err.message||'Upload failed','err'); } };
   inp.click();
 }
 function exportJson(){
@@ -2105,12 +2461,13 @@ async function boot(){
 /* ================================ INIT ================================== */
 function init(){
   initTips();
+  initFxPanel();
   if('serviceWorker' in navigator){ navigator.serviceWorker.register('/escape/sw.js').catch(()=>{}); }
   startReminderLoop();
   setInterval(tickClock, 30000);
   boot();
 }
-window.addEventListener('keydown',(e)=>{ if(e.key==='Escape'){ closeSheet(); closeModal(); } });
+window.addEventListener('keydown',(e)=>{ if(e.key==='Escape'){ closeSheet(); closeModal(); fxPanelOpen(false); } });
 document.addEventListener('keydown',(e)=>{ if(e.key==='Enter' && $('#passInput') && !$('#gate').classList.contains('hide')){ const b=$('#gate [data-action="doAuth"]'); if(b) b.click(); } });
 document.addEventListener('keydown',(e)=>{ if(e.key!=='Enter'||!e.target) return;
   if(e.target.id==='aiCountryInput'){ const b=$('[data-action="aiAddCountry"]'); if(b && !b.disabled) b.click(); }

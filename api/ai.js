@@ -235,6 +235,32 @@ module.exports = async (req, res) => {
       return send(data, r.costUSD);
     }
 
+    if (action === 'col') {
+      const list = String(body.currencies || '').slice(0, 400) || 'USD (United States), TWD (Taiwan)';
+      const prompt =
+        'You research cost-of-living facts for an Indonesian labor migrant comparing destination countries. For EACH currency/country in this list: ' + list + ' — find CURRENT typical prices in LOCAL currency: a cheap restaurant meal, a regular cappuccino, and the statutory minimum MONTHLY wage (if none exists, the typical monthly pay for low-skill labor; say which in the note). Use web search sparingly — approximate is fine. ' +
+        'Respond with ONLY one JSON object keyed by 3-letter currency code, e.g. {"TWD":{"country":"Taiwan","meal":120,"coffee":60,"minWage":29500,"note":"statutory"},"KRW":{...}}. Numbers only (no strings) for meal/coffee/minWage.' +
+        NO_NARRATE;
+      const r = await runClaude(prompt, { model, effort, useWeb: true, maxTokens: 2200 });
+      const data = extractJson(r.text);
+      if (!data || typeof data !== 'object') return parseFail(res, r, 'No cost data came back — try again.');
+      return send(data, r.costUSD);
+    }
+
+    if (action === 'docpack') {
+      const purpose = String(body.purpose || '').slice(0, 160).trim();
+      if (!purpose) return res.status(400).json({ error: 'No purpose given.' });
+      const prompt =
+        'You are a document-checklist assistant for ' + persona + ' ' +
+        'List the CONCRETE documents he must gather for this purpose: "' + purpose.replace(/"/g, "'") + '". Use web search for the current official requirements (prefer Indonesian sources — KP2MI/BP2MI, embassies). Include Indonesian-issued documents (passport, SKCK, MCU, apostille/legalization, certificates) AND program-specific paperwork. ' +
+        'Respond with ONLY one JSON object: {"docs":[{"label":"short document name","why":"one line on what it is for / where to get it","critical":true or false}],"note":"one line overall"}. Max 10 docs, most important first. Do not repeat generic advice.' +
+        NO_NARRATE;
+      const r = await runClaude(prompt, { model, effort, useWeb: true, maxTokens: 1800 });
+      const data = extractJson(r.text);
+      if (!data || !Array.isArray(data.docs)) return parseFail(res, r, 'No checklist came back — try again.');
+      return send(data, r.costUSD);
+    }
+
     return res.status(400).json({ error: 'Unknown action.' });
   } catch (e) {
     return res.status(500).json({ error: String((e && e.message) || e) });
