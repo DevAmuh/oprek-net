@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Masuk · Graduation</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600,700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #09110d;
+  --card2:   #172019;
+  --gold:    #c9a84c;
+  --gold-lt: #f0d080;
+  --gold-dim:#7a6128;
+  --green:   #2d5e38;
+  --green-lt:#3d7a4a;
+  --text:    #e8dfc8;
+  --muted:   #6a7a62;
+  --danger:  #e06060;
+  --r: 12px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 100%; height: 100%;
+  background: var(--bg); color: var(--text);
+  font-family: 'Nunito', sans-serif;
+  display: flex; align-items: center; justify-content: center;
+}
+.card {
+  width: min(360px, 90vw);
+  background: var(--card2); border: 1.5px solid var(--green);
+  border-radius: 16px; padding: 32px 26px; text-align: center;
+}
+.cap { font-size: 34px; margin-bottom: 10px; }
+h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 24px; font-weight: 700; color: var(--gold-lt);
+  margin-bottom: 6px;
+}
+p.sub { font-size: 13px; color: var(--muted); margin-bottom: 22px; }
+input {
+  width: 100%; padding: 14px 16px;
+  background: #0e1a10; border: 1.5px solid var(--green);
+  border-radius: var(--r); color: var(--text);
+  font-family: 'Nunito', sans-serif; font-size: 15px;
+  outline: none; transition: border-color .2s; margin-bottom: 14px;
+  text-align: center;
+}
+input:focus { border-color: var(--gold); }
+button {
+  width: 100%; padding: 14px 20px; border: none; border-radius: var(--r);
+  background: var(--gold-dim); color: var(--bg);
+  font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 15px;
+  cursor: pointer; transition: all .2s;
+}
+button:hover:not(:disabled) { background: var(--gold); }
+button:disabled { opacity: .5; cursor: not-allowed; }
+.err {
+  min-height: 18px; font-size: 12.5px; color: var(--danger);
+  margin-top: 12px;
+}
+.back { display: block; margin-top: 22px; font-size: 12px; color: var(--muted); text-decoration: none; }
+.back:hover { color: var(--gold); }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="cap">🔒</div>
+    <h1>Masuk</h1>
+    <p class="sub">Halaman denah kursi kini bersifat privat.</p>
+    <form id="loginForm">
+      <input id="pw" type="password" placeholder="Kata sandi" autocomplete="current-password" autofocus>
+      <button id="submitBtn" type="submit">Masuk</button>
+    </form>
+    <div class="err" id="err"></div>
+    <a class="back" href="index.html">← Kembali</a>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = 'https://fvrwxuwkwwrajuausuaj.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_W9xkq0fkMyffe305mlqFnQ_Q1Tw8bGC';
+const ADMIN_EMAIL  = 'admin@graduation.local';
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const form = document.getElementById('loginForm');
+const pw = document.getElementById('pw');
+const err = document.getElementById('err');
+const btn = document.getElementById('submitBtn');
+
+// Already logged in? Skip straight to the chart.
+sb.auth.getSession().then(({ data }) => {
+  if (data.session) location.replace('chart.html');
+});
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  err.textContent = '';
+  btn.disabled = true;
+  btn.textContent = 'Memeriksa…';
+
+  const { error } = await sb.auth.signInWithPassword({
+    email: ADMIN_EMAIL,
+    password: pw.value,
+  });
+
+  if (error) {
+    err.textContent = 'Kata sandi salah.';
+    btn.disabled = false;
+    btn.textContent = 'Masuk';
+    pw.value = '';
+    pw.focus();
+    return;
+  }
+
+  location.replace('chart.html');
+});
+</script>
+</body>
+</html>

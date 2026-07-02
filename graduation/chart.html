@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Graduation · Seat Finder</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* =============================================
+   ROOT & RESET
+============================================= */
+:root {
+  --bg:        #09110d;
+  --card:      #111c14;
+  --card2:     #172019;
+  --gold:      #c9a84c;
+  --gold-lt:   #f0d080;
+  --gold-dim:  #7a6128;
+  --green:     #2d5e38;
+  --green-lt:  #3d7a4a;
+  --text:      #e8dfc8;
+  --muted:     #6a7a62;
+  --cyan:      #00d4ff;
+  --cyan-dim:  #0a3050;
+  --male-bg:   #1a3a5c;
+  --male-bd:   #234a74;
+  --male-tx:   #90c0ff;
+  --fem-bg:    #3a1a3a;
+  --fem-bd:    #4a2a4a;
+  --fem-tx:    #e0a0d0;
+  --pend-bg:   #0e2e14;
+  --pend-bd:   #2d6e3a;
+  --pend-tx:   #80e090;
+  --r:         12px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Nunito', sans-serif;
+  font-size: 15px;
+}
+
+/* =============================================
+   LOADING / LOGOUT
+============================================= */
+.loading-screen {
+  position: fixed; inset: 0; z-index: 100;
+  background: var(--bg); display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 14px;
+}
+.loading-spin {
+  width: 30px; height: 30px; border-radius: 50%;
+  border: 3px solid #1a2e1e; border-top-color: var(--gold);
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-screen p { font-size: 13px; color: var(--muted); letter-spacing: .5px; }
+.logout-btn {
+  position: fixed; top: 14px; right: 16px; z-index: 40;
+  background: none; border: none; cursor: pointer;
+  color: var(--muted); font-family: 'Nunito', sans-serif; font-size: 12px;
+  padding: 6px 10px; transition: color .2s;
+}
+.logout-btn:hover { color: var(--gold); }
+
+/* =============================================
+   SLIDE ENGINE
+============================================= */
+#slider-track {
+  display: flex;
+  width: 500vw;
+  height: 100vh;
+  transition: transform .42s cubic-bezier(.65,0,.35,1);
+  will-change: transform;
+}
+.slide {
+  width: 100vw;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+#slide-result { align-items: stretch; }
+
+.slide-inner {
+  width: 100%;
+  max-width: 480px;
+  padding: 36px 22px 80px;
+  margin: 0 auto;
+}
+.slide-inner.wide {
+  max-width: 1100px;
+  padding: 28px 16px 80px;
+}
+
+/* =============================================
+   PROGRESS DOTS
+============================================= */
+.dots { display: flex; gap: 7px; justify-content: center; margin-bottom: 28px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); transition: all .3s; }
+.dot.on { background: var(--gold); width: 22px; border-radius: 4px; }
+
+/* =============================================
+   TYPOGRAPHY
+============================================= */
+.badge {
+  display: inline-block;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--gold); border: 1px solid var(--gold-dim);
+  padding: 5px 14px; border-radius: 20px; margin-bottom: 18px;
+}
+.hero-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(34px, 9vw, 52px);
+  font-weight: 700; line-height: 1.08;
+  color: var(--gold-lt); margin-bottom: 6px;
+}
+.hero-sub {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 17px; font-style: italic;
+  color: var(--muted); margin-bottom: 36px;
+}
+.step-lbl  { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold-dim); margin-bottom: 6px; }
+.step-title { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 700; color: var(--gold-lt); margin-bottom: 26px; }
+.back-btn {
+  background: none; border: none; cursor: pointer;
+  color: var(--muted); font-family: 'Nunito', sans-serif; font-size: 13px;
+  padding: 0 0 18px; display: flex; align-items: center; gap: 6px; transition: color .2s;
+}
+.back-btn:hover { color: var(--gold); }
+
+/* =============================================
+   SEARCH
+============================================= */
+.search-wrap { position: relative; margin-bottom: 14px; }
+.search-input {
+  width: 100%; padding: 16px 20px 16px 48px;
+  background: var(--card2); border: 1.5px solid var(--green);
+  border-radius: var(--r); color: var(--text);
+  font-family: 'Nunito', sans-serif; font-size: 15px;
+  outline: none; transition: border-color .2s; -webkit-appearance: none;
+}
+.search-input:focus { border-color: var(--gold); }
+.search-input::placeholder { color: var(--muted); }
+.s-icon { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+.search-results { background: var(--card2); border: 1px solid var(--green); border-radius: var(--r); overflow: hidden; display: none; margin-bottom: 8px; }
+.search-results.on { display: block; }
+.s-item { padding: 13px 18px; cursor: pointer; border-bottom: 1px solid #1a2e1e; transition: background .15s; display: flex; align-items: center; gap: 12px; }
+.s-item:last-child { border-bottom: none; }
+.s-item:hover { background: #1a2e1e; }
+.s-code { font-size: 11px; font-weight: 800; letter-spacing: 1px; color: var(--gold); background: #1a2e1e; padding: 3px 8px; border-radius: 6px; }
+.s-name { font-weight: 700; font-size: 14px; }
+.s-cls  { font-size: 12px; color: var(--muted); }
+.s-none { padding: 14px 18px; color: var(--muted); font-style: italic; font-size: 13px; }
+
+/* =============================================
+   OR DIVIDER
+============================================= */
+.or { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; margin: 18px 0; }
+.or::before, .or::after { content:''; flex:1; height:1px; background:#1a2e1e; }
+
+/* =============================================
+   BUTTONS
+============================================= */
+.btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 15px 20px; border: none; border-radius: var(--r); font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 15px; cursor: pointer; transition: all .2s; -webkit-appearance: none; }
+.btn-outline { background: transparent; border: 1.5px solid var(--green-lt); color: var(--text); }
+.btn-outline:hover { background: var(--card2); border-color: var(--gold); color: var(--gold-lt); }
+
+/* =============================================
+   CLASS GRID
+============================================= */
+.class-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.class-card { background: var(--card2); border: 1.5px solid var(--green); border-radius: var(--r); padding: 24px 16px; cursor: pointer; transition: all .2s; text-align: center; -webkit-tap-highlight-color: transparent; }
+.class-card:active, .class-card:hover { border-color: var(--gold); background: #1c2a1f; transform: scale(.97); }
+.cc-label { font-family: 'Cormorant Garamond', serif; font-size: 38px; font-weight: 700; color: var(--gold-lt); line-height: 1; }
+.cc-sub   { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+/* =============================================
+   GENDER CARDS
+============================================= */
+.gender-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.gender-card { background: var(--card2); border: 2px solid var(--green); border-radius: var(--r); padding: 32px 16px; cursor: pointer; transition: all .2s; text-align: center; -webkit-tap-highlight-color: transparent; }
+.gender-card:active, .gender-card:hover { transform: scale(.97); }
+.gender-card.putra:hover { border-color: var(--male-tx); }
+.gender-card.putri:hover { border-color: var(--fem-tx); }
+.g-icon  { font-size: 40px; margin-bottom: 8px; }
+.g-label { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 700; }
+.gender-card.putra .g-label { color: var(--male-tx); }
+.gender-card.putri .g-label { color: var(--fem-tx); }
+.g-sub   { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+/* =============================================
+   NAME LIST
+============================================= */
+.name-list { display: flex; flex-direction: column; gap: 8px; }
+.name-item { background: var(--card2); border: 1.5px solid var(--green); border-radius: var(--r); padding: 14px 18px; cursor: pointer; transition: all .2s; display: flex; align-items: center; gap: 12px; -webkit-tap-highlight-color: transparent; }
+.name-item:active, .name-item:hover { border-color: var(--gold); background: #1c2a1f; transform: translateX(4px); }
+.ni-no   { font-size: 11px; color: var(--gold); font-weight: 800; background: #1a2e1e; padding: 3px 8px; border-radius: 6px; min-width: 44px; text-align: center; flex-shrink: 0; }
+.ni-name { font-weight: 700; flex: 1; }
+.ni-arr  { color: var(--muted); flex-shrink: 0; }
+
+/* =============================================
+   RESULT SCREEN
+============================================= */
+.result-card { background: var(--card2); border: 1.5px solid var(--gold-dim); border-radius: 16px; padding: 24px 20px; margin-bottom: 20px; box-shadow: 0 8px 32px rgba(201,168,76,.1); }
+.rc-emoji  { font-size: 44px; margin-bottom: 10px; text-align:center; }
+.rc-forlbl { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); text-align:center; margin-bottom: 2px; }
+.rc-sname  { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 700; color: var(--gold-lt); text-align:center; margin-bottom: 2px; }
+.rc-sinfo  { font-size: 12px; color: var(--muted); text-align:center; margin-bottom: 20px; }
+
+.parent-box { background: linear-gradient(135deg,#060f18,#081a28); border: 2px solid var(--cyan); border-radius: 12px; padding: 18px 16px; margin-bottom: 14px; box-shadow: 0 0 24px rgba(0,212,255,.15); }
+.pb-badge  { display: inline-block; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--cyan); background: rgba(0,212,255,.08); border: 1px solid rgba(0,212,255,.25); border-radius: 20px; padding: 3px 12px; margin-bottom: 8px; }
+.pb-code   { font-family: 'Cormorant Garamond', serif; font-size: 42px; font-weight: 700; color: var(--cyan); line-height: 1; text-shadow: 0 0 18px rgba(0,212,255,.4); }
+.pb-desc   { font-size: 12px; color: #80c8d8; margin-top: 3px; }
+.pb-count  { display: inline-flex; align-items: center; gap: 6px; background: rgba(0,212,255,.07); border: 1px solid rgba(0,212,255,.2); border-radius: 20px; padding: 4px 12px; margin-top: 10px; font-size: 12px; color: var(--cyan); }
+.stu-ref   { background: #0e1a10; border: 1px solid var(--green); border-radius: 10px; padding: 12px 14px; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; }
+.sr-icon   { font-size: 20px; flex-shrink: 0; }
+.sr-lbl    { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+.sr-val    { font-size: 14px; font-weight: 700; color: var(--text); }
+.rc-msg    { font-family: 'Cormorant Garamond', serif; font-size: 15px; font-style: italic; color: var(--muted); line-height: 1.6; text-align: center; }
+
+/* =============================================
+   SEATING CHART
+============================================= */
+.chart-ttl   { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); text-align: center; margin-bottom: 8px; }
+.chart-outer { overflow-x: auto; border: 1px solid var(--green); border-radius: var(--r); background: #0b160d; }
+.chart-inner { min-width: 1000px; padding: 14px 12px; }
+
+.chart-stage {
+  grid-column: 1 / -1;
+  text-align: center; padding: 9px 0;
+  background: linear-gradient(90deg, transparent 5%, var(--green) 20%, var(--green-lt) 50%, var(--green) 80%, transparent 95%);
+  color: var(--gold-lt); font-weight: 800; letter-spacing: 4px; font-size: 11px;
+  text-transform: uppercase; border-radius: 5px; margin-bottom: 20px;
+  font-family: 'Cormorant Garamond', serif;
+}
+
+/* Three-column layout: left | aisle | right */
+.chart-body {
+  display: grid;
+  grid-template-columns: 1fr 48px 1fr;
+  gap: 0;
+  align-items: start;
+}
+
+/* Aisle column — contains all 8 Pendamping cells stacked */
+.chart-aisle {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: center;
+  padding-top: calc(4 * (24px + 2px)); /* offset down past the 4 header bars */
+}
+.aisle-label {
+  font-size: 7px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: #2a3d2c; writing-mode: vertical-rl; margin-bottom: 4px;
+}
+
+.chart-half { display: flex; flex-direction: column; gap: 2px; }
+.chart-half:first-of-type { grid-column: 1; }
+.chart-half:last-of-type  { grid-column: 3; }
+.chart-aisle               { grid-column: 2; }
+
+/* section bars */
+.bar { border-radius: 3px; padding: 4px 8px; text-align: center; font-size: 9px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 1px; }
+.bar-vip    { background: #2a3d60; color: #90c0ff; }
+.bar-guests { background: #5a2090; color: #d0a0ff; }
+.bar-teach  { background: #1a5c2a; color: #80e090; }
+
+/* student row */
+.stu-row { display: flex; align-items: center; gap: 2px; padding: 1px 0; }
+
+/* Wali Kelas cell — green, lives in aisle-side of each student row */
+.pend-cell {
+  width: 42px; height: 22px; border-radius: 3px;
+  background: var(--pend-bg); border: 1.5px solid var(--pend-bd);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 7px; font-weight: 800; color: var(--pend-tx);
+  flex-shrink: 0; letter-spacing: 0.3px;
+}
+.pend-hidden { visibility: hidden; }
+
+/* student seats */
+.seats-wrap { display: flex; gap: 2px; flex: 1; }
+.seat {
+  width: 30px; height: 22px; border-radius: 3px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 5.5px; font-weight: 800; flex-shrink: 0;
+  border: 1.5px solid transparent; transition: all .3s; cursor: default;
+  letter-spacing: -0.3px; white-space: nowrap;
+}
+.seat.male   { background: var(--male-bg); color: var(--male-tx); border-color: var(--male-bd); }
+.seat.female { background: var(--fem-bg);  color: var(--fem-tx);  border-color: var(--fem-bd); }
+
+/* ★ BREATHING GOLD BLOOM for found student seat */
+.seat.stu-hl {
+  background: #3a2800 !important;
+  color: var(--gold-lt) !important;
+  border-color: var(--gold) !important;
+  animation: bloom-gold 1.5s infinite ease-in-out;
+}
+@keyframes bloom-gold {
+  0%,100% { box-shadow: 0 0 0 2px rgba(201,168,76,.35), 0 0 8px rgba(201,168,76,.5); }
+  50%      { box-shadow: 0 0 0 5px rgba(201,168,76,.15), 0 0 20px rgba(201,168,76,.8); }
+}
+
+.seats-spacer { flex: 1; min-width: 0; }
+/* Left half: push seats toward aisle (right edge) */
+.left-half .seats-wrap { justify-content: flex-end; }
+
+/* =============================================
+   ORANG TUA
+============================================= */
+.ot-sep { border-top: 1px dashed #1e2e22; margin: 8px 0 6px; font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; text-align: center; padding-top: 6px; }
+.stu-section-lbl { border-top: 1px dashed #1e2e22; margin: 8px 0 2px; font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; text-align: center; padding-top: 6px; }
+.ot-classes { display: flex; gap: 5px; width: 100%; }
+.ot-block   { flex: 1; min-width: 0; }
+.ot-cls-lbl { font-size: 8px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: #5090b0; text-align: center; padding: 3px 0; margin-bottom: 3px; border: 1px solid #1a3a5c; border-radius: 3px; background: #060f18; }
+.ot-cols    { display: flex; gap: 2px; width: 100%; }
+.ot-col     { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ot-pair    { display: flex; gap: 1px; transition: all .3s; }
+.ot-seat    { flex: 1; height: 15px; background: var(--cyan-dim); border: 1px solid #1a5080; border-radius: 2px; font-size: 5px; color: #4a88a8; font-weight: 700; display: flex; align-items: center; justify-content: center; transition: all .3s; text-align: center; line-height: 1; min-width: 0; letter-spacing: -0.3px; white-space: nowrap; }
+
+/* ★ BREATHING CYAN BLOOM for found parent seat */
+.ot-pair.ot-found .ot-seat {
+  background: rgba(0,212,255,.28) !important;
+  border-color: var(--cyan) !important;
+  color: var(--cyan) !important;
+  animation: bloom-cyan 1.5s infinite ease-in-out;
+}
+@keyframes bloom-cyan {
+  0%,100% { box-shadow: 0 0 0 2px rgba(0,212,255,.25), 0 0 6px rgba(0,212,255,.4); }
+  50%      { box-shadow: 0 0 0 4px rgba(0,212,255,.1), 0 0 16px rgba(0,212,255,.75); }
+}
+
+/* legend */
+.legend   { display: flex; gap: 12px; flex-wrap: wrap; padding: 10px 12px; border-top: 1px solid #1a2e1e; font-size: 10px; color: var(--muted); }
+.leg-i    { display: flex; align-items: center; gap: 5px; }
+.leg-d    { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+.scroll-cue { text-align: center; font-size: 10px; color: var(--muted); padding: 8px; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+
+<div class="loading-screen" id="loadingScreen">
+  <div class="loading-spin"></div>
+  <p>Memuat data…</p>
+</div>
+
+<button class="logout-btn" onclick="doLogout()">Keluar ⏻</button>
+
+<div id="slider-track">
+
+  <!-- ===== SLIDE 0: WELCOME ===== -->
+  <div class="slide" id="slide-0">
+  <div class="slide-inner">
+    <div style="height:12px"></div>
+    <div class="badge">Graduation Ceremony · 2026</div>
+    <h1 class="hero-title">Temukan<br>Kursi Anda</h1>
+    <p class="hero-sub">Masukkan nama atau nomor absen putra/putri Anda</p>
+
+    <div class="search-wrap">
+      <svg class="s-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input class="search-input" id="searchInput" type="search"
+        placeholder="Nama siswa atau no. absen (contoh: '07')"
+        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    </div>
+    <div class="search-results" id="searchResults"></div>
+
+    <div class="or">atau</div>
+    <button class="btn btn-outline" onclick="goSlide(1)">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+      TELUSURI KELAS
+    </button>
+  </div>
+  </div>
+
+  <!-- ===== SLIDE 1: CLASS ===== -->
+  <div class="slide" id="slide-1">
+  <div class="slide-inner">
+    <div style="height:12px"></div>
+    <div class="dots">
+      <div class="dot on"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+    <button class="back-btn" onclick="goSlide(0)">← Kembali</button>
+    <div class="step-lbl">Langkah 1 dari 3</div>
+    <div class="step-title">Putra/putri Anda<br>dari kelas mana?</div>
+    <div class="class-grid">
+      <div class="class-card" onclick="pickClass('9A')">
+        <div class="cc-label">9A</div><div class="cc-sub">27 siswa</div>
+      </div>
+      <div class="class-card" onclick="pickClass('9B')">
+        <div class="cc-label">9B</div><div class="cc-sub">27 siswa</div>
+      </div>
+      <div class="class-card" onclick="pickClass('9C')">
+        <div class="cc-label">9C</div><div class="cc-sub">27 siswa</div>
+      </div>
+      <div class="class-card" onclick="pickClass('9D')">
+        <div class="cc-label">9D</div><div class="cc-sub">27 siswa</div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <!-- ===== SLIDE 2: GENDER ===== -->
+  <div class="slide" id="slide-2">
+  <div class="slide-inner">
+    <div style="height:12px"></div>
+    <div class="dots">
+      <div class="dot"></div><div class="dot on"></div><div class="dot"></div>
+    </div>
+    <button class="back-btn" onclick="goSlide(1)">← Kembali</button>
+    <div class="step-lbl">Langkah 2 dari 3</div>
+    <div class="step-title">Putra atau<br>putri?</div>
+    <div class="gender-grid">
+      <div class="gender-card putra" onclick="pickGender('M')">
+        <div class="g-icon">👦</div>
+        <div class="g-label">Putra</div>
+        <div class="g-sub">Laki-laki</div>
+      </div>
+      <div class="gender-card putri" onclick="pickGender('F')">
+        <div class="g-icon">👧</div>
+        <div class="g-label">Putri</div>
+        <div class="g-sub">Perempuan</div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <!-- ===== SLIDE 3: NAMES ===== -->
+  <div class="slide" id="slide-3">
+  <div class="slide-inner">
+    <div style="height:12px"></div>
+    <div class="dots">
+      <div class="dot"></div><div class="dot"></div><div class="dot on"></div>
+    </div>
+    <button class="back-btn" onclick="goSlide(2)">← Kembali</button>
+    <div class="step-lbl">Langkah 3 dari 3</div>
+    <div class="step-title" id="nameTtl">Pilih nama</div>
+    <div class="name-list" id="nameList"></div>
+  </div>
+  </div>
+
+  <!-- ===== SLIDE 4: RESULT ===== -->
+  <div class="slide" id="slide-result">
+  <div class="slide-inner wide">
+    <button class="back-btn" onclick="goSlide(0)">← Cari lagi</button>
+
+    <div class="result-card">
+      <div class="rc-emoji">🎉</div>
+      <div class="rc-forlbl">Orang tua / wali dari</div>
+      <div class="rc-sname" id="rcName">—</div>
+      <div class="rc-sinfo" id="rcInfo">Kelas 9A · No. 01</div>
+
+      <div class="parent-box">
+        <div class="pb-badge">Kursi Anda · Orang Tua</div>
+        <div class="pb-code" id="pbCode">9A01</div>
+        <div class="pb-desc" id="pbDesc">Blok 9A · Kolom 1 · Baris 1</div>
+        <div class="pb-count">🪑 2 kursi tersedia untuk Anda</div>
+      </div>
+
+      <div class="stu-ref">
+        <div class="sr-icon">🎓</div>
+        <div>
+          <div class="sr-lbl">Putra/putri Anda duduk di</div>
+          <div class="sr-val" id="srVal">Pendamping P1 · Kursi ke-1</div>
+        </div>
+      </div>
+
+      <div class="rc-msg">"Here are your seats. So glad you could be here —<br>enjoy this wonderful day. 🌸"</div>
+    </div>
+
+    <div class="chart-ttl">↓ Posisi Anda di denah kursi</div>
+    <div class="chart-outer">
+      <div class="chart-inner" id="chartInner"></div>
+      <div class="legend" id="chartLegend"></div>
+    </div>
+    <div class="scroll-cue">← geser untuk melihat seluruh denah →</div>
+    <div style="height:20px;"></div>
+  </div>
+  </div>
+
+</div><!-- /slider-track -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// =============================================
+// SUPABASE — AUTH GATE + DATA LOAD
+// =============================================
+const SUPABASE_URL = 'https://fvrwxuwkwwrajuausuaj.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_W9xkq0fkMyffe305mlqFnQ_Q1Tw8bGC';
+const ADMIN_EMAIL  = 'admin@graduation.local';
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let S = {};
+let ROWS_LEFT = [];
+let ROWS_RIGHT = [];
+const STU_SEAT = {};
+
+async function doLogout() {
+  await sb.auth.signOut();
+  location.replace('index.html');
+}
+
+async function boot() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { location.replace('login.html'); return; }
+
+  const [studentsRes, layoutRes] = await Promise.all([
+    sb.from('graduation_students').select('code,name,cls,gender,no'),
+    sb.from('graduation_layout').select('rows_left,rows_right').eq('id', 1).single(),
+  ]);
+
+  if (studentsRes.error || layoutRes.error || !studentsRes.data || !layoutRes.data) {
+    await sb.auth.signOut();
+    location.replace('login.html');
+    return;
+  }
+
+  studentsRes.data.forEach(s => {
+    S[s.code] = { n: s.name, cls: s.cls, g: s.gender, no: s.no };
+  });
+  ROWS_LEFT  = layoutRes.data.rows_left;
+  ROWS_RIGHT = layoutRes.data.rows_right;
+
+  buildSeatLookup();
+  wireSearch();
+
+  document.getElementById('loadingScreen').style.display = 'none';
+}
+boot();
+
+function buildSeatLookup() {
+  const pendPos = {};
+  [...ROWS_LEFT, ...ROWS_RIGHT].forEach(r => {
+    if (!pendPos[r.pend]) pendPos[r.pend] = 0;
+    r.seats.forEach(code => {
+      pendPos[r.pend]++;
+      STU_SEAT[code] = { pend: r.pend, pos: pendPos[r.pend] };
+    });
+  });
+}
+
+function parentInfo(code) {
+  const cls = code.slice(0,2);
+  const num = parseInt(code.slice(2));
+  // Numbers go ACROSS 3 columns per row:
+  // Row 1: 01,02,03 | Row 2: 04,05,06 | ... | Row 9: 25,26,27
+  const col = ((num - 1) % 3) + 1;
+  const row = Math.floor((num - 1) / 3) + 1;
+  return { cls, col, row, desc: `Blok ${cls} · Kolom ${col} · Baris ${row}` };
+}
+
+// =============================================
+// NAVIGATION
+// =============================================
+const SLIDES = ['slide-0','slide-1','slide-2','slide-3','slide-result'];
+let curSlide = 0;
+
+function goSlide(idx) {
+  document.getElementById('slider-track').style.transform = `translateX(-${idx * 100}vw)`;
+  curSlide = idx;
+  setTimeout(() => {
+    const el = document.getElementById(SLIDES[idx]);
+    if (el) el.scrollTop = 0;
+  }, 420);
+}
+
+let sel = { cls: null, gender: null };
+
+function pickClass(cls) { sel.cls = cls; goSlide(2); }
+
+function pickGender(g) {
+  sel.gender = g;
+  buildNames();
+  goSlide(3);
+}
+
+function buildNames() {
+  const { cls, gender } = sel;
+  document.getElementById('nameTtl').textContent =
+    `Kelas ${cls} — ${gender==='M'?'Putra':'Putri'}`;
+  const list = document.getElementById('nameList');
+  list.innerHTML = '';
+  Object.entries(S)
+    .filter(([,s]) => s.cls===cls && s.g===gender)
+    .sort((a,b) => a[0].localeCompare(b[0]))
+    .forEach(([code, s]) => {
+      const el = document.createElement('div');
+      el.className = 'name-item';
+      const disp = s.n==='Student' ? `— Siswa No. ${s.no} —` : s.n;
+      el.innerHTML = `<span class="ni-no">No.&nbsp;${s.no}</span>
+        <span class="ni-name">${disp}</span>
+        <span class="ni-arr">›</span>`;
+      el.onclick = () => showResult(code);
+      list.appendChild(el);
+    });
+}
+
+function showResult(code) {
+  const s    = S[code];
+  const seat = STU_SEAT[code];
+  const par  = parentInfo(code);
+  const gLbl = s.g==='M' ? 'Putra' : 'Putri';
+
+  document.getElementById('rcName').textContent = s.n==='Student' ? `Siswa ${code}` : s.n;
+  document.getElementById('rcInfo').textContent = `Kelas ${s.cls} · ${gLbl} · No. Absen ${s.no}`;
+  document.getElementById('pbCode').textContent = code;
+  document.getElementById('pbDesc').textContent = par.desc;
+  document.getElementById('srVal').textContent  = `${seat.pend} · Kursi ke-${seat.pos}`;
+
+  buildChart(code);
+  goSlide(4);
+
+  setTimeout(() => {
+    const found = document.querySelector('.ot-pair.ot-found');
+    if (found) found.scrollIntoView({ behavior:'smooth', block:'center', inline:'center' });
+  }, 600);
+}
+
+// =============================================
+// CHART BUILDER
+// =============================================
+function buildChart(hlCode) {
+
+  function renderRows(rows, side) {
+    let h = `
+      <div class="bar bar-vip">VIP</div>
+      <div class="bar bar-guests">Invited Guests</div>
+      <div class="bar bar-teach">Teachers</div>
+      <div class="stu-section-lbl">Students</div>`;
+
+    rows.forEach(r => {
+      const pendEl = r.showPend
+        ? `<div class="pend-cell">${r.pend}</div>`
+        : `<div class="pend-cell pend-hidden"></div>`;
+
+      h += `<div class="stu-row">`;
+
+      if (side === 'left') {
+        // seats first, then Wali Kelas on the right (aisle side)
+        h += `<div class="seats-wrap">`;
+        if (r.offsetLeft) h += `<div class="seats-spacer"></div>`;
+        r.seats.forEach(code => {
+          const gc = S[code]?.g === 'M' ? 'male' : 'female';
+          const hl = code===hlCode ? ' stu-hl' : '';
+          h += `<div class="seat ${gc}${hl}" title="${code}">${code}</div>`;
+        });
+        h += `</div>`;
+        h += pendEl;
+      } else {
+        // Wali Kelas first (aisle side), then seats
+        h += pendEl;
+        h += `<div class="seats-wrap">`;
+        r.seats.forEach(code => {
+          const gc = S[code]?.g === 'M' ? 'male' : 'female';
+          const hl = code===hlCode ? ' stu-hl' : '';
+          h += `<div class="seat ${gc}${hl}" title="${code}">${code}</div>`;
+        });
+        if (r.offsetRight) h += `<div class="seats-spacer"></div>`;
+        h += `</div>`;
+      }
+
+      h += `</div>`;
+    });
+
+    return h;
+  }
+
+  function renderOT(classes) {
+    let h = `<div class="ot-classes">`;
+    classes.forEach(cls => {
+      h += `<div class="ot-block">
+        <div class="ot-cls-lbl">${cls}</div>
+        <div class="ot-cols">`;
+      // 3 columns, each col gets students: col0→1,4,7,10... col1→2,5,8,11... col2→3,6,9,12...
+      [0,1,2].forEach(colIdx => {
+        h += `<div class="ot-col">`;
+        for (let rowIdx = 0; rowIdx < 9; rowIdx++) {
+          const n = rowIdx * 3 + colIdx + 1;
+          const code = cls + String(n).padStart(2,'0');
+          const isFound = code===hlCode;
+          h += `<div class="ot-pair${isFound?' ot-found':''}" id="otp-${code}">
+            <div class="ot-seat">${code}</div>
+            <div class="ot-seat">${code}</div>
+          </div>`;
+        }
+        h += `</div>`;
+      });
+      h += `</div></div>`;
+    });
+    h += `</div>`;
+    return h;
+  }
+
+  document.getElementById('chartInner').innerHTML = `
+    <div class="chart-body">
+      <div class="chart-stage">— PANGGUNG —</div>
+
+      <div class="chart-half left-half">
+        ${renderRows(ROWS_LEFT, 'left')}
+        <div class="ot-sep">Parents</div>
+        ${renderOT(['9C','9D'])}
+      </div>
+
+      <div class="chart-aisle">
+        <div class="aisle-label">AISLE</div>
+      </div>
+
+      <div class="chart-half">
+        ${renderRows(ROWS_RIGHT, 'right')}
+        <div class="ot-sep">Parents</div>
+        ${renderOT(['9A','9B'])}
+      </div>
+
+    </div>`;
+
+  document.getElementById('chartLegend').innerHTML = `
+    <div class="leg-i"><div class="leg-d" style="background:var(--male-bg);border:1px solid var(--male-bd)"></div>Siswa putra</div>
+    <div class="leg-i"><div class="leg-d" style="background:var(--fem-bg);border:1px solid var(--fem-bd)"></div>Siswa putri</div>
+    <div class="leg-i"><div class="leg-d" style="background:var(--pend-bg);border:1px solid var(--pend-bd)"></div>Wali Kelas (W9A/B/C/D, W8B/C)</div>
+    <div class="leg-i"><div class="leg-d" style="background:#3a2800;border:1px solid var(--gold)"></div>Kursi siswa Anda ✦</div>
+    <div class="leg-i"><div class="leg-d" style="background:rgba(0,212,255,.28);border:1px solid var(--cyan)"></div>Kursi Anda (orang tua) ✦</div>`;
+}
+
+// =============================================
+// SEARCH
+// =============================================
+function wireSearch() {
+  const inp = document.getElementById('searchInput');
+  const res = document.getElementById('searchResults');
+
+  inp.addEventListener('input', () => {
+    const q = inp.value.trim().toLowerCase();
+    if (q.length < 2) { res.classList.remove('on'); return; }
+    const hits = Object.entries(S).filter(([code, s]) =>
+      s.n.toLowerCase().includes(q) || code.toLowerCase().includes(q) || s.no.includes(q)
+    ).slice(0, 8);
+    if (!hits.length) {
+      res.innerHTML = `<div class="s-none">Tidak ditemukan — coba telusuri lewat kelas.</div>`;
+      res.classList.add('on'); return;
+    }
+    res.innerHTML = hits.map(([code, s]) => {
+      const nm = s.n==='Student' ? `Siswa No. ${s.no}` : s.n;
+      const g  = s.g==='M' ? 'Putra' : 'Putri';
+      return `<div class="s-item" onclick="showResult('${code}')">
+        <span class="s-code">${code}</span>
+        <div><div class="s-name">${nm}</div>
+        <div class="s-cls">Kelas ${s.cls} · ${g}</div></div>
+      </div>`;
+    }).join('');
+    res.classList.add('on');
+  });
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#searchInput') && !e.target.closest('#searchResults'))
+      res.classList.remove('on');
+  });
+}
+</script>
+</body>
+</html>
