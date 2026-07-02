@@ -60,6 +60,21 @@ textarea{resize:vertical;min-height:60px}
 .streakpill{display:inline-flex;align-items:center;gap:5px;background:rgba(246,191,82,.1);border:1px solid rgba(246,191,82,.3);color:var(--amber-soft);
   padding:5px 10px;border-radius:6px;font-family:var(--mono);font-weight:700;font-size:12px}
 
+/* ---------------- FX ticker (broker strip under the header) ---------------- */
+.fxbar{margin:-4px -14px 12px;padding:7px 14px;border-bottom:1px solid var(--line);background:rgba(0,0,0,.25);overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.fxbar::-webkit-scrollbar{display:none}
+.fxrow{display:flex;align-items:center;gap:8px;white-space:nowrap;font-family:var(--mono);font-size:11px}
+.fxlbl{color:var(--amber-faint);font-weight:700;font-size:9px;letter-spacing:.12em;flex:none}
+.fxpill{color:var(--muted);flex:none;padding:3px 8px;border:1px solid var(--line);border-radius:6px;background:rgba(255,255,255,.02)}
+.fxpill b{color:var(--amber-soft);font-weight:700;margin-right:4px}
+.fxpill.gold{border-color:rgba(246,191,82,.4);background:rgba(246,191,82,.07);color:var(--amber-soft)}
+.fxctl{display:inline-flex;align-items:center;gap:5px;flex:none}
+.fxctl select{width:auto;padding:3px 24px 3px 8px;font-size:11px;font-family:var(--mono);border-radius:6px;background-position:right 7px center}
+.fxctl button{color:var(--amber-dim);border:1px solid var(--line);border-radius:6px;padding:3px 8px;font-size:12px;line-height:1}
+.fxctl button:hover{color:var(--amber-soft)}
+.fxupd{color:var(--faint);font-size:9.5px;flex:none}
+@media(min-width:920px){ .fxbar{margin:-8px 0 16px;padding:8px 2px} }
+
 /* ---------------- Departures board ---------------- */
 .board-masthead{display:none}
 .dep-row{display:grid;grid-template-columns:1fr 62px 76px;gap:8px;align-items:center;padding:13px 14px;border-top:1px solid rgba(246,191,82,.1);cursor:pointer;transition:background .15s;animation:flap .4s ease both}
@@ -357,6 +372,7 @@ details.row-x[open]{border-color:var(--line2)}
       <div><div class="big">DEPARTURES</div><div class="vwname" id="vwName">Board</div></div>
       <div class="rt"><span id="clockRt">05:14 WIB</span><br><span id="dateRt"></span></div>
     </div>
+    <div id="fxbar" class="fxbar"></div>
     <div id="view"></div>
   </main>
 </div>
@@ -444,6 +460,7 @@ function defaults(){
     customRoutes:[],
     aiScan:null,
     lastAsk:null,
+    customLangs:[],
     why:{
       reasons:[
         'The rupiah keeps shrinking — my hours are worth more abroad.',
@@ -594,7 +611,7 @@ function aiProfileContext(){
   L.push('Money saved for the move: '+fmtMoney(banked(),p.baseCurrency)+'.');
   const cap=ageCapDate(p.birthDate); const mU=monthsUntil(cap);
   if(mU!=null) L.push('Australia WHV age-cap: '+mU+' months left until he turns 31.');
-  L.push('Languages: '+LANGS.map(l=>l.label+' '+(state.languages[l.id].level||'None')).join(', ')+'.');
+  L.push('Languages: '+[...LANGS.map(l=>l.label+' '+(state.languages[l.id].level||'None')), ...(state.customLangs||[]).map(c=>c.label+' '+(c.level||'starting'))].join(', ')+'.');
   const up=computeCalendarItems(state).filter(i=>!i.rrule).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,4);
   if(up.length) L.push('Upcoming deadlines: '+up.map(i=>i.title+' ('+i.date+')').join('; ')+'.');
   L.push('Check-in streak: '+state.streak.count+' days.');
@@ -1024,8 +1041,22 @@ function render(){
   const fn={ board:viewBoard, today:viewToday, tailwinds:viewTailwinds, ascent:viewAscent, docs:viewDocs, routes:viewRoutes,
     money:viewMoney, languages:viewLanguages, log:viewLog, settings:viewSettings }[currentView]||viewToday;
   const vw=$('#view'); vw.innerHTML=fn();
+  renderFx();
   if(currentView==='tailwinds') ensureFeed();
   vw.classList.remove('fade'); void vw.offsetWidth; vw.classList.add('fade');
+}
+/* Broker-style rate strip, latched beneath the header on every view. */
+function renderFx(){
+  const el=$('#fxbar'); if(!el) return;
+  const r=state.runway.rates||{}; const base=state.profile.baseCurrency;
+  el.innerHTML='<div class="fxrow">'
+    +'<span class="fxlbl">IDR / 1</span>'
+    +['USD','TWD','AUD','EUR'].map(c=>'<span class="fxpill"><b>'+c+'</b>'+fmtNum(r[c]||0)+'</span>').join('')
+    +'<span class="fxpill gold"><b>SAVED</b>'+fmtMoney(banked(),base)+'</span>'
+    +'<span class="fxctl"><select data-action="baseCur" title="Show all totals in…">'+['USD','IDR','TWD','AUD','EUR'].map(c=>'<option '+(base===c?'selected':'')+'>'+c+'</option>').join('')+'</select>'
+    +'<button data-action="fetchFx" title="Pull live rates">↻</button></span>'
+    +(state.runway.ratesUpdated?'<span class="fxupd">upd '+esc(fmtDate(state.runway.ratesUpdated))+'</span>':'<span class="fxupd">seed rates</span>')
+    +'</div>';
 }
 function tickClock(){
   const d=new Date(); const hh=String(d.getHours()).padStart(2,'0'), mm=String(d.getMinutes()).padStart(2,'0');
@@ -1219,42 +1250,84 @@ function viewToday(){
     +'</div>';
 }
 
+/* Composite "altitude": one number computed live from the whole tracker —
+   docs 35% · money vs biggest goal 25% · best route status 25% ·
+   language habit 7.5% · check-in streak 7.5%. */
+function ascentAltitude(){
+  const dp=docProgress(); const docsP=dp.pct/100;
+  const tb=state.runway.targets.map(t=>toBase(t.amount,t.currency)).filter(x=>x>0);
+  const moneyP=tb.length?Math.min(1,banked()/Math.max(...tb)):0;
+  const ORDER={not_started:0,registered:.35,applied:.55,selected:.8,placed:1,closed:0};
+  const rp=[...state.phase1.map(p=>ORDER[p.status]||0), ...(state.customRoutes||[]).map(c=>ORDER[c.status]||0)];
+  const routeP=rp.length?Math.max(...rp):0;
+  const streaks=[...LANGS.map(l=>(state.languages[l.id]||{}).streak||0), ...(state.customLangs||[]).map(c=>c.streak||0)];
+  const langP=Math.min(1,Math.max(0,...streaks,0)/30);
+  const streakP=Math.min(1,(state.streak.count||0)/30);
+  return { alt:Math.round((docsP*.35+moneyP*.25+routeP*.25+langP*.075+streakP*.075)*100), docsP, moneyP, routeP };
+}
 function viewAscent(){
   const dp=docProgress();
   const dec=state.phase2.decision;
   const lead=state.phase1.find(p=>p.lead);
-  const cashActive=state.phase1.some(p=>p.status!=='not_started');
+  const cashActive=state.phase1.some(p=>p.status!=='not_started')||(state.customRoutes||[]).some(c=>c.status&&c.status!=='not_started');
   const na=nextAction();
   const endLive=dec!=='undecided';
-  // determine "here"
   const hereStage = dp.pct<100 ? 1 : (!cashActive ? 2 : (dec==='undecided'?2:3));
+  const A=ascentAltitude();
+  const week=state.doneLog.filter(e=>{ const d=daysBetween(e.date,todayISO()); return d!=null&&d>=0&&d<=6; }).length;
+  const up=computeCalendarItems(state).filter(i=>!i.rrule&&i.date>=todayISO()).sort((a,b)=>a.date.localeCompare(b.date))[0];
 
-  let html='<div class="panel" style="border-color:rgba(94,234,212,.28);background:linear-gradient(180deg,rgba(94,234,212,.06),var(--panel2))">'
+  // ALTITUDE — the living instrument, fed by every tab
+  let html='<div class="panel" style="border-color:rgba(246,191,82,.34)">'
+    +'<div class="between"><div><div class="eyebrow">ALTITUDE'+info('One number for your whole escape, recomputed live: documents 35% + money vs your biggest goal 25% + your furthest route 25% + language habit 7.5% + streak 7.5%. Every tab feeds it — nothing here is decoration.')+'</div>'
+    +'<div style="font-family:var(--mono);font-weight:700;font-size:34px;color:var(--amber-soft);line-height:1.1">'+A.alt+'<span style="font-size:16px;opacity:.6">%</span></div></div>'
+    +'<div style="text-align:right"><div class="k mono" style="font-size:9px;letter-spacing:.14em;color:var(--amber-faint)">CLIMB RATE</div>'
+    +'<div style="font-family:var(--mono);font-weight:700;font-size:18px;color:'+(week>0?'var(--green)':'var(--faint)')+'">'+(week>0?'+':'')+week+'<span style="font-size:11px;opacity:.7"> actions / 7d</span></div></div></div>'
+    +bar(A.alt,true)
+    +(up?'<div class="sub mt-s">⏳ Next deadline: <b>'+esc(up.title)+'</b> · '+fmtDate(up.date)+'</div>':'')
+    +'</div>';
+
+  // CURRENT THRUST + quick jumps into every system
+  html+='<div class="panel" style="border-color:rgba(94,234,212,.28);background:linear-gradient(180deg,rgba(94,234,212,.06),var(--panel2))">'
     +'<div class="eyebrow" style="color:var(--teal)">CURRENT THRUST</div>'
     +'<div style="font-family:var(--disp);font-size:20px;letter-spacing:-.015em;margin:6px 0 3px">'+esc(na.text)+'</div>'
-    +'<div class="sub">'+esc(na.via)+'</div></div>';
+    +'<div class="sub">'+esc(na.via)+'</div>'
+    +'<div class="btn-row mt">'
+      +[['docs','📄 Docs'],['routes','🛫 Routes'],['money','💰 Money'],['languages','🗣 Languages'],['log','✅ Log']].map(x=>'<button class="btn ghost sm" data-action="nav" data-view="'+x[0]+'">'+x[1]+'</button>').join('')
+    +'</div></div>';
 
   html+='<div class="rail-wrap"><div class="rail-line"></div>';
-  // Stage 3 endgame (top)
-  html+='<div class="stage-node '+(hereStage===3?'here':(endLive?'done':''))+'"><div class="dot"></div>'
-    +'<div class="stage-lbl">STAGE 3 · ENDGAME'+(hereStage===3?' — YOU ARE HERE':'')+'</div>'
+  // Stage 3 endgame (top) — tap to open Routes
+  const endSub = dec==='australia'
+    ? 'Chosen: Australia · A$'+fmtNum(+state.phase2.australia.savedAUD||0)+' / 5,000 buffer · '+(monthsUntil(ageCapDate(state.profile.birthDate))||'—')+' mo to the age cap.'
+    : dec==='germany'
+      ? 'Chosen: Germany · German '+esc(state.languages.german.level||'A0')+' → B1.'
+      : 'Undecided — pick when the cash is flowing.';
+  html+='<div class="stage-node '+(hereStage===3?'here':(endLive?'done':''))+'" data-action="nav" data-view="routes" style="cursor:pointer"><div class="dot"></div>'
+    +'<div class="stage-lbl">STAGE 3 · ENDGAME'+(hereStage===3?' — YOU ARE HERE':'')+' <span class="faint">↗</span></div>'
     +'<div style="font-family:var(--disp);font-size:17px;margin:3px 0 7px">Citizenship</div>'
     +'<div class="row wrap" style="gap:7px">'
       +'<span class="chip small">🇩🇪 Germany · B1</span><span class="chip small">🇦🇺 Australia · EN</span></div>'
-    +'<div class="sub mt-s">'+({undecided:'Undecided — pick when the cash is flowing.',germany:'Chosen: Germany (Ausbildung).',australia:'Chosen: Australia (WHV 462).'}[dec])+'</div></div>';
-  // Stage 2 cash
-  html+='<div class="stage-node '+(hereStage===2?'here':(cashActive?'done':''))+'"><div class="dot"></div>'
-    +'<div class="stage-lbl">STAGE 2 · CASH BRIDGE'+(hereStage===2?' — YOU ARE HERE':'')+'</div>'
+    +'<div class="sub mt-s">'+endSub+'</div></div>';
+  // Stage 2 cash — live statuses incl. AI-added countries
+  const crN=(state.customRoutes||[]).length;
+  html+='<div class="stage-node '+(hereStage===2?'here':(cashActive?'done':''))+'" data-action="nav" data-view="routes" style="cursor:pointer"><div class="dot"></div>'
+    +'<div class="stage-lbl">STAGE 2 · CASH BRIDGE'+(hereStage===2?' — YOU ARE HERE':'')+' <span class="faint">↗</span></div>'
     +'<div style="font-family:var(--disp);font-size:17px;margin:3px 0 7px">Earn hard currency</div>'
     +'<div class="item" style="margin-top:0"><div class="between"><span style="font-weight:600">🛫 '+esc((lead&&lead.label)||'Taiwan SP2T')+'</span>'
-      +'<span class="badge '+(lead&&lead.status!=='not_started'?'live':'')+'">'+esc(STATUS_LABELS[(lead&&lead.status)||'not_started'])+'</span></div>'
-      +'<div class="row wrap mt-s" style="gap:6px"><span class="chip small">🇰🇷 Korea · EPS</span><span class="chip small">🇯🇵 Japan · SSW</span></div></div></div>';
-  // Stage 1 ground
-  html+='<div class="stage-node '+(hereStage===1?'here':'')+' '+(dp.pct>=100?'done':'')+'"><div class="dot"></div>'
-    +'<div class="stage-lbl">STAGE 1 · GROUND — '+dp.pct+'%</div>'
+      +statusBadge((lead&&lead.status)||'not_started')+'</div>'
+      +(lead&&lead.waveWindow?'<div class="sub mt-s">🌊 '+esc(lead.waveWindow)+'</div>':'')
+      +'<div class="row wrap mt-s" style="gap:6px">'
+        +state.phase1.filter(p=>!p.lead).map(p=>'<span class="chip small">'+esc(p.label)+' · '+esc(STATUS_LABELS[p.status]||p.status)+'</span>').join('')
+        +(crN?'<span class="chip small" style="border-color:rgba(196,181,253,.4);color:var(--violet)">+'+crN+' AI route'+(crN>1?'s':'')+'</span>':'')
+      +'</div></div></div>';
+  // Stage 1 ground — tap to open Docs
+  const nextDoc=state.documents.find(d=>d.status!=='done');
+  html+='<div class="stage-node '+(hereStage===1?'here':'')+' '+(dp.pct>=100?'done':'')+'" data-action="nav" data-view="docs" style="cursor:pointer"><div class="dot"></div>'
+    +'<div class="stage-lbl">STAGE 1 · GROUND — '+dp.pct+'% <span class="faint">↗</span></div>'
     +'<div style="font-family:var(--disp);font-size:17px;margin:3px 0 6px">Documents · '+dp.done+' of '+dp.total+'</div>'
     +'<div style="max-width:220px">'+bar(dp.pct)+'</div>'
-    +'<div class="sub mt-s"><button class="btn ghost sm" data-action="nav" data-view="docs">Open the gate →</button></div></div>';
+    +(nextDoc?'<div class="sub mt-s">Next up: <b>'+esc(nextDoc.label)+'</b></div>':'<div class="sub mt-s">✓ Gate cleared.</div>')+'</div>';
   html+='</div>';
 
   html+='<div class="panel mt"><div class="between"><div><div class="k mono" style="font-size:9px;letter-spacing:.14em;color:var(--amber-faint)">FUEL BANKED</div>'
@@ -1551,9 +1624,9 @@ function viewTailwinds(){
 }
 
 function viewLanguages(){
-  let html='<div class="panel"><h2 style="font-size:20px">Languages'+info('Replaces the old “German-only” tab. Korean (for Korea/EPS), Japanese (for Japan/SSW) and German (for Germany/Ausbildung) are equals here. Each stays dormant until you actually take that route.')+'</h2><div class="sub">Each wakes with its route — none is “the” language until a route needs it.</div></div>';
+  let html='<div class="panel"><h2 style="font-size:20px">Languages'+info('Korean (Korea/EPS), Japanese (Japan/SSW) and German (Germany/Ausbildung) wake with their routes — and you can add ANY other language below. Levels are free-form: pick a suggestion or type your own scale.')+'</h2><div class="sub">Route languages wake automatically — and you can add your own. Your levels, your rules.</div></div>';
   const anyLive=LANGS.some(l=>langActive(l)==='live');
-  if(!anyLive) html+='<div class="note mb">No language is required yet — your lead route (Taiwan) is language-free. Pick a route that needs one and it goes live here.</div>';
+  if(!anyLive && !(state.customLangs||[]).length) html+='<div class="note mb">No language is required yet — your lead route (Taiwan) is language-free. Pick a route that needs one, or add any language you want below.</div>';
   LANGS.forEach(l=>{
     const d=state.languages[l.id]; const act=langActive(l);
     const didToday=d.lastDay===todayISO();
@@ -1561,14 +1634,33 @@ function viewLanguages(){
     html+='<div class="langcard'+(act==='live'?' live':'')+'">'
       +'<div class="between"><div class="row" style="gap:10px"><span class="flag">'+l.flag+'</span><div><div style="font-weight:600">'+l.label+' <span class="faint small">· '+esc(l.routeName)+'</span></div>'
         +'<div class="faint small">target: '+esc(l.target)+' · 🔥 '+(d.streak||0)+'-day streak</div></div></div>'+badge+'</div>'
-      +'<div class="grid2 mt"><div class="field"><label>Level</label><select data-action="langLevel" data-lang="'+l.id+'">'
-        +l.levels.map(v=>'<option '+(d.level===v?'selected':'')+'>'+v+'</option>').join('')+'</select></div>'
+      +'<div class="grid2 mt"><div class="field"><label>Level'+info('Free-form — pick a suggestion or type your own (e.g. “TOPIK I passed”, “conversational”).')+'</label>'
+        +'<input list="lvl-'+l.id+'" data-action="langLevel" data-lang="'+l.id+'" value="'+esc(d.level||'')+'" placeholder="e.g. '+esc(l.levels[1]||'Studying')+'">'
+        +'<datalist id="lvl-'+l.id+'">'+l.levels.map(v=>'<option value="'+esc(v)+'">').join('')+'</datalist></div>'
       +'<div class="field"><label></label><button class="btn '+(didToday?'ghost':'primary')+' block sm" style="margin-top:22px" data-action="langToday" data-lang="'+l.id+'" '+(didToday?'disabled':'')+'>'+(didToday?'✓ done today':'I studied today')+'</button></div></div>'
       +'<div class="copywrap mt-s"><input id="lesson-'+l.id+'" placeholder="Log a lesson (e.g. Nicos Weg A1-3)"><button class="btn ghost sm" data-action="langLesson" data-lang="'+l.id+'">Log</button>'
         +'<a class="btn ghost sm" href="'+esc(l.res.url)+'" target="_blank" rel="noopener">'+esc(l.res.label)+' ↗</a></div>'
       +(d.lessons&&d.lessons.length?'<div class="mt-s">'+d.lessons.slice(0,4).map(x=>'<div class="faint small" style="padding:3px 0">· '+esc(x.text)+' <span style="opacity:.6">'+fmtDate(x.date)+'</span></div>').join('')+'</div>':'')
       +'</div>';
   });
+  // Your own languages — always live (you added them on purpose)
+  (state.customLangs||[]).forEach(c=>{
+    const didToday=c.lastDay===todayISO();
+    html+='<div class="langcard live">'
+      +'<div class="between"><div class="row" style="gap:10px"><span class="flag">🌐</span><div><div style="font-weight:600">'+esc(c.label)+' <span class="faint small">· yours</span></div>'
+        +'<div class="faint small">'+(c.target?'target: '+esc(c.target)+' · ':'')+'🔥 '+(c.streak||0)+'-day streak</div></div></div>'
+      +'<span class="badge live">● LIVE</span></div>'
+      +'<div class="grid2 mt"><div class="field"><label>Level</label><input data-action="clLevel" data-id="'+c.id+'" value="'+esc(c.level||'')+'" placeholder="your scale, your words"></div>'
+      +'<div class="field"><label>Target</label><input data-action="clTarget" data-id="'+c.id+'" value="'+esc(c.target||'')+'" placeholder="e.g. conversational by Dec"></div></div>'
+      +'<div class="btn-row mt-s"><button class="btn '+(didToday?'ghost':'primary')+' sm" data-action="clToday" data-id="'+c.id+'" '+(didToday?'disabled':'')+'>'+(didToday?'✓ done today':'I studied today')+'</button>'
+      +'<button class="btn ghost sm danger" data-action="clRemove" data-id="'+c.id+'">Remove</button></div>'
+      +'<div class="copywrap mt-s"><input id="clesson-'+c.id+'" placeholder="Log a lesson"><button class="btn ghost sm" data-action="clLesson" data-id="'+c.id+'">Log</button></div>'
+      +(c.lessons&&c.lessons.length?'<div class="mt-s">'+c.lessons.slice(0,4).map(x=>'<div class="faint small" style="padding:3px 0">· '+esc(x.text)+' <span style="opacity:.6">'+fmtDate(x.date)+'</span></div>').join('')+'</div>':'')
+      +'</div>';
+  });
+  // Add any language
+  html+='<div class="panel mt"><h3 style="font-size:15px">＋ Add a language</h3><div class="sub">Arabic for the Gulf, Mandarin for Taiwan shifts, anything — with your own level scale.</div>'
+    +'<div class="copywrap mt-s"><input id="newLangName" placeholder="e.g. Arabic"><input id="newLangTarget" placeholder="Target (optional)" style="max-width:160px"><button class="btn primary sm" data-action="langAdd">Add</button></div></div>';
   return html;
 }
 
@@ -1665,7 +1757,7 @@ function viewSettings(){
     +'<button class="btn ghost sm" data-action="exportJson">⬇ Export</button><button class="btn ghost sm" data-action="importJson">⬆ Import</button>'
     +'<button class="btn ghost sm" data-action="resetAll" style="color:var(--red)">Reset</button></div>'
     +'<div class="sub mt-s">Cached on this device for offline use, and synced privately to your passphrase-locked vault.</div></div>';
-  html+='<div class="center small faint" style="padding:10px">Escape Pipeline · Departures edition · v3.1 (AI)</div>';
+  html+='<div class="center small faint" style="padding:10px">Escape Pipeline · Departures edition · v3.2</div>';
   return html;
 }
 
@@ -1717,6 +1809,12 @@ document.addEventListener('click', async (e)=>{
     case 'fetchFx': toast('Fetching rates…'); try{ await fetchRates(); toast('Rates updated ✓'); }catch(err){ toast('Offline — kept saved rates','err'); } break;
     case 'langToday': { const L=state.languages[lang]; const tISO=todayISO(); mutate(s=>{ const x=s.languages[lang]; const gap=x.lastDay?daysBetween(x.lastDay,tISO):null; x.streak=(gap===1)?x.streak+1:1; x.lastDay=tISO; }); const meta=LANGS.find(m=>m.id===lang); addDone('Studied '+(meta?meta.label:lang)+' (streak '+state.languages[lang].streak+')','languages'); toast('🔥 '+(meta?meta.label:'')+' streak '+state.languages[lang].streak); break; }
     case 'langLesson': { const el=$('#lesson-'+lang); const v=el?el.value.trim():''; if(v){ mutate(s=>{ s.languages[lang].lessons.unshift({date:todayISO(),text:v}); }); const meta=LANGS.find(m=>m.id===lang); addDone((meta?meta.label:lang)+' lesson: '+v,'languages'); } break; }
+    case 'langAdd': { const n=$('#newLangName').value.trim(); const tg=$('#newLangTarget').value.trim();
+      if(n){ mutate(s=>{ (s.customLangs=s.customLangs||[]).push({ id:uid(), label:n.slice(0,30), target:tg.slice(0,60), level:'', streak:0, lastDay:null, lessons:[] }); }); toast('＋ '+n+' added'); } break; }
+    case 'clRemove': { const c=(state.customLangs||[]).find(x=>x.id===id); if(c && confirm('Remove '+c.label+'? Its streak and lessons go too.')){ mutate(s=>{ s.customLangs=(s.customLangs||[]).filter(x=>x.id!==id); }); } break; }
+    case 'clToday': { const tISO=todayISO(); mutate(s=>{ const c=(s.customLangs||[]).find(x=>x.id===id); if(c){ const gap=c.lastDay?daysBetween(c.lastDay,tISO):null; c.streak=(gap===1)?c.streak+1:1; c.lastDay=tISO; } });
+      const c=(state.customLangs||[]).find(x=>x.id===id); if(c){ addDone('Studied '+c.label+' (streak '+c.streak+')','languages'); toast('🔥 '+c.label+' streak '+c.streak); } break; }
+    case 'clLesson': { const el=$('#clesson-'+id); const v=el?el.value.trim():''; if(v){ mutate(s=>{ const c=(s.customLangs||[]).find(x=>x.id===id); if(c) c.lessons.unshift({date:todayISO(),text:v}); }); const c=(state.customLangs||[]).find(x=>x.id===id); if(c) addDone(c.label+' lesson: '+v,'languages'); } break; }
     case 'addDoneManual': { const v=$('#doneText').value.trim(); if(v) addDone(v,'manual'); break; }
     case 'delDone': mutate(s=>{ s.doneLog=s.doneLog.filter(x=>x.id!==id); }); break;
     case 'clearLog': if(confirm('Clear the whole log? (Your other data stays.)')){ mutate(s=>{ s.doneLog=[]; }); toast('Log cleared'); } break;
@@ -1777,6 +1875,8 @@ document.addEventListener('change', (e)=>{
     case 'aiModel': setSilent(s=>{ (s.settings.ai=s.settings.ai||{}).model=v; }); toast('AI model: '+v); break;
     case 'aiEffort': setSilent(s=>{ (s.settings.ai=s.settings.ai||{}).effort=v; }); break;
     case 'aiContext': setSilent(s=>{ s.settings.aiContext=v; }); break;
+    case 'clLevel': setSilent(s=>{ const c=(s.customLangs||[]).find(x=>x.id===id); if(c) c.level=v; }); break;
+    case 'clTarget': setSilent(s=>{ const c=(s.customLangs||[]).find(x=>x.id===id); if(c) c.target=v; }); break;
     case 'toggleDailyReminder': mutate(s=>{ s.settings.dailyReminder=t.checked; }); break;
     case 'setReminderTime': setSilent(s=>{ s.settings.reminderTime=v; }); maybeNotify(); break;
     case 'savedFrom': _savedFrom=v; render(); break;
@@ -1977,6 +2077,7 @@ function revealApp(){
   if(g) g.classList.add('hide'); if(app) app.style.display=''; if(tb) tb.style.display='';
   render(); tickClock();
   loadFeed(false).catch(()=>{});
+  if(state.runway.ratesUpdated!==todayISO()) fetchRates().catch(()=>{}); // keep the ticker fresh, silently
   maybeNotify();
   openGuide(false);
 }
