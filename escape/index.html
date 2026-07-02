@@ -101,7 +101,10 @@ textarea{resize:vertical;min-height:60px}
 .btn.ghost{background:transparent}
 .btn.sm{padding:7px 11px;font-size:12px;border-radius:8px}
 .btn.block{width:100%}.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.danger{color:#ffb3c0;border-color:rgba(251,113,133,.35)}
 .btn-row{display:flex;gap:8px;flex-wrap:wrap}
+.sub.amber{color:var(--amber-soft)}
+code{font-family:var(--mono);font-size:11px;background:rgba(0,0,0,.35);padding:1px 5px;border-radius:4px;border:1px solid var(--line)}
 
 .statstrip{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .statcell{border:1px solid var(--line);border-radius:var(--radius-sm);padding:11px 12px;background:rgba(255,255,255,.02)}
@@ -150,6 +153,21 @@ textarea{resize:vertical;min-height:60px}
 .seg{display:flex;gap:6px;background:rgba(0,0,0,.3);padding:5px;border-radius:11px;border:1px solid var(--line)}
 .seg button{flex:1;padding:9px;border-radius:8px;font-weight:600;font-size:13px;color:var(--muted)}
 .seg button.on{background:linear-gradient(180deg,var(--amber-soft),var(--amber));color:#2a1c05}
+.seg.sm{padding:3px;gap:4px}
+.seg.sm button{padding:6px;font-size:12px}
+
+/* Board calendar month grid */
+.calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:4px}
+.calh{text-align:center;font-family:var(--mono);font-size:10px;color:var(--muted);padding:2px 0;letter-spacing:.05em}
+.calcell{position:relative;aspect-ratio:1/1;display:flex;align-items:flex-start;justify-content:flex-start;border:1px solid var(--line);border-radius:6px;background:rgba(0,0,0,.18);min-height:30px}
+.calcell.empty{border-color:transparent;background:transparent}
+.calcell .cald{font-family:var(--mono);font-size:11px;color:var(--muted);padding:3px 0 0 4px}
+.calcell.past .cald{opacity:.4}
+.calcell.today{border-color:var(--amber);box-shadow:inset 0 0 0 1px var(--amber)}
+.calcell.today .cald{color:var(--amber-soft);font-weight:700}
+.calcell.has{background:rgba(246,191,82,.1);border-color:rgba(246,191,82,.4)}
+.calcell .caldot{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:var(--amber)}
+.callegend{margin-top:8px;border-top:1px solid var(--line);padding-top:4px}
 
 /* Ascent rail */
 .rail-wrap{position:relative;padding-left:44px;margin-top:8px}
@@ -377,7 +395,7 @@ function defaults(){
   return {
     v:1, _ts:0, _syncedTs:0,
     profile:{ name:'Amuh', birthDate:'1999-10-15', baseCurrency:'USD' },
-    nextActionOverride:'',
+    nextActionOverride:'', nextActionVia:'',
     streak:{ count:0, lastCheckIn:null, anchorLabel:'After Subuh' },
     documents:[
       { id:'passport', label:'Passport', status:'not_started', critical:true, expiry:'', notes:'', driveLink:'' },
@@ -423,6 +441,7 @@ function defaults(){
     },
     doneLog:[],
     saved:[],
+    customRoutes:[],
     why:{
       reasons:[
         'The rupiah keeps shrinking — my hours are worth more abroad.',
@@ -530,6 +549,90 @@ async function vaultPull(){
     if(j.data && (j.data._ts||0) > (state._ts||0)){ state=deepMerge(defaults(), j.data); migrate(); saveLocal(); render(); return 'pulled'; } }
   return 'local-newer';
 }
+/* AI brain — calls /api/ai (Claude + web search), gated by the passphrase. */
+async function aiCall(action, extra){
+  const r=await fetch('/api/ai',{ method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({ pass:_pass, action, ...(extra||{}) }) });
+  const t=await r.text(); let j=null; try{ j=t?JSON.parse(t):null; }catch(e){}
+  if(!r.ok) throw new Error((j&&j.error)||({404:'AI backend not live here — it works on dhiya.id/escape once deployed.',504:'The research took too long — tap again to retry.'}[r.status]||('AI error '+r.status)));
+  return j;
+}
+function aiStateSummary(){
+  const dp=docProgress();
+  const lines=[];
+  lines.push('Documents: '+dp.done+'/'+dp.total+' done'+(state.documents.find(d=>d.id==='passport'&&d.status!=='done')?' (passport NOT done — the gate)':''));
+  lines.push('Cash routes: '+state.phase1.map(p=>p.label+'='+STATUS_LABELS[p.status]).join(', '));
+  lines.push('Endgame decision: '+state.phase2.decision);
+  lines.push('Money saved: '+fmtMoney(banked(),state.profile.baseCurrency));
+  const cap=ageCapDate(state.profile.birthDate); const mU=monthsUntil(cap);
+  if(mU!=null) lines.push('Australia age-cap: '+mU+' months to 31');
+  lines.push('Streak: '+state.streak.count+' days');
+  const up=computeCalendarItems(state).filter(i=>!i.rrule).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,3);
+  if(up.length) lines.push('Next deadlines: '+up.map(i=>i.title+' ('+i.date+')').join('; '));
+  if((state.customRoutes||[]).length) lines.push('Countries he is exploring (AI-researched): '+state.customRoutes.map(c=>c.name+'='+(STATUS_LABELS[c.status]||c.status||'?')).join(', '));
+  lines.push('He can only do labor work (no credentials).');
+  return lines.join('\n');
+}
+/* Research a country via AI and file it into state.customRoutes.
+   existingId set => refresh that route in place; otherwise add a new one. */
+async function aiAddCountry(name, existingId, btnEl){
+  const msg=$('#aiCountryMsg'); const btn=btnEl||$('[data-action="aiAddCountry"]');
+  const oldTxt=btn?btn.textContent:'';
+  const setMsg=(txt,cls)=>{ if(msg){ msg.textContent=txt; msg.className='sub mt-s'+(cls?' '+cls:''); } };
+  if(btn){ btn.disabled=true; btn.textContent='… searching'; }
+  setMsg('🔎 Searching the live web for '+name+'… this can take ~20s.');
+  try{
+    const j=await aiCall('country',{ country:name });
+    const d=j.data||{};
+    mutate(s=>{
+      s.customRoutes=s.customRoutes||[];
+      const route={
+        id: existingId||uid(),
+        name: (d.name||name).toString().toUpperCase().slice(0,40),
+        tag: d.tag||'AI route', langLabel: d.langLabel||'—', langNote: d.langNote||'',
+        status: (existingId&&(s.customRoutes.find(x=>x.id===existingId)||{}).status)||'not_started',
+        next: d.next||'', pay: d.pay||'', timeline: d.timeline||'',
+        laborEligible: (typeof d.laborEligible==='boolean')?d.laborEligible:null,
+        ageCap: d.ageCap||'', why: d.why||'', risk: d.risk||'', link: d.link||'',
+        addedAt: Date.now()
+      };
+      if(existingId){ const i=s.customRoutes.findIndex(x=>x.id===existingId); if(i>=0) s.customRoutes[i]=route; else s.customRoutes.unshift(route); }
+      else { s.customRoutes.unshift(route); }
+    });
+    const el=$('#aiCountryInput'); if(el && !existingId) el.value='';
+    toast('✓ '+(d.name||name)+' researched & added','ok');
+  }catch(err){
+    setMsg('⚠ '+(err.message||'AI failed'),'amber');
+    if(btn){ btn.disabled=false; btn.textContent=oldTxt||'🔎 Research'; }
+  }
+}
+/* AI picks one concrete next move and sets it as the focus action. */
+async function aiNextMove(btn){
+  const old=btn?btn.textContent:''; if(btn){ btn.disabled=true; btn.textContent='… thinking'; }
+  try{
+    const j=await aiCall('next',{ context:aiStateSummary() });
+    const d=j.data||{};
+    if(!d.text) throw new Error('No suggestion');
+    mutate(s=>{ s.nextActionOverride=String(d.text).slice(0,140); s.nextActionVia=d.why?('✨ '+String(d.why).slice(0,160)):'✨ Picked by your AI coach'; });
+    toast(d.why?('✨ '+d.why):'✨ Next move set','ok');
+    setView('today');
+  }catch(err){
+    toast('⚠ '+(err.message||'AI failed'),'err');
+    if(btn){ btn.disabled=false; btn.textContent=old; }
+  }
+}
+/* Settings: quick connectivity check for the Claude key. */
+async function aiTest(btn){
+  const old=btn?btn.textContent:''; if(btn){ btn.disabled=true; btn.textContent='… testing'; }
+  try{
+    await aiCall('next',{ context:'(connectivity test — any tiny generic step will do)' });
+    toast('✓ AI is connected and working','ok');
+  }catch(err){
+    toast('⚠ '+(err.message||'Not connected'),'err');
+  }finally{
+    if(btn){ btn.disabled=false; btn.textContent=old; }
+  }
+}
 
 /* -------------------------------- helpers -------------------------------- */
 const $ = (s,r=document)=>r.querySelector(s);
@@ -580,7 +683,7 @@ function checkIn(){
 /* --------------------------- one next action ----------------------------- */
 function nextAction(){
   const s=state;
-  if((s.nextActionOverride||'').trim()) return { text:s.nextActionOverride.trim(), view:'board', via:'Your custom focus', custom:true };
+  if((s.nextActionOverride||'').trim()) return { text:s.nextActionOverride.trim(), view:'board', via:(s.nextActionVia||'Your custom focus'), custom:true };
   const pass=s.documents.find(d=>d.id==='passport');
   if(pass && pass.status!=='done') return { text:'Apply for your passport', via:'via M-Paspor — the gate that unlocks every route', view:'docs' };
   const prog=s.documents.find(d=>d.status==='in_progress');
@@ -871,6 +974,10 @@ function routeFlights(){
   const cap=ageCapDate(state.profile.birthDate); const mU=monthsUntil(cap);
   flights.push({ kind:'end', id:'australia', name:'AUSTRALIA', tag:'WHV 462 · endgame', lang:{t:'🇬🇧 EN',c:'--teal'},
     status: dec==='australia'?{t:'BOARDING',c:'st-boarding'}:(mU!=null&&mU<=18?{t:'GATE 31',c:'st-gate'}:{t:'SCHEDULED',c:'st-scheduled'}), next:'AUD 5k → apply before 31' });
+  (state.customRoutes||[]).forEach(c=>{
+    flights.push({ kind:'custom', id:c.id, name:c.name||'?', tag:c.tag||'AI route',
+      lang:{t:c.langLabel||'—',c:'--violet'}, status:statusToFlight(c.status||'not_started'), next:c.next||'' });
+  });
   return flights;
 }
 function statusToFlight(s){
@@ -905,6 +1012,7 @@ function viewBoard(){
     +'<div class="act">'+esc(na.text)+'</div>'
     +'<div class="via">'+esc(na.via)+'</div>'
     +'<div class="btn-row mt"><button class="btn primary mono" data-action="nav" data-view="'+na.view+'">CHECK IN →</button>'
+      +(_unlocked?'<button class="btn ghost sm" data-action="aiNext">✨ AI pick</button>':'')
       +'<button class="btn ghost sm" data-action="editNA">✎ set my own</button></div>'
     +'<div id="naEdit" style="display:none;margin-top:10px"><input id="naInput" placeholder="Type your one move…" value="'+esc(state.nextActionOverride)+'">'
       +'<div class="btn-row mt-s"><button class="btn primary sm" data-action="saveNA">Save</button><button class="btn ghost sm" data-action="clearNA">Auto</button></div></div>'
@@ -932,10 +1040,14 @@ function viewBoard(){
   } else {
     agRows='<div class="empty">No dated deadlines yet.<br>Add an expiry in <b>Docs</b>, or a wave date in <b>Routes</b>, and it shows here.</div>';
   }
+  const calToggle='<div class="seg sm" style="margin:10px 0 4px">'
+    +'<button data-action="calMode" data-m="agenda" class="'+(_calMode==='agenda'?'on':'')+'">Agenda</button>'
+    +'<button data-action="calMode" data-m="month" class="'+(_calMode==='month'?'on':'')+'">Month</button></div>';
+  const calBody = _calMode==='month' ? calMonthGridHTML(agItems) : agRows;
   const cal='<div class="panel"><div class="between"><div style="font-weight:600">🗓 Your calendar'
     +info('Your deadlines, right here in the app. This is the same list as the “'+CFG.CAL_NAME+'” Google calendar — sync it in Settings and these show in your phone’s calendar too, so you never have to leave.')+'</div>'
     +'<button class="btn ghost sm" data-action="nav" data-view="settings">Sync ↗</button></div>'
-    +agRows
+    +calToggle+calBody
     +'<div class="btn-row mt"><button class="btn ghost sm" data-action="downloadICS">⬇ .ics</button>'
     +'<button class="btn ghost sm" data-action="nav" data-view="settings">Push to Google →</button></div></div>';
 
@@ -944,6 +1056,44 @@ function viewBoard(){
     +'<div>'+hero+boardHtml+'</div>'
     +'<div>'+stats+checkin+cal+'</div>'
     +'</div>';
+}
+
+/* Month-grid rendering for the Board calendar. agItems: dated items sorted asc. */
+function calMonthGridHTML(agItems){
+  const anchor=_calMonth||todayISO().slice(0,7); // 'YYYY-MM'
+  const y=+anchor.slice(0,4), m=+anchor.slice(5,7)-1; // m: 0-based
+  const first=new Date(y,m,1), lead=first.getDay(), days=new Date(y,m+1,0).getDate();
+  const monthLbl=first.toLocaleDateString(undefined,{month:'long',year:'numeric'});
+  const todayIso=todayISO();
+  // items falling in this month, grouped by day-of-month
+  const byDay={};
+  agItems.forEach(i=>{ if(i.date.slice(0,7)===anchor){ const d=+i.date.slice(8,10); (byDay[d]=byDay[d]||[]).push(i); } });
+  let head='<div class="between" style="margin:8px 0 6px"><button class="btn ghost sm" data-action="calMonthNav" data-d="-1">‹</button>'
+    +'<div style="font-family:var(--mono);font-weight:700;font-size:13px;letter-spacing:.04em">'+monthLbl.toUpperCase()+'</div>'
+    +'<button class="btn ghost sm" data-action="calMonthNav" data-d="1">›</button></div>';
+  let grid='<div class="calgrid">'
+    +['S','M','T','W','T','F','S'].map(d=>'<div class="calh">'+d+'</div>').join('');
+  for(let k=0;k<lead;k++) grid+='<div class="calcell empty"></div>';
+  for(let d=1;d<=days;d++){
+    const iso=anchor+'-'+String(d).padStart(2,'0');
+    const has=byDay[d]; const isToday=iso===todayIso;
+    const past=iso<todayIso;
+    grid+='<div class="calcell'+(has?' has':'')+(isToday?' today':'')+(past&&!isToday?' past':'')+'" '+(has?'title="'+esc(has.map(x=>x.title).join(' · '))+'"':'')+'>'
+      +'<span class="cald">'+d+'</span>'+(has?'<span class="caldot"></span>':'')+'</div>';
+  }
+  grid+='</div>';
+  // legend: only for this month's items
+  const legItems=agItems.filter(i=>i.date.slice(0,7)===anchor);
+  let legend='';
+  if(legItems.length){
+    legend='<div class="callegend">'+legItems.map(i=>{ const dl=daysBetween(todayISO(),i.date);
+      const cls=dl!=null&&dl<0?'crit':(dl!=null&&dl<=30?'warn':'');
+      return '<div class="between" style="padding:5px 0"><span style="font-size:12.5px"><b style="font-family:var(--mono);color:var(--amber-soft)">'+(+i.date.slice(8,10))+'</b> · '+esc(i.title)+'</span><span class="badge '+cls+'" style="font-size:10px">'+fmtDate(i.date)+'</span></div>';
+    }).join('')+'</div>';
+  } else {
+    legend='<div class="empty" style="padding:12px">Nothing dated in '+esc(monthLbl)+'.</div>';
+  }
+  return head+grid+legend;
 }
 
 function viewToday(){
@@ -963,6 +1113,7 @@ function viewToday(){
       +'<div class="via" style="max-width:260px;margin:0 auto">'+esc(na.via)+'</div>'
       +'<button class="btn primary block mono mt" style="padding:14px" data-action="nav" data-view="'+na.view+'">DO IT NOW →</button>'
       +'<button class="btn ghost block sm mt-s" data-action="checkin" '+(checkedToday?'disabled':'')+'>'+(checkedToday?'✓ I did it — see you tomorrow':'✓ I showed up today')+'</button>'
+      +(_unlocked?'<button class="btn ghost block sm mt-s" data-action="aiNext">✨ Not sure? Let the AI pick my move</button>':'')
     +'</div>'
     +'<div class="panel" style="margin-top:16px"><div class="statstrip">'
       +'<div class="statcell center"><div class="v" style="font-size:16px">'+dp.done+'/'+dp.total+'</div><div class="k" style="letter-spacing:.1em">DOCS</div></div>'
@@ -1110,6 +1261,36 @@ function viewRoutes(){
       +'<div class="field mt"><label>WHV → PR notes</label><textarea data-action="whvNotes" placeholder="Regional work, sponsors, skills assessment…">'+esc(a.whvNotes||'')+'</textarea></div>';
   }
   html+='</div>';
+
+  // EXPLORE A NEW COUNTRY — AI research
+  html+='<div class="eyebrow" style="padding:14px 2px 8px">EXPLORE — ADD ANY COUNTRY</div>';
+  html+='<div class="panel">'
+    +'<div class="sub">Type a country. The AI'+info('Uses your own Claude API key (set once in Settings). It searches the live web for the real 2026 labour route, pay, language, age cap and next step — then files it here and on the Board.')+' searches the live web and files its real 2026 labour route, pay and next step here + on the Board.</div>'
+    +'<div class="copywrap mt"><input id="aiCountryInput" placeholder="e.g. Oman, Poland, Canada…" autocomplete="off"><button class="btn primary sm" data-action="aiAddCountry">🔎 Research</button></div>'
+    +'<div id="aiCountryMsg" class="sub mt-s" style="min-height:0"></div>';
+  const cr=state.customRoutes||[];
+  if(cr.length){
+    html+='<div class="divider"></div>';
+    cr.forEach(c=>{
+      const badge = c.laborEligible===false
+        ? '<span class="badge crit">needs skills</span>'
+        : (c.laborEligible===true ? '<span class="badge live">labour-OK</span>' : '');
+      html+='<details class="item row-x"><summary class="between"><span class="title">'+esc(c.name||'?')+' '+badge+statusBadge(c.status||'not_started')+'</span><span class="chev">▾</span></summary>'
+        +'<div class="sub mt-s">'+esc(c.tag||'')+(c.langLabel?' · '+esc(c.langLabel):'')+(c.pay?' · '+esc(c.pay):'')+'</div>'
+        +'<div class="row-body">'
+        +(c.why?'<div class="note mt-s">'+esc(c.why)+'</div>':'')
+        +(c.timeline?'<div class="sub mt-s">🗓 '+esc(c.timeline)+'</div>':'')
+        +(c.ageCap?'<div class="sub mt-s">⏳ '+esc(c.ageCap)+'</div>':'')
+        +(c.risk?'<div class="note amber mt-s">⚠ '+esc(c.risk)+'</div>':'')
+        +'<div class="grid2 mt"><div class="field"><label>Status</label><select data-action="crStatus" data-id="'+c.id+'">'
+          +opts.map(s=>'<option value="'+s+'" '+((c.status||'not_started')===s?'selected':'')+'>'+STATUS_LABELS[s]+'</option>').join('')+'</select></div>'
+        +'<div class="field"><label>Next step</label><input data-action="crNext" data-id="'+c.id+'" value="'+esc(c.next||'')+'"></div></div>'
+        +'<div class="btn-row">'+(c.link?'<a class="btn ghost sm" href="'+esc(c.link)+'" target="_blank" rel="noopener">Official site ↗</a>':'')
+          +'<button class="btn ghost sm" data-action="crRefresh" data-id="'+c.id+'">↻ Re-research</button>'
+          +'<button class="btn ghost sm danger" data-action="crRemove" data-id="'+c.id+'">Remove</button></div></div></details>';
+    });
+  }
+  html+='</div>';
   return html;
 }
 
@@ -1146,7 +1327,7 @@ function viewMoney(){
   html+='<details class="panel"><summary style="cursor:pointer;font-weight:600;font-size:14px">⚙ Currency &amp; exchange rates'+info('Only matters if you save in several currencies. Sets how many rupiah each is worth so totals add up. Safe to ignore — pull live rates with one tap if you ever need it.')+'</summary>'
     +'<div class="mt"><div class="between"><span class="sub">IDR per 1 unit · '+(state.runway.ratesUpdated?'updated '+fmtDate(state.runway.ratesUpdated):'seed values')+'</span><button class="btn ghost sm" data-action="fetchFx">↻ live rates</button></div>'
     +'<div class="grid2 mt">'+['USD','TWD','AUD','EUR'].map(c=>'<div class="field"><label>'+c+'</label><input type="number" data-action="rate" data-cur="'+c+'" value="'+(state.runway.rates[c]||0)+'"></div>').join('')+'</div>'
-    +'<div class="field mt"><label>Show totals in</label><select data-action="baseCur">'+['USD','IDR','AUD','EUR'].map(c=>'<option '+(base===c?'selected':'')+'>'+c+'</option>').join('')+'</select></div></div></details>';
+    +'<div class="field mt"><label>Show totals in</label><select data-action="baseCur">'+['USD','IDR','TWD','AUD','EUR'].map(c=>'<option '+(base===c?'selected':'')+'>'+c+'</option>').join('')+'</select></div></div></details>';
   return html;
 }
 
@@ -1168,6 +1349,7 @@ const FEED_CATALOG={
 };
 let _feed=null, _feedTs=0, _feedFilter='all', _feedLoading=false;
 let _twMode='latest', _savedFilter='all', _savedSort='new', _savedFrom='', _savedTo='';
+let _calMode='agenda', _calMonth=null; // _calMonth: 'YYYY-MM' anchor for the month grid
 try{ const c=JSON.parse(localStorage.getItem('escapeFeed')||'null'); if(c){ _feed=c.data; _feedTs=c.ts||0; } }catch(e){}
 function timeAgo(s){
   const t=s?Date.parse(s):0; if(!t) return '';
@@ -1304,6 +1486,13 @@ function viewSettings(){
     +'<div class="btn-row mt"><button class="btn ghost sm" data-action="lockApp">Lock app</button>'
     +'<button class="btn ghost sm" data-action="pushCloudNow">↑ Save now</button><button class="btn ghost sm" data-action="pullCloud">↻ Sync</button></div></div>';
 
+  // AI brain (Claude key)
+  html+='<div class="panel"><h3 style="font-size:15px">🤖 AI research'+info('Powers “Research a new country” in Routes and the ✨ AI-pick next move. It runs on YOUR Claude API key, kept server-side — never in the browser — and only unlocks with your passphrase, so nobody but you can spend it.')+'</h3>'
+    +'<div class="sub">The app can research any country on the live web and pick your next move — powered by <b>your own Claude API key</b>.</div>'
+    +'<div class="note blue mt">One-time setup: in <b>Vercel → your project → Settings → Environment Variables</b>, add <code>ANTHROPIC_API_KEY</code> = your key from <b>console.anthropic.com</b>, then redeploy. The key stays on the server; the browser never sees it.</div>'
+    +'<div class="btn-row mt"><button class="btn primary sm" data-action="aiTest">Test AI connection</button>'
+    +'<a class="btn ghost sm" href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Get a key ↗</a></div></div>';
+
   // WHY (folded in)
   html+='<div class="panel"><h3 style="font-size:15px">🔥 Why (refuel here)</h3>'
     +'<div class="mt-s">'+w.map(x=>'<div class="between" style="align-items:center;gap:10px;margin-bottom:7px"><span class="small" style="width:120px">'+esc(x.place)+'</span>'
@@ -1352,7 +1541,7 @@ function viewSettings(){
     +'<button class="btn ghost sm" data-action="exportJson">⬇ Export</button><button class="btn ghost sm" data-action="importJson">⬆ Import</button>'
     +'<button class="btn ghost sm" data-action="resetAll" style="color:var(--red)">Reset</button></div>'
     +'<div class="sub mt-s">Cached on this device for offline use, and synced privately to your passphrase-locked vault.</div></div>';
-  html+='<div class="center small faint" style="padding:10px">Escape Pipeline · Departures edition · v2</div>';
+  html+='<div class="center small faint" style="padding:10px">Escape Pipeline · Departures edition · v3 (AI)</div>';
   return html;
 }
 
@@ -1369,6 +1558,8 @@ document.addEventListener('click', async (e)=>{
     case 'feedFilter': _feedFilter=t.dataset.f||'all'; renderFeed(); { const cs=$$('#view [data-action="feedFilter"]'); cs.forEach(b=>b.classList.toggle('primary', b.dataset.f===_feedFilter)); cs.forEach(b=>b.classList.toggle('ghost', b.dataset.f!==_feedFilter)); } break;
     case 'refreshFeed': loadFeed(true); toast('Refreshing…'); break;
     case 'twMode': _twMode=t.dataset.m; render(); break;
+    case 'calMode': _calMode=t.dataset.m; if(_calMode==='month'&&!_calMonth) _calMonth=todayISO().slice(0,7); render(); break;
+    case 'calMonthNav': { const base=_calMonth||todayISO().slice(0,7); const y=+base.slice(0,4), m=+base.slice(5,7)-1; const nd=new Date(y,m+(+t.dataset.d),1); _calMonth=nd.getFullYear()+'-'+String(nd.getMonth()+1).padStart(2,'0'); render(); break; }
     case 'keepArticle': { const g=(_feed&&_feed.groups||[]).find(x=>x.id===t.dataset.topic); const it=g&&g.items[+t.dataset.idx];
       if(it && !isSaved(it.link)){ mutate(s=>{ (s.saved=s.saved||[]).unshift({ id:uid(), title:it.title, link:it.link, source:it.source||'', date:it.date||'', topicId:g.id, topicLabel:g.label, flag:g.flag, note:'', savedAt:Date.now() }); }); toast('Kept ✓ — see the Saved tab'); } break; }
     case 'unsave': mutate(s=>{ s.saved=(s.saved||[]).filter(x=>x.id!==id); }); break;
@@ -1383,14 +1574,14 @@ document.addEventListener('click', async (e)=>{
     case 'focusAdd': { const el=$('#enAmt'); if(el){ el.scrollIntoView({behavior:'smooth',block:'center'}); setTimeout(()=>el.focus(),300); } break; }
     case 'checkin': checkIn(); break;
     case 'editNA': { const ed=$('#naEdit'); if(ed){ ed.style.display=ed.style.display==='none'?'block':'none'; if(ed.style.display==='block') $('#naInput').focus(); } break; }
-    case 'saveNA': setSilent(s=>{ s.nextActionOverride=$('#naInput').value.trim(); }); render(); toast('Next move set'); break;
-    case 'clearNA': mutate(s=>{ s.nextActionOverride=''; }); toast('Back to auto'); break;
+    case 'saveNA': setSilent(s=>{ s.nextActionOverride=$('#naInput').value.trim(); s.nextActionVia=''; }); render(); toast('Next move set'); break;
+    case 'clearNA': mutate(s=>{ s.nextActionOverride=''; s.nextActionVia=''; }); toast('Back to auto'); break;
     case 'downloadICS': downloadICS(); break;
     case 'toggleDoc': { const el=$('#docd-'+id); if(el){el.classList.toggle('open'); t.classList.toggle('open');} break; }
-    case 'docNextAction': { const d=state.documents.find(x=>x.id===id); mutate(s=>{ s.nextActionOverride='Finish: '+d.label; }); setView('today'); break; }
+    case 'docNextAction': { const d=state.documents.find(x=>x.id===id); mutate(s=>{ s.nextActionOverride='Finish: '+d.label; s.nextActionVia=''; }); setView('today'); break; }
     case 'docUpload': pickAndUpload(id); break;
     case 'toggleP1': { const el=$('#p1d-'+id); if(el){el.classList.toggle('open'); t.classList.toggle('open');} break; }
-    case 'p1NextAction': { const p=state.phase1.find(x=>x.id===id); mutate(s=>{ s.nextActionOverride=p.nextStep+' ('+p.label+')'; }); setView('today'); break; }
+    case 'p1NextAction': { const p=state.phase1.find(x=>x.id===id); mutate(s=>{ s.nextActionOverride=p.nextStep+' ('+p.label+')'; s.nextActionVia=''; }); setView('today'); break; }
     case 'decision': mutate(s=>{ s.phase2.decision=val; }); break;
     case 'ausbAdd': { const v=$('#ausbInput').value.trim(); if(v) mutate(s=>{ s.phase2.germany.ausbildungShortlist.push(v); }); break; }
     case 'ausbRemove': mutate(s=>{ s.phase2.germany.ausbildungShortlist.splice(+i,1); }); break;
@@ -1422,6 +1613,11 @@ document.addEventListener('click', async (e)=>{
     case 'importJson': importJson(); break;
     case 'enableNotif': await enableNotifications(); break;
     case 'testNotif': fireNotification('🌅 Test reminder','If you can see this, daily nudges will work on this device.'); toast('Sent — check your notifications'); break;
+    case 'aiAddCountry': { const el=$('#aiCountryInput'); const name=el?el.value.trim():''; if(!name){ if(el) el.focus(); break; } await aiAddCountry(name, null, t); break; }
+    case 'crRefresh': { const c=(state.customRoutes||[]).find(x=>x.id===id); if(c) await aiAddCountry(c.name, id, t); break; }
+    case 'crRemove': { const c=(state.customRoutes||[]).find(x=>x.id===id); if(c && confirm('Remove '+(c.name||'this country')+' from your routes?')){ mutate(s=>{ s.customRoutes=(s.customRoutes||[]).filter(x=>x.id!==id); }); toast('Removed'); } break; }
+    case 'aiNext': await aiNextMove(t); break;
+    case 'aiTest': await aiTest(t); break;
     case 'resetAll': if(confirm('Erase ALL local data and start fresh? Export a backup first if unsure.')){ localStorage.removeItem(CFG.STORE_KEY); state=defaults(); saveLocal(); setView('board'); toast('Reset done'); } break;
   }
 });
@@ -1435,6 +1631,8 @@ document.addEventListener('change', (e)=>{
     case 'docLink': setSilent(s=>{ s.documents.find(x=>x.id===id).driveLink=v; }); break;
     case 'docNotes': setSilent(s=>{ s.documents.find(x=>x.id===id).notes=v; }); break;
     case 'p1Status': { mutate(s=>{ s.phase1.find(x=>x.id===id).status=v; }); break; }
+    case 'crStatus': { mutate(s=>{ const c=(s.customRoutes||[]).find(x=>x.id===id); if(c) c.status=v; }); break; }
+    case 'crNext': setSilent(s=>{ const c=(s.customRoutes||[]).find(x=>x.id===id); if(c) c.next=v; }); break;
     case 'p1Next': setSilent(s=>{ s.phase1.find(x=>x.id===id).nextStep=v; }); break;
     case 'p1Wave': setSilent(s=>{ s.phase1.find(x=>x.id===id).waveWindow=v; }); break;
     case 'sperrNote': setSilent(s=>{ s.phase2.germany.sperrkontoNote=v; }); break;
@@ -1500,6 +1698,7 @@ function openGuide(force){
     +'<div><b>Board</b> — your overview, plus a calendar of every deadline.</div>'
     +'<div><b>Tailwinds</b> — fresh news &amp; live opportunities for Taiwan · Korea · Japan · Germany · Australia. Info is gold.</div>'
     +'<div><b>Docs · Money · Languages · Routes</b> — your real info (some live under “More”). <b>Tap any row to open its fields.</b> You do <i>not</i> need to fill everything now.</div>'
+    +'<div><b>✨ AI</b> — in <b>Routes</b>, type any country and it researches the real labour pathway for you; on <b>Today</b>, let it pick your next move. (Needs the one-time key setup in Settings.)</div>'
     +'<div>Confused by a word? Tap the little <span class="info" style="position:static;top:0;margin:0 2px" data-tip="Exactly like this — a plain-language explainer. They’re sprinkled anywhere a term might trip you up.">i</span> beside it.</div>'
     +'</div>'
     +'<button class="btn primary block mt" data-action="nav" data-view="today">Show me Today →</button>');
@@ -1681,6 +1880,7 @@ function init(){
 }
 window.addEventListener('keydown',(e)=>{ if(e.key==='Escape'){ closeSheet(); closeModal(); } });
 document.addEventListener('keydown',(e)=>{ if(e.key==='Enter' && $('#passInput') && !$('#gate').classList.contains('hide')){ const b=$('#gate [data-action="doAuth"]'); if(b) b.click(); } });
+document.addEventListener('keydown',(e)=>{ if(e.key==='Enter' && e.target && e.target.id==='aiCountryInput'){ const b=$('[data-action="aiAddCountry"]'); if(b && !b.disabled) b.click(); } });
 init();
 </script>
 </body>
