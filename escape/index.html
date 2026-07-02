@@ -442,6 +442,8 @@ function defaults(){
     doneLog:[],
     saved:[],
     customRoutes:[],
+    aiScan:null,
+    lastAsk:null,
     why:{
       reasons:[
         'The rupiah keeps shrinking — my hours are worth more abroad.',
@@ -469,6 +471,7 @@ function defaults(){
       cloudSync:false, cloudToken:'',
       googleClientId:'', calendarId:'', driveFolderId:'', eventMap:{},
       feedTopics:['taiwan','korea','japan','germany','australia','moves'], feedCustom:[],
+      ai:{ model:'haiku', effort:'low', spendUSD:0, spendSince:'' },
     },
   };
 }
@@ -549,12 +552,24 @@ async function vaultPull(){
     if(j.data && (j.data._ts||0) > (state._ts||0)){ state=deepMerge(defaults(), j.data); migrate(); saveLocal(); render(); return 'pulled'; } }
   return 'local-newer';
 }
-/* AI brain — calls /api/ai (Claude + web search), gated by the passphrase. */
+/* AI brain — calls /api/ai (Claude + web search), gated by the passphrase.
+   Sends the chosen model+effort and keeps a running spend estimate. */
+function aiCfg(){ const a=state.settings.ai; return (a&&typeof a==='object')?a:{model:'haiku',effort:'low',spendUSD:0,spendSince:''}; }
+function fmtCost(c){ if(typeof c!=='number'||!(c>0)) return ''; return '≈$'+(Math.round(c*1000)/1000); }
 async function aiCall(action, extra){
+  const ai=aiCfg();
   const r=await fetch('/api/ai',{ method:'POST', headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({ pass:_pass, action, ...(extra||{}) }) });
+    body:JSON.stringify({ pass:_pass, action, model:ai.model||'haiku', effort:ai.effort||'low', ...(extra||{}) }) });
   const t=await r.text(); let j=null; try{ j=t?JSON.parse(t):null; }catch(e){}
-  if(!r.ok) throw new Error((j&&j.error)||({404:'AI backend not live here — it works on dhiya.id/escape once deployed.',504:'The research took too long — tap again to retry.'}[r.status]||('AI error '+r.status)));
+  if(!r.ok){
+    let m=(j&&j.error)||({404:'AI backend not live here — it works on dhiya.id/escape once deployed.',504:'The research took too long — tap again to retry.'}[r.status]||('AI error '+r.status));
+    if(r.status===504 && (ai.model||'haiku')!=='haiku') m+=' (Haiku in Settings is much faster.)';
+    throw new Error(m);
+  }
+  if(j && typeof j.costUSD==='number' && j.costUSD>0){
+    setSilent(s=>{ const a=s.settings.ai=s.settings.ai||{model:'haiku',effort:'low',spendUSD:0,spendSince:''};
+      a.spendUSD=+(a.spendUSD||0)+j.costUSD; if(!a.spendSince) a.spendSince=todayISO(); });
+  }
   return j;
 }
 function aiStateSummary(){
@@ -600,7 +615,7 @@ async function aiAddCountry(name, existingId, btnEl){
       else { s.customRoutes.unshift(route); }
     });
     const el=$('#aiCountryInput'); if(el && !existingId) el.value='';
-    toast('✓ '+(d.name||name)+' researched & added','ok');
+    toast('✓ '+(d.name||name)+' researched & added'+(fmtCost(j.costUSD)?' · '+fmtCost(j.costUSD):''),'ok');
   }catch(err){
     setMsg('⚠ '+(err.message||'AI failed'),'amber');
     if(btn){ btn.disabled=false; btn.textContent=oldTxt||'🔎 Research'; }
@@ -614,7 +629,7 @@ async function aiNextMove(btn){
     const d=j.data||{};
     if(!d.text) throw new Error('No suggestion');
     mutate(s=>{ s.nextActionOverride=String(d.text).slice(0,140); s.nextActionVia=d.why?('✨ '+String(d.why).slice(0,160)):'✨ Picked by your AI coach'; });
-    toast(d.why?('✨ '+d.why):'✨ Next move set','ok');
+    toast((d.why?('✨ '+d.why):'✨ Next move set')+(fmtCost(j.costUSD)?' · '+fmtCost(j.costUSD):''),'ok');
     setView('today');
   }catch(err){
     toast('⚠ '+(err.message||'AI failed'),'err');
@@ -625,11 +640,66 @@ async function aiNextMove(btn){
 async function aiTest(btn){
   const old=btn?btn.textContent:''; if(btn){ btn.disabled=true; btn.textContent='… testing'; }
   try{
-    await aiCall('next',{ context:'(connectivity test — any tiny generic step will do)' });
-    toast('✓ AI is connected and working','ok');
+    const j=await aiCall('next',{ context:'(connectivity test — any tiny generic step will do)' });
+    toast('✓ AI connected — '+(j.modelUsed||aiCfg().model)+(fmtCost(j.costUSD)?' · '+fmtCost(j.costUSD):''),'ok');
+    render();
   }catch(err){
     toast('⚠ '+(err.message||'Not connected'),'err');
   }finally{
+    const b=$('[data-action="aiTest"]'); if(b){ b.disabled=false; b.textContent=old||'Test AI connection'; }
+  }
+}
+/* Power-up 1: check the live SP2T / EPS / SSW intake windows and file them. */
+async function aiWindows(btn){
+  const old=btn?btn.textContent:''; if(btn){ btn.disabled=true; btn.textContent='… checking'; }
+  try{
+    const j=await aiCall('windows',{});
+    const d=j.data||{}; const rts=Array.isArray(d.routes)?d.routes:[];
+    if(!rts.length) throw new Error('No window info found — try again.');
+    mutate(s=>{ rts.forEach(r=>{ const p=s.phase1.find(x=>x.id===r.id); if(p){
+      if(r.window) p.waveWindow=String(r.window).slice(0,120);
+      if(r.next) p.nextStep=String(r.next).slice(0,100);
+    } }); });
+    addDone('AI checked intake windows (SP2T · EPS · SSW)','routes');
+    toast('🗓 Intake windows updated'+(fmtCost(j.costUSD)?' · '+fmtCost(j.costUSD):''),'ok');
+  }catch(err){
+    toast('⚠ '+(err.message||'AI failed'),'err');
+    if(btn){ btn.disabled=false; btn.textContent=old; }
+  }
+}
+/* Power-up 2: AI news scan — a fresh briefing on the user's routes. */
+async function aiScanRun(btn){
+  const old=btn?btn.textContent:''; if(btn){ btn.disabled=true; btn.textContent='… scanning'; }
+  try{
+    const labels=[];
+    (state.settings.feedTopics||[]).forEach(id=>{ const c=FEED_CATALOG[id]; if(c) labels.push(c.label); });
+    (state.settings.feedCustom||[]).forEach(x=>labels.push(x));
+    const j=await aiCall('news',{ topics:labels.slice(0,12).join(', ')||'Taiwan, Korea, Japan, Germany, Australia' });
+    const d=j.data||{};
+    if(!Array.isArray(d.items)||!d.items.length) throw new Error('Scan came back empty — try again.');
+    mutate(s=>{ s.aiScan={ ts:Date.now(), summary:String(d.summary||'').slice(0,400), costUSD:j.costUSD||0,
+      items:d.items.slice(0,6).map(it=>({ title:String(it.title||'').slice(0,160), gist:String(it.gist||'').slice(0,240),
+        link:String(it.link||''), country:String(it.country||'').slice(0,30) })) }; });
+    toast('✨ Briefing ready'+(fmtCost(j.costUSD)?' · '+fmtCost(j.costUSD):''),'ok');
+  }catch(err){
+    toast('⚠ '+(err.message||'AI failed'),'err');
+    if(btn){ btn.disabled=false; btn.textContent=old; }
+  }
+}
+/* Power-up 3: ask-anything — one web-searched answer, kept until the next. */
+async function aiAsk(btn){
+  const el=$('#askInput'); const q=el?el.value.trim():'';
+  if(!q){ if(el) el.focus(); return; }
+  const old=btn?btn.textContent:''; if(btn){ btn.disabled=true; btn.textContent='…'; }
+  try{
+    const j=await aiCall('ask',{ q });
+    const d=j.data||{};
+    if(!d.answer) throw new Error('No answer came back — try again.');
+    mutate(s=>{ s.lastAsk={ q:q.slice(0,200), answer:String(d.answer).slice(0,1200), ts:Date.now(), costUSD:j.costUSD||0,
+      links:Array.isArray(d.links)?d.links.slice(0,3).map(l=>({ t:String(l.t||'source').slice(0,40), u:String(l.u||'') })):[] }; });
+    toast('✓ Answered'+(fmtCost(j.costUSD)?' · '+fmtCost(j.costUSD):''),'ok');
+  }catch(err){
+    toast('⚠ '+(err.message||'AI failed'),'err');
     if(btn){ btn.disabled=false; btn.textContent=old; }
   }
 }
@@ -1051,10 +1121,24 @@ function viewBoard(){
     +'<div class="btn-row mt"><button class="btn ghost sm" data-action="downloadICS">⬇ .ics</button>'
     +'<button class="btn ghost sm" data-action="nav" data-view="settings">Push to Google →</button></div></div>';
 
+  // Ask-anything agent — one web-searched answer, kept until the next question.
+  let ask='';
+  if(_unlocked){
+    const la=state.lastAsk;
+    ask='<div class="panel"><div style="font-weight:600">🧭 Ask your agent'+info('Type any question about working abroad — fees, tests, visas, rules — and the AI answers from a live web search, with sources. Each answer costs a few cents of your Claude key.')+'</div>'
+      +'<div class="copywrap mt-s"><input id="askInput" placeholder="e.g. EPS-TOPIK fee right now?" autocomplete="off"><button class="btn primary sm" data-action="askAI">Ask</button></div>';
+    if(la){
+      ask+='<div class="faint small mt-s">Q: '+esc(la.q)+' · '+timeAgo(new Date(la.ts).toISOString())+'</div>'
+        +'<div class="note mt-s" style="white-space:pre-wrap">'+esc(la.answer)+'</div>'
+        +(la.links&&la.links.length?'<div class="btn-row mt-s">'+la.links.map(l=>'<a class="btn ghost sm" href="'+esc(l.u)+'" target="_blank" rel="noopener">'+esc(l.t||'source')+' ↗</a>').join('')+'</div>':'');
+    }
+    ask+='</div>';
+  }
+
   // Desktop: 2-col wall (board + side). Mobile: stacked.
   return '<div class="deskgrid">'
     +'<div>'+hero+boardHtml+'</div>'
-    +'<div>'+stats+checkin+cal+'</div>'
+    +'<div>'+stats+checkin+ask+cal+'</div>'
     +'</div>';
 }
 
@@ -1211,6 +1295,7 @@ function viewRoutes(){
   html+='<div class="eyebrow" style="padding:2px 2px 8px">CASH BRIDGE — EARN FIRST</div>';
   html+='<div class="note mt-s mb">🏭 Taiwan = a cash machine, not a home. Earn, bank it, don’t over-invest emotionally.</div>';
   html+='<div class="panel">';
+  if(_unlocked) html+='<div class="between" style="padding-bottom:2px"><span class="sub">Registration windows move — let the AI check the current ones.'+info('One tap: the AI searches the official Indonesian sources (SISKOP2MI, HRD-Korea, JFT-Basic) for the CURRENT SP2T / EPS-TOPIK / SSW registration windows and writes them into these rows. Dates flow to your calendar automatically. Costs a few cents.')+'</span><button class="btn ghost sm" style="flex:none" data-action="aiWindows">🗓 Check (AI)</button></div>';
   state.phase1.forEach(p=>{
     html+='<details class="item row-x"><summary class="between"><span class="title">'+esc(p.label)+info(RINFO[p.id])+(p.lead?' <span class="badge live">LEAD</span>':'')+statusBadge(p.status)+'</span>'
       +'<span class="chev">▾</span></summary>'
@@ -1429,8 +1514,25 @@ function viewTailwinds(){
     +'<div class="seg mt"><button data-action="twMode" data-m="latest" class="'+(_twMode==='latest'?'on':'')+'">Latest</button>'
     +'<button data-action="twMode" data-m="saved" class="'+(_twMode==='saved'?'on':'')+'">Saved'+(savedCount?' ('+savedCount+')':'')+'</button></div></div>';
   if(_twMode==='saved') return html+savedHTML();
+  // AI briefing — manual scan, persists until re-run
+  if(_unlocked){
+    const sc=state.aiScan;
+    html+='<div class="panel" style="border-color:rgba(246,191,82,.32)">'
+      +'<div class="between"><div class="eyebrow" style="color:var(--amber)">✨ AI BRIEFING'+(sc?' · '+timeAgo(new Date(sc.ts).toISOString()).toUpperCase():'')+'</div>'
+      +'<button class="btn '+(sc?'ghost':'primary')+' sm" style="flex:none" data-action="aiScan">'+(sc?'↻ Re-scan':'✨ Scan now')+'</button></div>';
+    if(sc){
+      if(sc.summary) html+='<div class="sub mt-s">'+esc(sc.summary)+'</div>';
+      html+=(sc.items||[]).map(it=>'<div class="feeditem"><a class="feed-t" href="'+esc(it.link)+'" target="_blank" rel="noopener">'
+        +'<div style="font-weight:600;font-size:14px;line-height:1.35;color:var(--cream)">'+esc(it.title)+'</div>'
+        +(it.gist?'<div class="sub mt-s" style="font-size:12.5px">'+esc(it.gist)+'</div>':'')
+        +'<div class="faint small mt-s">'+(it.country?esc(it.country)+' · ':'')+'source ↗</div></a></div>').join('');
+    } else {
+      html+='<div class="sub mt-s">One tap = the AI web-searches this month’s REAL developments on your routes (Indonesian + English sources) and writes you a short briefing. Costs a few cents of your key.</div>';
+    }
+    html+='</div>';
+  }
   html+='<div class="panel"><div class="row wrap" style="gap:6px">'+chips.map(c=>'<button class="btn '+(_feedFilter===c.id?'primary':'ghost')+' sm" data-action="feedFilter" data-f="'+c.id+'">'+esc(c.label)+'</button>').join('')+'</div>'
-    +(updated?'<div class="faint small mt-s">'+updated+' · aggregated via Google News</div>':'')+'</div>';
+    +'<div class="faint small mt-s">'+(updated?updated+' · ':'')+'last 60 days · Indonesian + English sources</div></div>';
   html+='<div id="feedBody"><div class="empty">Scanning the horizon…</div></div>';
   html+='<div class="note mt">Spot a better opportunity than your current plan? Keep it (☆), note why — you can switch routes anytime in <b>Routes</b>. Info is gold.</div>';
   return html;
@@ -1487,8 +1589,16 @@ function viewSettings(){
     +'<button class="btn ghost sm" data-action="pushCloudNow">↑ Save now</button><button class="btn ghost sm" data-action="pullCloud">↻ Sync</button></div></div>';
 
   // AI brain (Claude key)
-  html+='<div class="panel"><h3 style="font-size:15px">🤖 AI research'+info('Powers “Research a new country” in Routes and the ✨ AI-pick next move. It runs on YOUR Claude API key, kept server-side — never in the browser — and only unlocks with your passphrase, so nobody but you can spend it.')+'</h3>'
-    +'<div class="sub">The app can research any country on the live web and pick your next move — powered by <b>your own Claude API key</b>.</div>'
+  const ai=aiCfg();
+  html+='<div class="panel"><h3 style="font-size:15px">🤖 AI research'+info('Powers country research, the news scan, intake-window checks, the agent box and ✨ next-move picks. It runs on YOUR Claude API key, kept server-side — never in the browser — and only unlocks with your passphrase, so nobody but you can spend it.')+'</h3>'
+    +'<div class="sub">Researches the live web on <b>your own Claude API key</b>. You control the brain and the budget below.</div>'
+    +'<div class="grid2 mt"><div class="field"><label>Model'+info('Which Claude brain to use. Haiku = fastest & cheapest — plenty for fact-finding. Opus = deepest thinking but ~5× pricier and slow enough to sometimes time out.')+'</label><select data-action="aiModel">'
+      +[['haiku','Haiku 4.5 — fast & cheap (~$0.05/research)'],['sonnet','Sonnet 5 — balanced (~$0.09)'],['opus','Opus 4.8 — deepest (~$0.15+, slow)']].map(o=>'<option value="'+o[0]+'" '+(ai.model===o[0]?'selected':'')+'>'+o[1]+'</option>').join('')+'</select></div>'
+    +'<div class="field"><label>Effort <span class="faint">(Haiku ignores this)</span></label><select data-action="aiEffort">'
+      +['low','medium','high'].map(v=>'<option '+(ai.effort===v?'selected':'')+'>'+v+'</option>').join('')+'</select></div></div>'
+    +'<div class="between mt"><span class="small">Spent ≈ <b class="mono" style="color:var(--amber-soft)">$'+(+(ai.spendUSD||0)).toFixed(2)+'</b>'+(ai.spendSince?' <span class="faint">since '+fmtDate(ai.spendSince)+'</span>':'')+'</span>'
+    +'<button class="btn ghost sm" data-action="aiSpendReset">Reset</button></div>'
+    +'<div class="faint small mt-s">Estimates only — your real balance lives at console.anthropic.com.</div>'
     +'<div class="note blue mt">One-time setup: in <b>Vercel → your project → Settings → Environment Variables</b>, add <code>ANTHROPIC_API_KEY</code> = your key from <b>console.anthropic.com</b>, then redeploy. The key stays on the server; the browser never sees it.</div>'
     +'<div class="btn-row mt"><button class="btn primary sm" data-action="aiTest">Test AI connection</button>'
     +'<a class="btn ghost sm" href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Get a key ↗</a></div></div>';
@@ -1541,7 +1651,7 @@ function viewSettings(){
     +'<button class="btn ghost sm" data-action="exportJson">⬇ Export</button><button class="btn ghost sm" data-action="importJson">⬆ Import</button>'
     +'<button class="btn ghost sm" data-action="resetAll" style="color:var(--red)">Reset</button></div>'
     +'<div class="sub mt-s">Cached on this device for offline use, and synced privately to your passphrase-locked vault.</div></div>';
-  html+='<div class="center small faint" style="padding:10px">Escape Pipeline · Departures edition · v3 (AI)</div>';
+  html+='<div class="center small faint" style="padding:10px">Escape Pipeline · Departures edition · v3.1 (AI)</div>';
   return html;
 }
 
@@ -1618,6 +1728,10 @@ document.addEventListener('click', async (e)=>{
     case 'crRemove': { const c=(state.customRoutes||[]).find(x=>x.id===id); if(c && confirm('Remove '+(c.name||'this country')+' from your routes?')){ mutate(s=>{ s.customRoutes=(s.customRoutes||[]).filter(x=>x.id!==id); }); toast('Removed'); } break; }
     case 'aiNext': await aiNextMove(t); break;
     case 'aiTest': await aiTest(t); break;
+    case 'aiWindows': await aiWindows(t); break;
+    case 'aiScan': await aiScanRun(t); break;
+    case 'askAI': await aiAsk(t); break;
+    case 'aiSpendReset': setSilent(s=>{ const a=s.settings.ai=s.settings.ai||{}; a.spendUSD=0; a.spendSince=todayISO(); }); render(); toast('Spend meter reset'); break;
     case 'resetAll': if(confirm('Erase ALL local data and start fresh? Export a backup first if unsure.')){ localStorage.removeItem(CFG.STORE_KEY); state=defaults(); saveLocal(); setView('board'); toast('Reset done'); } break;
   }
 });
@@ -1646,6 +1760,8 @@ document.addEventListener('change', (e)=>{
     case 'setBirth': mutate(s=>{ s.profile.birthDate=v; }); break;
     case 'setAnchor': setSilent(s=>{ s.streak.anchorLabel=v; }); break;
     case 'setClientId': setSilent(s=>{ s.settings.googleClientId=v.trim(); }); render(); break;
+    case 'aiModel': setSilent(s=>{ (s.settings.ai=s.settings.ai||{}).model=v; }); toast('AI model: '+v); break;
+    case 'aiEffort': setSilent(s=>{ (s.settings.ai=s.settings.ai||{}).effort=v; }); break;
     case 'toggleDailyReminder': mutate(s=>{ s.settings.dailyReminder=t.checked; }); break;
     case 'setReminderTime': setSilent(s=>{ s.settings.reminderTime=v; }); maybeNotify(); break;
     case 'savedFrom': _savedFrom=v; render(); break;
@@ -1880,7 +1996,9 @@ function init(){
 }
 window.addEventListener('keydown',(e)=>{ if(e.key==='Escape'){ closeSheet(); closeModal(); } });
 document.addEventListener('keydown',(e)=>{ if(e.key==='Enter' && $('#passInput') && !$('#gate').classList.contains('hide')){ const b=$('#gate [data-action="doAuth"]'); if(b) b.click(); } });
-document.addEventListener('keydown',(e)=>{ if(e.key==='Enter' && e.target && e.target.id==='aiCountryInput'){ const b=$('[data-action="aiAddCountry"]'); if(b && !b.disabled) b.click(); } });
+document.addEventListener('keydown',(e)=>{ if(e.key!=='Enter'||!e.target) return;
+  if(e.target.id==='aiCountryInput'){ const b=$('[data-action="aiAddCountry"]'); if(b && !b.disabled) b.click(); }
+  if(e.target.id==='askInput'){ const b=$('[data-action="askAI"]'); if(b && !b.disabled) b.click(); } });
 init();
 </script>
 </body>

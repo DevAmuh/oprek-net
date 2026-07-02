@@ -13,12 +13,12 @@
 // =============================================================
 
 const CATALOG = {
-  // --- your routes ---
-  taiwan:    { flag:'🇹🇼', label:'Taiwan',      section:'Your routes', q:'Indonesia migrant worker Taiwan OR Taiwan migrant worker policy' },
-  korea:     { flag:'🇰🇷', label:'Korea (EPS)', section:'Your routes', q:'Indonesia worker Korea EPS OR South Korea foreign worker visa' },
-  japan:     { flag:'🇯🇵', label:'Japan (SSW)', section:'Your routes', q:'Indonesia worker Japan specified skilled worker OR Japan tokutei ginou' },
-  germany:   { flag:'🇩🇪', label:'Germany',     section:'Your routes', q:'Indonesia Germany skilled worker visa OR Germany Ausbildung foreigner OR Fachkräfte Indonesia' },
-  australia: { flag:'🇦🇺', label:'Australia',   section:'Your routes', q:'Indonesia Australia working holiday visa OR Australia 462 visa OR Australia skilled migration Indonesia' },
+  // --- your routes ---  (q = English query · qid = Indonesian-edition query)
+  taiwan:    { flag:'🇹🇼', label:'Taiwan',      section:'Your routes', q:'Indonesia migrant worker Taiwan OR Taiwan migrant worker policy', qid:'pekerja migran Taiwan OR PMI Taiwan OR SP2T Taiwan' },
+  korea:     { flag:'🇰🇷', label:'Korea (EPS)', section:'Your routes', q:'Indonesia worker Korea EPS OR South Korea foreign worker visa', qid:'EPS Korea OR EPS-TOPIK OR pekerja migran Korea G2G' },
+  japan:     { flag:'🇯🇵', label:'Japan (SSW)', section:'Your routes', q:'Indonesia worker Japan specified skilled worker OR Japan tokutei ginou', qid:'pekerja migran Jepang OR tokutei ginou OR SSW Jepang Indonesia' },
+  germany:   { flag:'🇩🇪', label:'Germany',     section:'Your routes', q:'Indonesia Germany skilled worker visa OR Germany Ausbildung foreigner OR Fachkräfte Indonesia', qid:'kerja di Jerman OR Ausbildung Indonesia OR visa kerja Jerman' },
+  australia: { flag:'🇦🇺', label:'Australia',   section:'Your routes', q:'Indonesia Australia working holiday visa OR Australia 462 visa OR Australia skilled migration Indonesia', qid:'working holiday visa Australia Indonesia OR visa 462 OR kerja di Australia' },
   // --- Gulf ---
   gulf:    { flag:'🕌', label:'Gulf (all)', section:'Gulf', q:'Indonesia migrant worker Gulf OR Gulf foreign worker visa reform' },
   saudi:   { flag:'🇸🇦', label:'Saudi',     section:'Gulf', q:'Indonesia worker Saudi Arabia OR Saudi Arabia foreign worker visa' },
@@ -48,8 +48,8 @@ const CATALOG = {
   canada:     { flag:'🇨🇦', label:'Canada',      section:'Americas', q:'Indonesia worker Canada OR Canada express entry OR Canada work permit Indonesia' },
   usa:        { flag:'🇺🇸', label:'USA',         section:'Americas', q:'Indonesia worker United States visa OR US work visa Indonesia' },
   // --- themes ---
-  moves:  { flag:'🌐', label:'Openings & policy', section:'Themes', q:'Indonesia migrant worker opportunity 2026 OR Indonesia overseas job program OR Indonesia rupiah salary abroad' },
-  schengen:{ flag:'🛂', label:'Schengen pathways', section:'Themes', q:'Schengen work visa Indonesia OR EU residence permit Indonesia pathway citizenship' },
+  moves:  { flag:'🌐', label:'Openings & policy', section:'Themes', q:'Indonesia migrant worker opportunity 2026 OR Indonesia overseas job program OR Indonesia rupiah salary abroad', qid:'lowongan pekerja migran OR penempatan PMI OR program KP2MI BP2MI' },
+  schengen:{ flag:'🛂', label:'Schengen pathways', section:'Themes', q:'Schengen work visa Indonesia OR EU residence permit Indonesia pathway citizenship', qid:'visa kerja Eropa Indonesia OR visa Schengen kerja' },
 };
 const SECTIONS = ['Your routes','Gulf','Europe','Asia-Pacific','Americas','Themes'];
 const DEFAULT_TOPICS = ['taiwan','korea','japan','germany','australia','moves'];
@@ -88,26 +88,49 @@ async function fetchText(url, ms){
     clearTimeout(to); return { ok: r.ok, status: r.status, text: await r.text() };
   } catch (e) { clearTimeout(to); return { ok: false, status: 0, text: '', err: String(e) }; }
 }
-const googleUrl = q => 'https://news.google.com/rss/search?q=' + encodeURIComponent(q) + '&hl=en-ID&gl=ID&ceid=ID:en';
+// when:30d = Google News recency operator; -site: excludes SEO spam at the source.
+const withOps  = q => q + ' when:30d -site:y-axis.com';
+const googleUrl = q => 'https://news.google.com/rss/search?q=' + encodeURIComponent(withOps(q)) + '&hl=en-ID&gl=ID&ceid=ID:en';
+const googleIdUrl = q => 'https://news.google.com/rss/search?q=' + encodeURIComponent(withOps(q)) + '&hl=id&gl=ID&ceid=ID:id';
 const bingUrl   = q => 'https://www.bing.com/news/search?q=' + encodeURIComponent(q) + '&format=rss';
 const slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '').slice(0, 24);
 function hostOf(link){ try{ return new URL(link).hostname.replace(/^www\./,''); }catch(e){ return ''; } }
+
+// Quality gate: fresh (≤60 days, dated), not from blocked SEO farms, and not
+// India-targeted content (the reader is Indonesian) unless it mentions Indonesia.
+const BLOCK = ['y-axis.com', 'y-axis'];
+const MAX_AGE_MS = 60 * 86400000;
+function keepItem(it){
+  if (!it.ts || (Date.now() - it.ts) > MAX_AGE_MS) return false;
+  const host = hostOf(it.link).toLowerCase();
+  const src = (it.source || '').toLowerCase();
+  if (BLOCK.some(b => host.includes(b) || src.includes(b))) return false;
+  if (/\bindians?\b|\bindia'?s\b/i.test(it.title) && !/indonesia/i.test(it.title)) return false;
+  return true;
+}
 function mergeDedupe(a, b){
   const out = a.slice(); const seen = new Set(a.map(x => x.title.toLowerCase().slice(0, 50)));
   for (const it of b){ const k = it.title.toLowerCase().slice(0, 50); if (!seen.has(k)){ seen.add(k); out.push(it); } }
   return out;
 }
 
+// Indonesian-edition query: explicit qid when curated, else built from the label.
+function idQueryFor(entry, label){
+  if (entry && entry.qid) return entry.qid;
+  const base = String(label).replace(/\s*\(.*?\)\s*/g, '').trim();
+  return 'pekerja migran ' + base + ' OR visa kerja ' + base + ' OR kerja di ' + base;
+}
 function buildTopics(req){
   const q = req.query || {};
   const t = (q.t ? String(q.t).split(',') : []).map(x => x.trim()).filter(x => CATALOG[x]);
   const c = (q.c ? String(q.c).split(',') : []).map(x => x.trim()).filter(Boolean);
-  let topics = t.map(id => ({ id, flag: CATALOG[id].flag, label: CATALOG[id].label, q: CATALOG[id].q }));
+  let topics = t.map(id => ({ id, flag: CATALOG[id].flag, label: CATALOG[id].label, q: CATALOG[id].q, qid: idQueryFor(CATALOG[id], CATALOG[id].label) }));
   for (const name of c){
     topics.push({ id: 'c_' + slug(name), flag: '🌍', label: name,
-      q: 'Indonesia ' + name + ' work visa OR ' + name + ' foreign worker OR ' + name + ' immigration' });
+      q: 'Indonesia ' + name + ' work visa OR ' + name + ' foreign worker OR ' + name + ' immigration',
+      qid: idQueryFor(null, name) });
   }
-  if (!topics.length) topics = DEFAULT_TOPICS.map(id => ({ id, flag: CATALOG[id].flag, label: CATALOG[id].label, q: CATALOG[id].q }));
+  if (!topics.length) topics = DEFAULT_TOPICS.map(id => ({ id, flag: CATALOG[id].flag, label: CATALOG[id].label, q: CATALOG[id].q, qid: idQueryFor(CATALOG[id], CATALOG[id].label) }));
   return topics.slice(0, 12);   // cap to keep it fast + within rate limits
 }
 
@@ -120,12 +143,26 @@ module.exports = async (req, res) => {
   const TOPICS = buildTopics(req);
   try {
     const results = await Promise.all(TOPICS.map(async (t) => {
-      const [g, b] = await Promise.all([ fetchText(googleUrl(t.q)), fetchText(bingUrl(t.q), 6000) ]);
-      let items = g.ok ? parseItems(g.text, 8) : [];
+      const [g, gi, b] = await Promise.all([
+        fetchText(googleUrl(t.q)),
+        fetchText(googleIdUrl(t.qid || t.q)),
+        fetchText(bingUrl(t.q), 6000),
+      ]);
+      let items = g.ok ? parseItems(g.text, 10) : [];
+      if (gi.ok) items = mergeDedupe(items, parseItems(gi.text, 10));
       if (b.ok){ const bing = parseItems(b.text, 6).map(x => ({ ...x, source: x.source || hostOf(x.link) })); items = mergeDedupe(items, bing); }
-      items = items.sort((x, y) => y.ts - x.ts).slice(0, 8);
+      items = items.filter(keepItem).sort((x, y) => y.ts - x.ts).slice(0, 14);
       return { id: t.id, flag: t.flag, label: t.label, items, _status: g.status };
     }));
+    // Cross-group dedupe: the same story must not appear under several countries.
+    const seenAll = new Set();
+    for (const g of results){
+      g.items = g.items.filter(it => {
+        const k = it.title.toLowerCase().slice(0, 50);
+        if (seenAll.has(k)) return false;
+        seenAll.add(k); return true;
+      }).slice(0, 8);
+    }
     let total = results.reduce((a, g) => a + g.items.length, 0);
     let source = 'google';
 
