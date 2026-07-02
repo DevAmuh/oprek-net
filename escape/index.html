@@ -80,12 +80,17 @@ textarea{resize:vertical;min-height:60px}
 .fxpanel .cv input{max-width:110px;font-family:var(--mono)}
 .fxpanel .cv select{width:auto;padding-right:26px;font-family:var(--mono)}
 .fxpanel .cv b{color:var(--amber-soft)}
-.colrow{display:grid;grid-template-columns:88px 1fr;gap:4px 10px;padding:9px 0;border-top:1px solid var(--line);font-size:12px}
-.colrow .cc{font-family:var(--mono);font-weight:700;color:var(--amber-soft)}
-.colrow .cn{color:var(--faint);font-size:10.5px}
-.colrow .cd{color:var(--muted);line-height:1.55}
-.colrow .cd b{color:var(--cream);font-weight:600}
-.colrow .stash{color:var(--teal)}
+.colrow{display:grid;grid-template-columns:1fr;gap:4px 10px;padding:9px 0;font-size:12px}
+.cc{font-family:var(--mono);font-weight:700;color:var(--amber-soft)}
+.cn{color:var(--faint);font-size:10.5px;white-space:nowrap}
+/* purchasing-power table */
+.coltab{width:100%;border-collapse:collapse;font-size:12px}
+.coltab th{font-family:var(--mono);font-weight:700;font-size:9px;letter-spacing:.1em;color:var(--amber-faint);text-align:left;padding:6px 10px 6px 0;border-bottom:1px solid var(--line2);white-space:nowrap}
+.coltab td{padding:8px 10px 8px 0;border-bottom:1px solid var(--line);vertical-align:top;white-space:nowrap;color:var(--cream)}
+.coltab td .rp{color:var(--faint);font-size:10.5px;font-family:var(--mono);margin-top:2px}
+.coltab .stash{color:var(--teal);font-family:var(--mono);font-weight:700}
+.coltab .notetr td{padding-top:0;font-size:11px;white-space:normal;color:var(--faint)}
+.coltab tr:last-child td{border-bottom:none}
 @media(min-width:920px){ .fxwrap{top:0;margin:-8px 0 16px} .fxbar{padding:8px 2px} .fx-more{height:35px} }
 
 /* ---------------- News footer ticker ---------------- */
@@ -97,7 +102,7 @@ textarea{resize:vertical;min-height:60px}
 .nb-item:hover{color:var(--amber-soft);text-decoration:none}
 .nb-lead{font-family:var(--mono);font-weight:700;font-size:9.5px;letter-spacing:.14em;color:var(--amber);cursor:pointer;flex:none}
 .nb-sep{color:var(--faint)}
-@media(max-width:919px){ .newsbar{bottom:calc(66px + var(--safe-b));padding:6px 10px} body.has-newsbar .stage{padding-bottom:calc(126px + var(--safe-b))} }
+@media(max-width:919px){ .newsbar{bottom:calc(80px + var(--safe-b));padding:6px 10px} body.has-newsbar .stage{padding-bottom:calc(140px + var(--safe-b))} }
 @media(min-width:920px){ body.has-newsbar .stage{padding-bottom:86px} }
 
 /* ---------------- Departures board ---------------- */
@@ -208,6 +213,24 @@ code{font-family:var(--mono);font-size:11px;background:rgba(0,0,0,.35);padding:1
 .calcell.has{background:rgba(246,191,82,.1);border-color:rgba(246,191,82,.4)}
 .calcell .caldot{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:var(--amber)}
 .callegend{margin-top:8px;border-top:1px solid var(--line);padding-top:4px}
+/* year view — 12 mini months */
+.yeargrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:10px}
+.ymonth{border:1px solid var(--line);border-radius:8px;padding:7px 8px;background:rgba(0,0,0,.18);cursor:pointer;transition:border-color .15s}
+.ymonth:hover{border-color:var(--line2)}
+.ymonth.has{border-color:rgba(246,191,82,.35)}
+.ymonth .yh{font-family:var(--mono);font-weight:700;font-size:9px;letter-spacing:.14em;color:var(--amber-faint);margin-bottom:5px}
+.ymonth.has .yh{color:var(--amber-soft)}
+.ydays{display:grid;grid-template-columns:repeat(7,1fr);gap:1px}
+.yd{font-family:var(--mono);font-size:7.5px;color:var(--faint);text-align:center;padding:1.5px 0;border-radius:3px;line-height:1.5}
+.yd.off{visibility:hidden}
+.yd.td{outline:1px solid var(--amber);color:var(--amber-soft)}
+.yd.ydoc{background:rgba(246,191,82,.5);color:#1c1405;font-weight:700}
+.yd.ywave{background:rgba(94,234,212,.45);color:#04211c;font-weight:700}
+.yd.ycap{background:rgba(251,113,133,.5);color:#2b0710;font-weight:700}
+.yd.yai{background:rgba(196,181,253,.5);color:#181035;font-weight:700}
+.ykey{display:inline-block;width:9px;height:9px;border-radius:3px;vertical-align:-1px;margin-right:4px}
+.ykey.ydoc{background:rgba(246,191,82,.7)}.ykey.ywave{background:rgba(94,234,212,.6)}
+.ykey.ycap{background:rgba(251,113,133,.7)}.ykey.yai{background:rgba(196,181,253,.7)}
 
 /* Ascent rail */
 .rail-wrap{position:relative;padding-left:44px;margin-top:8px}
@@ -266,7 +289,10 @@ code{font-family:var(--mono);font-size:11px;background:rgba(0,0,0,.35);padding:1
    DESKTOP — a substantially different "Departures Wall"
    ============================================================ */
 @media(min-width:920px){
-  .app{display:grid;grid-template-columns:250px 1fr}
+  .app{display:grid;grid-template-columns:250px 1fr;overflow-x:clip}
+  /* grid items default to min-width:auto — the marquee track's intrinsic
+     width would blow the 1fr column out past the viewport without this */
+  .stage{min-width:0}
   .topbar,.tabbar{display:none}
   /* left gate directory rail */
   .rail{display:flex;flex-direction:column;position:sticky;top:0;height:100dvh;padding:20px 14px;border-right:1px solid var(--line);
@@ -310,13 +336,17 @@ code{font-family:var(--mono);font-size:11px;background:rgba(0,0,0,.35);padding:1
 @media(max-width:919px){ .desk-only{display:none} .col-fuel{display:none} }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
-/* ---- Today = raised centre button ---- */
+/* ---- Today = raised centre button (dim until it's the active view) ---- */
 .tabbar{overflow:visible}
 .tabbar button span{display:block}
-.tabbar button.center{color:var(--amber-soft)}
-.tabbar button.center svg{width:54px;height:54px;padding:15px;border-radius:50%;
-  background:linear-gradient(180deg,var(--amber-soft),var(--amber));stroke:#241a05;color:#241a05;
-  margin-top:-28px;box-shadow:0 10px 26px -8px rgba(246,191,82,.75),0 0 0 5px var(--bg)}
+.tabbar button.center{color:var(--amber-dim)}
+.tabbar button.center svg{width:48px;height:48px;padding:13px;border-radius:50%;
+  background:linear-gradient(180deg,#241c0e,#171108);stroke:var(--amber-dim);color:var(--amber-dim);
+  border:1px solid var(--line2);margin-top:-14px;box-shadow:0 6px 18px -8px rgba(0,0,0,.8),0 0 0 5px var(--bg);
+  transition:background .2s,box-shadow .2s}
+.tabbar button.center.on{color:var(--amber-soft)}
+.tabbar button.center.on svg{background:linear-gradient(180deg,var(--amber-soft),var(--amber));stroke:#241a05;color:#241a05;border:none;
+  box-shadow:0 10px 26px -8px rgba(246,191,82,.75),0 0 0 5px var(--bg)}
 .tabbar button.center.on::before,.tabbar button.center::before{display:none}
 .tabbar button.center span{margin-top:3px;font-size:9.5px}
 
@@ -465,6 +495,7 @@ function defaults(){
     ],
     phase2:{
       decision:'undecided',
+      roles:{ germany:'endgame', australia:'endgame' },
       germany:{ germanLevel:'A0', germanStreak:0, germanLastDay:null,
         ausbildungShortlist:['Care / Pflege','Hospitality','Logistics'], employers:[], lessons:[], sperrkontoNote:'' },
       australia:{ savedAUD:0, sduwhvStatus:'not_started', whvNotes:'' },
@@ -492,6 +523,7 @@ function defaults(){
     lastAsk:null,
     customLangs:[],
     docPacks:[],
+    aiEvents:[],
     why:{
       reasons:[
         'The rupiah keeps shrinking — my hours are worth more abroad.',
@@ -522,7 +554,7 @@ function defaults(){
       ai:{ model:'haiku', effort:'low', spendUSD:0, spendSince:'' },
       aiContext:'',
       tickerCurrencies:['USD','TWD','AUD','EUR','KRW','JPY','SAR','QAR','PLN'],
-      newsTicker:true,
+      newsTicker:true, tickerSpeed:'normal',
     },
   };
 }
@@ -721,12 +753,16 @@ async function aiWindows(btn){
     const j=await aiCall('windows',{});
     const d=j.data||{}; const rts=Array.isArray(d.routes)?d.routes:[];
     if(!rts.length) throw new Error('No window info found — try again.');
-    mutate(s=>{ rts.forEach(r=>{ const p=s.phase1.find(x=>x.id===r.id); if(p){
-      if(r.window) p.waveWindow=String(r.window).slice(0,120);
-      if(r.next) p.nextStep=String(r.next).slice(0,100);
-    } }); });
+    const evs=Array.isArray(d.events)?d.events.filter(e=>e&&e.date&&parseYMD(e.date)&&e.title).slice(0,8):[];
+    mutate(s=>{
+      rts.forEach(r=>{ const p=s.phase1.find(x=>x.id===r.id); if(p){
+        if(r.window) p.waveWindow=String(r.window).slice(0,120);
+        if(r.next) p.nextStep=String(r.next).slice(0,100);
+      } });
+      s.aiEvents=evs.map(e=>({ id:uid(), title:String(e.title).slice(0,80), date:String(e.date).slice(0,10), desc:String(e.desc||'').slice(0,140), found:todayISO() }));
+    });
     addDone('AI checked intake windows (SP2T · EPS · SSW)','routes');
-    toast('🗓 Intake windows updated'+(fmtCost(j.costUSD)?' · '+fmtCost(j.costUSD):''),'ok');
+    toast('🗓 Windows updated'+(evs.length?' · '+evs.length+' dates → calendar':'')+(fmtCost(j.costUSD)?' · '+fmtCost(j.costUSD):''),'ok');
   }catch(err){
     toast('⚠ '+(err.message||'AI failed'),'err');
     if(btn){ btn.disabled=false; btn.textContent=old; }
@@ -894,6 +930,10 @@ function computeCalendarItems(s){
     const dt=firstDateIn(p.waveWindow);
     if(dt) items.push({ uid:'p1-'+p.id+'-wave', title:'🌊 '+p.label+' window', date:dt,
       desc:(p.waveWindow||'')+' · '+(p.nextStep||''), alarmDays:[14,3] });
+  });
+  (s.aiEvents||[]).forEach(ev=>{
+    if(ev.date && parseYMD(ev.date)) items.push({ uid:'ai-'+ev.id, title:'✨ '+ev.title, date:ev.date,
+      desc:(ev.desc||'Found by your AI on '+fmtDate(ev.found||'')), alarmDays:[14,3] });
   });
   const cap=ageCapDate(s.profile&&s.profile.birthDate);
   if(cap && (s.phase2.decision==='australia'||s.phase2.decision==='undecided')){
@@ -1079,7 +1119,10 @@ const LANGS=[
   { id:'german',   label:'German',   flag:'🇩🇪', routeId:null,        routeName:'Germany (Ausbildung)', target:'B1', levels:['A0','A1','A2','B1','B2','C1'], res:{label:'DW Nicos Weg',url:'https://learngerman.dw.com'} },
 ];
 function langActive(l){
-  if(l.id==='german') return state.phase2.decision==='germany' ? 'live' : (state.phase2.decision==='undecided' ? 'potential' : 'dormant');
+  if(l.id==='german'){
+    if(((state.phase2.roles||{}).germany)==='watch') return 'dormant';
+    return state.phase2.decision==='germany' ? 'live' : (state.phase2.decision==='undecided' ? 'potential' : 'dormant');
+  }
   const p=state.phase1.find(x=>x.id===l.routeId);
   return (p && p.status!=='not_started') ? 'live' : 'dormant';
 }
@@ -1142,13 +1185,17 @@ function render(){
   if(currentView==='tailwinds') ensureFeed();
   vw.classList.remove('fade'); void vw.offsetWidth; vw.classList.add('fade');
 }
-/* ---- marquee engine: auto-flow, pause on hover/touch, drag to scrub ---- */
+/* ---- marquee engine: auto-flow, pause on hover/touch, drag to scrub ----
+   NOTE: element.scrollLeft rounds fractional writes in Chromium (Edge/Chrome),
+   so incrementing by <1px stalls at 0 forever. We keep our own float position
+   and write the rounded value each frame. Speed is a Settings choice. */
+function tickerSpeed(){ return ({off:0, slow:0.4, normal:0.8, fast:1.6})[state.settings.tickerSpeed||'normal']||0.8; }
 function marquee(el){
   if(!el) return;
   if(el._mq){ el._mq.measure(); return; }
-  const st={ paused:false, idleT:null, half:0 };
+  const st={ paused:false, idleT:null, half:0, pos:el.scrollLeft||0 };
   const hold=()=>{ st.paused=true; clearTimeout(st.idleT); };
-  const release=(ms)=>{ clearTimeout(st.idleT); st.idleT=setTimeout(()=>{ st.paused=false; }, ms==null?2000:ms); };
+  const release=(ms)=>{ clearTimeout(st.idleT); st.idleT=setTimeout(()=>{ st.pos=el.scrollLeft; st.paused=false; }, ms==null?2000:ms); };
   el.addEventListener('mouseenter',hold);
   el.addEventListener('mouseleave',()=>release(700));
   el.addEventListener('touchstart',()=>{ hold(); release(3500); },{passive:true});
@@ -1157,13 +1204,15 @@ function marquee(el){
   el.addEventListener('pointerdown',e=>{ drag=true; sx=e.clientX; sl=el.scrollLeft; hold(); });
   document.addEventListener('pointermove',e=>{ if(drag) el.scrollLeft=sl-(e.clientX-sx); });
   document.addEventListener('pointerup',()=>{ if(drag){ drag=false; release(2000); } });
-  st.measure=()=>{ st.half=el.scrollWidth/2; };
+  st.measure=()=>{ st.half=el.scrollWidth/2; if(st.pos>=st.half) st.pos=0; };
   el._mq=st; st.measure();
   const reduce=matchMedia('(prefers-reduced-motion: reduce)');
   (function step(){
-    if(!document.hidden && !st.paused && !reduce.matches && st.half>el.clientWidth+16){
-      el.scrollLeft+=0.5;
-      if(el.scrollLeft>=st.half) el.scrollLeft-=st.half;
+    const sp=tickerSpeed();
+    if(!document.hidden && !st.paused && !reduce.matches && sp>0 && st.half>el.clientWidth+16){
+      st.pos+=sp;
+      if(st.pos>=st.half) st.pos-=st.half;
+      el.scrollLeft=st.pos;
     }
     requestAnimationFrame(step);
   })();
@@ -1185,19 +1234,23 @@ function renderFx(){
   renderNewsbar();
 }
 
-/* Purchasing-power seed (LOCAL currency; “≈” until refreshed with AI). */
+/* Purchasing-power seed (LOCAL currency; “≈” until refreshed with AI).
+   rent = cheap room / shared flat per month · medical = basic clinic visit. */
 const COL_SEED={
-  IDR:{country:'Indonesia',meal:25000,coffee:20000,minWage:3300000,note:'UMR varies a lot by province'},
-  USD:{country:'United States',meal:15,coffee:5,minWage:1257,note:'federal floor — most states pay more'},
-  TWD:{country:'Taiwan',meal:120,coffee:60,minWage:28590},
-  KRW:{country:'South Korea',meal:9000,coffee:4800,minWage:2156880},
-  JPY:{country:'Japan',meal:1000,coffee:450,minWage:180000},
-  EUR:{country:'Germany (€ ref)',meal:12,coffee:3.5,minWage:2200},
-  AUD:{country:'Australia',meal:20,coffee:5.5,minWage:4400},
-  SAR:{country:'Saudi Arabia',meal:25,coffee:12,minWage:4000,note:'SR floor is for Saudis; expat labor pay is lower'},
-  QAR:{country:'Qatar',meal:25,coffee:15,minWage:1000,note:'+ food & housing allowances'},
-  PLN:{country:'Poland',meal:35,coffee:15,minWage:4806},
+  IDR:{country:'Indonesia',meal:25000,coffee:20000,rent:1200000,medical:150000,minWage:3300000,note:'UMR varies a lot by province'},
+  USD:{country:'United States',meal:15,coffee:5,rent:900,medical:150,minWage:1257,note:'federal floor — most states pay more'},
+  TWD:{country:'Taiwan',meal:120,coffee:60,rent:8000,medical:400,minWage:29500,note:'dorm often provided for factory workers'},
+  KRW:{country:'South Korea',meal:9000,coffee:4800,rent:500000,medical:20000,minWage:2156880,note:'EPS housing often employer-provided'},
+  JPY:{country:'Japan',meal:1000,coffee:450,rent:55000,medical:3000,minWage:180000},
+  EUR:{country:'Germany (€ ref)',meal:12,coffee:3.5,rent:450,medical:0,minWage:2200,note:'healthcare via mandatory insurance'},
+  AUD:{country:'Australia',meal:20,coffee:5.5,rent:1000,medical:80,minWage:4400,note:'WHV workers often share houses'},
+  SAR:{country:'Saudi Arabia',meal:25,coffee:12,rent:1200,medical:100,minWage:4000,note:'SR floor is for Saudis; expat labor pay is lower'},
+  QAR:{country:'Qatar',meal:25,coffee:15,rent:1500,medical:100,minWage:1000,note:'+ food & housing allowances usually provided'},
+  PLN:{country:'Poland',meal:35,coffee:15,rent:1500,medical:150,minWage:4806},
 };
+/* Currency code → country name (for the “add by country” picker). */
+const CUR_COUNTRIES={USD:'United States',EUR:'Eurozone (Germany, NL…)',GBP:'United Kingdom',JPY:'Japan',KRW:'South Korea',TWD:'Taiwan',CNY:'China',HKD:'Hong Kong',SGD:'Singapore',MYR:'Malaysia',THB:'Thailand',VND:'Vietnam',PHP:'Philippines',IDR:'Indonesia',INR:'India',BND:'Brunei',AUD:'Australia',NZD:'New Zealand',SAR:'Saudi Arabia',QAR:'Qatar',AED:'UAE (Dubai)',KWD:'Kuwait',OMR:'Oman',BHD:'Bahrain',JOD:'Jordan',TRY:'Turkey',ILS:'Israel',PLN:'Poland',RON:'Romania',CZK:'Czechia',HUF:'Hungary',BGN:'Bulgaria',SEK:'Sweden',NOK:'Norway',DKK:'Denmark',ISK:'Iceland',CHF:'Switzerland',CAD:'Canada',MXN:'Mexico',BRL:'Brazil',ARS:'Argentina',CLP:'Chile',COP:'Colombia',PEN:'Peru',ZAR:'South Africa',EGP:'Egypt',MAD:'Morocco',NGN:'Nigeria',KES:'Kenya',RUB:'Russia',UAH:'Ukraine',KZT:'Kazakhstan',UZS:'Uzbekistan',PKR:'Pakistan',BDT:'Bangladesh',LKR:'Sri Lanka',NPR:'Nepal',MMK:'Myanmar',KHR:'Cambodia',LAK:'Laos',MOP:'Macau',FJD:'Fiji',PGK:'Papua New Guinea',GEL:'Georgia',AMD:'Armenia',AZN:'Azerbaijan',RSD:'Serbia',ALL:'Albania',MKD:'North Macedonia',BAM:'Bosnia',HRK:'Croatia (old)',MDL:'Moldova'};
+function curLabel(c){ const n=(colFor(c)&&colFor(c).country)||CUR_COUNTRIES[c]; return n?(n+' ('+c+')'):c; }
 function colFor(c){ return (state.colData&&state.colData[c])||COL_SEED[c]||null; }
 function sumIDR(){ const r=state.runway.rates||{}; return state.runway.entries.reduce((a,e)=>a+(+e.amount||0)*(r[e.currency]||0),0); }
 
@@ -1211,30 +1264,36 @@ function renderFxPanel(){
   let h='<div class="cv">Convert <input id="cvAmt" type="number" value="'+esc(amt)+'"> '
     +'<select id="cvCur">'+[...new Set(['USD','IDR',...tickerCurs()])].map(c=>'<option '+(c===cur?'selected':'')+'>'+esc(c)+'</option>').join('')+'</select>'
     +'<span>= <b>Rp '+fmtNum(Math.round(idr))+'</b>'+(base!=='IDR'?' <span class="faint">≈ '+fmtMoney(inBase,base)+'</span>':'')+'</span></div>';
-  // purchasing power rows
+  // purchasing power — a real table: local price on top, Rp underneath
   const stash=sumIDR();
-  h+=tickerCurs().map(c=>{
-    const cd=colFor(c); const rate=r[c]||0;
-    let d='<b>1 '+esc(c)+' = Rp '+fmtNum(rate)+'</b>';
-    if(cd){
-      const line=[];
-      if(cd.coffee) line.push('☕ '+fmtMoney(cd.coffee,c)+' <span class="faint">(Rp '+fmtNum(Math.round(cd.coffee*rate))+')</span>');
-      if(cd.meal) line.push('🍔 '+fmtMoney(cd.meal,c)+' <span class="faint">(Rp '+fmtNum(Math.round(cd.meal*rate))+')</span>');
-      d+='<br>'+line.join(' · ');
-      if(cd.minWage){
-        d+='<br>min wage <b>'+fmtMoney(cd.minWage,c)+'/mo</b> <span class="faint">(Rp '+fmtNum(Math.round(cd.minWage*rate))+')</span>';
-        const mo=stash>0&&rate>0?stash/(cd.minWage*rate):0;
-        if(mo>0) d+=' · <span class="stash">your stash ≈ '+ (Math.round(mo*10)/10)+' mo there</span>';
+  const cell=(v,c,rate,suffix)=>{ if(!v&&v!==0) return '<td class="faint">—</td>';
+    return '<td><div>'+fmtMoney(v,c)+(suffix||'')+'</div><div class="rp">Rp '+fmtNum(Math.round(v*rate))+'</div></td>'; };
+  h+='<div style="overflow-x:auto;margin-top:10px"><table class="coltab">'
+    +'<tr><th>Country</th><th>Rate (Rp)</th><th>☕ Coffee</th><th>🍔 Meal</th><th>🏠 Rent/mo</th><th>🏥 Clinic</th><th>💵 Min wage/mo</th><th>Your stash'+info('Everything you have saved, expressed as months of that country’s minimum wage — a quick “how long could I survive / how fast could I bank” gauge.')+'</th></tr>'
+    +tickerCurs().map(c=>{
+      const cd=colFor(c); const rate=r[c]||0;
+      let row='<tr><td><div class="cc">'+esc(c)+'</div><div class="cn">'+esc((cd&&cd.country)||CUR_COUNTRIES[c]||'')+'</div></td>'
+        +'<td>'+(rate?fmtNum(rate):'<span class="faint">…</span>')+'</td>';
+      if(cd&&rate){
+        row+=cell(cd.coffee,c,rate)+cell(cd.meal,c,rate)+cell(cd.rent,c,rate)+cell(cd.medical,c,rate)+cell(cd.minWage,c,rate,'');
+        const mo=(stash>0&&cd.minWage)?stash/(cd.minWage*rate):0;
+        row+='<td class="stash">'+(mo>0?('≈ '+(Math.round(mo*10)/10)+' mo'):'—')+'</td>';
+      } else {
+        row+='<td colspan="6" class="faint">'+(rate?'no living-cost data yet — tap ✨ refresh below':'rate loading — tap ↻ rates')+'</td>';
       }
-      if(cd.note) d+='<br><span class="faint">'+esc(cd.note)+'</span>';
-    } else d+='<br><span class="faint">no living-cost data — tap ✨ refresh below</span>';
-    return '<div class="colrow"><div><div class="cc">'+esc(c)+'</div><div class="cn">'+esc((cd&&cd.country)||'')+'</div></div><div class="cd">'+d+'</div></div>';
-  }).join('');
-  // currency chips editor + controls
-  h+='<div class="colrow" style="grid-template-columns:1fr"><div>'
-    +'<div class="row wrap" style="gap:6px">'+tickerCurs().map(c=>'<span class="chip">'+esc(c)+' <button data-action="tkRemove" data-id="'+esc(c)+'">×</button></span>').join('')
-    +'</div><div class="copywrap mt-s"><input id="tkInput" list="tkCodes" placeholder="Add a currency (e.g. NOK)" style="max-width:220px;text-transform:uppercase">'
-    +'<datalist id="tkCodes">'+codes.map(c=>'<option value="'+esc(c)+'">').join('')+'</datalist>'
+      row+='</tr>';
+      if(cd&&cd.note) row+='<tr class="notetr"><td></td><td colspan="7" class="faint">'+esc(cd.note)+'</td></tr>';
+      return row;
+    }).join('')
+    +'</table></div>';
+  // currency chips editor + controls — add by COUNTRY name, not code
+  const inList=new Set(tickerCurs());
+  const addOpts=Object.keys(CUR_COUNTRIES).filter(c=>!inList.has(c)&&(!codes.length||codes.includes(c)))
+    .sort((a,b)=>CUR_COUNTRIES[a].localeCompare(CUR_COUNTRIES[b]))
+    .map(c=>'<option value="'+c+'">'+esc(CUR_COUNTRIES[c])+' ('+c+')</option>').join('');
+  h+='<div class="colrow" style="grid-template-columns:1fr;border-top:1px solid var(--line)"><div>'
+    +'<div class="row wrap" style="gap:6px">'+tickerCurs().map(c=>'<span class="chip" title="'+esc(curLabel(c))+'">'+esc(c)+' <button data-action="tkRemove" data-id="'+esc(c)+'">×</button></span>').join('')
+    +'</div><div class="copywrap mt-s"><select id="tkSelect" style="max-width:260px"><option value="">＋ Add a country…</option>'+addOpts+'</select>'
     +'<button class="btn ghost sm" data-action="tkAdd">Add</button>'
     +'<select data-action="baseCur" style="max-width:120px" title="Show all totals in…">'+['USD','IDR','TWD','AUD','EUR'].map(c=>'<option '+(base===c?'selected':'')+'>'+c+'</option>').join('')+'</select>'
     +'<button class="btn ghost sm" data-action="fetchFx">↻ rates</button></div>'
@@ -1332,11 +1391,13 @@ function routeFlights(){
     flights.push({ kind:'cash', id:p.id, name:p.label.replace(/ (SP2T|EPS|SSW)$/,'').toUpperCase(), tag:(p.id==='taiwan_sp2t'?'SP2T · cash bridge':(p.id==='korea_eps'?'EPS · skilled labour':'SSW · skilled labour')), lang, status:st, next:p.nextStep });
   });
   const dec=state.phase2.decision;
-  flights.push({ kind:'end', id:'germany', name:'GERMANY', tag:'Ausbildung · endgame', lang:{t:'🇩🇪 B1',c:'--amber-dim'},
-    status: dec==='germany'?{t:'BOARDING',c:'st-boarding'}:{t:'SCHEDULED',c:'st-scheduled'}, next:'German B1 → training place' });
+  const roles=state.phase2.roles||{germany:'endgame',australia:'endgame'};
+  const gWatch=roles.germany==='watch', aWatch=roles.australia==='watch';
+  flights.push({ kind:gWatch?'watch':'end', id:'germany', name:'GERMANY', tag:'Ausbildung · '+(gWatch?'watching':'endgame'), lang:{t:'🇩🇪 B1',c:'--amber-dim'},
+    status: gWatch?{t:'WATCHING',c:'st-scheduled'}:(dec==='germany'?{t:'BOARDING',c:'st-boarding'}:{t:'SCHEDULED',c:'st-scheduled'}), next:'German B1 → training place' });
   const cap=ageCapDate(state.profile.birthDate); const mU=monthsUntil(cap);
-  flights.push({ kind:'end', id:'australia', name:'AUSTRALIA', tag:'WHV 462 · endgame', lang:{t:'🇬🇧 EN',c:'--teal'},
-    status: dec==='australia'?{t:'BOARDING',c:'st-boarding'}:(mU!=null&&mU<=18?{t:'GATE 31',c:'st-gate'}:{t:'SCHEDULED',c:'st-scheduled'}), next:'AUD 5k → apply before 31' });
+  flights.push({ kind:aWatch?'watch':'end', id:'australia', name:'AUSTRALIA', tag:'WHV 462 · '+(aWatch?'watching':'endgame'), lang:{t:'🇬🇧 EN',c:'--teal'},
+    status: aWatch?{t:'WATCHING',c:'st-scheduled'}:(dec==='australia'?{t:'BOARDING',c:'st-boarding'}:(mU!=null&&mU<=18?{t:'GATE 31',c:'st-gate'}:{t:'SCHEDULED',c:'st-scheduled'})), next:'AUD 5k → apply before 31' });
   (state.customRoutes||[]).forEach(c=>{
     const role=c.role||'watch';
     const status = role==='endgame'
@@ -1412,13 +1473,16 @@ function viewBoard(){
   }
   const calToggle='<div class="seg sm" style="margin:10px 0 4px">'
     +'<button data-action="calMode" data-m="agenda" class="'+(_calMode==='agenda'?'on':'')+'">Agenda</button>'
-    +'<button data-action="calMode" data-m="month" class="'+(_calMode==='month'?'on':'')+'">Month</button></div>';
-  const calBody = _calMode==='month' ? calMonthGridHTML(agItems) : agRows;
+    +'<button data-action="calMode" data-m="month" class="'+(_calMode==='month'?'on':'')+'">Month</button>'
+    +'<button data-action="calMode" data-m="year" class="'+(_calMode==='year'?'on':'')+'">Year</button></div>';
+  const calBody = _calMode==='month' ? calMonthGridHTML(agItems) : (_calMode==='year' ? calYearHTML(agItems) : agRows);
   const cal='<div class="panel"><div class="between"><div style="font-weight:600">🗓 Your calendar'
     +info('Your deadlines, right here in the app. This is the same list as the “'+CFG.CAL_NAME+'” Google calendar — sync it in Settings and these show in your phone’s calendar too, so you never have to leave.')+'</div>'
     +'<button class="btn ghost sm" data-action="nav" data-view="settings">Sync ↗</button></div>'
     +calToggle+calBody
     +'<div class="btn-row mt"><button class="btn ghost sm" data-action="downloadICS">⬇ .ics</button>'
+    +'<a class="btn ghost sm" target="_blank" rel="noopener" href="https://calendar.google.com/calendar/u/0/r">📅 Open Google Calendar ↗</a>'
+    +(_unlocked?'<button class="btn ghost sm" data-action="aiWindows">✨ AI: refresh dates</button>':'')
     +'<button class="btn ghost sm" data-action="nav" data-view="settings">Push to Google →</button></div></div>';
 
   // Ask-anything agent — one web-searched answer, kept until the next question.
@@ -1478,6 +1542,46 @@ function calMonthGridHTML(agItems){
     legend='<div class="empty" style="padding:12px">Nothing dated in '+esc(monthLbl)+'.</div>';
   }
   return head+grid+legend;
+}
+
+/* Year view — 12 color-coded mini-months; tap any month/day → Month view. */
+function calCat(uid){ // color category by item origin
+  if(uid.indexOf('doc-')===0||uid.indexOf('pk-')===0) return 'ydoc';    // documents (amber)
+  if(uid.indexOf('p1-')===0) return 'ywave';                            // route windows (teal)
+  if(uid.indexOf('au-')===0) return 'ycap';                             // age cap (red)
+  return 'yai';                                                          // AI-found (violet)
+}
+function calYearHTML(agItems){
+  const y=_calYear||+todayISO().slice(0,4);
+  const byDate={};
+  agItems.forEach(i=>{ if(+i.date.slice(0,4)===y){ (byDate[i.date]=byDate[i.date]||[]).push(i); } });
+  const todayIso=todayISO();
+  let h='<div class="between" style="margin:8px 0 6px"><button class="btn ghost sm" data-action="calYearNav" data-d="-1">‹</button>'
+    +'<div style="font-family:var(--mono);font-weight:700;font-size:13px;letter-spacing:.06em">'+y+'</div>'
+    +'<button class="btn ghost sm" data-action="calYearNav" data-d="1">›</button></div>';
+  h+='<div class="yeargrid">';
+  for(let m=0;m<12;m++){
+    const first=new Date(y,m,1), lead=first.getDay(), days=new Date(y,m+1,0).getDate();
+    const mm=String(m+1).padStart(2,'0');
+    const monthHas=Object.keys(byDate).some(d=>d.slice(5,7)===mm);
+    h+='<div class="ymonth'+(monthHas?' has':'')+'" data-action="calOpenMonth" data-m="'+y+'-'+mm+'">'
+      +'<div class="yh">'+first.toLocaleDateString(undefined,{month:'short'}).toUpperCase()+'</div><div class="ydays">';
+    for(let k=0;k<lead;k++) h+='<span class="yd off"></span>';
+    for(let d=1;d<=days;d++){
+      const iso=y+'-'+mm+'-'+String(d).padStart(2,'0');
+      const its=byDate[iso];
+      const cls=its?(' '+calCat(its[0].uid)):''; const isT=iso===todayIso;
+      h+='<span class="yd'+cls+(isT?' td':'')+'"'+(its?' title="'+esc(its.map(x=>x.title).join(' · '))+'"':'')+'>'+d+'</span>';
+    }
+    h+='</div></div>';
+  }
+  h+='</div>';
+  h+='<div class="row wrap mt-s" style="gap:10px;font-size:10px;color:var(--faint)">'
+    +'<span><i class="ykey ydoc"></i> documents</span><span><i class="ykey ywave"></i> route windows</span>'
+    +'<span><i class="ykey ycap"></i> age cap</span><span><i class="ykey yai"></i> ✨ AI-found</span></div>';
+  const n=Object.keys(byDate).length;
+  h+='<div class="sub mt-s">'+(n?n+' dated day'+(n>1?'s':'')+' in '+y+' — tap a month to zoom in.':'Nothing dated in '+y+' yet — tap “✨ AI: refresh dates” below and let it hunt.')+'</div>';
+  return h;
 }
 
 function viewToday(){
@@ -1626,7 +1730,9 @@ function packProgress(p){ const done=(p.docs||[]).filter(d=>d.status==='done').l
 function viewDocs(){
   const dp=docProgress();
   let html='<div class="panel"><div class="between"><div><h2 style="font-size:20px">Documents</h2><div class="sub">The gate — nothing downstream moves without these. <b>Tap any row</b> to set its status, add an expiry date, or upload a scan.</div></div>'
-    +'<div style="text-align:right"><div style="font-family:var(--mono);font-weight:700;font-size:20px;color:var(--amber-soft)">'+dp.done+'/'+dp.total+'</div></div></div><div class="mt">'+bar(dp.pct)+'</div></div>';
+    +'<div style="text-align:right"><div style="font-family:var(--mono);font-weight:700;font-size:20px;color:var(--amber-soft)">'+dp.done+'/'+dp.total+'</div></div></div><div class="mt">'+bar(dp.pct)+'</div>'
+    +'<div class="btn-row mt"><a class="btn ghost sm" target="_blank" rel="noopener" href="'+(state.settings.driveFolderId?('https://drive.google.com/drive/folders/'+esc(state.settings.driveFolderId)):'https://drive.google.com/drive/my-drive')+'">📂 Open my Drive folder ↗</a>'
+    +(state.settings.driveFolderId?'':'<span class="faint small" style="align-self:center">(connect Drive in Settings to link your “'+esc(CFG.DRIVE_FOLDER)+'” folder directly)</span>')+'</div></div>';
 
   // GENERAL — the universal gate (drives the big progress + next action)
   html+='<div class="eyebrow" style="padding:2px 2px 8px">GENERAL — THE GATE'+info('The universal Indonesian documents every route needs. These drive your Docs progress and the “one thing today”. Purpose packs below hold route-specific paperwork on top of these.')+'</div>';
@@ -1652,6 +1758,7 @@ function viewDocs(){
       +'<div class="copywrap mt"><input id="pd-'+pk.id+'" placeholder="Add a document (e.g. Apostilled ijazah)"><button class="btn ghost sm" data-action="pdAdd" data-id="'+pk.id+'">Add</button></div>'
       +'<div class="btn-row mt">'
       +(_unlocked?'<button class="btn primary sm" data-action="aiDocpack" data-id="'+pk.id+'">✨ AI: build this checklist</button>':'')
+      +(pk.driveFolderId?'<a class="btn ghost sm" target="_blank" rel="noopener" href="https://drive.google.com/drive/folders/'+esc(pk.driveFolderId)+'">📂 Open folder ↗</a>':'')
       +'<button class="btn ghost sm danger" data-action="packRemove" data-id="'+pk.id+'">Remove pack</button></div>'
       +'</details>';
   });
@@ -1697,20 +1804,35 @@ function viewRoutes(){
   (state.customRoutes||[]).filter(c=>(c.role||'watch')==='bridge').forEach(c=>{ html+=customRouteCard(c); });
   html+='</div>';
 
-  // ENDGAME — candidates are Germany, Australia, plus any AI route you promote
+  // ENDGAME — nothing is fixed: built-ins can be demoted to “watching”,
+  // and any AI-researched country can be promoted into the candidates table.
+  const roles=state.phase2.roles||{germany:'endgame',australia:'endgame'};
   const endCustoms=(state.customRoutes||[]).filter(c=>(c.role||'watch')==='endgame');
   const decCustom=endCustoms.find(c=>c.id===dec)||((state.customRoutes||[]).find(c=>c.id===dec));
-  html+='<div class="eyebrow" style="padding:14px 2px 8px">ENDGAME — WHERE YOU SETTLE'+info('Candidates: Germany and Australia come researched out of the box, and any country you research below can be promoted to an endgame candidate (set its role). Choose one — the Board, Languages and your next actions follow it.')+'</div>';
+  const cands=[];
+  if(roles.germany!=='watch') cands.push({key:'germany',chip:'Germany 🇩🇪',col:'GERMANY 🇩🇪',cit:'~5 yrs, criteria-based',lang:'German B1–B2',pay:'€724–1,490/mo training',ctch:'learn German'});
+  if(roles.australia!=='watch') cands.push({key:'australia',chip:'Australia 🇦🇺',col:'AUSTRALIA 🇦🇺',cit:'4 yrs + 1 yr PR (hard gate)',lang:'English only',pay:'A$26.44/hr (top min wage)',ctch:'apply before 31'});
+  endCustoms.forEach(c=>cands.push({key:c.id,chip:esc(c.name),col:esc(c.name),cit:c.timeline?esc(c.timeline):'—',lang:esc(c.langLabel||'—'),pay:esc(c.pay||'—'),ctch:esc(c.risk||'—')}));
+  html+='<div class="eyebrow" style="padding:14px 2px 8px">ENDGAME — WHERE YOU SETTLE'+info('Nothing here is fixed. Germany and Australia are just pre-researched candidates — demote either to “watching”, and promote any country you research below into the table (set its role to Endgame candidate). Choose one and the Board, Languages and next actions follow.')+'</div>';
   html+='<div class="panel"><div class="seg" style="flex-wrap:wrap">'
-    +['undecided','germany','australia'].map(k=>'<button data-action="decision" data-val="'+k+'" class="'+(dec===k?'on':'')+'" style="min-width:110px">'+({undecided:'Undecided',germany:'Germany 🇩🇪',australia:'Australia 🇦🇺'}[k])+'</button>').join('')
-    +endCustoms.map(c=>'<button data-action="decision" data-val="'+c.id+'" class="'+(dec===c.id?'on':'')+'" style="min-width:110px">'+esc(c.name)+'</button>').join('')
+    +'<button data-action="decision" data-val="undecided" class="'+(dec==='undecided'?'on':'')+'" style="min-width:110px">Undecided</button>'
+    +cands.map(cd=>'<button data-action="decision" data-val="'+cd.key+'" class="'+(dec===cd.key?'on':'')+'" style="min-width:110px">'+cd.chip+'</button>').join('')
+    +'</div>';
+  if(cands.length){
+    html+='<div style="overflow-x:auto"><table class="cmp">'
+      +'<tr><th></th>'+cands.map(cd=>'<th class="'+(dec===cd.key?'you':'')+'">'+cd.col+'</th>').join('')+'</tr>'
+      +'<tr><th>Citizenship / timeline</th>'+cands.map(cd=>'<td>'+cd.cit+'</td>').join('')+'</tr>'
+      +'<tr><th>Language</th>'+cands.map(cd=>'<td>'+cd.lang+'</td>').join('')+'</tr>'
+      +'<tr><th>Pay during</th>'+cands.map(cd=>'<td>'+cd.pay+'</td>').join('')+'</tr>'
+      +'<tr><th>Catch / risk</th>'+cands.map(cd=>'<td>'+cd.ctch+'</td>').join('')+'</tr></table></div>';
+  } else {
+    html+='<div class="empty">No endgame candidates — promote a researched country below, or bring Germany/Australia back.</div>';
+  }
+  html+='<div class="row wrap mt" style="gap:10px">'
+    +[['germany','🇩🇪 Germany'],['australia','🇦🇺 Australia']].map(b=>'<label class="row small" style="gap:6px">'+b[1]
+      +'<select data-action="egRole" data-id="'+b[0]+'" style="width:auto;padding:4px 26px 4px 8px;font-size:12px">'
+      +[['endgame','Endgame candidate'],['watch','Just watching']].map(o=>'<option value="'+o[0]+'" '+((roles[b[0]]||'endgame')===o[0]?'selected':'')+'>'+o[1]+'</option>').join('')+'</select></label>').join('')
     +'</div>'
-    +'<div style="overflow-x:auto"><table class="cmp">'
-    +'<tr><th></th><th class="'+(dec==='germany'?'you':'')+'">GERMANY</th><th class="'+(dec==='australia'?'you':'')+'">AUSTRALIA</th></tr>'
-    +'<tr><th>Citizenship</th><td>~5 yrs, criteria-based</td><td>4 yrs + 1 yr PR (hard gate)</td></tr>'
-    +'<tr><th>Language</th><td>German B1–B2</td><td>English only</td></tr>'
-    +'<tr><th>Pay during</th><td>€724–1,490/mo training</td><td>A$26.44/hr (top min wage)</td></tr>'
-    +'<tr><th>Catch</th><td>learn German</td><td>apply before 31</td></tr></table></div>'
     +'<div class="note blue mt">PR ≠ citizenship. PR frees you ~90%; citizenship is the capstone.</div>';
 
   if(dec==='germany'){
@@ -1839,7 +1961,7 @@ const FEED_CATALOG={
 };
 let _feed=null, _feedTs=0, _feedFilter='all', _feedLoading=false;
 let _twMode='latest', _savedFilter='all', _savedSort='new', _savedFrom='', _savedTo='';
-let _calMode='agenda', _calMonth=null; // _calMonth: 'YYYY-MM' anchor for the month grid
+let _calMode='agenda', _calMonth=null, _calYear=null; // month: 'YYYY-MM' · year: number
 try{ const c=JSON.parse(localStorage.getItem('escapeFeed')||'null'); if(c){ _feed=c.data; _feedTs=c.ts||0; } }catch(e){}
 function timeAgo(s){
   const t=s?Date.parse(s):0; if(!t) return '';
@@ -2064,6 +2186,8 @@ function viewSettings(){
   // tickers
   html+='<div class="panel"><h3 style="font-size:15px">📰 Tickers</h3>'
     +'<label class="row mt-s small" style="gap:8px"><input type="checkbox" style="width:auto" data-action="toggleNewsbar" '+(s.newsTicker!==false?'checked':'')+'> Rolling news footer (today’s Tailwinds headlines on every tab)</label>'
+    +'<div class="field mt"><label>Scroll speed <span class="faint">(both tickers)</span></label><select data-action="tickerSpeed">'
+      +[['off','Off — drag only'],['slow','Slow'],['normal','Normal'],['fast','Fast']].map(o=>'<option value="'+o[0]+'" '+((s.tickerSpeed||'normal')===o[0]?'selected':'')+'>'+o[1]+'</option>').join('')+'</select></div>'
     +'<div class="sub mt-s">The currency strip up top: tap it for the money panel — converter, living costs, and which currencies to show.</div></div>';
 
   // reminders
@@ -2083,7 +2207,7 @@ function viewSettings(){
     +'<button class="btn ghost sm" data-action="exportJson">⬇ Export</button><button class="btn ghost sm" data-action="importJson">⬆ Import</button>'
     +'<button class="btn ghost sm" data-action="resetAll" style="color:var(--red)">Reset</button></div>'
     +'<div class="sub mt-s">Cached on this device for offline use, and synced privately to your passphrase-locked vault.</div></div>';
-  html+='<div class="center small faint" style="padding:10px">Escape Pipeline · Departures edition · v3.3</div>';
+  html+='<div class="center small faint" style="padding:10px">Escape Pipeline · Departures edition · v3.4</div>';
   return html;
 }
 
@@ -2100,8 +2224,10 @@ document.addEventListener('click', async (e)=>{
     case 'feedFilter': _feedFilter=t.dataset.f||'all'; renderFeed(); { const cs=$$('#view [data-action="feedFilter"]'); cs.forEach(b=>b.classList.toggle('primary', b.dataset.f===_feedFilter)); cs.forEach(b=>b.classList.toggle('ghost', b.dataset.f!==_feedFilter)); } break;
     case 'refreshFeed': loadFeed(true); toast('Refreshing…'); break;
     case 'twMode': _twMode=t.dataset.m; render(); break;
-    case 'calMode': _calMode=t.dataset.m; if(_calMode==='month'&&!_calMonth) _calMonth=todayISO().slice(0,7); render(); break;
+    case 'calMode': _calMode=t.dataset.m; if(_calMode==='month'&&!_calMonth) _calMonth=todayISO().slice(0,7); if(_calMode==='year'&&!_calYear) _calYear=+todayISO().slice(0,4); render(); break;
     case 'calMonthNav': { const base=_calMonth||todayISO().slice(0,7); const y=+base.slice(0,4), m=+base.slice(5,7)-1; const nd=new Date(y,m+(+t.dataset.d),1); _calMonth=nd.getFullYear()+'-'+String(nd.getMonth()+1).padStart(2,'0'); render(); break; }
+    case 'calYearNav': _calYear=(_calYear||+todayISO().slice(0,4))+(+t.dataset.d); render(); break;
+    case 'calOpenMonth': _calMode='month'; _calMonth=t.dataset.m; render(); break;
     case 'keepArticle': { const g=(_feed&&_feed.groups||[]).find(x=>x.id===t.dataset.topic); const it=g&&g.items[+t.dataset.idx];
       if(it && !isSaved(it.link)){ mutate(s=>{ (s.saved=s.saved||[]).unshift({ id:uid(), title:it.title, link:it.link, source:it.source||'', date:it.date||'', topicId:g.id, topicLabel:g.label, flag:g.flag, note:'', savedAt:Date.now() }); }); toast('Kept ✓ — see the Saved tab'); } break; }
     case 'unsave': mutate(s=>{ s.saved=(s.saved||[]).filter(x=>x.id!==id); }); break;
@@ -2180,11 +2306,11 @@ document.addEventListener('click', async (e)=>{
     case 'askAI': await aiAsk(t); break;
     case 'aiSpendReset': setSilent(s=>{ const a=s.settings.ai=s.settings.ai||{}; a.spendUSD=0; a.spendSince=todayISO(); }); render(); toast('Spend meter reset'); break;
     case 'tkRemove': { const c=id; setSilent(s=>{ s.settings.tickerCurrencies=tickerCurs().filter(x=>x!==c); }); renderFx(); renderFxPanel(); break; }
-    case 'tkAdd': { const el=$('#tkInput'); const c=(el?el.value.trim().toUpperCase():'').slice(0,3);
-      if(!/^[A-Z]{3}$/.test(c)){ toast('Use a 3-letter code like NOK','err'); break; }
-      if(tickerCurs().includes(c)){ if(el) el.value=''; break; }
+    case 'tkAdd': { const el=$('#tkSelect'); const c=el?el.value:'';
+      if(!/^[A-Z]{3}$/.test(c)){ if(el) el.focus(); break; }
+      if(tickerCurs().includes(c)) break;
       setSilent(s=>{ s.settings.tickerCurrencies=[...tickerCurs(),c]; });
-      renderFx(); renderFxPanel(); toast('＋ '+c+' — pulling its rate…'); fetchRates().catch(()=>toast('Offline — rate comes when you reconnect','err')); break; }
+      renderFx(); renderFxPanel(); toast('＋ '+curLabel(c)+' — pulling its rate…'); fetchRates().catch(()=>toast('Offline — rate comes when you reconnect','err')); break; }
     case 'aiCol': await aiColRefresh(t); break;
     case 'resetAll': if(confirm('Erase ALL local data and start fresh? Export a backup first if unsure.')){ localStorage.removeItem(CFG.STORE_KEY); state=defaults(); saveLocal(); setView('board'); toast('Reset done'); } break;
   }
@@ -2211,6 +2337,7 @@ document.addEventListener('change', (e)=>{
     case 'crStatus': { mutate(s=>{ const c=(s.customRoutes||[]).find(x=>x.id===id); if(c) c.status=v; }); break; }
     case 'crNext': setSilent(s=>{ const c=(s.customRoutes||[]).find(x=>x.id===id); if(c) c.next=v; }); break;
     case 'crRole': mutate(s=>{ const c=(s.customRoutes||[]).find(x=>x.id===id); if(c){ c.role=v; if(v!=='endgame'&&s.phase2.decision===id) s.phase2.decision='undecided'; } }); break;
+    case 'egRole': mutate(s=>{ const r=s.phase2.roles=s.phase2.roles||{germany:'endgame',australia:'endgame'}; r[id]=v; if(v!=='endgame'&&s.phase2.decision===id) s.phase2.decision='undecided'; }); break;
     case 'p1Label': mutate(s=>{ const p=s.phase1.find(x=>x.id===id); if(p&&v.trim()) p.label=v.trim().slice(0,40); }); break;
     case 'p1Link': setSilent(s=>{ const p=s.phase1.find(x=>x.id===id); if(p) p.link=/^https?:/.test(v)?v:(v?'https://'+v:''); }); break;
     case 'p1Note': setSilent(s=>{ const p=s.phase1.find(x=>x.id===id); if(p) p.note=v.slice(0,140); }); break;
@@ -2234,6 +2361,7 @@ document.addEventListener('change', (e)=>{
     case 'clTarget': setSilent(s=>{ const c=(s.customLangs||[]).find(x=>x.id===id); if(c) c.target=v; }); break;
     case 'toggleDailyReminder': mutate(s=>{ s.settings.dailyReminder=t.checked; }); break;
     case 'toggleNewsbar': setSilent(s=>{ s.settings.newsTicker=t.checked; }); renderNewsbar(); break;
+    case 'tickerSpeed': setSilent(s=>{ s.settings.tickerSpeed=v; }); break;
     case 'setReminderTime': setSilent(s=>{ s.settings.reminderTime=v; }); maybeNotify(); break;
     case 'savedFrom': _savedFrom=v; render(); break;
     case 'savedTo': _savedTo=v; render(); break;
@@ -2433,7 +2561,8 @@ function revealApp(){
   if(g) g.classList.add('hide'); if(app) app.style.display=''; if(tb) tb.style.display='';
   render(); tickClock();
   loadFeed(false).catch(()=>{});
-  if(state.runway.ratesUpdated!==todayISO()) fetchRates().catch(()=>{}); // keep the ticker fresh, silently
+  // keep the ticker fresh: refetch daily OR whenever a chosen currency has no rate yet
+  if(state.runway.ratesUpdated!==todayISO() || tickerCurs().some(c=>!(state.runway.rates||{})[c])) fetchRates().catch(()=>{});
   maybeNotify();
   openGuide(false);
 }

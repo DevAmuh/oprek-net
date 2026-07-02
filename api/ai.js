@@ -199,7 +199,7 @@ module.exports = async (req, res) => {
         '1. Taiwan SP2T (government-to-government via SISKOP2MI)\n' +
         '2. Korea EPS — the next EPS-TOPIK registration/exam round for Indonesians\n' +
         '3. Japan SSW — the next JFT-Basic / skills-test schedule in Indonesia\n' +
-        'Respond with ONLY one JSON object: {"routes":[{"id":"taiwan_sp2t"|"korea_eps"|"japan_ssw","window":"short current status — include a date in YYYY-MM-DD form if one is known","next":"one concrete step","link":"official URL"}],"note":"one line overall"}. Include all three routes even if a window is closed (say so).' +
+        'Respond with ONLY one JSON object: {"routes":[{"id":"taiwan_sp2t"|"korea_eps"|"japan_ssw","window":"short current status — include a date in YYYY-MM-DD form if one is known","next":"one concrete step","link":"official URL"}],"events":[{"title":"short event name","date":"YYYY-MM-DD","desc":"one line"}],"note":"one line overall"}. Include all three routes even if a window is closed (say so). In "events", list every CONCRETE upcoming dated deadline you found (registration opens/closes, exam dates, announcement dates) — max 8; empty array if none.' +
         NO_NARRATE;
       const r = await runClaude(prompt, { model, effort, useWeb: true, maxTokens: 1800 });
       const data = extractJson(r.text);
@@ -238,8 +238,8 @@ module.exports = async (req, res) => {
     if (action === 'col') {
       const list = String(body.currencies || '').slice(0, 400) || 'USD (United States), TWD (Taiwan)';
       const prompt =
-        'You research cost-of-living facts for an Indonesian labor migrant comparing destination countries. For EACH currency/country in this list: ' + list + ' — find CURRENT typical prices in LOCAL currency: a cheap restaurant meal, a regular cappuccino, and the statutory minimum MONTHLY wage (if none exists, the typical monthly pay for low-skill labor; say which in the note). Use web search sparingly — approximate is fine. ' +
-        'Respond with ONLY one JSON object keyed by 3-letter currency code, e.g. {"TWD":{"country":"Taiwan","meal":120,"coffee":60,"minWage":29500,"note":"statutory"},"KRW":{...}}. Numbers only (no strings) for meal/coffee/minWage.' +
+        'You research cost-of-living facts for an Indonesian labor migrant comparing destination countries. For EACH currency/country in this list: ' + list + ' — find CURRENT typical prices in LOCAL currency: a cheap restaurant meal, a regular cappuccino, a cheap room / shared-flat rent per month, a basic clinic visit for a foreigner, and the statutory minimum MONTHLY wage (if none exists, the typical monthly pay for low-skill labor; say which in the note). Use web search sparingly — approximate is fine. ' +
+        'Respond with ONLY one JSON object keyed by 3-letter currency code, e.g. {"TWD":{"country":"Taiwan","meal":120,"coffee":60,"rent":8000,"medical":400,"minWage":29500,"note":"statutory; dorm often provided"},"KRW":{...}}. Numbers only (no strings) for meal/coffee/rent/medical/minWage.' +
         NO_NARRATE;
       const r = await runClaude(prompt, { model, effort, useWeb: true, maxTokens: 2200 });
       const data = extractJson(r.text);
