@@ -98,7 +98,7 @@ async function runClaude(userText, opts){
   for (let i = 0; i < 3; i++) {
     const body = { model: m.id, max_tokens: opts.maxTokens || 2500, messages: msgs };
     if (m.effortOK) body.output_config = { effort: opts.effort || 'low' };
-    if (opts.useWeb) body.tools = [{ type: m.search, name: 'web_search', max_uses: 3 }];
+    if (opts.useWeb) body.tools = [{ type: m.search, name: 'web_search', max_uses: opts.maxUses || 3 }];
     last = await callClaude(body, opts.apiKey);
     allText += textOf(last);
     if (last.usage) {
@@ -281,13 +281,13 @@ module.exports = async (req, res) => {
       const items = String(body.items || '').slice(0, 3000).trim();
       if (!items) return res.status(400).json({ error: 'Nothing to compare.' });
       const prompt =
-        'Today is ' + TODAY + '. You are a brutally honest relocation strategist for ' + persona + ' ' +
-        'They are about to bet YEARS of their life (a non-renewable resource — mind any age caps) on ONE destination. Stress-test these candidates against each other. Use web search sparingly to check anything time-critical (quotas, upcoming rounds, rule changes). Candidates with their known facts:\n' + items + '\n' +
+        'Today is ' + TODAY + '. You are a brutally honest cultural insider briefing ' + persona + ' ' +
+        'They are choosing where to spend YEARS of their one life. Paperwork and visas live elsewhere in their app — your job is the LIVED REALITY of each candidate, the things brochures hide. For EACH candidate cover: real crime/safety for foreigners; how locals actually treat Southeast Asian / Indonesian workers (racism, hierarchy, invisible ceilings); day-to-day reality for a practicing Muslim (most Indonesian workers are — prayer space, halal food, Ramadan at work, hostility or ease); behaviors locals GENUINELY LOVE in a foreigner; behaviors that get you quietly or loudly DESPISED; sensitive topics to never raise; and the workplace reality check — actual work culture plus its dark sides (exploitation patterns, unpaid overtime, passport confiscation risk, dorm conditions) and bright sides. Use web search for current specifics — worker forums and news, not tourism sites. Candidates:\n' + items + '\n' +
         'Respond with ONLY one JSON object:\n' +
-        '{"countries":{"<NAME>":{"s":["2-4 concrete strengths"],"w":["2-4 concrete weaknesses"],"o":["1-3 opportunities ahead"],"t":["1-3 threats/risks"],"verdict":"one blunt line"}},"recommendation":"3-5 sentences: name ONE country to commit to first and WHY, grounded in their specific situation (age cap, money, documents, languages), plus what would change your answer."}\n' +
-        'Be specific with numbers and dates, not generic. If a candidate is a bad fit, say so plainly.' +
+        '{"countries":{"<NAME>":{"safety":"1-2 lines","racism":"1-2 honest lines on attitudes toward Indonesian/SE-Asian workers","religion":"1-2 lines on Muslim daily-life practicality","loved":["2-4 behaviors genuinely appreciated"],"despised":["2-4 behaviors that make locals resent you"],"sensitive":["2-3 topics to avoid at all costs"],"work":{"culture":"1-2 lines","bright":["2-3 bright sides"],"dark":["2-3 dark sides, named plainly"]},"verdict":"one blunt line"}},"recommendation":"3-5 sentences naming ONE candidate to commit to first and WHY, grounded in their specific situation (age caps, money, documents, languages), plus what would change your answer."}\n' +
+        'Be concrete and unsanitized — name real risks plainly. If a candidate is a bad fit for this person, say so.' +
         NO_NARRATE;
-      const r = await runClaude(prompt, { model, effort, apiKey, useWeb: true, maxTokens: 2800 });
+      const r = await runClaude(prompt, { model, effort, apiKey, useWeb: true, maxUses: 5, maxTokens: 3600 });
       const data = extractJson(r.text);
       if (!data || !data.countries) return parseFail(res, r, 'The comparison came back empty — try again.');
       return send(data, r.costUSD);

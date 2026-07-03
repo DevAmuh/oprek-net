@@ -224,6 +224,18 @@ code{font-family:var(--mono);font-size:11px;background:rgba(0,0,0,.35);padding:1
 .swoth{font-family:var(--mono);font-weight:700;font-size:9px;letter-spacing:.12em;margin-bottom:5px}
 .sw-s .swoth{color:#a7f3c6}.sw-w .swoth{color:var(--amber-soft)}.sw-o .swoth{color:var(--teal)}.sw-t .swoth{color:#ffb3c0}
 .swotli{font-size:12.5px;color:var(--muted);padding:2px 0;line-height:1.45}
+.crurow{display:grid;grid-template-columns:180px 1fr;gap:4px 12px;padding:7px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+.crurow b{color:var(--amber-soft);font-weight:600}
+.crurow span{color:var(--muted);line-height:1.5}
+@media(max-width:520px){ .crurow{grid-template-columns:1fr;gap:1px} }
+
+/* Desktop: cap form-heavy views so panels stop stretching absurdly wide,
+   and lay the language cards out as a grid instead of a mile-long stack. */
+@media(min-width:1160px){
+  .vnarrow{max-width:1080px;margin:0 auto}
+  .langwrap{display:grid;grid-template-columns:repeat(auto-fill,minmax(460px,1fr));gap:14px;align-items:start}
+  .langwrap .langcard{margin-top:0}
+}
 /* year view — 12 mini months */
 .yeargrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:10px}
 .ymonth{border:1px solid var(--line);border-radius:8px;padding:7px 8px;background:rgba(0,0,0,.18);cursor:pointer;transition:border-color .15s}
@@ -542,11 +554,12 @@ function defaults(){
       entries:[],
       targets:[
         { id:'t_passport', label:'Passport fee (~Rp 350k)', amount:350000, currency:'IDR' },
-        { id:'t_aud', label:'Australia buffer (AUD 5,000)', amount:5000, currency:'AUD' },
-        { id:'t_sperr', label:'Sperrkonto (~€11,904, often offset)', amount:11904, currency:'EUR' },
+        { id:'t_depart', label:'Departure fund — medical, visa, tickets', amount:8000000, currency:'IDR' },
+        { id:'t_buffer', label:'Arrival buffer — first 2 months abroad', amount:15000000, currency:'IDR' },
       ],
-      rates:{ IDR:1, USD:17888, TWD:565, AUD:11800, EUR:19300 },
+      rates:{ IDR:1, USD:17888, TWD:565, AUD:11800, EUR:19300, SAR:4770, QAR:4915, AED:4870, JPY:112 },
       ratesUpdated:'',
+      monthlyIncome:0, savePct:20,
     },
     doneLog:[],
     saved:[],
@@ -2097,35 +2110,64 @@ function viewCrucible(){
     +'</div><div class="sub mt-s">Anything from Routes can enter — research more countries there to widen the field.</div></div>';
   const sel=cands.filter(c=>picks.includes(c.key));
   if(sel.length>=2){
-    const rows=[['program','Program'],['lang','Language'],['pay','Pay'],['timeline','Timeline'],['ageCap','Age cap'],['labor','Labour fit'],['risk','Main risk']];
-    html+='<div class="panel" style="overflow-x:auto"><table class="cmp">'
-      +'<tr><th></th>'+sel.map(c=>'<th>'+esc(c.name)+'</th>').join('')+'</tr>'
-      +rows.map(r=>'<tr><th>'+r[1]+'</th>'+sel.map(c=>'<td>'+esc(c.facts[r[0]]||'—')+'</td>').join('')+'</tr>').join('')
-      +'</table></div>';
+    // RESEARCH KIT — zero-cost homework: real people's experiences, no AI needed
+    html+='<div class="panel"><div class="eyebrow" style="padding:0 0 6px">RESEARCH KIT — THE STUFF BROCHURES HIDE'+info('One-tap web searches per contender: how locals treat Indonesian workers, crime, Muslim daily life, work-culture reality, etiquette, and the dark side — from forums and news, not tourism sites. Free; no AI needed.')+'</div>'
+      +'<div class="sub">Paperwork lives in Routes. This is the <b>lived reality</b> — read real people before betting years.</div>'
+      +sel.map(c=>'<div class="mt"><div class="small" style="font-weight:600;margin-bottom:6px">'+esc(c.name)+'</div><div class="row wrap" style="gap:6px">'
+        +cruLinks(c.name).map(l=>'<a class="btn ghost sm" target="_blank" rel="noopener" href="'+l[1]+'">'+l[0]+'</a>').join('')
+        +'</div></div>').join('')+'</div>';
     if(_unlocked&&aiOn()){
-      html+='<div class="panel"><div class="between"><div class="sub">Facts are half the story — let the AI weigh trade-offs against <b>your</b> age cap, money, documents and languages.</div>'
+      html+='<div class="panel"><div class="between"><div class="sub">Browsing gets you fragments — the AI digs through worker forums and news and hands you the <b>full unsanitized brief</b>, weighed against your own situation.</div>'
         +'<button class="btn primary sm" style="flex:none" data-action="cruRun">⚖ Run the crucible</button></div></div>';
     } else if(!aiOn()){
-      html+='<div class="note">🔒 The AI stress-test (SWOT per country + one blunt recommendation) needs your own Claude API key — <a href="#" data-action="nav" data-view="settings">Settings → 🤖 AI</a>.</div>';
+      html+='<div class="note">🔒 The deep brief (racism · faith · loved/despised behaviors · taboo topics · workplace dark sides · one blunt recommendation) needs your own Claude API key — <a href="#" data-action="nav" data-view="settings">Settings → 🤖 AI</a>.</div>';
     }
   } else {
-    html+='<div class="panel"><div class="empty">Pick at least two contenders above and the fact matrix appears here.</div></div>';
+    html+='<div class="panel"><div class="empty">Pick at least two contenders above — you’ll get one-tap research links for each, and (with AI) the full lived-reality brief.</div></div>';
   }
-  // verdicts
+  // verdicts — the lived-reality brief
   const d=cru.data;
   if(d&&d.countries){
-    html+='<div class="eyebrow" style="padding:14px 2px 8px">VERDICTS · '+esc(timeAgo(new Date(d.ts).toISOString()).toUpperCase())+(d.costUSD?' · '+fmtCost(d.costUSD):'')+'</div>';
+    html+='<div class="eyebrow" style="padding:14px 2px 8px">THE BRIEF · '+esc(timeAgo(new Date(d.ts).toISOString()).toUpperCase())+(d.costUSD?' · '+fmtCost(d.costUSD):'')+'</div>';
     if(d.reco) html+='<div class="panel" style="border-color:rgba(246,191,82,.4)"><div class="eyebrow" style="color:var(--amber)">🏁 RECOMMENDATION</div>'
       +'<div style="font-size:14px;line-height:1.6;margin-top:6px">'+esc(d.reco)+'</div></div>';
     Object.keys(d.countries).forEach(nm=>{
       const c=d.countries[nm]||{};
-      const cell=(t,arr,cls)=>'<div class="swotcell '+cls+'"><div class="swoth">'+t+'</div>'+(Array.isArray(arr)&&arr.length?arr.map(x=>'<div class="swotli">· '+esc(x)+'</div>').join(''):'<div class="swotli faint">—</div>')+'</div>';
+      if(!c.safety&&!c.work&&c.s){ html+='<div class="note mb">Old analysis format for '+esc(nm)+' — hit ⚖ Run the crucible again for the new deep brief.</div>'; return; }
+      const li=(arr)=>Array.isArray(arr)&&arr.length?arr.map(x=>'<div class="swotli">· '+esc(x)+'</div>').join(''):'<div class="swotli faint">—</div>';
+      const line=(icon2,label,txt)=>txt?'<div class="crurow"><b>'+icon2+' '+label+'</b><span>'+esc(txt)+'</span></div>':'';
+      const w=c.work||{};
       html+='<div class="panel"><h3 style="font-size:15px">'+esc(nm)+'</h3>'
         +(c.verdict?'<div class="sub mt-s">“'+esc(c.verdict)+'”</div>':'')
-        +'<div class="swotgrid mt">'+cell('✅ STRENGTHS',c.s,'sw-s')+cell('⚠ WEAKNESSES',c.w,'sw-w')+cell('🌅 OPPORTUNITIES',c.o,'sw-o')+cell('⛈ THREATS',c.t,'sw-t')+'</div></div>';
+        +'<div class="mt">'
+        +line('🛡','Safety & crime',c.safety)
+        +line('🤝','How they’ll treat you',c.racism)
+        +line('☪','Faith & daily life',c.religion)
+        +line('🏭','Work culture',w.culture)
+        +'</div>'
+        +'<div class="swotgrid mt">'
+        +'<div class="swotcell sw-s"><div class="swoth">💛 THEY LOVE</div>'+li(c.loved)+'</div>'
+        +'<div class="swotcell sw-t"><div class="swoth">🚫 THEY DESPISE</div>'+li(c.despised)+'</div>'
+        +'<div class="swotcell sw-o"><div class="swoth">🌅 WORK — BRIGHT SIDE</div>'+li(w.bright)+'</div>'
+        +'<div class="swotcell sw-w"><div class="swoth">🌑 WORK — DARK SIDE</div>'+li(w.dark)+'</div>'
+        +'</div>'
+        +(Array.isArray(c.sensitive)&&c.sensitive.length?'<div class="note amber mt">⚠ Never bring up: '+c.sensitive.map(esc).join(' · ')+'</div>':'')
+        +'</div>';
     });
   }
-  return html;
+  return '<div class="vnarrow" style="max-width:1200px">'+html+'</div>';
+}
+/* One-tap research links per contender — the no-AI path into lived reality. */
+function cruLinks(name){
+  const q=s=>'https://www.google.com/search?q='+encodeURIComponent(s);
+  return [
+    ['🛡 crime & safety', q(name+' crime safety for foreign workers')],
+    ['🤝 racism & attitudes', q(name+' racism discrimination indonesian workers reddit')],
+    ['☪ muslim life', q('muslim halal prayer experience working in '+name)],
+    ['🏭 work reality', q(name+' work culture foreign workers reality reddit')],
+    ['✅ dos & don’ts', q(name+' cultural etiquette dos and don’ts foreigners')],
+    ['🌑 dark side', q(name+' migrant worker problems exploitation stories')],
+  ];
 }
 /* Run the AI stress-test on the picked contenders. */
 async function aiCrucible(btn){
@@ -2160,6 +2202,31 @@ function viewMoney(){
     +'<button class="btn primary" data-action="focusAdd">＋ Add money</button></div>'
     +(months>0?'<div class="note mt">≈ <b>'+fmtNum(months)+'</b> months of '+esc(idnRow.place)+' pay already banked.</div>':'')+'</div>';
 
+  // Money coach — 50/30/20 with "pay yourself first", zero jargon
+  const inc=+state.runway.monthlyIncome||0;
+  const pct=+state.runway.savePct||20;
+  const planTarget=inc*pct/100;
+  const mm=todayISO().slice(0,7);
+  const thisMonth=state.runway.entries.filter(e=>(e.date||'').slice(0,7)===mm).reduce((a,e)=>a+toBase(e.amount,e.currency),0);
+  const planPct=planTarget>0?Math.min(100,thisMonth/planTarget*100):0;
+  html+='<div class="panel" style="border-color:rgba(94,234,212,.28)"><h3 style="font-size:15px">🧭 Money coach'+info('The 50/30/20 rule, escape-tuned: 50% of income for needs, 30% for wants, and AT LEAST 20% paid to your escape fund FIRST — on payday, before anything else can eat it. Set your income and slice; the bar tracks this month against the plan.')+'</h3>'
+    +'<div class="grid2 mt"><div class="field"><label>Monthly income ('+esc(base)+')</label><input type="number" data-action="mcIncome" value="'+(inc||'')+'" placeholder="e.g. 5000000"></div>'
+    +'<div class="field"><label>Escape-fund slice</label><select data-action="mcPct">'+[10,15,20,30,40,50].map(p=>'<option value="'+p+'" '+(pct===p?'selected':'')+'>'+p+'% of income</option>').join('')+'</select></div></div>';
+  if(inc>0){
+    html+='<div class="between mt"><span class="small">This month: <b style="color:var(--amber-soft)">'+fmtMoney(thisMonth,base)+'</b> of <b>'+fmtMoney(planTarget,base)+'</b> planned</span>'
+      +'<span class="badge '+(planPct>=100?'live':(planPct>=50?'warn':''))+'">'+Math.round(planPct)+'%</span></div>'+bar(planPct,true)
+    +'<div class="sub mt-s">Needs ≤ '+fmtMoney(inc*0.5,base)+' · Wants ≤ '+fmtMoney(inc*0.3,base)+' · Escape fund ≥ '+fmtMoney(planTarget,base)+'</div>';
+  } else {
+    html+='<div class="sub mt-s">Set your income and the coach plans your monthly escape-fund target.</div>';
+  }
+  html+='<details class="mt-s"><summary style="cursor:pointer" class="small">📖 The 5 rules that actually work</summary><div class="guide-list" style="margin-top:10px">'
+    +'<div><b>Pay yourself first.</b> Move the escape slice OUT on payday — a different account or an envelope. What stays in your pocket gets spent.</div>'
+    +'<div><b>Log every deposit here</b> the moment you set it aside. The bar going green is the reward loop.</div>'
+    +'<div><b>Wants have a ceiling, not a ban.</b> 30% guilt-free — starving all fun is how plans die in month two.</div>'
+    +'<div><b>Keep 1 month of expenses untouchable</b> as an emergency wall, separate from the escape fund — so one bad week doesn’t raid the dream.</div>'
+    +'<div><b>Windfalls (THR, bonuses, side gigs): 80% to the fund</b> before they melt. This is where departures get bought.</div>'
+    +'</div></details></div>';
+
   // log form (the main input)
   html+='<div class="panel"><h3 style="font-size:15px">Log what you saved</h3>'
     +'<div class="sub mb">Add each amount you put aside — a paycheck, a transfer, anything. Pick the currency you saved it in.</div>'
@@ -2181,7 +2248,7 @@ function viewMoney(){
     +'<div class="mt"><div class="between"><span class="sub">IDR per 1 unit · '+(state.runway.ratesUpdated?'updated '+fmtDate(state.runway.ratesUpdated):'seed values')+'</span><button class="btn ghost sm" data-action="fetchFx">↻ live rates</button></div>'
     +'<div class="grid2 mt">'+['USD','TWD','AUD','EUR'].map(c=>'<div class="field"><label>'+c+'</label><input type="number" data-action="rate" data-cur="'+c+'" value="'+(state.runway.rates[c]||0)+'"></div>').join('')+'</div>'
     +'<div class="field mt"><label>Show totals in</label><select data-action="baseCur">'+['USD','IDR','TWD','AUD','EUR'].map(c=>'<option '+(base===c?'selected':'')+'>'+c+'</option>').join('')+'</select></div></div></details>';
-  return html;
+  return '<div class="vnarrow">'+html+'</div>';
 }
 
 /* ------------------------------- Tailwinds ------------------------------- */
@@ -2312,6 +2379,7 @@ function viewLanguages(){
   const anyLive=LANGS.some(l=>langActive(l)==='live');
   if(!anyLive && !(state.customLangs||[]).length){ const ld=leadRoute();
     html+='<div class="note mb">No language is required yet'+(ld?' — your lead route ('+esc(ld.label)+') hasn’t demanded one':'')+'. Pick a route that needs one, or add any language you want below.</div>'; }
+  html+='<div class="langwrap">';
   LANGS.forEach(l=>{
     const d=state.languages[l.id]; const act=langActive(l);
     const didToday=d.lastDay===todayISO();
@@ -2343,17 +2411,18 @@ function viewLanguages(){
       +(c.lessons&&c.lessons.length?'<div class="mt-s">'+c.lessons.slice(0,4).map(x=>'<div class="faint small" style="padding:3px 0">· '+esc(x.text)+' <span style="opacity:.6">'+fmtDate(x.date)+'</span></div>').join('')+'</div>':'')
       +'</div>';
   });
+  html+='</div>'; // .langwrap
   // Add any language
   html+='<div class="panel mt"><h3 style="font-size:15px">＋ Add a language</h3><div class="sub">Arabic for the Gulf, Mandarin for Taiwan shifts, anything — with your own level scale.</div>'
     +'<div class="copywrap mt-s"><input id="newLangName" placeholder="e.g. Arabic"><input id="newLangTarget" placeholder="Target (optional)" style="max-width:160px"><button class="btn primary sm" data-action="langAdd">Add</button></div></div>';
-  return html;
+  return '<div class="vnarrow" style="max-width:1400px">'+html+'</div>';
 }
 
 function viewLog(){
   let html='<div class="panel"><div class="between"><div><h2 style="font-size:20px">Log</h2><div class="sub">Your wins — real proof you act. Read it when you doubt yourself.'+info('Only genuine accomplishments land here (a document cleared, money banked, a check-in, a study session). Not every tap — this is fuel, not an audit trail.')+'</div></div>'
     +(state.doneLog.length?'<button class="btn ghost sm" data-action="clearLog">Clear</button>':'')+'</div>'
     +'<div class="copywrap mt"><input id="doneText" placeholder="Log a win — something you’re proud you did"><button class="btn primary sm" data-action="addDoneManual">Add</button></div></div>';
-  if(!state.doneLog.length) return html+'<div class="panel"><div class="empty">Empty. Check in or finish one tiny thing — watch it fill.</div></div>';
+  if(!state.doneLog.length) return '<div class="vnarrow">'+html+'<div class="panel"><div class="empty">Empty. Check in or finish one tiny thing — watch it fill.</div></div></div>';
   const groups={}; state.doneLog.forEach(e=>{ (groups[e.date]=groups[e.date]||[]).push(e); });
   html+='<div class="panel">';
   Object.keys(groups).sort((a,b)=>b.localeCompare(a)).forEach(dt=>{
@@ -2361,7 +2430,7 @@ function viewLog(){
     groups[dt].forEach(e=>{ html+='<div class="between" style="padding:8px 0;border-bottom:1px solid var(--line)"><div>✅ '+esc(e.text)+'</div><button class="btn ghost sm" data-action="delDone" data-id="'+e.id+'">✕</button></div>'; });
   });
   html+='</div><div class="note">'+state.doneLog.length+' actions shipped. You are not someone who never finishes.</div>';
-  return html;
+  return '<div class="vnarrow">'+html+'</div>';
 }
 
 function viewSettings(){
@@ -2453,8 +2522,8 @@ function viewSettings(){
     +'<button class="btn ghost sm" data-action="exportJson">⬇ Export</button><button class="btn ghost sm" data-action="importJson">⬆ Import</button>'
     +'<button class="btn ghost sm" data-action="resetAll" style="color:var(--red)">Reset</button></div>'
     +'<div class="sub mt-s">Cached on this device for offline use, and synced privately to your passphrase-locked vault.</div></div>';
-  html+='<div class="center small faint" style="padding:10px">Escape Pipeline · Departures edition · v3.7 · E2E-encrypted · BYO-AI</div>';
-  return html;
+  html+='<div class="center small faint" style="padding:10px">Escape Pipeline · Departures edition · v3.8 · E2E-encrypted · BYO-AI</div>';
+  return '<div class="vnarrow">'+html+'</div>';
 }
 
 /* =============================== EVENTS ================================== */
@@ -2614,6 +2683,8 @@ document.addEventListener('change', (e)=>{
     case 'whvNotes': setSilent(s=>{ s.phase2.australia.whvNotes=v; }); break;
     case 'langLevel': mutate(s=>{ s.languages[lang].level=v; if(lang==='german') s.phase2.germany.germanLevel=v; }); break;
     case 'rate': setSilent(s=>{ s.runway.rates[cur]=+v||0; }); render(); break;
+    case 'mcIncome': setSilent(s=>{ s.runway.monthlyIncome=+v||0; }); render(); break;
+    case 'mcPct': setSilent(s=>{ s.runway.savePct=+v||20; }); render(); break;
     case 'baseCur': mutate(s=>{ s.profile.baseCurrency=v; }); break;
     case 'setName': setSilent(s=>{ s.profile.name=v; }); break;
     case 'setBirth': mutate(s=>{ s.profile.birthDate=v; }); break;
@@ -2910,6 +2981,14 @@ async function doAuth(mode){
       }
     }
     _uname=uname; _pass=pass; _authKey=auth; _encKey=enc; _feedToken=(j&&j.feed_token)||''; _unlocked=true;
+    // PRIVACY GUARD: localStorage is shared per browser. A brand-new vault must
+    // start from clean defaults, and signing into a DIFFERENT vault must never
+    // inherit the previous user's local data (it would sync into their cloud!).
+    let prevOwner=''; try{ prevOwner=localStorage.getItem('escapeOwner')||''; }catch(e){}
+    if(!migrated && (mode==='create' || prevOwner!==uname)){
+      state=defaults(); saveLocal(); // cloud copy (if any) is decrypted right below and wins
+    }
+    try{ localStorage.setItem('escapeOwner', uname); }catch(e){}
     if(j && j.data_ct && j.iv){
       try{ const data=await decryptJson(enc, j.data_ct, j.iv);
         if((data._ts||0) > (state._ts||0)){ state=deepMerge(defaults(), data); migrate(); saveLocal(); } }catch(e){}
