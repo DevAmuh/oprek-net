@@ -1,18 +1,15 @@
 // =============================================================
 //  Escape Pipeline — AI brain  ->  /api/ai
 // -------------------------------------------------------------
-//  Uses the owner's Anthropic API key (Vercel env ANTHROPIC_API_KEY)
-//  with Claude's native web_search tool to research live relocation
-//  facts. The key lives ONLY here (server-side) and is never sent to
-//  the browser. Every call is gated by the vault passphrase, verified
-//  against Supabase, so only the owner can spend the key.
+//  BRING-YOUR-OWN-KEY: each user supplies their own Anthropic API key
+//  (stored E2E-encrypted in their vault, sent per request, forwarded to
+//  Anthropic, never logged or persisted here). Claude's native web_search
+//  researches live relocation facts. Every call is auth-gated against the
+//  Supabase vault, so only a vault owner can trigger spend on their key.
 //
 //  Cost controls: model allowlist (Haiku default), max 3 web searches,
 //  3 loop rounds, 40s time budget, and every response reports its
 //  estimated costUSD so the client can keep a running spend meter.
-//
-//  Required Vercel Environment Variable:
-//    ANTHROPIC_API_KEY  - your Claude API key (console.anthropic.com)
 // =============================================================
 
 const SUPA_URL = 'https://pvgsrurcxssjqxshqkli.supabase.co';
@@ -69,11 +66,11 @@ async function verifyTestToken(t){
   } catch (e) { return false; }
 }
 
-async function callClaude(body){
+async function callClaude(body, apiKey){
   const r = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
-      'x-api-key': process.env.ANTHROPIC_API_KEY,
+      'x-api-key': apiKey,
       'anthropic-version': '2023-06-01',
       'content-type': 'application/json',
     },
@@ -102,7 +99,7 @@ async function runClaude(userText, opts){
     const body = { model: m.id, max_tokens: opts.maxTokens || 2500, messages: msgs };
     if (m.effortOK) body.output_config = { effort: opts.effort || 'low' };
     if (opts.useWeb) body.tools = [{ type: m.search, name: 'web_search', max_uses: 3 }];
-    last = await callClaude(body);
+    last = await callClaude(body, opts.apiKey);
     allText += textOf(last);
     if (last.usage) {
       used.input  += last.usage.input_tokens  || 0;
@@ -153,17 +150,22 @@ module.exports = async (req, res) => {
     if (typeof body === 'string') { try { body = JSON.parse(body); } catch (e) { body = {}; } }
     body = body || {};
 
-    if (!process.env.ANTHROPIC_API_KEY) {
-      return res.status(500).json({ error: 'AI not set up yet — add ANTHROPIC_API_KEY in Vercel → Settings → Environment Variables, then redeploy.' });
-    }
     if (!(await verifyUser(body.uname, body.auth)) && !(await verifyPass(body.pass)) && !(await verifyTestToken(body.testToken))) {
       return res.status(401).json({ error: 'Locked — unlock the app first.' });
+    }
+    // Bring-your-own-key: every user pays for their own AI. The key arrives
+    // per-request (stored E2E-encrypted in their vault), is forwarded to
+    // Anthropic and never logged or persisted here.
+    const apiKey = String(body.apiKey || '').trim();
+    if (apiKey.length < 20) {
+      return res.status(402).json({ error: 'Smart features are off — add YOUR Claude API key in Settings → 🤖 AI (console.anthropic.com, a few cents per use).' });
     }
 
     const modelKey = MODELS[body.model] ? body.model : 'haiku';
     const model = MODELS[modelKey];
     const effort = EFFORTS.includes(body.effort) ? body.effort : 'low';
     const action = body.action || 'country';
+    const TODAY = new Date().toISOString().slice(0, 10);
     // The model sometimes embeds <cite index="..."> markers inside JSON string
     // values when it cites search results — strip them from every string.
     const stripCites = (x) => {
@@ -175,7 +177,7 @@ module.exports = async (req, res) => {
     const send = (data, costUSD) => res.status(200).json({ ok: true, data: stripCites(data), costUSD: costUSD || 0, modelUsed: modelKey });
     // His situation (the 5W1H): the client sends a live snapshot built from the
     // whole tracker + his own "About me" notes; fall back to the baseline.
-    const BASE_PERSONA = 'Amuh, a 26-year-old Indonesian citizen (Muslim) with NO recognized professional credentials or work experience — realistically he can only take LABOR work: agriculture, factory/manufacturing, hospitality, care, construction, dishwashing, warehouse. He is escaping the weak Indonesian rupiah for a strong-currency country.';
+    const BASE_PERSONA = 'an Indonesian labor migrant with NO recognized professional credentials or degree-based work experience — realistically limited to LABOR work: agriculture, factory/manufacturing, hospitality, care, construction, dishwashing, warehouse. They are escaping the weak Indonesian rupiah for a strong-currency country.';
     const profile = String(body.profile || '').slice(0, 2500).trim();
     const persona = profile ? (BASE_PERSONA + '\nHis current situation (live from his tracker):\n' + profile + '\n') : BASE_PERSONA;
     const NO_NARRATE = ' Do not narrate your searching or thinking. After searching, output ONLY the JSON object.';
@@ -189,7 +191,7 @@ module.exports = async (req, res) => {
         'Respond with ONLY one JSON object — no markdown, no code fence, no text before or after. Schema (keep every string short):\n' +
         '{"name": short UPPERCASE label (e.g. "QATAR"), "tag": "<program> · <sector>", "langLabel": e.g. "— none" or "🇩🇪 B1" or "🇸🇦 Arabic", "langNote": one line, "next": one concrete next step, "pay": monthly pay with an "≈ $X/mo" hint, "timeline": e.g. "intake opens Q3 2026" or "year-round", "laborEligible": true or false (can he do it with NO credentials?), "ageCap": text or null, "why": 1-2 sentences on why it is worth considering for a labor migrant, "risk": one sentence, "link": official URL}' +
         NO_NARRATE;
-      const r = await runClaude(prompt, { model, effort, useWeb: true, maxTokens: 3000 });
+      const r = await runClaude(prompt, { model, effort, apiKey, useWeb: true, maxTokens: 3000 });
       const data = extractJson(r.text);
       if (!data) return parseFail(res, r, 'AI returned no usable result — try again.');
       return send(data, r.costUSD);
@@ -201,21 +203,21 @@ module.exports = async (req, res) => {
         "You are the momentum coach inside Amuh's personal relocation app. He is an Indonesian labor migrant escaping the weak rupiah; he researches endlessly and stalls before acting, and undervalues himself. Give him exactly ONE tiny, concrete step he can do TODAY — not a plan, not a list. Base it on his current state:\n" +
         ctx +
         '\n\nRespond with ONLY one JSON object: {"text": the one next action (imperative, max 8 words), "why": one short, warm, encouraging sentence}. No other text.';
-      const r = await runClaude(prompt, { model, effort, useWeb: false, maxTokens: 800 });
+      const r = await runClaude(prompt, { model, effort, apiKey, useWeb: false, maxTokens: 800 });
       const data = extractJson(r.text);
       if (!data) return parseFail(res, r, 'AI had nothing — try again.');
       return send(data, r.costUSD);
     }
 
     if (action === 'windows') {
+      const routesList = String(body.routes || '').slice(0, 500) ||
+        '1. Taiwan SP2T (government-to-government via SISKOP2MI)\n2. Korea EPS — EPS-TOPIK rounds for Indonesians\n3. Japan SSW — JFT-Basic / skills-test schedule in Indonesia';
       const prompt =
-        'You research Indonesian labor-migration programs. Find the CURRENT (as of today) registration/intake status of these three official programs for Indonesians. Use web search and prioritize official Indonesian sources (KP2MI/BP2MI, siskop2mi.bp2mi.go.id, HRD-Korea EPS Indonesia, JFT-Basic / Prometric Indonesia):\n' +
-        '1. Taiwan SP2T (government-to-government via SISKOP2MI)\n' +
-        '2. Korea EPS — the next EPS-TOPIK registration/exam round for Indonesians\n' +
-        '3. Japan SSW — the next JFT-Basic / skills-test schedule in Indonesia\n' +
-        'Respond with ONLY one JSON object: {"routes":[{"id":"taiwan_sp2t"|"korea_eps"|"japan_ssw","window":"short current status — include a date in YYYY-MM-DD form if one is known","next":"one concrete step","link":"official URL"}],"events":[{"title":"short event name","date":"YYYY-MM-DD","desc":"one line"}],"note":"one line overall"}. Include all three routes even if a window is closed (say so). In "events", list every CONCRETE upcoming dated deadline you found (registration opens/closes, exam dates, announcement dates) — max 8; empty array if none.' +
+        'Today is ' + TODAY + '. You research Indonesian labor-migration programs so the user can PREPARE AND ANTICIPATE what is coming — the future, not the past. For each of their routes below, find the NEXT registration/intake round, upcoming exam dates, quota openings or announcement dates AFTER today. Use web search; prioritize official Indonesian sources (KP2MI/BP2MI, siskop2mi.bp2mi.go.id, HRD-Korea EPS Indonesia, JFT-Basic / Prometric, embassy pages). Their routes:\n' + routesList + '\n' +
+        'Respond with ONLY one JSON object: {"routes":[{"id":"<the route id given>","window":"what is coming next — include a date in YYYY-MM-DD form if one is known; if the last round just closed, say when the NEXT one is expected","next":"one concrete preparation step to be ready BEFORE that date","link":"official URL"}],"events":[{"title":"short event name","date":"YYYY-MM-DD","desc":"one line on how to prepare"}],"note":"one line overall"}. ' +
+        'STRICT RULE: every date in "events" MUST be ON or AFTER ' + TODAY + ' — never list past dates (mention closed rounds only inside "window" text). If an exact future date is unannounced, give the expected month/quarter in the window text instead of a fake date. Max 8 events.' +
         NO_NARRATE;
-      const r = await runClaude(prompt, { model, effort, useWeb: true, maxTokens: 1800 });
+      const r = await runClaude(prompt, { model, effort, apiKey, useWeb: true, maxTokens: 1800 });
       const data = extractJson(r.text);
       if (!data || !Array.isArray(data.routes)) return parseFail(res, r, 'No window info found — try again.');
       return send(data, r.costUSD);
@@ -225,11 +227,11 @@ module.exports = async (req, res) => {
       const topics = String(body.topics || '').slice(0, 300) || 'Taiwan, Korea, Japan, Germany, Australia';
       const prompt =
         'You are a news scout for ' + persona + ' ' +
-        'Web-search (Indonesian AND English sources) for the most useful developments of the LAST 30 DAYS for Indonesian migrant workers heading to: ' + topics + '. ' +
-        'Prioritize: new visa rules, intake/registration openings, quota changes, pay/minimum-wage changes, warnings (scams, bans). Skip India-focused content and consultancy ads. ' +
+        'Today is ' + TODAY + '. Web-search (Indonesian AND English sources) for what matters NOW and NEXT for Indonesian migrant workers heading to: ' + topics + '. ' +
+        'Prioritize FORWARD-LOOKING items they can prepare for: upcoming registration/intake openings, announced future exam dates, quota changes taking effect, new visa rules coming, pay rises scheduled — then warnings (scams, bans). Skip India-focused content, consultancy ads, and stale evergreen pieces. ' +
         'Respond with ONLY one JSON object: {"summary":"1-2 sentences — the big picture this month","items":[{"title":"short headline","gist":"one line on why it matters to him","link":"source URL","country":"country name"}]}. Max 6 items, most useful first. If a route has nothing new, leave it out.' +
         NO_NARRATE;
-      const r = await runClaude(prompt, { model, effort, useWeb: true, maxTokens: 2000 });
+      const r = await runClaude(prompt, { model, effort, apiKey, useWeb: true, maxTokens: 2000 });
       const data = extractJson(r.text);
       if (!data || !Array.isArray(data.items)) return parseFail(res, r, 'Scan came back empty — try again.');
       return send(data, r.costUSD);
@@ -243,7 +245,7 @@ module.exports = async (req, res) => {
         'Use web search if the answer needs current facts (fees, dates, rules). Be concrete and current — name amounts, dates and offices. His question:\n"' + q.replace(/"/g, "'") + '"\n' +
         'Respond with ONLY one JSON object: {"answer":"plain-text answer, max 120 words, warm but factual","links":[{"t":"short source label","u":"URL"}]}. Max 3 links.' +
         NO_NARRATE;
-      const r = await runClaude(prompt, { model, effort, useWeb: true, maxTokens: 1200 });
+      const r = await runClaude(prompt, { model, effort, apiKey, useWeb: true, maxTokens: 1200 });
       const data = extractJson(r.text);
       if (!data || !data.answer) return parseFail(res, r, 'No answer came back — try again.');
       return send(data, r.costUSD);
@@ -255,7 +257,7 @@ module.exports = async (req, res) => {
         'You research cost-of-living facts for an Indonesian labor migrant comparing destination countries. For EACH currency/country in this list: ' + list + ' — find CURRENT typical prices in LOCAL currency: a cheap restaurant meal, a regular cappuccino, a cheap room / shared-flat rent per month, a basic clinic visit for a foreigner, and the statutory minimum MONTHLY wage (if none exists, the typical monthly pay for low-skill labor; say which in the note). Use web search sparingly — approximate is fine. ' +
         'Respond with ONLY one JSON object keyed by 3-letter currency code, e.g. {"TWD":{"country":"Taiwan","meal":120,"coffee":60,"rent":8000,"medical":400,"minWage":29500,"note":"statutory; dorm often provided"},"KRW":{...}}. Numbers only (no strings) for meal/coffee/rent/medical/minWage.' +
         NO_NARRATE;
-      const r = await runClaude(prompt, { model, effort, useWeb: true, maxTokens: 2200 });
+      const r = await runClaude(prompt, { model, effort, apiKey, useWeb: true, maxTokens: 2200 });
       const data = extractJson(r.text);
       if (!data || typeof data !== 'object') return parseFail(res, r, 'No cost data came back — try again.');
       return send(data, r.costUSD);
@@ -269,9 +271,25 @@ module.exports = async (req, res) => {
         'List the CONCRETE documents he must gather for this purpose: "' + purpose.replace(/"/g, "'") + '". Use web search for the current official requirements (prefer Indonesian sources — KP2MI/BP2MI, embassies). Include Indonesian-issued documents (passport, SKCK, MCU, apostille/legalization, certificates) AND program-specific paperwork. ' +
         'Respond with ONLY one JSON object: {"docs":[{"label":"short document name","why":"one line on what it is for / where to get it","critical":true or false}],"note":"one line overall"}. Max 10 docs, most important first. Do not repeat generic advice.' +
         NO_NARRATE;
-      const r = await runClaude(prompt, { model, effort, useWeb: true, maxTokens: 1800 });
+      const r = await runClaude(prompt, { model, effort, apiKey, useWeb: true, maxTokens: 1800 });
       const data = extractJson(r.text);
       if (!data || !Array.isArray(data.docs)) return parseFail(res, r, 'No checklist came back — try again.');
+      return send(data, r.costUSD);
+    }
+
+    if (action === 'compare') {
+      const items = String(body.items || '').slice(0, 3000).trim();
+      if (!items) return res.status(400).json({ error: 'Nothing to compare.' });
+      const prompt =
+        'Today is ' + TODAY + '. You are a brutally honest relocation strategist for ' + persona + ' ' +
+        'They are about to bet YEARS of their life (a non-renewable resource — mind any age caps) on ONE destination. Stress-test these candidates against each other. Use web search sparingly to check anything time-critical (quotas, upcoming rounds, rule changes). Candidates with their known facts:\n' + items + '\n' +
+        'Respond with ONLY one JSON object:\n' +
+        '{"countries":{"<NAME>":{"s":["2-4 concrete strengths"],"w":["2-4 concrete weaknesses"],"o":["1-3 opportunities ahead"],"t":["1-3 threats/risks"],"verdict":"one blunt line"}},"recommendation":"3-5 sentences: name ONE country to commit to first and WHY, grounded in their specific situation (age cap, money, documents, languages), plus what would change your answer."}\n' +
+        'Be specific with numbers and dates, not generic. If a candidate is a bad fit, say so plainly.' +
+        NO_NARRATE;
+      const r = await runClaude(prompt, { model, effort, apiKey, useWeb: true, maxTokens: 2800 });
+      const data = extractJson(r.text);
+      if (!data || !data.countries) return parseFail(res, r, 'The comparison came back empty — try again.');
       return send(data, r.costUSD);
     }
 

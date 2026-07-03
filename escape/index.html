@@ -217,6 +217,13 @@ code{font-family:var(--mono);font-size:11px;background:rgba(0,0,0,.35);padding:1
 .calcell.has{background:rgba(246,191,82,.1);border-color:rgba(246,191,82,.4)}
 .calcell .caldot{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:var(--amber)}
 .callegend{margin-top:8px;border-top:1px solid var(--line);padding-top:4px}
+/* Crucible SWOT cards */
+.swotgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:520px){ .swotgrid{grid-template-columns:1fr} }
+.swotcell{border:1px solid var(--line);border-radius:9px;padding:9px 11px;background:rgba(255,255,255,.015)}
+.swoth{font-family:var(--mono);font-weight:700;font-size:9px;letter-spacing:.12em;margin-bottom:5px}
+.sw-s .swoth{color:#a7f3c6}.sw-w .swoth{color:var(--amber-soft)}.sw-o .swoth{color:var(--teal)}.sw-t .swoth{color:#ffb3c0}
+.swotli{font-size:12.5px;color:var(--muted);padding:2px 0;line-height:1.45}
 /* year view — 12 mini months */
 .yeargrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:10px}
 .ymonth{border:1px solid var(--line);border-radius:8px;padding:7px 8px;background:rgba(0,0,0,.18);cursor:pointer;transition:border-color .15s}
@@ -316,6 +323,26 @@ code{font-family:var(--mono);font-size:11px;background:rgba(0,0,0,.35);padding:1
   .rail nav button:hover{background:rgba(255,255,255,.04)}
   .rail nav button.on{background:rgba(246,191,82,.12);color:var(--amber-soft)}
   .rail nav button.on::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:3px;background:linear-gradient(180deg,var(--amber),var(--amber-soft))}
+  /* pinned bottom block: help · Settings · Lock (sign out) */
+  .rail-bottom{margin-top:auto;border-top:1px solid var(--line);padding-top:8px;display:flex;flex-direction:column}
+  .rail-bottom button{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border-radius:9px;color:var(--muted);
+    font-family:var(--mono);font-weight:700;font-size:12.5px;letter-spacing:.04em;text-align:left;position:relative}
+  .rail-bottom button svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .rail-bottom button:hover{background:rgba(255,255,255,.04)}
+  .rail-bottom button.on{background:rgba(246,191,82,.12);color:var(--amber-soft)}
+  /* collapse toggle + collapsed (icon-only) mode */
+  .rail .brand{position:relative}
+  .rail-collapse{position:absolute;right:-4px;top:5px;width:22px;height:22px;border-radius:6px;border:1px solid var(--line2);color:var(--amber-dim);font-size:11px;line-height:1;background:var(--bg)}
+  .rail-collapse:hover{color:var(--amber-soft)}
+  body.rail-min .app{grid-template-columns:64px 1fr}
+  body.rail-min .rail{padding:20px 7px}
+  body.rail-min .rail .rl,body.rail-min .rail .bn,body.rail-min .clockbig,body.rail-min .streakbig,body.rail-min .gate-lbl{display:none}
+  body.rail-min .rail nav button,body.rail-min .rail-bottom button{justify-content:center;padding:12px 0}
+  body.rail-min .rail .brand img{margin:0 auto}
+  body.rail-min .rail-collapse{right:-2px;top:-4px}
+  body.rail-min .newsbar{left:64px}
+  /* Board panes: draggable divider between the wall and the side column */
+  .panegrip{display:none}
 
   .stage{max-width:none;margin:0;padding:26px 34px 44px}
   /* big split-flap masthead */
@@ -336,8 +363,13 @@ code{font-family:var(--mono);font-size:11px;background:rgba(0,0,0,.35);padding:1
   .cols2{columns:2;column-gap:18px}
   .cols2 > *{break-inside:avoid}
 }
-/* …and a wide two-column Wall (board + side panel) only when there's room */
-@media(min-width:1160px){ .deskgrid{display:grid;grid-template-columns:1fr 340px;gap:22px;align-items:start} }
+/* …and a wide two-column Wall (board + side panel) only when there's room.
+   The 6px grip column is draggable — resizes the side pane, persisted. */
+@media(min-width:1160px){
+  .deskgrid{display:grid;grid-template-columns:minmax(0,1fr) 6px var(--sidew,340px);gap:16px;align-items:start}
+  .panegrip{display:block;cursor:col-resize;width:6px;align-self:stretch;min-height:200px;border-radius:3px;background:var(--line);touch-action:none}
+  .panegrip:hover,.panegrip.drag{background:var(--amber-dim)}
+}
 @media(max-width:919px){ .desk-only{display:none} .col-fuel{display:none} }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
@@ -413,12 +445,13 @@ details.row-x[open]{border-color:var(--line2)}
 <div class="app">
   <!-- Desktop gate directory -->
   <aside class="rail">
-    <div class="brand"><img src="/escape/icon.svg" alt=""><div><div class="n">ESCAPE</div><div class="s">Departures</div></div></div>
+    <div class="brand"><img src="/escape/icon.svg" alt=""><div class="bn"><div class="n">ESCAPE</div><div class="s">Departures</div></div>
+      <button class="rail-collapse" data-action="railToggle" title="Collapse / expand">«</button></div>
     <div class="clockbig" id="clockBig">05:14 <span class="wib">WIB</span></div>
     <div class="streakbig" id="streakBig">🔥 0-day streak</div>
     <div class="gate-lbl">VIEWS</div>
     <nav id="railnav"></nav>
-    <button class="rail-help" data-action="guide">? How to use this</button>
+    <div class="rail-bottom" id="railBottom"></div>
   </aside>
 
   <main class="stage">
@@ -475,9 +508,9 @@ CFG.ICS_BASE = CFG.SUPA_URL + '/functions/v1/escape-ics';
 function defaults(){
   return {
     v:1, _ts:0, _syncedTs:0,
-    profile:{ name:'Amuh', birthDate:'1999-10-15', baseCurrency:'USD' },
+    profile:{ name:'', birthDate:'', baseCurrency:'USD' },
     nextActionOverride:'', nextActionVia:'',
-    streak:{ count:0, lastCheckIn:null, anchorLabel:'After Subuh' },
+    streak:{ count:0, lastCheckIn:null, anchorLabel:'Morning check-in' },
     documents:[
       { id:'passport', label:'Passport', status:'not_started', critical:true, expiry:'', notes:'', driveLink:'' },
       { id:'ktp', label:'KTP', status:'not_started', expiry:'', notes:'', driveLink:'' },
@@ -488,19 +521,13 @@ function defaults(){
       { id:'mcu', label:'MCU (Medical Check-Up)', status:'not_started', expiry:'', notes:'Validity is short — time it to the application.', driveLink:'' },
     ],
     phase1:[
-      { id:'taiwan_sp2t', label:'Taiwan SP2T', lead:true, status:'not_started', waveWindow:'',
-        nextStep:'Register on SISKOP2MI', link:'https://siskop2mi.bp2mi.go.id',
-        note:'No language, no fee · ~NT$29,500/mo + OT ≈ 6–8× Indonesian pay.' },
-      { id:'korea_eps', label:'Korea EPS', status:'not_started', waveWindow:'',
-        nextStep:'Study for EPS-TOPIK (~$28)', link:'https://www.eps.go.kr',
-        note:'Needs the EPS-TOPIK Korean test.' },
-      { id:'japan_ssw', label:'Japan SSW', status:'not_started', waveWindow:'',
-        nextStep:'JFT-Basic A2 + skills test', link:'https://www.jlpt.jp',
-        note:'Japanese A2 + a skills test required.' },
+      { id:'gulf_bridge', label:'Gulf cash bridge (Qatar/Saudi/UAE)', lead:true, status:'not_started', waveWindow:'',
+        nextStep:'Pick a Gulf country and learn its worker-visa path', link:'https://siskop2mi.bp2mi.go.id',
+        note:'Employer-sponsored labor visas · tax-free pay · housing often included · fast intake.' },
     ],
     phase2:{
       decision:'undecided',
-      roles:{ germany:'endgame', australia:'endgame' },
+      roles:{ germany:'hidden', australia:'hidden' },
       germany:{ germanLevel:'A0', germanStreak:0, germanLastDay:null,
         ausbildungShortlist:['Care / Pflege','Hospitality','Logistics'], employers:[], lessons:[], sperrkontoNote:'' },
       australia:{ savedAUD:0, sduwhvStatus:'not_started', whvNotes:'' },
@@ -523,12 +550,19 @@ function defaults(){
     },
     doneLog:[],
     saved:[],
-    customRoutes:[],
+    customRoutes:[
+      { id:'seed_japan', name:'JAPAN', tag:'SSW worker track · endgame', langLabel:'JFT-Basic A2', langNote:'Basic Japanese test, offered in Indonesia',
+        status:'not_started', role:'endgame', next:'Learn the SSW basics, then research the details',
+        pay:'¥180,000–230,000/mo', timeline:'JFT-Basic exams run year-round in Indonesia', laborEligible:true,
+        why:'A no-degree skilled-worker track with a real path toward permanent residency.', risk:'Language gate (JFT-Basic A2) plus a sector skills test.',
+        link:'https://www.ssw.go.jp', addedAt:0 },
+    ],
     aiScan:null,
     lastAsk:null,
     customLangs:[],
     docPacks:[],
     aiEvents:[],
+    crucible:{ picks:[], data:null },
     why:{
       reasons:[
         'The rupiah keeps shrinking — my hours are worth more abroad.',
@@ -537,30 +571,32 @@ function defaults(){
         'Every tiny step compounds. I act, therefore I am not stuck.',
       ],
       wageComparison:[
-        { place:'Indonesia (teaching)', monthlyUSD:140 },
-        { place:'Taiwan (with OT)', monthlyUSD:1100 },
-        { place:'Australia (FT min)', monthlyUSD:2860 },
+        { place:'Indonesia (top UMR — Jakarta)', monthlyUSD:330 },
+        { place:'Gulf labor (Qatar)', monthlyUSD:550 },
+        { place:'Taiwan (factory + OT)', monthlyUSD:1100 },
+        { place:'Japan (SSW)', monthlyUSD:1250 },
       ],
     },
     resources:[
-      { label:'KP2MI / SISKOP2MI (labor programs)', url:'https://siskop2mi.bp2mi.go.id' },
+      { label:'KP2MI / SISKOP2MI (official labor programs)', url:'https://siskop2mi.bp2mi.go.id' },
       { label:'Imigrasi / M-Paspor (passport)', url:'https://www.imigrasi.go.id' },
-      { label:'Korea EPS (HRD Korea)', url:'https://www.eps.go.kr' },
-      { label:'JLPT / JFT-Basic (Japan)', url:'https://www.jlpt.jp' },
-      { label:'Deutsche Welle — “Nicos Weg” (free German)', url:'https://learngerman.dw.com' },
-      { label:'Make it in Germany (Ausbildung & visas)', url:'https://www.make-it-in-germany.com' },
-      { label:'Australia Work & Holiday (462)', url:'https://immi.homeaffairs.gov.au' },
+      { label:'Japan SSW (official)', url:'https://www.ssw.go.jp' },
+      { label:'JFT-Basic (Japanese test in Indonesia)', url:'https://www.jpf.go.jp/jft-basic/' },
+      { label:'Qatar Ministry of Labour', url:'https://www.mol.gov.qa' },
+      { label:'Saudi Qiwa (work visas)', url:'https://www.qiwa.sa' },
     ],
     settings:{
       reminderTime:'05:00', dailyReminder:true,
       cloudSync:false, cloudToken:'',
       googleClientId:'', calendarId:'', driveFolderId:'', eventMap:{},
-      feedTopics:['taiwan','korea','japan','germany','australia','moves'], feedCustom:[],
+      feedTopics:['gulf','qatar','saudi','japan','moves'], feedCustom:[],
       ai:{ model:'haiku', effort:'low', spendUSD:0, spendSince:'' },
+      aiKey:'',
       aiContext:'',
-      tickerCurrencies:['USD','TWD','AUD','EUR','KRW','JPY','SAR','QAR','PLN'],
-      newsTicker:true, tickerSpeed:'normal',
+      tickerCurrencies:['USD','SAR','QAR','AED','JPY'],
+      newsTicker:true, tickerSpeed:'slow',
       bottomTabs:['board','tailwinds','today','docs'],
+      railOrder:null, railCollapsed:false, boardSideW:340,
       calShare:false,
     },
   };
@@ -680,10 +716,14 @@ async function vaultPull(){
 /* AI brain — calls /api/ai (Claude + web search), gated by the passphrase.
    Sends the chosen model+effort and keeps a running spend estimate. */
 function aiCfg(){ const a=state.settings.ai; return (a&&typeof a==='object')?a:{model:'haiku',effort:'low',spendUSD:0,spendSince:''}; }
+/* Smart features are BRING-YOUR-OWN-KEY: hidden until the user arms them. */
+function aiOn(){ return String(state.settings.aiKey||'').trim().length>=20; }
+/* Google Calendar/Drive integration is per-user too (their own Client ID). */
+function googleOn(){ return !!String(state.settings.googleClientId||'').trim(); }
 function fmtCost(c){ if(typeof c!=='number'||!(c>0)) return ''; return '≈$'+(Math.round(c*1000)/1000); }
 async function aiCall(action, extra){
   const ai=aiCfg();
-  const payload={ uname:_uname, auth:_authKey, action, model:ai.model||'haiku', effort:ai.effort||'low', ...(extra||{}) };
+  const payload={ uname:_uname, auth:_authKey, apiKey:String(state.settings.aiKey||'').trim(), action, model:ai.model||'haiku', effort:ai.effort||'low', ...(extra||{}) };
   if(action!=='next' && !payload.profile){ try{ payload.profile=aiProfileContext(); }catch(e){} }
   const r=await fetch('/api/ai',{ method:'POST', headers:{'Content-Type':'application/json'},
     body:JSON.stringify(payload) });
@@ -754,6 +794,7 @@ async function aiAddCountry(name, existingId, btnEl){
       else { s.customRoutes.unshift(route); }
     });
     const el=$('#aiCountryInput'); if(el && !existingId) el.value='';
+    syncRegionForCountry(d.name||name, d.link||''); // ticker, news feed, resources follow the route
     toast('✓ '+(d.name||name)+' researched & added'+(fmtCost(j.costUSD)?' · '+fmtCost(j.costUSD):''),'ok');
   }catch(err){
     setMsg('⚠ '+(err.message||'AI failed'),'amber');
@@ -792,15 +833,23 @@ async function aiTest(btn){
 async function aiWindows(btn){
   const old=btn?btn.textContent:''; if(btn){ btn.disabled=true; btn.textContent='… checking'; }
   try{
-    const j=await aiCall('windows',{});
+    // send THEIR routes so the AI researches what they actually care about
+    const routesList=[
+      ...state.phase1.map(p=>p.id+': '+p.label+(p.note?' — '+p.note:'')),
+      ...(state.customRoutes||[]).filter(c=>(c.role||'watch')!=='watch').map(c=>c.id+': '+c.name+(c.tag?' — '+c.tag:'')),
+    ].join('\n');
+    const j=await aiCall('windows',{ routes:routesList });
     const d=j.data||{}; const rts=Array.isArray(d.routes)?d.routes:[];
     if(!rts.length) throw new Error('No window info found — try again.');
-    const evs=Array.isArray(d.events)?d.events.filter(e=>e&&e.date&&parseYMD(e.date)&&e.title).slice(0,8):[];
+    const tISO=todayISO();
+    const evs=Array.isArray(d.events)?d.events.filter(e=>e&&e.date&&parseYMD(e.date)&&e.title&&String(e.date)>=tISO).slice(0,8):[];
     mutate(s=>{
-      rts.forEach(r=>{ const p=s.phase1.find(x=>x.id===r.id); if(p){
-        if(r.window) p.waveWindow=String(r.window).slice(0,120);
-        if(r.next) p.nextStep=String(r.next).slice(0,100);
-      } });
+      rts.forEach(r=>{
+        const p=s.phase1.find(x=>x.id===r.id);
+        const c=(s.customRoutes||[]).find(x=>x.id===r.id);
+        if(p){ if(r.window) p.waveWindow=String(r.window).slice(0,120); if(r.next) p.nextStep=String(r.next).slice(0,100); }
+        else if(c){ if(r.next) c.next=String(r.next).slice(0,100); if(r.window) c.timeline=String(r.window).slice(0,120); }
+      });
       s.aiEvents=evs.map(e=>({ id:uid(), title:String(e.title).slice(0,80), date:String(e.date).slice(0,10), desc:String(e.desc||'').slice(0,140), found:todayISO() }));
     });
     addDone('AI checked intake windows (SP2T · EPS · SSW)','routes');
@@ -929,7 +978,13 @@ function nextAction(){
   if(notStarted) return { text:'Begin: '+notStarted.label, via:'Document gate', view:'docs' };
   const ld=leadRoute();
   if(ld && ld.status==='not_started') return { text:(ld.next||('Register '+ld.label)), via:ld.label+' — your cash-bridge lead', view:'routes' };
-  if(s.phase2.decision==='undecided') return { text:'Decide your endgame', via:'Germany or Australia', view:'routes' };
+  if(s.phase2.decision==='undecided'){
+    const names=[]; const rr=s.phase2.roles||{};
+    if((rr.germany||'endgame')==='endgame') names.push('Germany');
+    if((rr.australia||'endgame')==='endgame') names.push('Australia');
+    (s.customRoutes||[]).filter(c=>(c.role||'watch')==='endgame').forEach(c=>names.push(c.name));
+    return { text:'Decide your endgame', via:(names.length?names.join(' · '):'promote a candidate in Routes'), view:'routes' };
+  }
   if(s.phase2.decision==='germany'){
     const lv=state.languages.german.level;
     if(['A0','A1','A2'].includes(lv)) return { text:'Do today’s German', via:'toward B1', view:'languages' };
@@ -978,7 +1033,7 @@ function computeCalendarItems(s){
       desc:(ev.desc||'Found by your AI on '+fmtDate(ev.found||'')), alarmDays:[14,3] });
   });
   const cap=ageCapDate(s.profile&&s.profile.birthDate);
-  if(cap && (s.phase2.decision==='australia'||s.phase2.decision==='undecided')){
+  if(cap && (s.phase2.decision==='australia'||s.phase2.decision==='undecided') && (((s.phase2.roles||{}).australia)||'endgame')!=='hidden'){
     items.push({ uid:'au-agecap', title:'🎂 Turn 31 — Australia WHV age cap', date:cap,
       desc:'Last chance: WHV 462 must be applied for before you turn 31.', alarmDays:[180,90,30] });
   }
@@ -1183,6 +1238,8 @@ const ICONS={
   languages:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.3 2.6 14.7 0 17M12 3.5c-2.6 2.3-2.6 14.7 0 17"/></svg>',
   log:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 12.3l2.3 2.3 4.7-4.9"/></svg>',
   settings:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 3v2M12 19v2M5 12H3M21 12h-2M6 6l1.5 1.5M18 18l-1.5-1.5M6 18l1.5-1.5M18 6l-1.5 1.5"/></svg>',
+  lock:'<svg viewBox="0 0 24 24"><rect x="5.5" y="10.5" width="13" height="9" rx="2"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5M12 14v2.5"/></svg>',
+  crucible:'<svg viewBox="0 0 24 24"><path d="M12 4v16M8 20h8M4 7h16"/><path d="M6.5 7l-2.3 4.6a2.7 2.7 0 0 0 5.2 0L7.2 7M17.5 7l-2.3 4.6a2.7 2.7 0 0 0 5.2 0L18.2 7"/></svg>',
   more:'<svg viewBox="0 0 24 24"><circle cx="6" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="18" cy="12" r="1.4"/></svg>',
 };
 function icon(id){ return ICONS[id]||''; }
@@ -1195,10 +1252,17 @@ const NAV=[
   { id:'money',     label:'Money',     hint:'Savings, goals — rates live in the top strip' },
   { id:'ascent',    label:'Ascent',    hint:'Altitude % — your whole climb, live' },
   { id:'routes',    label:'Routes',    hint:'Bridge · endgame · research any country' },
+  { id:'crucible',  label:'Crucible',  hint:'Weigh countries head-to-head before betting years' },
   { id:'languages', label:'Languages', hint:'Any language, your own levels' },
   { id:'log',       label:'Log',       hint:'Everything you’ve done' },
   { id:'settings',  label:'Settings',  hint:'AI, calendar, tickers, backup' },
 ];
+// Desktop sidebar order — user-arrangeable; settings is pinned at the bottom.
+function railOrder(){
+  const o=state.settings.railOrder; const ids=NAV.map(n=>n.id);
+  const ok=Array.isArray(o)&&o.length===ids.length&&ids.every(id=>o.includes(id));
+  return ok?o.slice():ids;
+}
 // Mobile bottom bar — user-arrangeable; slot 3 (index 2) is the raised spotlight.
 function bottomTabs(){
   const t=state.settings.bottomTabs;
@@ -1208,14 +1272,39 @@ function bottomTabs(){
 
 function setView(id){ currentView=id; closeSheet(); closeModal(); render(); window.scrollTo({top:0,behavior:'smooth'}); }
 
+/* Board pane divider — drag to resize the side column (persisted). */
+let _pg=null;
+document.addEventListener('pointerdown',e=>{
+  const g=e.target.closest('#panegrip'); if(!g) return;
+  _pg={ grid:g.parentElement, right:g.parentElement.getBoundingClientRect().right, w:0 };
+  g.classList.add('drag'); e.preventDefault();
+});
+document.addEventListener('pointermove',e=>{
+  if(!_pg) return;
+  let w=_pg.right-e.clientX-10; w=Math.max(280,Math.min(620,Math.round(w)));
+  _pg.grid.style.setProperty('--sidew',w+'px'); _pg.w=w;
+});
+document.addEventListener('pointerup',()=>{
+  if(_pg){ const g=$('#panegrip'); if(g) g.classList.remove('drag');
+    if(_pg.w) setSilent(s=>{ s.settings.boardSideW=_pg.w; }); _pg=null; }
+});
+
 function render(){
   const nm=(NAV.find(n=>n.id===currentView)||{}).label||'Board';
   const sp=$('#streakPill'); if(sp) sp.innerHTML='🔥 '+(state.streak.count||0);
   const sb=$('#streakBig'); if(sb) sb.textContent='🔥 '+(state.streak.count||0)+'-day streak';
   const vn=$('#vwName'); if(vn) vn.textContent=nm;
-  // rail nav (desktop) — all views, with a one-line hint
-  const rn=$('#railnav'); if(rn) rn.innerHTML=NAV.map(n=>
-    '<button data-action="nav" data-view="'+n.id+'" class="'+(currentView===n.id?'on':'')+'" title="'+esc(n.hint||'')+'">'+icon(n.id)+n.label+'</button>').join('');
+  // rail nav (desktop) — user-ordered; Settings + Lock pinned at the bottom
+  const rn=$('#railnav'); if(rn) rn.innerHTML=railOrder().filter(id=>id!=='settings').map(id=>{
+    const n=NAV.find(x=>x.id===id)||{id,label:id};
+    return '<button data-action="nav" data-view="'+n.id+'" class="'+(currentView===n.id?'on':'')+'" title="'+esc(n.hint||'')+'">'+icon(n.id)+'<span class="rl">'+n.label+'</span></button>';
+  }).join('');
+  const rb=$('#railBottom'); if(rb) rb.innerHTML=
+    '<button data-action="guide" title="How to use this app">'+icon('help')+'<span class="rl">How to use</span></button>'
+    +'<button data-action="nav" data-view="settings" class="'+(currentView==='settings'?'on':'')+'" title="'+esc((NAV.find(n=>n.id==='settings')||{}).hint||'')+'">'+icon('settings')+'<span class="rl">Settings</span></button>'
+    +'<button data-action="lockApp" title="Lock the app / sign out">'+icon('lock')+'<span class="rl">Lock · sign out</span></button>';
+  document.body.classList.toggle('rail-min', !!state.settings.railCollapsed);
+  const rc=document.querySelector('.rail-collapse'); if(rc) rc.textContent=state.settings.railCollapsed?'»':'«';
   // tab bar (mobile) — user's chosen four + More; slot 3 raised as the spotlight
   const bt=bottomTabs();
   const order=[bt[0],bt[1],bt[2],bt[3],'more'];
@@ -1226,7 +1315,7 @@ function render(){
     return '<button data-action="nav" data-view="'+id+'" class="'+(currentView===id?'on':'')+center+'">'+icon(id)+'<span>'+n.label+'</span></button>';
   }).join('');
   const fn={ board:viewBoard, today:viewToday, tailwinds:viewTailwinds, ascent:viewAscent, docs:viewDocs, routes:viewRoutes,
-    money:viewMoney, languages:viewLanguages, log:viewLog, settings:viewSettings }[currentView]||viewToday;
+    crucible:viewCrucible, money:viewMoney, languages:viewLanguages, log:viewLog, settings:viewSettings }[currentView]||viewToday;
   const vw=$('#view'); vw.innerHTML=fn();
   renderFx();
   if(currentView==='tailwinds') ensureFeed();
@@ -1345,7 +1434,7 @@ function renderFxPanel(){
     +'<select data-action="baseCur" style="max-width:120px" title="Show all totals in…">'+['USD','IDR','TWD','AUD','EUR'].map(c=>'<option '+(base===c?'selected':'')+'>'+c+'</option>').join('')+'</select>'
     +'<button class="btn ghost sm" data-action="fetchFx">↻ rates</button></div>'
     +'<div class="between mt-s"><span class="faint small">'+(state.colDataUpdated?'living costs AI-updated '+esc(fmtDate(state.colDataUpdated)):'living costs = rough seed values')+'</span>'
-    +(_unlocked?'<button class="btn ghost sm" data-action="aiCol">✨ Refresh with AI</button>':'')+'</div>'
+    +((_unlocked&&aiOn())?'<button class="btn ghost sm" data-action="aiCol">✨ Refresh with AI</button>':'')+'</div>'
     +'</div></div>';
   p.innerHTML=h;
 }
@@ -1504,7 +1593,7 @@ function viewBoard(){
     +'<div class="act">'+esc(na.text)+'</div>'
     +'<div class="via">'+esc(na.via)+'</div>'
     +'<div class="btn-row mt"><button class="btn primary mono" data-action="nav" data-view="'+na.view+'">CHECK IN →</button>'
-      +(_unlocked?'<button class="btn ghost sm" data-action="aiNext">✨ AI pick</button>':'')
+      +((_unlocked&&aiOn())?'<button class="btn ghost sm" data-action="aiNext">✨ AI pick</button>':'')
       +'<button class="btn ghost sm" data-action="editNA">✎ set my own</button></div>'
     +'<div id="naEdit" style="display:none;margin-top:10px"><input id="naInput" placeholder="Type your one move…" value="'+esc(state.nextActionOverride)+'">'
       +'<div class="btn-row mt-s"><button class="btn primary sm" data-action="saveNA">Save</button><button class="btn ghost sm" data-action="clearNA">Auto</button></div></div>'
@@ -1539,16 +1628,16 @@ function viewBoard(){
   const calBody = _calMode==='month' ? calMonthGridHTML(agItems) : (_calMode==='year' ? calYearHTML(agItems) : agRows);
   const cal='<div class="panel"><div class="between"><div style="font-weight:600">🗓 Your calendar'
     +info('Every deadline in one place: document expiries (incl. packs), route intake windows, the age cap, and ✨ AI-found dates. Agenda = list · Month = grid · Year = the whole year color-coded. “✨ AI: refresh dates” web-hunts current registration/exam dates. Syncs to the “'+CFG.CAL_NAME+'” Google calendar.')+'</div>'
-    +'<button class="btn ghost sm" data-action="nav" data-view="settings">Sync ↗</button></div>'
+    +(googleOn()?'<button class="btn ghost sm" data-action="nav" data-view="settings">Sync ↗</button>':'')+'</div>'
     +calToggle+calBody
     +'<div class="btn-row mt"><button class="btn ghost sm" data-action="downloadICS">⬇ .ics</button>'
-    +'<a class="btn ghost sm" target="_blank" rel="noopener" href="https://calendar.google.com/calendar/u/0/r">📅 Open Google Calendar ↗</a>'
-    +(_unlocked?'<button class="btn ghost sm" data-action="aiWindows">✨ AI: refresh dates</button>':'')
-    +'<button class="btn ghost sm" data-action="nav" data-view="settings">Push to Google →</button></div></div>';
+    +(googleOn()?'<a class="btn ghost sm" target="_blank" rel="noopener" href="https://calendar.google.com/calendar/u/0/r">📅 Open Google Calendar ↗</a>':'')
+    +((_unlocked&&aiOn())?'<button class="btn ghost sm" data-action="aiWindows">✨ AI: what’s coming</button>':'')
+    +(googleOn()?'<button class="btn ghost sm" data-action="nav" data-view="settings">Push to Google →</button>':'')+'</div></div>';
 
   // Ask-anything agent — one web-searched answer, kept until the next question.
   let ask='';
-  if(_unlocked){
+  if(_unlocked&&aiOn()){
     const la=state.lastAsk;
     ask='<div class="panel"><div style="font-weight:600">🧭 Ask your agent'+info('Type any question about working abroad — fees, tests, visas, rules — and the AI answers from a live web search, with sources. Each answer costs a few cents of your Claude key.')+'</div>'
       +'<div class="copywrap mt-s"><input id="askInput" placeholder="e.g. EPS-TOPIK fee right now?" autocomplete="off"><button class="btn primary sm" data-action="askAI">Ask</button></div>';
@@ -1560,9 +1649,10 @@ function viewBoard(){
     ask+='</div>';
   }
 
-  // Desktop: 2-col wall (board + side). Mobile: stacked.
-  return '<div class="deskgrid">'
+  // Desktop: 2-col wall (board + side) with a draggable divider. Mobile: stacked.
+  return '<div class="deskgrid" style="--sidew:'+(Math.max(280,Math.min(620,+state.settings.boardSideW||340)))+'px">'
     +'<div>'+hero+boardHtml+'</div>'
+    +'<div class="panegrip" id="panegrip" title="Drag to resize the panes"></div>'
     +'<div>'+stats+checkin+ask+cal+'</div>'
     +'</div>';
 }
@@ -1662,7 +1752,7 @@ function viewToday(){
       +'<div class="via" style="max-width:260px;margin:0 auto">'+esc(na.via)+'</div>'
       +'<button class="btn primary block mono mt" style="padding:14px" data-action="nav" data-view="'+na.view+'">DO IT NOW →</button>'
       +'<button class="btn ghost block sm mt-s" data-action="checkin" '+(checkedToday?'disabled':'')+'>'+(checkedToday?'✓ I did it — see you tomorrow':'✓ I showed up today')+'</button>'
-      +(_unlocked?'<button class="btn ghost block sm mt-s" data-action="aiNext">✨ Not sure? Let the AI pick my move</button>':'')
+      +((_unlocked&&aiOn())?'<button class="btn ghost block sm mt-s" data-action="aiNext">✨ Not sure? Let the AI pick my move</button>':'')
     +'</div>'
     +'<div class="panel" style="margin-top:16px"><div class="statstrip">'
       +'<div class="statcell center"><div class="v" style="font-size:16px">'+dp.done+'/'+dp.total+'</div><div class="k" style="letter-spacing:.1em">DOCS</div></div>'
@@ -1793,7 +1883,7 @@ function docRowHTML(d, pk){
     +'<div class="grid2"><div class="field"><label>Valid until</label><input type="date" data-action="docExpiry" data-id="'+d.id+'"'+pkAttr+' value="'+esc(d.expiry||'')+'"></div>'
     +'<div class="field"><label>Drive link</label><input data-action="docLink" data-id="'+d.id+'"'+pkAttr+' placeholder="Paste link" value="'+esc(d.driveLink||'')+'"></div></div>'
     +'<div class="field"><label>Notes</label><textarea data-action="docNotes" data-id="'+d.id+'"'+pkAttr+' placeholder="Office, cost, appointment…">'+esc(d.notes||'')+'</textarea></div>'
-    +'<div class="btn-row"><button class="btn primary sm" data-action="docUpload" data-id="'+d.id+'"'+pkAttr+'>⬆ Upload to Drive</button>'
+    +'<div class="btn-row">'+(googleOn()?'<button class="btn primary sm" data-action="docUpload" data-id="'+d.id+'"'+pkAttr+'>⬆ Upload to Drive</button>':'')
     +'<button class="btn ghost sm" data-action="docNextAction" data-id="'+d.id+'"'+pkAttr+'>★ Next move</button>'
     +(pk?'<button class="btn ghost sm danger" data-action="pdRemove" data-id="'+d.id+'"'+pkAttr+'>Remove</button>':'')
     +'</div></div></details>';
@@ -1803,8 +1893,8 @@ function viewDocs(){
   const dp=docProgress();
   let html='<div class="panel"><div class="between"><div><h2 style="font-size:20px">Documents</h2><div class="sub">The gate — nothing downstream moves without these. <b>Tap any row</b> to set its status, add an expiry date, or upload a scan.</div></div>'
     +'<div style="text-align:right"><div style="font-family:var(--mono);font-weight:700;font-size:20px;color:var(--amber-soft)">'+dp.done+'/'+dp.total+'</div></div></div><div class="mt">'+bar(dp.pct)+'</div>'
-    +'<div class="btn-row mt"><a class="btn ghost sm" target="_blank" rel="noopener" href="'+(state.settings.driveFolderId?('https://drive.google.com/drive/folders/'+esc(state.settings.driveFolderId)):'https://drive.google.com/drive/my-drive')+'">📂 Open my Drive folder ↗</a>'
-    +(state.settings.driveFolderId?'':'<span class="faint small" style="align-self:center">(connect Drive in Settings to link your “'+esc(CFG.DRIVE_FOLDER)+'” folder directly)</span>')+'</div></div>';
+    +(googleOn()?('<div class="btn-row mt"><a class="btn ghost sm" target="_blank" rel="noopener" href="'+(state.settings.driveFolderId?('https://drive.google.com/drive/folders/'+esc(state.settings.driveFolderId)):'https://drive.google.com/drive/my-drive')+'">📂 Open my Drive folder ↗</a>'
+      +(state.settings.driveFolderId?'':'<span class="faint small" style="align-self:center">(connect Drive in Settings to link your “'+esc(CFG.DRIVE_FOLDER)+'” folder directly)</span>')+'</div>'):'')+'</div>';
 
   // GENERAL — the universal gate (drives the big progress + next action)
   html+='<div class="eyebrow" style="padding:2px 2px 8px">GENERAL — THE GATE'+info('The universal Indonesian documents every route needs. These drive your Docs progress and the “one thing today”. Purpose packs below hold route-specific paperwork on top of these.')+'</div>';
@@ -1829,8 +1919,8 @@ function viewDocs(){
       +((pk.docs&&pk.docs.length)?pk.docs.map(d=>docRowHTML(d,pk.id)).join(''):'<div class="empty">Empty — add documents below, or let the AI build the checklist.</div>')
       +'<div class="copywrap mt"><input id="pd-'+pk.id+'" placeholder="Add a document (e.g. Apostilled ijazah)"><button class="btn ghost sm" data-action="pdAdd" data-id="'+pk.id+'">Add</button></div>'
       +'<div class="btn-row mt">'
-      +(_unlocked?'<button class="btn primary sm" data-action="aiDocpack" data-id="'+pk.id+'">✨ AI: build this checklist</button>':'')
-      +(pk.driveFolderId?'<a class="btn ghost sm" target="_blank" rel="noopener" href="https://drive.google.com/drive/folders/'+esc(pk.driveFolderId)+'">📂 Open folder ↗</a>':'')
+      +((_unlocked&&aiOn())?'<button class="btn primary sm" data-action="aiDocpack" data-id="'+pk.id+'">✨ AI: build this checklist</button>':'')
+      +((googleOn()&&pk.driveFolderId)?'<a class="btn ghost sm" target="_blank" rel="noopener" href="https://drive.google.com/drive/folders/'+esc(pk.driveFolderId)+'">📂 Open folder ↗</a>':'')
       +'<button class="btn ghost sm danger" data-action="packRemove" data-id="'+pk.id+'">Remove pack</button></div>'
       +'</details>';
   });
@@ -1855,7 +1945,7 @@ function viewRoutes(){
   html+='<div class="eyebrow" style="padding:2px 2px 8px">CASH BRIDGE — EARN FIRST</div>';
   html+='<div class="note mt-s mb">🏭 Taiwan = a cash machine, not a home. Earn, bank it, don’t over-invest emotionally.</div>';
   html+='<div class="panel">';
-  if(_unlocked) html+='<div class="between" style="padding-bottom:2px"><span class="sub">Registration windows move — let the AI check the current ones.'+info('One tap: the AI searches the official Indonesian sources (SISKOP2MI, HRD-Korea, JFT-Basic) for the CURRENT SP2T / EPS-TOPIK / SSW registration windows and writes them into these rows. Dates flow to your calendar automatically. Costs a few cents.')+'</span><button class="btn ghost sm" style="flex:none" data-action="aiWindows">🗓 Check (AI)</button></div>';
+  if(_unlocked&&aiOn()) html+='<div class="between" style="padding-bottom:2px"><span class="sub">Registration windows move — let the AI check what’s coming.'+info('One tap: the AI searches official Indonesian sources for the NEXT registration rounds, exam dates and quota openings on YOUR routes, writes them into these rows, and files upcoming dates into your calendar so you can prepare. Costs a few cents.')+'</span><button class="btn ghost sm" style="flex:none" data-action="aiWindows">🗓 What’s next (AI)</button></div>';
   state.phase1.forEach(p=>{
     html+='<details class="item row-x"><summary class="between"><span class="title">'+esc(p.label)+(RINFO[p.id]?info(RINFO[p.id]):'')+(p.lead?' <span class="badge live">★ LEAD</span>':'')+statusBadge(p.status)+'</span>'
       +'<span class="chev">▾</span></summary>'
@@ -1942,10 +2032,14 @@ function viewRoutes(){
 
   // EXPLORE A NEW COUNTRY — AI research (watch-role routes live here)
   html+='<div class="eyebrow" style="padding:14px 2px 8px">EXPLORE — ADD ANY COUNTRY</div>';
-  html+='<div class="panel">'
-    +'<div class="sub">Type a country. The AI researches its real 2026 labour route — then set its <b>role</b>: keep watching, cash bridge, or endgame candidate.</div>'
-    +'<div class="copywrap mt"><input id="aiCountryInput" placeholder="e.g. Oman, Poland, Canada…" autocomplete="off"><button class="btn primary sm" data-action="aiAddCountry">🔎 Research</button></div>'
-    +'<div id="aiCountryMsg" class="sub mt-s" style="min-height:0"></div>';
+  html+='<div class="panel">';
+  if(_unlocked&&aiOn()){
+    html+='<div class="sub">Type a country. The AI researches its real labour route — then set its <b>role</b>: keep watching, cash bridge, or endgame candidate.</div>'
+      +'<div class="copywrap mt"><input id="aiCountryInput" placeholder="e.g. Oman, Poland, Canada…" autocomplete="off"><button class="btn primary sm" data-action="aiAddCountry">🔎 Research</button></div>'
+      +'<div id="aiCountryMsg" class="sub mt-s" style="min-height:0"></div>';
+  } else {
+    html+='<div class="note">🔒 Country research runs on <b>your own Claude API key</b> — add one in <a href="#" data-action="nav" data-view="settings">Settings → 🤖 AI</a> to unlock all smart features (a few cents per use).</div>';
+  }
   const watch=(state.customRoutes||[]).filter(c=>(c.role||'watch')==='watch');
   if(watch.length){ html+='<div class="divider"></div>'+watch.map(customRouteCard).join(''); }
   html+='</div>';
@@ -1976,22 +2070,95 @@ function customRouteCard(c){
     +'<div class="field"><label>Next step</label><input data-action="crNext" data-id="'+c.id+'" value="'+esc(c.next||'')+'"></div>'
     +'<div class="btn-row">'+(c.link?'<a class="btn ghost sm" href="'+esc(c.link)+'" target="_blank" rel="noopener">Official site ↗</a>':'')
       +'<button class="btn ghost sm" data-action="crLead" data-id="'+c.id+'">'+(c.lead?'★ Lead route':'☆ Make lead')+'</button>'
-      +'<button class="btn ghost sm" data-action="crRefresh" data-id="'+c.id+'">↻ Re-research</button>'
+      +(aiOn()?'<button class="btn ghost sm" data-action="crRefresh" data-id="'+c.id+'">↻ Re-research</button>':'')
       +'<button class="btn ghost sm danger" data-action="crRemove" data-id="'+c.id+'">Remove</button></div></div></details>';
+}
+
+/* ------------------------------- Crucible -------------------------------- */
+/* Every route the user has, as a comparable candidate with its known facts. */
+function crucibleCands(){
+  const roles=state.phase2.roles||{germany:'endgame',australia:'endgame'};
+  const out=[];
+  if((roles.germany||'endgame')!=='hidden') out.push({key:'germany',name:'GERMANY',facts:{program:'Ausbildung — paid vocational training',lang:'German B1–B2',pay:'€724–1,490/mo during training',timeline:'~5 yrs to citizenship',ageCap:'no formal cap',labor:'yes — care/hospitality/logistics tracks',risk:'the language mountain'}});
+  if((roles.australia||'endgame')!=='hidden') out.push({key:'australia',name:'AUSTRALIA',facts:{program:'WHV 462 → PR attempts',lang:'English',pay:'A$26.44/hr (top min wage)',timeline:'4 yrs + 1 yr PR (hard gate)',ageCap:'apply before 31',labor:'yes — farm/hospitality',risk:'PR from a WHV is a long shot'}});
+  state.phase1.forEach(p=>out.push({key:p.id,name:p.label,facts:{program:p.note||'cash bridge',lang:'—',pay:'—',timeline:p.waveWindow||'—',ageCap:'—',labor:'yes',risk:'—'}}));
+  (state.customRoutes||[]).forEach(c=>out.push({key:c.id,name:c.name,facts:{program:c.tag||'—',lang:c.langLabel||'—',pay:c.pay||'—',timeline:c.timeline||'—',ageCap:c.ageCap||'—',labor:c.laborEligible===true?'yes':(c.laborEligible===false?'needs skills':'?'),risk:c.risk||'—'}}));
+  return out;
+}
+function viewCrucible(){
+  const cands=crucibleCands();
+  const cru=state.crucible||{picks:[],data:null};
+  const picks=(cru.picks||[]).filter(k=>cands.some(c=>c.key===k));
+  let html='<div class="panel"><h2 style="font-size:20px">Crucible'+info('Years of your life are a non-renewable resource — stress-test destinations BEFORE you invest them. Pick 2–4 candidates: the matrix lines up the hard facts, and the AI runs a SWOT on each plus one blunt recommendation grounded in YOUR situation.')+'</h2>'
+    +'<div class="sub">Put countries in the fire, side by side, before you bet years on one.</div></div>';
+  // pick the contenders
+  html+='<div class="panel"><div class="eyebrow" style="padding:0 0 8px">CONTENDERS — PICK 2–4</div><div class="row wrap" style="gap:6px">'
+    +cands.map(c=>'<button class="btn '+(picks.includes(c.key)?'primary':'ghost')+' sm" data-action="cruPick" data-id="'+esc(c.key)+'">'+esc(c.name)+'</button>').join('')
+    +'</div><div class="sub mt-s">Anything from Routes can enter — research more countries there to widen the field.</div></div>';
+  const sel=cands.filter(c=>picks.includes(c.key));
+  if(sel.length>=2){
+    const rows=[['program','Program'],['lang','Language'],['pay','Pay'],['timeline','Timeline'],['ageCap','Age cap'],['labor','Labour fit'],['risk','Main risk']];
+    html+='<div class="panel" style="overflow-x:auto"><table class="cmp">'
+      +'<tr><th></th>'+sel.map(c=>'<th>'+esc(c.name)+'</th>').join('')+'</tr>'
+      +rows.map(r=>'<tr><th>'+r[1]+'</th>'+sel.map(c=>'<td>'+esc(c.facts[r[0]]||'—')+'</td>').join('')+'</tr>').join('')
+      +'</table></div>';
+    if(_unlocked&&aiOn()){
+      html+='<div class="panel"><div class="between"><div class="sub">Facts are half the story — let the AI weigh trade-offs against <b>your</b> age cap, money, documents and languages.</div>'
+        +'<button class="btn primary sm" style="flex:none" data-action="cruRun">⚖ Run the crucible</button></div></div>';
+    } else if(!aiOn()){
+      html+='<div class="note">🔒 The AI stress-test (SWOT per country + one blunt recommendation) needs your own Claude API key — <a href="#" data-action="nav" data-view="settings">Settings → 🤖 AI</a>.</div>';
+    }
+  } else {
+    html+='<div class="panel"><div class="empty">Pick at least two contenders above and the fact matrix appears here.</div></div>';
+  }
+  // verdicts
+  const d=cru.data;
+  if(d&&d.countries){
+    html+='<div class="eyebrow" style="padding:14px 2px 8px">VERDICTS · '+esc(timeAgo(new Date(d.ts).toISOString()).toUpperCase())+(d.costUSD?' · '+fmtCost(d.costUSD):'')+'</div>';
+    if(d.reco) html+='<div class="panel" style="border-color:rgba(246,191,82,.4)"><div class="eyebrow" style="color:var(--amber)">🏁 RECOMMENDATION</div>'
+      +'<div style="font-size:14px;line-height:1.6;margin-top:6px">'+esc(d.reco)+'</div></div>';
+    Object.keys(d.countries).forEach(nm=>{
+      const c=d.countries[nm]||{};
+      const cell=(t,arr,cls)=>'<div class="swotcell '+cls+'"><div class="swoth">'+t+'</div>'+(Array.isArray(arr)&&arr.length?arr.map(x=>'<div class="swotli">· '+esc(x)+'</div>').join(''):'<div class="swotli faint">—</div>')+'</div>';
+      html+='<div class="panel"><h3 style="font-size:15px">'+esc(nm)+'</h3>'
+        +(c.verdict?'<div class="sub mt-s">“'+esc(c.verdict)+'”</div>':'')
+        +'<div class="swotgrid mt">'+cell('✅ STRENGTHS',c.s,'sw-s')+cell('⚠ WEAKNESSES',c.w,'sw-w')+cell('🌅 OPPORTUNITIES',c.o,'sw-o')+cell('⛈ THREATS',c.t,'sw-t')+'</div></div>';
+    });
+  }
+  return html;
+}
+/* Run the AI stress-test on the picked contenders. */
+async function aiCrucible(btn){
+  const cands=crucibleCands(); const cru=state.crucible||{picks:[]};
+  const sel=cands.filter(c=>(cru.picks||[]).includes(c.key));
+  if(sel.length<2){ toast('Pick at least two contenders first','err'); return; }
+  const items=sel.map(c=>c.name+': '+Object.keys(c.facts).map(k=>k+'='+c.facts[k]).join('; ')).join('\n');
+  const old=btn?btn.textContent:''; if(btn){ btn.disabled=true; btn.textContent='… weighing'; }
+  try{
+    const j=await aiCall('compare',{ items });
+    const d=j.data||{};
+    if(!d.countries) throw new Error('The comparison came back empty — try again.');
+    mutate(s=>{ const c=s.crucible=s.crucible||{picks:[],data:null};
+      c.data={ ts:Date.now(), countries:d.countries, reco:String(d.recommendation||'').slice(0,900), costUSD:j.costUSD||0 }; });
+    toast('⚖ Verdicts are in'+(fmtCost(j.costUSD)?' · '+fmtCost(j.costUSD):''),'ok');
+  }catch(err){
+    toast('⚠ '+(err.message||'AI failed'),'err');
+    if(btn){ btn.disabled=false; btn.textContent=old; }
+  }
 }
 
 function viewMoney(){
   const base=state.profile.baseCurrency;
   const total=banked();
-  const idnMonthly=(state.why.wageComparison.find(w=>/indonesia/i.test(w.place))||{monthlyUSD:140}).monthlyUSD;
-  const months=idnMonthly?(bankedUSD()/idnMonthly):0;
+  const idnRow=state.why.wageComparison.find(w=>/indonesia/i.test(w.place))||{place:'Indonesia (top UMR)',monthlyUSD:330};
+  const months=idnRow.monthlyUSD?(bankedUSD()/idnRow.monthlyUSD):0;
   const curOpts=['TWD','IDR','USD','AUD','EUR'].map(c=>'<option>'+c+'</option>').join('');
 
   let html='<div class="panel"><h2 style="font-size:20px">Money'+info('Just your savings for the move — nothing Wall-Street about it. Log money as you set it aside; watch it climb toward each goal.')+'</h2>'
     +'<div class="sub">What you’ve saved so far, and how close you are to each goal.</div>'
     +'<div class="between mt"><div><div style="font-family:var(--mono);font-weight:700;font-size:26px;color:var(--amber-soft)">'+fmtMoney(total,base)+'</div><div class="faint small">saved so far</div></div>'
     +'<button class="btn primary" data-action="focusAdd">＋ Add money</button></div>'
-    +(months>0?'<div class="note mt">≈ <b>'+fmtNum(months)+'</b> months of your old Indonesian salary already banked.</div>':'')+'</div>';
+    +(months>0?'<div class="note mt">≈ <b>'+fmtNum(months)+'</b> months of '+esc(idnRow.place)+' pay already banked.</div>':'')+'</div>';
 
   // log form (the main input)
   html+='<div class="panel"><h3 style="font-size:15px">Log what you saved</h3>'
@@ -2117,7 +2284,7 @@ function viewTailwinds(){
     +'<button data-action="twMode" data-m="saved" class="'+(_twMode==='saved'?'on':'')+'">Saved'+(savedCount?' ('+savedCount+')':'')+'</button></div></div>';
   if(_twMode==='saved') return html+savedHTML();
   // AI briefing — manual scan, persists until re-run
-  if(_unlocked){
+  if(_unlocked&&aiOn()){
     const sc=state.aiScan;
     html+='<div class="panel" style="border-color:rgba(246,191,82,.32)">'
       +'<div class="between"><div class="eyebrow" style="color:var(--amber)">✨ AI BRIEFING'+(sc?' · '+timeAgo(new Date(sc.ts).toISOString()).toUpperCase():'')+'</div>'
@@ -2143,7 +2310,8 @@ function viewTailwinds(){
 function viewLanguages(){
   let html='<div class="panel"><h2 style="font-size:20px">Languages'+info('Korean (Korea/EPS), Japanese (Japan/SSW) and German (Germany/Ausbildung) wake with their routes — and you can add ANY other language below. Levels are free-form: pick a suggestion or type your own scale.')+'</h2><div class="sub">Route languages wake automatically — and you can add your own. Your levels, your rules.</div></div>';
   const anyLive=LANGS.some(l=>langActive(l)==='live');
-  if(!anyLive && !(state.customLangs||[]).length) html+='<div class="note mb">No language is required yet — your lead route (Taiwan) is language-free. Pick a route that needs one, or add any language you want below.</div>';
+  if(!anyLive && !(state.customLangs||[]).length){ const ld=leadRoute();
+    html+='<div class="note mb">No language is required yet'+(ld?' — your lead route ('+esc(ld.label)+') hasn’t demanded one':'')+'. Pick a route that needs one, or add any language you want below.</div>'; }
   LANGS.forEach(l=>{
     const d=state.languages[l.id]; const act=langActive(l);
     const didToday=d.lastDay===todayISO();
@@ -2210,10 +2378,13 @@ function viewSettings(){
     +'<div class="btn-row mt"><button class="btn ghost sm" data-action="lockApp">Lock app</button>'
     +'<button class="btn ghost sm" data-action="pushCloudNow">↑ Save now</button><button class="btn ghost sm" data-action="pullCloud">↻ Sync</button></div></div>';
 
-  // AI brain (Claude key)
+  // AI brain (bring-your-own Claude key)
   const ai=aiCfg();
-  html+='<div class="panel"><h3 style="font-size:15px">🤖 AI research'+info('Powers country research, the news scan, intake-window checks, the agent box and ✨ next-move picks. It runs on YOUR Claude API key, kept server-side — never in the browser — and only unlocks with your passphrase, so nobody but you can spend it.')+'</h3>'
-    +'<div class="sub">Researches the live web on <b>your own Claude API key</b>. You control the brain and the budget below.</div>'
+  html+='<div class="panel"><h3 style="font-size:15px">🤖 AI research '+(aiOn()?'<span class="badge live">ARMED</span>':'<span class="badge">off</span>')
+    +info('Every smart feature — country research, the Crucible, news scans, what’s-coming date hunts, the agent box, ✨ next-move picks — runs on YOUR OWN Claude API key and your budget. The key is stored end-to-end encrypted in your vault and sent only with your own requests; nobody else can spend it. No key = the app works fine, just without the smart parts.')+'</h3>'
+    +'<div class="sub">'+(aiOn()?'Armed — all smart features are live, on your key and your budget.':'Paste your own Claude API key to unlock every ✨ smart feature. Without it the app still works — just without the smart parts.')+'</div>'
+    +'<div class="field mt"><label>Your Claude API key</label><div class="copywrap"><input type="password" data-action="aiKeySet" placeholder="sk-ant-…" value="'+esc(s.aiKey||'')+'" autocomplete="off"></div>'
+    +'<div class="faint small mt-s">From console.anthropic.com → API keys. Stored E2E-encrypted in your vault; typical use costs a few cents per tap, shown on every action.</div></div>'
     +'<div class="grid2 mt"><div class="field"><label>Model</label><select data-action="aiModel">'
       +[['haiku','Haiku 4.5 — fast & cheap (~$0.05/research)'],['sonnet','Sonnet 5 — balanced (~$0.09)'],['opus','Opus 4.8 — deepest (~$0.15+, slow)']].map(o=>'<option value="'+o[0]+'" '+(ai.model===o[0]?'selected':'')+'>'+o[1]+'</option>').join('')+'</select></div>'
     +'<div class="field"><label>Effort <span class="faint">(Haiku ignores this)</span></label><select data-action="aiEffort">'
@@ -2223,8 +2394,7 @@ function viewSettings(){
     +'<div class="between mt"><span class="small">Spent ≈ <b class="mono" style="color:var(--amber-soft)">$'+(+(ai.spendUSD||0)).toFixed(2)+'</b>'+(ai.spendSince?' <span class="faint">since '+fmtDate(ai.spendSince)+'</span>':'')+'</span>'
     +'<button class="btn ghost sm" data-action="aiSpendReset">Reset</button></div>'
     +'<div class="faint small mt-s">Estimates only — your real balance lives at console.anthropic.com.</div>'
-    +'<div class="note blue mt">One-time setup: in <b>Vercel → your project → Settings → Environment Variables</b>, add <code>ANTHROPIC_API_KEY</code> = your key from <b>console.anthropic.com</b>, then redeploy. The key stays on the server; the browser never sees it.</div>'
-    +'<div class="btn-row mt"><button class="btn primary sm" data-action="aiTest">Test AI connection</button>'
+    +'<div class="btn-row mt">'+(aiOn()?'<button class="btn primary sm" data-action="aiTest">Test AI connection</button>':'')
     +'<a class="btn ghost sm" href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Get a key ↗</a></div></div>';
 
   // WHY (folded in)
@@ -2283,7 +2453,7 @@ function viewSettings(){
     +'<button class="btn ghost sm" data-action="exportJson">⬇ Export</button><button class="btn ghost sm" data-action="importJson">⬆ Import</button>'
     +'<button class="btn ghost sm" data-action="resetAll" style="color:var(--red)">Reset</button></div>'
     +'<div class="sub mt-s">Cached on this device for offline use, and synced privately to your passphrase-locked vault.</div></div>';
-  html+='<div class="center small faint" style="padding:10px">Escape Pipeline · Departures edition · v3.6 · E2E-encrypted</div>';
+  html+='<div class="center small faint" style="padding:10px">Escape Pipeline · Departures edition · v3.7 · E2E-encrypted · BYO-AI</div>';
   return html;
 }
 
@@ -2297,7 +2467,20 @@ document.addEventListener('click', async (e)=>{
     case 'nav': e.preventDefault(); setView(view); break;
     case 'more': openMore(); break;
     case 'arrangeTabs': closeSheet(); openModal(arrangeHTML()); break;
-    case 'navSlotsReset': setSilent(s=>{ s.settings.bottomTabs=['board','tailwinds','today','docs']; }); render(); openModal(arrangeHTML()); break;
+    case 'wizStep': openWizard(+t.dataset.i); break;
+    case 'wizDone': closeModal(); setView('today'); break;
+    case 'cruPick': { const cru=state.crucible||{picks:[]}; const has=(cru.picks||[]).includes(id);
+      if(!has && (cru.picks||[]).length>=4){ toast('Max 4 in the crucible — remove one first','err'); break; }
+      setSilent(s=>{ const c=s.crucible=s.crucible||{picks:[],data:null};
+        c.picks=has?(c.picks||[]).filter(x=>x!==id):[...(c.picks||[]),id]; });
+      render(); break; }
+    case 'cruRun': await aiCrucible(t); break;
+    case 'navSlotsReset': setSilent(s=>{ s.settings.bottomTabs=['board','tailwinds','today','docs']; s.settings.railOrder=null; }); render(); openModal(arrangeHTML()); break;
+    case 'railToggle': setSilent(s=>{ s.settings.railCollapsed=!s.settings.railCollapsed; }); render(); break;
+    case 'railMove': { const ord=railOrder().filter(x=>x!=='settings'); const ix=ord.indexOf(id); const j2=ix+(+t.dataset.d);
+      if(ix<0||j2<0||j2>=ord.length) break;
+      const tmp=ord[ix]; ord[ix]=ord[j2]; ord[j2]=tmp;
+      setSilent(s=>{ s.settings.railOrder=[...ord,'settings']; }); render(); openModal(arrangeHTML()); break; }
     case 'guide': closeSheet(); openGuide(true); break;
     case 'feedFilter': _feedFilter=t.dataset.f||'all'; renderFeed(); { const cs=$$('#view [data-action="feedFilter"]'); cs.forEach(b=>b.classList.toggle('primary', b.dataset.f===_feedFilter)); cs.forEach(b=>b.classList.toggle('ghost', b.dataset.f!==_feedFilter)); } break;
     case 'refreshFeed': loadFeed(true); toast('Refreshing…'); break;
@@ -2416,7 +2599,9 @@ document.addEventListener('change', (e)=>{
     case 'p1Status': { mutate(s=>{ s.phase1.find(x=>x.id===id).status=v; }); break; }
     case 'crStatus': { mutate(s=>{ const c=(s.customRoutes||[]).find(x=>x.id===id); if(c) c.status=v; }); break; }
     case 'crNext': setSilent(s=>{ const c=(s.customRoutes||[]).find(x=>x.id===id); if(c) c.next=v; }); break;
-    case 'crRole': mutate(s=>{ const c=(s.customRoutes||[]).find(x=>x.id===id); if(c){ c.role=v; if(v!=='endgame'&&s.phase2.decision===id) s.phase2.decision='undecided'; } }); break;
+    case 'crRole': { mutate(s=>{ const c=(s.customRoutes||[]).find(x=>x.id===id); if(c){ c.role=v; if(v!=='endgame'&&s.phase2.decision===id) s.phase2.decision='undecided'; } });
+      const cc=(state.customRoutes||[]).find(x=>x.id===id);
+      if(cc && v!=='watch') syncRegionForCountry(cc.name, cc.link||''); break; }
     case 'egRole': mutate(s=>{ const r=s.phase2.roles=s.phase2.roles||{germany:'endgame',australia:'endgame'}; r[id]=v; if(v!=='endgame'&&s.phase2.decision===id) s.phase2.decision='undecided'; }); break;
     case 'p1Label': mutate(s=>{ const p=s.phase1.find(x=>x.id===id); if(p&&v.trim()) p.label=v.trim().slice(0,40); }); break;
     case 'p1Link': setSilent(s=>{ const p=s.phase1.find(x=>x.id===id); if(p) p.link=/^https?:/.test(v)?v:(v?'https://'+v:''); }); break;
@@ -2437,6 +2622,9 @@ document.addEventListener('change', (e)=>{
     case 'aiModel': setSilent(s=>{ (s.settings.ai=s.settings.ai||{}).model=v; }); toast('AI model: '+v); break;
     case 'aiEffort': setSilent(s=>{ (s.settings.ai=s.settings.ai||{}).effort=v; }); break;
     case 'aiContext': setSilent(s=>{ s.settings.aiContext=v; }); break;
+    case 'aiKeySet': { const was=aiOn(); setSilent(s=>{ s.settings.aiKey=v.trim(); }); render();
+      if(!was&&aiOn()) toast('✨ Smart features ARMED — they run on your key now','ok');
+      else if(was&&!aiOn()) toast('Smart features off'); break; }
     case 'clLevel': setSilent(s=>{ const c=(s.customLangs||[]).find(x=>x.id===id); if(c) c.level=v; }); break;
     case 'clTarget': setSilent(s=>{ const c=(s.customLangs||[]).find(x=>x.id===id); if(c) c.target=v; }); break;
     case 'toggleDailyReminder': mutate(s=>{ s.settings.dailyReminder=t.checked; }); break;
@@ -2474,6 +2662,13 @@ function arrangeHTML(){
   return '<h3>Arrange your tabs</h3><div class="sub">The four tabs on the bottom bar — the centre one is the big raised button. Everything else lives under “More”.</div>'
     +bt.map((id,ix)=>'<div class="field mt"><label>'+names[ix]+'</label><select data-action="navSlot" data-i="'+ix+'">'
       +NAV.map(n=>'<option value="'+n.id+'" '+(n.id===id?'selected':'')+'>'+n.label+'</option>').join('')+'</select></div>').join('')
+    +'<div class="divider"></div><h3 style="font-size:14px">Desktop sidebar order</h3><div class="sub">Settings and Lock stay pinned at the bottom.</div>'
+    +'<div class="mt-s">'+railOrder().filter(id=>id!=='settings').map((id,ix,arr)=>{
+      const n=NAV.find(x=>x.id===id)||{label:id};
+      return '<div class="between" style="padding:5px 0;border-bottom:1px solid var(--line)"><span class="small">'+n.label+'</span><span class="row" style="gap:4px">'
+        +'<button class="btn ghost sm" data-action="railMove" data-id="'+id+'" data-d="-1" '+(ix===0?'disabled':'')+'>↑</button>'
+        +'<button class="btn ghost sm" data-action="railMove" data-id="'+id+'" data-d="1" '+(ix===arr.length-1?'disabled':'')+'>↓</button></span></div>';
+    }).join('')+'</div>'
     +'<div class="btn-row mt"><button class="btn ghost sm" data-action="navSlotsReset">Reset to default</button>'
     +'<button class="btn primary sm" data-close="modal" onclick="document.getElementById(\'modalBack\').classList.remove(\'show\')">Done</button></div>';
 }
@@ -2514,11 +2709,56 @@ function openGuide(force){
     +'<div><b>Tailwinds</b> — fresh Indonesian + English news on your routes, an ✨ AI monthly briefing, and the rolling headline footer on every tab.</div>'
     +'<div><b>Docs</b> — the gate documents, plus per-country <b>packs</b> with their own Google Drive folders. “✨ AI: build this checklist” researches what each program really needs.</div>'
     +'<div><b>Routes</b> — earn-first cash bridge + your endgame. Nothing is fixed: rename routes, pick your ★ lead, research ANY country with the AI and set its role — watching, bridge, or endgame candidate.</div>'
+    +'<div><b>⚖ Crucible</b> — before betting years on a country, put candidates side by side: fact matrix, AI SWOT each, one blunt recommendation.</div>'
     +'<div><b>Money · Ascent · Languages</b> — savings vs goals; your live altitude %; and any language with your own level scale.</div>'
     +'<div><b>🤖 The AI</b> runs on your own key (Settings), knows your whole situation on every call, and shows what each tap costs — usually a few cents.</div>'
     +'<div>Confused by a word? Tap the little <span class="info" style="position:static;top:0;margin:0 2px" data-tip="Exactly like this — a plain-language explainer. They’re sprinkled anywhere a term might trip you up.">i</span> beside it.</div>'
     +'</div>'
     +'<button class="btn primary block mt" data-action="nav" data-view="today">Show me Today →</button>');
+}
+
+/* First-run wizard — handholding for brand-new vaults. */
+function openWizard(step){
+  step=step||1;
+  const dots='<div class="row" style="justify-content:center;gap:6px;margin-top:14px">'+[1,2,3].map(i=>'<span style="width:8px;height:8px;border-radius:50%;background:'+(i===step?'var(--amber)':'var(--line2)')+'"></span>').join('')+'</div>';
+  let body='';
+  if(step===1) body='<h3>Welcome aboard 🛫</h3><div class="sub">Your private departures board for working abroad — one tiny step at a time.</div>'
+    +'<div class="guide-list">'
+    +'<div class="hi"><b>Today</b> gives you ONE thing to do each day. Do it, tap ✓. That habit is the whole engine.</div>'
+    +'<div><b>Docs</b> is the gate — passport first; everything else unlocks after it.</div>'
+    +'<div>Everything you type is <b>end-to-end encrypted</b> — nobody but you (not even the site owner) can read it.</div></div>';
+  if(step===2) body='<h3>Your starter plan ✈️</h3><div class="sub">We seeded a two-leg plan — every bit of it is editable in <b>Routes</b>:</div>'
+    +'<div class="guide-list">'
+    +'<div class="hi"><b>Leg 1 · Cash bridge: the Gulf</b> — employer-sponsored labor visas (Qatar / Saudi / UAE): fast intake, tax-free pay, housing often included. Earn hard currency first.</div>'
+    +'<div><b>Leg 2 · Endgame: Japan</b> — the SSW worker track, a no-degree path with real permanent-residency prospects.</div>'
+    +'<div>Not your plan? Rename anything, remove anything, research ANY country and promote it. Nothing is fixed.</div></div>';
+  if(step===3) body='<h3>Optional power-ups 🔌</h3>'
+    +'<div class="guide-list">'
+    +'<div class="hi"><b>🤖 AI</b> — paste your own Claude API key in Settings and the app researches countries, hunts upcoming deadlines, builds document checklists and stress-tests destinations for you. A few cents per use, on your own budget.</div>'
+    +'<div><b>📅 Google</b> — add your own Client ID in Settings to push deadlines to Google Calendar and file document scans in your Drive.</div>'
+    +'<div>Skip both for now — the tracker works fully without them.</div></div>';
+  const nav='<div class="btn-row mt" style="justify-content:space-between">'
+    +(step>1?'<button class="btn ghost sm" data-action="wizStep" data-i="'+(step-1)+'">← Back</button>':'<span></span>')
+    +(step<3?'<button class="btn primary sm" data-action="wizStep" data-i="'+(step+1)+'">Next →</button>'
+            :'<button class="btn primary sm" data-action="wizDone">Start with Today →</button>')+'</div>';
+  openModal(body+dots+nav);
+}
+
+/* Route → region interconnect: adding/promoting a country quietly teaches the
+   ticker, the news feed and Resources about it. Additive only. */
+function syncRegionForCountry(name, link){
+  const nm=String(name||'').trim().toLowerCase(); if(!nm) return;
+  setSilent(s=>{
+    for(const code in CUR_COUNTRIES){ const cn=CUR_COUNTRIES[code].toLowerCase();
+      if(nm.indexOf(cn)>=0 || cn.indexOf(nm)>=0){ if(!tickerCurs().includes(code)) s.settings.tickerCurrencies=[...tickerCurs(),code]; break; } }
+    let matched=''; for(const id in FEED_CATALOG){ const lb=FEED_CATALOG[id].label.toLowerCase();
+      if(lb.indexOf(nm)>=0 || nm.indexOf(lb.split(' ')[0])>=0){ matched=id; break; } }
+    const ft=s.settings.feedTopics||[];
+    if(matched){ if(!ft.includes(matched)) s.settings.feedTopics=[...ft,matched].slice(0,12); }
+    else { const fc=s.settings.feedCustom||[]; if(!fc.some(x=>x.toLowerCase()===nm)) s.settings.feedCustom=[...fc,String(name)].slice(0,6); }
+    if(link && /^https?:/.test(link) && !(s.resources||[]).some(r=>r.url===link)) s.resources.push({ label:String(name)+' — official', url:link });
+  });
+  fetchRates().catch(()=>{}); _feed=null; _feedTs=0;
 }
 
 /* Tailwinds country picker */
@@ -2675,9 +2915,11 @@ async function doAuth(mode){
         if((data._ts||0) > (state._ts||0)){ state=deepMerge(defaults(), data); migrate(); saveLocal(); } }catch(e){}
     }
     try{ if((($('#rememberPass')||{}).checked)) localStorage.setItem('escapeSession',JSON.stringify({u:uname,p:pass})); else localStorage.removeItem('escapeSession'); }catch(e){}
+    if(mode==='create'&&!migrated){ try{ localStorage.setItem('escapeGuideSeen','1'); }catch(e){} }
     revealApp();
     vaultStore().catch(()=>{});
     if(migrated) toast('✓ Vault upgraded — now end-to-end encrypted','ok');
+    else if(mode==='create') openWizard(1);
   }catch(e){
     const m=e.message||'';
     if(err) err.textContent =
