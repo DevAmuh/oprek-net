@@ -107,7 +107,7 @@ textarea{resize:vertical;min-height:60px}
 .nb-lead{font-family:var(--mono);font-weight:700;font-size:9.5px;letter-spacing:.14em;color:var(--amber);cursor:pointer;flex:none}
 .nb-sep{color:var(--faint)}
 @media(max-width:919px){ .newsbar{bottom:calc(80px + var(--safe-b));padding:6px 10px} body.has-newsbar .stage{padding-bottom:calc(140px + var(--safe-b))} }
-@media(min-width:920px){ body.has-newsbar .stage{padding-bottom:86px} }
+@media(min-width:920px){ .newsbar{left:250px} body.has-newsbar .stage{padding-bottom:86px} } /* clamped to the content column, like the header strip */
 
 /* ---------------- Departures board ---------------- */
 .board-masthead{display:none}
@@ -281,6 +281,7 @@ code{font-family:var(--mono);font-size:11px;background:rgba(0,0,0,.35);padding:1
 .navlist .nl-lbl{font-size:15px;font-weight:600;color:var(--ink)}
 .navlist .nl-hint{font-size:12px;color:var(--faint)}
 .navlist button.nl-wide .nl-lbl{grid-column:2/4;color:var(--amber-soft)}
+.navlist button.nl-arrange{display:block;text-align:center;color:var(--amber-soft);font-weight:600;font-size:14px;padding:13px;border-top:1px solid var(--line)!important;margin-top:6px}
 .toast{position:fixed;left:50%;bottom:calc(84px + var(--safe-b));transform:translateX(-50%) translateY(20px);z-index:80;
   background:linear-gradient(180deg,#191308,#0f0b05);border:1px solid var(--line2);color:var(--ink);padding:11px 16px;border-radius:10px;
   font-size:13px;box-shadow:var(--shadow);opacity:0;transition:.25s;pointer-events:none;max-width:90vw;text-align:center}
@@ -926,8 +927,8 @@ function nextAction(){
   if(prog) return { text:'Finish: '+prog.label, via:'Document gate', view:'docs' };
   const notStarted=s.documents.find(d=>d.status==='not_started');
   if(notStarted) return { text:'Begin: '+notStarted.label, via:'Document gate', view:'docs' };
-  const tw=s.phase1.find(p=>p.lead);
-  if(tw && tw.status==='not_started') return { text:'Register Taiwan SP2T', via:'on SISKOP2MI — your cash bridge', view:'routes' };
+  const ld=leadRoute();
+  if(ld && ld.status==='not_started') return { text:(ld.next||('Register '+ld.label)), via:ld.label+' — your cash-bridge lead', view:'routes' };
   if(s.phase2.decision==='undecided') return { text:'Decide your endgame', via:'Germany or Australia', view:'routes' };
   if(s.phase2.decision==='germany'){
     const lv=state.languages.german.level;
@@ -1161,7 +1162,7 @@ const LANGS=[
 ];
 function langActive(l){
   if(l.id==='german'){
-    if(((state.phase2.roles||{}).germany)==='watch') return 'dormant';
+    if((((state.phase2.roles||{}).germany)||'endgame')!=='endgame') return 'dormant'; // watching or removed
     return state.phase2.decision==='germany' ? 'live' : (state.phase2.decision==='undecided' ? 'potential' : 'dormant');
   }
   const p=state.phase1.find(x=>x.id===l.routeId);
@@ -1315,7 +1316,7 @@ function renderFxPanel(){
   const cell=(v,c,rate,suffix)=>{ if(!v&&v!==0) return '<td class="faint">—</td>';
     return '<td><div>'+fmtMoney(v,c)+(suffix||'')+'</div><div class="rp">Rp '+fmtNum(Math.round(v*rate))+'</div></td>'; };
   h+='<div class="coltabwrap"><table class="coltab">'
-    +'<tr><th>Country</th><th>Rate (Rp)</th><th>☕ Coffee</th><th>🍔 Meal</th><th>🏠 Rent/mo</th><th>🏥 Clinic</th><th>💵 Min wage/mo</th><th>Your stash'+info('Everything you have saved, expressed as months of that country’s minimum wage — a quick “how long could I survive / how fast could I bank” gauge.')+'</th></tr>'
+    +'<tr><th>Country</th><th>Rate (Rp)</th><th>☕ Coffee</th><th>🍔 Meal</th><th>🏠 Rent/mo</th><th>🏥 Clinic</th><th>💵 Min wage/mo</th><th>Your stash (mo of min wage)</th></tr>'
     +tickerCurs().map(c=>{
       const cd=colFor(c); const rate=r[c]||0;
       let row='<tr><td><div class="cc">'+esc(c)+'</div><div class="cn">'+esc((cd&&cd.country)||CUR_COUNTRIES[c]||'')+'</div></td>'
@@ -1432,6 +1433,13 @@ function banked(){ return state.runway.entries.reduce((a,e)=>a+toBase(e.amount,e
 function bankedUSD(){ return state.runway.entries.reduce((a,e)=>{ const idr=(+e.amount||0)*(state.runway.rates[e.currency]||0); return a+idr/(state.runway.rates.USD||1); },0); }
 
 /* ============================ ROUTES (flights) =========================== */
+/* The route you're pushing hardest — built-in OR AI-added. */
+function leadRoute(){
+  const c=(state.customRoutes||[]).find(x=>x.lead);
+  if(c) return { id:c.id, label:c.name, status:c.status||'not_started', waveWindow:'', next:c.next||'', custom:true };
+  const p=state.phase1.find(x=>x.lead);
+  return p?{ id:p.id, label:p.label, status:p.status, waveWindow:p.waveWindow||'', next:p.nextStep||'', custom:false }:null;
+}
 function routeFlights(){
   const flights=[];
   state.phase1.forEach(p=>{
@@ -1441,12 +1449,16 @@ function routeFlights(){
   });
   const dec=state.phase2.decision;
   const roles=state.phase2.roles||{germany:'endgame',australia:'endgame'};
-  const gWatch=roles.germany==='watch', aWatch=roles.australia==='watch';
-  flights.push({ kind:gWatch?'watch':'end', id:'germany', name:'GERMANY', tag:'Ausbildung · '+(gWatch?'watching':'endgame'), lang:{t:'🇩🇪 B1',c:'--amber-dim'},
-    status: gWatch?{t:'WATCHING',c:'st-scheduled'}:(dec==='germany'?{t:'BOARDING',c:'st-boarding'}:{t:'SCHEDULED',c:'st-scheduled'}), next:'German B1 → training place' });
-  const cap=ageCapDate(state.profile.birthDate); const mU=monthsUntil(cap);
-  flights.push({ kind:aWatch?'watch':'end', id:'australia', name:'AUSTRALIA', tag:'WHV 462 · '+(aWatch?'watching':'endgame'), lang:{t:'🇬🇧 EN',c:'--teal'},
-    status: aWatch?{t:'WATCHING',c:'st-scheduled'}:(dec==='australia'?{t:'BOARDING',c:'st-boarding'}:(mU!=null&&mU<=18?{t:'GATE 31',c:'st-gate'}:{t:'SCHEDULED',c:'st-scheduled'})), next:'AUD 5k → apply before 31' });
+  const gRole=roles.germany||'endgame', aRole=roles.australia||'endgame';
+  if(gRole!=='hidden'){
+    flights.push({ kind:gRole==='watch'?'watch':'end', id:'germany', name:'GERMANY', tag:'Ausbildung · '+(gRole==='watch'?'watching':'endgame'), lang:{t:'DE B1',c:'--amber-dim'},
+      status: gRole==='watch'?{t:'WATCHING',c:'st-scheduled'}:(dec==='germany'?{t:'BOARDING',c:'st-boarding'}:{t:'SCHEDULED',c:'st-scheduled'}), next:'German B1 → training place' });
+  }
+  if(aRole!=='hidden'){
+    const cap=ageCapDate(state.profile.birthDate); const mU=monthsUntil(cap);
+    flights.push({ kind:aRole==='watch'?'watch':'end', id:'australia', name:'AUSTRALIA', tag:'WHV 462 · '+(aRole==='watch'?'watching':'endgame'), lang:{t:'EN',c:'--teal'},
+      status: aRole==='watch'?{t:'WATCHING',c:'st-scheduled'}:(dec==='australia'?{t:'BOARDING',c:'st-boarding'}:(mU!=null&&mU<=18?{t:'GATE 31',c:'st-gate'}:{t:'SCHEDULED',c:'st-scheduled'})), next:'AUD 5k → apply before 31' });
+  }
   (state.customRoutes||[]).forEach(c=>{
     const role=c.role||'watch';
     const status = role==='endgame'
@@ -1638,7 +1650,7 @@ function viewToday(){
   const dp=docProgress();
   const checkedToday=state.streak.lastCheckIn===todayISO();
   const c=Math.max(0,Math.min(20,state.streak.count)); const off=107-(107*(c/20));
-  const lead=state.phase1.find(p=>p.lead);
+  const lead=leadRoute();
   return '<div style="max-width:440px;margin:0 auto">'
     +'<div class="between mt-s"><div class="eyebrow" style="text-transform:none">'+esc(state.streak.anchorLabel||'After Subuh')+'</div>'
       +'<div class="ring"><svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="17" fill="none" stroke="rgba(246,191,82,.15)" stroke-width="3"/>'
@@ -1678,7 +1690,7 @@ function ascentAltitude(){
 function viewAscent(){
   const dp=docProgress();
   const dec=state.phase2.decision;
-  const lead=state.phase1.find(p=>p.lead);
+  const lead=leadRoute();
   const cashActive=state.phase1.some(p=>p.status!=='not_started')||(state.customRoutes||[]).some(c=>c.status&&c.status!=='not_started');
   const na=nextAction();
   const endLive=dec!=='undecided';
@@ -1716,23 +1728,34 @@ function viewAscent(){
       : decCust
         ? 'Chosen: '+esc(decCust.name)+(decCust.timeline?' · '+esc(decCust.timeline):'')+'.'
         : 'Undecided — pick when the cash is flowing.';
+  // Stage 3 chips = the ACTUAL endgame candidates (built-ins respect their role)
+  const eroles=state.phase2.roles||{germany:'endgame',australia:'endgame'};
+  const endChips=[];
+  if((eroles.germany||'endgame')==='endgame') endChips.push('Germany · B1');
+  if((eroles.australia||'endgame')==='endgame') endChips.push('Australia · EN');
+  (state.customRoutes||[]).filter(c=>(c.role||'watch')==='endgame').forEach(c=>endChips.push(c.name));
   html+='<div class="stage-node '+(hereStage===3?'here':(endLive?'done':''))+'" data-action="nav" data-view="routes" style="cursor:pointer"><div class="dot"></div>'
     +'<div class="stage-lbl">STAGE 3 · ENDGAME'+(hereStage===3?' — YOU ARE HERE':'')+' <span class="faint">↗</span></div>'
     +'<div style="font-family:var(--disp);font-size:17px;margin:3px 0 7px">Citizenship</div>'
-    +'<div class="row wrap" style="gap:7px">'
-      +'<span class="chip small">🇩🇪 Germany · B1</span><span class="chip small">🇦🇺 Australia · EN</span></div>'
+    +(endChips.length
+      ?'<div class="row wrap" style="gap:7px">'+endChips.map(x=>'<span class="chip small">'+esc(x)+'</span>').join('')+'</div>'
+      :'<div class="sub">No candidates yet — research a country in Routes and promote it.</div>')
     +'<div class="sub mt-s">'+endSub+'</div></div>';
-  // Stage 2 cash — live statuses incl. AI-added countries
-  const crN=(state.customRoutes||[]).length;
+  // Stage 2 cash — every real route, by name and live status
+  const bridgeChips=[
+    ...state.phase1.filter(p=>!p.lead).map(p=>esc(p.label)+' · '+esc(STATUS_LABELS[p.status]||p.status)),
+    ...(state.customRoutes||[]).filter(c=>(c.role||'watch')==='bridge'&&!c.lead).map(c=>esc(c.name)+' · '+esc(STATUS_LABELS[c.status]||c.status||'?')),
+  ];
+  const watchN=(state.customRoutes||[]).filter(c=>(c.role||'watch')==='watch').length;
   html+='<div class="stage-node '+(hereStage===2?'here':(cashActive?'done':''))+'" data-action="nav" data-view="routes" style="cursor:pointer"><div class="dot"></div>'
     +'<div class="stage-lbl">STAGE 2 · CASH BRIDGE'+(hereStage===2?' — YOU ARE HERE':'')+' <span class="faint">↗</span></div>'
     +'<div style="font-family:var(--disp);font-size:17px;margin:3px 0 7px">Earn hard currency</div>'
-    +'<div class="item" style="margin-top:0"><div class="between"><span style="font-weight:600">🛫 '+esc((lead&&lead.label)||'Taiwan SP2T')+'</span>'
+    +'<div class="item" style="margin-top:0"><div class="between"><span style="font-weight:600">🛫 '+esc((lead&&lead.label)||'—')+' <span class="badge live">★ LEAD</span></span>'
       +statusBadge((lead&&lead.status)||'not_started')+'</div>'
       +(lead&&lead.waveWindow?'<div class="sub mt-s">🌊 '+esc(lead.waveWindow)+'</div>':'')
       +'<div class="row wrap mt-s" style="gap:6px">'
-        +state.phase1.filter(p=>!p.lead).map(p=>'<span class="chip small">'+esc(p.label)+' · '+esc(STATUS_LABELS[p.status]||p.status)+'</span>').join('')
-        +(crN?'<span class="chip small" style="border-color:rgba(196,181,253,.4);color:var(--violet)">+'+crN+' AI route'+(crN>1?'s':'')+'</span>':'')
+        +bridgeChips.map(x=>'<span class="chip small">'+x+'</span>').join('')
+        +(watchN?'<span class="chip small" style="border-color:rgba(196,181,253,.4);color:var(--violet)">👀 +'+watchN+' watching</span>':'')
       +'</div></div></div>';
   // Stage 1 ground — tap to open Docs
   const nextDoc=state.documents.find(d=>d.status!=='done');
@@ -1859,10 +1882,10 @@ function viewRoutes(){
   const endCustoms=(state.customRoutes||[]).filter(c=>(c.role||'watch')==='endgame');
   const decCustom=endCustoms.find(c=>c.id===dec)||((state.customRoutes||[]).find(c=>c.id===dec));
   const cands=[];
-  if(roles.germany!=='watch') cands.push({key:'germany',chip:'Germany 🇩🇪',col:'GERMANY 🇩🇪',cit:'~5 yrs, criteria-based',lang:'German B1–B2',pay:'€724–1,490/mo training',ctch:'learn German'});
-  if(roles.australia!=='watch') cands.push({key:'australia',chip:'Australia 🇦🇺',col:'AUSTRALIA 🇦🇺',cit:'4 yrs + 1 yr PR (hard gate)',lang:'English only',pay:'A$26.44/hr (top min wage)',ctch:'apply before 31'});
+  if((roles.germany||'endgame')==='endgame') cands.push({key:'germany',chip:'Germany',col:'GERMANY',cit:'~5 yrs, criteria-based',lang:'German B1–B2',pay:'€724–1,490/mo training',ctch:'learn German'});
+  if((roles.australia||'endgame')==='endgame') cands.push({key:'australia',chip:'Australia',col:'AUSTRALIA',cit:'4 yrs + 1 yr PR (hard gate)',lang:'English only',pay:'A$26.44/hr (top min wage)',ctch:'apply before 31'});
   endCustoms.forEach(c=>cands.push({key:c.id,chip:esc(c.name),col:esc(c.name),cit:c.timeline?esc(c.timeline):'—',lang:esc(c.langLabel||'—'),pay:esc(c.pay||'—'),ctch:esc(c.risk||'—')}));
-  html+='<div class="eyebrow" style="padding:14px 2px 8px">ENDGAME — WHERE YOU SETTLE'+info('Nothing here is fixed. Germany and Australia are just pre-researched candidates — demote either to “watching”, and promote any country you research below into the table (set its role to Endgame candidate). Choose one and the Board, Languages and next actions follow.')+'</div>';
+  html+='<div class="eyebrow" style="padding:14px 2px 8px">ENDGAME — WHERE YOU SETTLE'+info('Nothing here is fixed — Germany and Australia are just pre-researched candidates. Demote either to “watching” or remove them entirely below, and promote any country you research into the table (set its role to Endgame candidate). Choose one and the Board, Languages and next actions follow.')+'</div>';
   html+='<div class="panel"><div class="seg" style="flex-wrap:wrap">'
     +'<button data-action="decision" data-val="undecided" class="'+(dec==='undecided'?'on':'')+'" style="min-width:110px">Undecided</button>'
     +cands.map(cd=>'<button data-action="decision" data-val="'+cd.key+'" class="'+(dec===cd.key?'on':'')+'" style="min-width:110px">'+cd.chip+'</button>').join('')
@@ -1878,9 +1901,9 @@ function viewRoutes(){
     html+='<div class="empty">No endgame candidates — promote a researched country below, or bring Germany/Australia back.</div>';
   }
   html+='<div class="row wrap mt" style="gap:10px">'
-    +[['germany','🇩🇪 Germany'],['australia','🇦🇺 Australia']].map(b=>'<label class="row small" style="gap:6px">'+b[1]
+    +[['germany','Germany'],['australia','Australia']].map(b=>'<label class="row small" style="gap:6px">'+b[1]
       +'<select data-action="egRole" data-id="'+b[0]+'" style="width:auto;padding:4px 26px 4px 8px;font-size:12px">'
-      +[['endgame','Endgame candidate'],['watch','Just watching']].map(o=>'<option value="'+o[0]+'" '+((roles[b[0]]||'endgame')===o[0]?'selected':'')+'>'+o[1]+'</option>').join('')+'</select></label>').join('')
+      +[['endgame','Endgame candidate'],['watch','Just watching'],['hidden','Removed']].map(o=>'<option value="'+o[0]+'" '+((roles[b[0]]||'endgame')===o[0]?'selected':'')+'>'+o[1]+'</option>').join('')+'</select></label>').join('')
     +'</div>'
     +'<div class="note blue mt">PR ≠ citizenship. PR frees you ~90%; citizenship is the capstone.</div>';
 
@@ -1920,7 +1943,7 @@ function viewRoutes(){
   // EXPLORE A NEW COUNTRY — AI research (watch-role routes live here)
   html+='<div class="eyebrow" style="padding:14px 2px 8px">EXPLORE — ADD ANY COUNTRY</div>';
   html+='<div class="panel">'
-    +'<div class="sub">Type a country. The AI'+info('Uses your own Claude API key (set once in Settings). It searches the live web for the real 2026 labour route, pay, language, age cap and next step — then files it here and on the Board. Set its role to move it into Cash Bridge or Endgame.')+' researches its real 2026 labour route — then set its <b>role</b>: keep watching, cash bridge, or endgame candidate.</div>'
+    +'<div class="sub">Type a country. The AI researches its real 2026 labour route — then set its <b>role</b>: keep watching, cash bridge, or endgame candidate.</div>'
     +'<div class="copywrap mt"><input id="aiCountryInput" placeholder="e.g. Oman, Poland, Canada…" autocomplete="off"><button class="btn primary sm" data-action="aiAddCountry">🔎 Research</button></div>'
     +'<div id="aiCountryMsg" class="sub mt-s" style="min-height:0"></div>';
   const watch=(state.customRoutes||[]).filter(c=>(c.role||'watch')==='watch');
@@ -1937,6 +1960,7 @@ function customRouteCard(c){
     : (c.laborEligible===true ? '<span class="badge live">labour-OK</span>' : '');
   const roleLbl={watch:'👀 watching',bridge:'🏭 cash bridge',endgame:'🎯 endgame'};
   return '<details class="item row-x"><summary class="between"><span class="title">'+esc(c.name||'?')+' '+badge
+      +(c.lead?'<span class="badge live">★ LEAD</span>':'')
       +((c.role||'watch')!=='watch'?'<span class="badge warn">'+roleLbl[c.role]+'</span>':'')
       +statusBadge(c.status||'not_started')+'</span><span class="chev">▾</span></summary>'
     +'<div class="sub mt-s">'+esc(c.tag||'')+(c.langLabel?' · '+esc(c.langLabel):'')+(c.pay?' · '+esc(c.pay):'')+'</div>'
@@ -1947,10 +1971,11 @@ function customRouteCard(c){
     +(c.risk?'<div class="note amber mt-s">⚠ '+esc(c.risk)+'</div>':'')
     +'<div class="grid2 mt"><div class="field"><label>Status</label><select data-action="crStatus" data-id="'+c.id+'">'
       +opts.map(s=>'<option value="'+s+'" '+((c.status||'not_started')===s?'selected':'')+'>'+STATUS_LABELS[s]+'</option>').join('')+'</select></div>'
-    +'<div class="field"><label>Role'+info('Where this country sits in YOUR plan. Cash bridge = earn-first leg (shows with Taiwan/Korea/Japan). Endgame = candidate to settle in (joins the decision chips). Watching = parked here.')+'</label><select data-action="crRole" data-id="'+c.id+'">'
+    +'<div class="field"><label>Role</label><select data-action="crRole" data-id="'+c.id+'">'
       +[['watch','Just watching'],['bridge','Cash bridge'],['endgame','Endgame candidate']].map(o=>'<option value="'+o[0]+'" '+((c.role||'watch')===o[0]?'selected':'')+'>'+o[1]+'</option>').join('')+'</select></div></div>'
     +'<div class="field"><label>Next step</label><input data-action="crNext" data-id="'+c.id+'" value="'+esc(c.next||'')+'"></div>'
     +'<div class="btn-row">'+(c.link?'<a class="btn ghost sm" href="'+esc(c.link)+'" target="_blank" rel="noopener">Official site ↗</a>':'')
+      +'<button class="btn ghost sm" data-action="crLead" data-id="'+c.id+'">'+(c.lead?'★ Lead route':'☆ Make lead')+'</button>'
       +'<button class="btn ghost sm" data-action="crRefresh" data-id="'+c.id+'">↻ Re-research</button>'
       +'<button class="btn ghost sm danger" data-action="crRemove" data-id="'+c.id+'">Remove</button></div></div></details>';
 }
@@ -1966,7 +1991,7 @@ function viewMoney(){
     +'<div class="sub">What you’ve saved so far, and how close you are to each goal.</div>'
     +'<div class="between mt"><div><div style="font-family:var(--mono);font-weight:700;font-size:26px;color:var(--amber-soft)">'+fmtMoney(total,base)+'</div><div class="faint small">saved so far</div></div>'
     +'<button class="btn primary" data-action="focusAdd">＋ Add money</button></div>'
-    +(months>0?'<div class="note mt">≈ <b>'+fmtNum(months)+'</b> months of your old Indonesian salary'+info('At your old teaching pay (~$140/mo) this is how many months of income you have already banked. Motivation, quantified.')+' already banked.</div>':'')+'</div>';
+    +(months>0?'<div class="note mt">≈ <b>'+fmtNum(months)+'</b> months of your old Indonesian salary already banked.</div>':'')+'</div>';
 
   // log form (the main input)
   html+='<div class="panel"><h3 style="font-size:15px">Log what you saved</h3>'
@@ -2126,7 +2151,7 @@ function viewLanguages(){
     html+='<div class="langcard'+(act==='live'?' live':'')+'">'
       +'<div class="between"><div class="row" style="gap:10px"><span class="flag">'+l.flag+'</span><div><div style="font-weight:600">'+l.label+' <span class="faint small">· '+esc(l.routeName)+'</span></div>'
         +'<div class="faint small">target: '+esc(l.target)+' · 🔥 '+(d.streak||0)+'-day streak</div></div></div>'+badge+'</div>'
-      +'<div class="grid2 mt"><div class="field"><label>Level'+info('Free-form — pick a suggestion or type your own (e.g. “TOPIK I passed”, “conversational”).')+'</label>'
+      +'<div class="grid2 mt"><div class="field"><label>Level <span class="faint">(free-form)</span></label>'
         +'<input list="lvl-'+l.id+'" data-action="langLevel" data-lang="'+l.id+'" value="'+esc(d.level||'')+'" placeholder="e.g. '+esc(l.levels[1]||'Studying')+'">'
         +'<datalist id="lvl-'+l.id+'">'+l.levels.map(v=>'<option value="'+esc(v)+'">').join('')+'</datalist></div>'
       +'<div class="field"><label></label><button class="btn '+(didToday?'ghost':'primary')+' block sm" style="margin-top:22px" data-action="langToday" data-lang="'+l.id+'" '+(didToday?'disabled':'')+'>'+(didToday?'✓ done today':'I studied today')+'</button></div></div>'
@@ -2189,7 +2214,7 @@ function viewSettings(){
   const ai=aiCfg();
   html+='<div class="panel"><h3 style="font-size:15px">🤖 AI research'+info('Powers country research, the news scan, intake-window checks, the agent box and ✨ next-move picks. It runs on YOUR Claude API key, kept server-side — never in the browser — and only unlocks with your passphrase, so nobody but you can spend it.')+'</h3>'
     +'<div class="sub">Researches the live web on <b>your own Claude API key</b>. You control the brain and the budget below.</div>'
-    +'<div class="grid2 mt"><div class="field"><label>Model'+info('Which Claude brain to use. Haiku = fastest & cheapest — plenty for fact-finding. Opus = deepest thinking but ~5× pricier and slow enough to sometimes time out.')+'</label><select data-action="aiModel">'
+    +'<div class="grid2 mt"><div class="field"><label>Model</label><select data-action="aiModel">'
       +[['haiku','Haiku 4.5 — fast & cheap (~$0.05/research)'],['sonnet','Sonnet 5 — balanced (~$0.09)'],['opus','Opus 4.8 — deepest (~$0.15+, slow)']].map(o=>'<option value="'+o[0]+'" '+(ai.model===o[0]?'selected':'')+'>'+o[1]+'</option>').join('')+'</select></div>'
     +'<div class="field"><label>Effort <span class="faint">(Haiku ignores this)</span></label><select data-action="aiEffort">'
       +['low','medium','high'].map(v=>'<option '+(ai.effort===v?'selected':'')+'>'+v+'</option>').join('')+'</select></div></div>'
@@ -2258,7 +2283,7 @@ function viewSettings(){
     +'<button class="btn ghost sm" data-action="exportJson">⬇ Export</button><button class="btn ghost sm" data-action="importJson">⬆ Import</button>'
     +'<button class="btn ghost sm" data-action="resetAll" style="color:var(--red)">Reset</button></div>'
     +'<div class="sub mt-s">Cached on this device for offline use, and synced privately to your passphrase-locked vault.</div></div>';
-  html+='<div class="center small faint" style="padding:10px">Escape Pipeline · Departures edition · v3.5 · E2E-encrypted</div>';
+  html+='<div class="center small faint" style="padding:10px">Escape Pipeline · Departures edition · v3.6 · E2E-encrypted</div>';
   return html;
 }
 
@@ -2311,7 +2336,8 @@ document.addEventListener('click', async (e)=>{
     case 'aiDocpack': await aiDocpackFill(t, id); break;
     case 'toggleP1': { const el=$('#p1d-'+id); if(el){el.classList.toggle('open'); t.classList.toggle('open');} break; }
     case 'p1NextAction': { const p=state.phase1.find(x=>x.id===id); mutate(s=>{ s.nextActionOverride=p.nextStep+' ('+p.label+')'; s.nextActionVia=''; }); setView('today'); break; }
-    case 'p1Lead': mutate(s=>{ s.phase1.forEach(x=>{ x.lead=(x.id===id); }); }); toast('★ Lead route set'); break;
+    case 'p1Lead': mutate(s=>{ s.phase1.forEach(x=>{ x.lead=(x.id===id); }); (s.customRoutes||[]).forEach(c=>{ c.lead=false; }); }); toast('★ Lead route set'); break;
+    case 'crLead': mutate(s=>{ s.phase1.forEach(x=>{ x.lead=false; }); (s.customRoutes||[]).forEach(c=>{ c.lead=(c.id===id); }); }); toast('★ Lead route set'); break;
     case 'decision': mutate(s=>{ s.phase2.decision=val; }); break;
     case 'ausbAdd': { const v=$('#ausbInput').value.trim(); if(v) mutate(s=>{ s.phase2.germany.ausbildungShortlist.push(v); }); break; }
     case 'ausbRemove': mutate(s=>{ s.phase2.germany.ausbildungShortlist.splice(+i,1); }); break;
@@ -2435,7 +2461,7 @@ function openMore(){
   const rest=NAV.filter(n=>!bottomTabs().includes(n.id));
   sh.innerHTML='<h3>More</h3><div class="navlist">'
     +rest.map(n=>'<button data-action="nav" data-view="'+n.id+'"><span class="nl-ic">'+icon(n.id)+'</span><span class="nl-lbl">'+n.label+'</span><span class="nl-hint">'+esc(n.hint||'')+'</span></button>').join('')
-    +'<button data-action="arrangeTabs" class="nl-wide"><span class="nl-ic">'+icon('settings')+'</span><span class="nl-lbl">⇄ Arrange tabs…</span></button>'
+    +'<button data-action="arrangeTabs" class="nl-arrange">⇄ Arrange tabs…</button>'
     +'</div>';
   back.classList.add('show');
 }
@@ -2472,7 +2498,9 @@ function initTips(){
     if(el){ e.preventDefault(); if(_tipOpen===el){ hide(); _tipOpen=null; } else { show(el); _tipOpen=el; } }
     else if(_tipOpen){ hide(); _tipOpen=null; } });
   document.addEventListener('focusin',e=>{ const el=e.target.closest&&e.target.closest('[data-tip]'); if(el) show(el); });
-  addEventListener('scroll',()=>{ hide(); _tipOpen=null; },true);
+  // NOTE: the marquees (#fxbar/#newsbar) auto-scroll ~60×/s — their scroll
+  // events must NOT hide tooltips, or no tip ever survives a frame.
+  addEventListener('scroll',(ev)=>{ const t=ev.target; if(t&&t.id&&(t.id==='fxbar'||t.id==='newsbar')) return; hide(); _tipOpen=null; },true);
 }
 function openGuide(force){
   if(!force){ try{ if(localStorage.getItem('escapeGuideSeen')) return; }catch(e){} }
