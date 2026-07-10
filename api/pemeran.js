@@ -24,7 +24,9 @@ function isPlainObject(v) { return !!v && typeof v === 'object' && !Array.isArra
 // ---- PostgREST helper -----------------------------------------------------
 async function supa(path, opts) {
   opts = opts || {};
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  // .trim() guards the single most common paste error: a trailing newline or
+  // space on the env var, which silently makes the key invalid.
+  const key = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
   const headers = Object.assign(
     { apikey: key, Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
     opts.headers || {}
@@ -38,13 +40,18 @@ async function supa(path, opts) {
 
 // ---- passcode check (hash cached across warm invocations) -----------------
 let cachedHash = null;
+let lastConfigError = null; // captures WHY the settings read failed, for diagnosis
 
 async function getPasscodeHash() {
   if (cachedHash) return cachedHash;
   const r = await supa('/rest/v1/pemeran_settings?select=value&key=eq.passcode');
   const row = r.ok && Array.isArray(r.json) && r.json[0];
   const hash = row && row.value && row.value.hash;
-  if (typeof hash === 'string' && hash.length === 64) cachedHash = hash;
+  if (typeof hash === 'string' && hash.length === 64) { cachedHash = hash; lastConfigError = null; }
+  else {
+    const msg = r.json && (r.json.message || r.json.error || r.json.msg);
+    lastConfigError = 'Supabase HTTP ' + r.status + (msg ? ' — ' + msg : '');
+  }
   return cachedHash;
 }
 
@@ -221,7 +228,7 @@ module.exports = async (req, res) => {
     }
 
     const gate = await verifyPass(body.pass);
-    if (gate === 'config') return res.status(500).json({ error: CONFIG_ERROR });
+    if (gate === 'config') return res.status(500).json({ error: CONFIG_ERROR, detail: lastConfigError });
     if (gate !== 'ok') return res.status(401).json({ error: 'Kode akses salah.' });
 
     switch (body.action) {
