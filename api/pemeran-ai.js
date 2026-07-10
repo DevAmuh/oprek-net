@@ -50,17 +50,24 @@ async function getPasscodeHash() {
   return cachedHash;
 }
 
+// Returns 'ok' | 'bad' | 'config'. 'config' means the passcode row could not be
+// read at all (wrong/missing service-role key, unreachable DB); reporting that
+// as a wrong passcode sends the operator hunting for the wrong bug.
 async function verifyPass(pass) {
-  if (typeof pass !== 'string' || pass.length < 4 || pass.length > 200) return false;
+  if (typeof pass !== 'string' || pass.length < 4 || pass.length > 200) return 'bad';
   const hash = await getPasscodeHash();
-  if (!hash) return false;
+  if (!hash) return 'config';
   const digest = crypto.createHash('sha256').update(pass, 'utf8').digest('hex');
   try {
-    return crypto.timingSafeEqual(Buffer.from(digest, 'hex'), Buffer.from(hash, 'hex'));
+    return crypto.timingSafeEqual(Buffer.from(digest, 'hex'), Buffer.from(hash, 'hex')) ? 'ok' : 'bad';
   } catch (e) {
-    return false; // length mismatch etc. — treat as no match
+    return 'bad'; // length mismatch etc. — treat as no match
   }
 }
+
+const CONFIG_ERROR = 'Server tidak dapat membaca pengaturan dari database. Pastikan '
+  + 'SUPABASE_SERVICE_ROLE_KEY di Vercel berisi kunci service_role (secret) proyek '
+  + 'Supabase "Sandbox" — bukan kunci anon/publishable — lalu redeploy.';
 
 // ---- konstanta (kept in sync with pemeran/data/konstanta.json) ------------
 const DIMENSI_PROFIL_LULUSAN = [
@@ -1036,9 +1043,9 @@ module.exports = async (req, res) => {
       });
     }
 
-    if (!(await verifyPass(body.pass))) {
-      return res.status(401).json({ error: 'Kode akses salah.' });
-    }
+    const gate = await verifyPass(body.pass);
+    if (gate === 'config') return res.status(500).json({ error: CONFIG_ERROR });
+    if (gate !== 'ok') return res.status(401).json({ error: 'Kode akses salah.' });
 
     switch (body.action) {
       case 'generate_rpp':          return await generateRpp(body, res);
