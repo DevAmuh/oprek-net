@@ -632,15 +632,11 @@ function tpSchema(nElemen) {
     properties: {
       perElemen: {
         type: 'array',
-        minItems: nElemen,
-        maxItems: nElemen,
         items: {
           type: 'object',
           properties: {
             tps: {
               type: 'array',
-              minItems: 2,
-              maxItems: 8,
               items: {
                 type: 'object',
                 properties: {
@@ -734,8 +730,6 @@ function kktpSchema(n) {
     properties: {
       items: {
         type: 'array',
-        minItems: n,
-        maxItems: n,
         items: {
           type: 'object',
           properties: {
@@ -821,14 +815,12 @@ function atpSchema(allTpKodes) {
     properties: {
       units: {
         type: 'array',
-        minItems: 1,
-        maxItems: 30,
         items: {
           type: 'object',
           properties: {
             nama: { type: 'string' },
-            tpKodes: { type: 'array', minItems: 1, items: { type: 'string', enum: allTpKodes } },
-            bobot: { type: 'number', minimum: 0.7, maximum: 1.3 },
+            tpKodes: { type: 'array', items: { type: 'string', enum: allTpKodes } },
+            bobot: { type: 'number' },
             semester: { type: 'integer', enum: [1, 2] },
           },
           required: ['nama', 'tpKodes', 'bobot', 'semester'],
@@ -900,8 +892,6 @@ function mulokSchema() {
     properties: {
       elemen: {
         type: 'array',
-        minItems: 2,
-        maxItems: 4,
         items: {
           type: 'object',
           properties: { nama: { type: 'string' }, teks: { type: 'string' } },
