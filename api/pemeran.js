@@ -27,10 +27,13 @@ async function supa(path, opts) {
   // .trim() guards the single most common paste error: a trailing newline or
   // space on the env var, which silently makes the key invalid.
   const key = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
-  const headers = Object.assign(
-    { apikey: key, Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
-    opts.headers || {}
-  );
+  const headers = { apikey: key, 'Content-Type': 'application/json' };
+  // Only legacy JWT keys (eyJ...) carry a role claim in the Bearer slot. The new
+  // sb_secret_/sb_publishable_ keys are NOT JWTs — sent as Bearer, PostgREST can't
+  // read a role and falls back to anon (403 permission denied). With apikey alone,
+  // the gateway maps sb_secret_ to service_role correctly. So Bearer only for JWTs.
+  if (key.startsWith('eyJ')) headers.Authorization = 'Bearer ' + key;
+  Object.assign(headers, opts.headers || {});
   const r = await fetch(SUPA_URL + path, { method: opts.method || 'GET', headers, body: opts.body });
   const text = await r.text();
   let json = null;
