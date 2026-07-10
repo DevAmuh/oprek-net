@@ -1,0 +1,26 @@
+{
+  "mapel": "Bahasa Inggris",
+  "fase": "D",
+  "redaksi": "nasional",
+  "sumber": "Keputusan Kepala Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP) Kementerian Pendidikan Dasar dan Menengah No. 046/H/KR/2025 tentang Capaian Pembelajaran pada PAUD, Jenjang Pendidikan Dasar, dan Jenjang Pendidikan Menengah — Bagian V.1 Capaian Pembelajaran Bahasa Inggris, Fase D",
+  "sumberUrl": "https://jdih.kemendikdasmen.go.id/",
+  "sumberLocalFile": "E:\\Claude Cowork\\SMPI AHA\\Perangkat Pembelajaran\\8. Misc\\uncategorized\\School & Exam Admin\\Landasan Yuridis\\Kepka_BSKAP_No_01k17e8396ajn15j3hcw0k773b_copy.pdf (PDF hal. 135-136 dari 1691 hal.)",
+  "catatan": "Ditranskripsi verbatim dari ekstraksi teks PyMuPDF (fitz) atas dokumen PDF resmi (SALINAN, watermark jdih.kemendikdasmen.go.id) yang disimpan lokal. Nomor butir asli dokumen: 3.1-3.3 (Fase D adalah fase ke-3 karena mapel ini wajib mulai Fase B, bukan Fase A). PENTING: teks ini BERBEDA dari redaksi 'kontekstual' ESP sekolah (data/cp/esp_kontekstual.json), yang berasal dari CP versi lama (kemungkinan Kepmendikbudristek 033/H/KR/2022) dan sudah disahkan sekolah via KOSP untuk mapel mulok ESP — jangan disatukan. File ini adalah CP resmi TERKINI (046/H/KR/2025) untuk mapel wajib 'Bahasa Inggris'. Dokumen sumber menyertakan versi Inggris resmi juga (field teksEn).",
+  "elemen": [
+    {
+      "nama": "Menyimak - Berbicara (Listening - Speaking)",
+      "teks": "Memahami alur informasi secara keseluruhan, gagasan utama dan informasi rinci dari teks lisan tentang topik sehari-hari atau yang sesuai dengan minat; menggunakan bahasa Inggris untuk mengungkapkan gagasan dan pengalaman dalam berbagai jenis teks secara lisan tentang topik yang dibahas dengan menggunakan kalimat sederhana dan majemuk baik formal maupun informal sesuai konteks.",
+      "teksEn": "Understand the entire flow of information, main ideas and details of oral texts about everyday topics or topics of interest; using English to express ideas and experiences in various types of texts orally about the topics discussed using simple and compound sentences, both formally and informally in line with its context."
+    },
+    {
+      "nama": "Membaca - Memirsa (Reading - Viewing)",
+      "teks": "Memahami alur informasi, informasi tersurat dan tersirat dari berbagai jenis teks tertulis atau teks multimodal tentang topik sehari-hari atau yang sesuai dengan minat dan meresponnya sesuai konteks.",
+      "teksEn": "Understand the entire flow of information, explicit and implicit information from various types of written or multimodal texts about everyday topics or topics of interest and respond in line with its context."
+    },
+    {
+      "nama": "Menulis - Mempresentasikan (Writing - Presenting)",
+      "teks": "Mengomunikasikan gagasan dan pengalaman mereka dalam berbagai jenis teks secara tertulis atau teks multimodal tentang topik sehari-hari atau yang sesuai dengan minat dengan mulai menggunakan kalimat sederhana dan majemuk dengan struktur teks dan unsur kebahasaan yang tepat; mengungkapkan pendapat dan mempertahankan argumen tentang suatu isu terkait topik sehari-hari atau yang sesuai dengan minat.",
+      "teksEn": "Communicate their ideas and experiences in various types of texts, in written or multimodal texts, about everyday topics or topics of interest, by starting to use simple and compound sentences with appropriate text structures and language features; express their opinions and defend their arguments on issues related to daily topics or topics of interests."
+    }
+  ]
+}

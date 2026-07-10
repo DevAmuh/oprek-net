@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Perencanaan Pembelajaran Mendalam</title>
+<style>
+  /* Ported from eduforge src/templates/rpm_smpi_aha.html (verified 1:1 against
+     the school's master template docx — MASTER TEMPLATE\RPP - Template Kosong
+     (Reusable) - PM SMPI.docx — row-by-row during the M2 port). Extended:
+     the Pengalaman Belajar section's per-meeting rows now live inside a
+     <template data-repeat="pertemuan"> so js/render/rpp.js can clone one
+     copy per meeting and label it "Pertemuan i dari N". */
+  :root {
+    --yellow: #FFCE3C;
+    --salmon: #F7CBAC;
+    --orange: #F4B083;
+    --black: #000000;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #e8e8e8;
+    font-family: 'Arial Narrow', Arial, 'Segoe UI', sans-serif;
+  }
+  .rpp-page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 12px auto;
+    padding: 12.7mm;
+    background: #ffffff;
+    color: var(--black);
+    box-shadow: 0 0 8px rgba(0,0,0,0.25);
+    font-size: 10.5pt;
+    line-height: 1.35;
+  }
+
+  /* ── header banner: 99×79 logo + 550×77 ribbon, per the original ── */
+  .rpp-banner {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 4px;
+  }
+  .rpp-banner img.logo { width: 99px; height: 79px; flex: none; }
+  .rpp-banner img.banner-img {
+    height: 77px;
+    width: auto;
+    max-width: calc(100% - 110px);
+    object-fit: contain;
+    object-position: left center;
+  }
+
+  /* ── title block ── */
+  .rpp-title-block { text-align: center; margin: 4px 0 10px; }
+  .rpp-title-block h1 {
+    font-size: 13pt;
+    margin: 0;
+  }
+  .rpp-title-block h2 {
+    font-size: 12pt;
+    font-style: italic;
+    margin: 0 0 6px;
+    font-weight: bold;
+  }
+  .rpp-topic {
+    font-weight: bold;
+    font-size: 11pt;
+    margin: 0;
+  }
+
+  /* ── info block (borderless label:value pairs) ── */
+  .rpp-info {
+    margin: 6px 0 10px 70pt;
+    font-size: 10.5pt;
+  }
+  .rpp-info-row { display: flex; gap: 4px; }
+  .rpp-info-row .label { font-weight: bold; width: 150px; flex-shrink: 0; }
+  .rpp-info-row .colon { width: 12px; flex-shrink: 0; }
+
+  /* ── main table ──
+     Modeled on the real Word table's physical 5-column grid
+     (131 / 195 / 155 / 19 / 168 of 668 total). Sub-columns like
+     Elemen/Kompetensi/Konten and Model/Strategy/Method are plain rows
+     with colspans over this grid — no nested tables — so they sit
+     flush with the surrounding borders exactly like the original. */
+  table.rpp-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    border: 2px solid black;
+  }
+  table.rpp-table td {
+    border: 1px solid black;
+    padding: 4px 6px;
+    vertical-align: top;
+    font-size: 10.5pt;
+  }
+
+  .pane-left {
+    background: var(--yellow);
+    font-weight: bold;
+    text-align: center;
+    vertical-align: middle;
+  }
+  .pane-mid {
+    background: var(--salmon);
+    font-weight: bold;
+  }
+  .pane-mid.pane-header {
+    text-align: center;
+  }
+  .pane-right {
+    background: #ffffff;
+    font-weight: normal;
+  }
+  .pane-right.sub-legend {
+    background: var(--salmon);
+    font-weight: normal;
+    font-style: italic;
+  }
+  .pane-yellow {
+    background: var(--yellow) !important;
+  }
+  .pane-orange {
+    background: var(--orange);
+    font-weight: bold;
+  }
+  em, .italic { font-style: italic; }
+  .small { font-size: 9pt; }
+
+  /* ── pertemuan title row (new — M2 extension) ── */
+  .pane-orange.pertemuan-title {
+    text-align: left;
+    font-size: 10pt;
+  }
+
+  /* ── rich text (AI-generated content: line prefixes + inline bold/italic) ── */
+  .rt-line { margin: 0 0 4px; }
+  .rt-line:last-child { margin-bottom: 0; }
+  .rt-indent-1 { margin-left: 14px; }
+  .rt-indent-2 { margin-left: 28px; }
+
+  /* ── checkbox lists ── */
+  ul.checkbox-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 18px;
+  }
+  ul.checkbox-list li { white-space: normal; }
+  ul.checkbox-list .chk { display: inline-block; width: 1.2em; }
+
+  /* ── signature block ── */
+  .signature-block p { margin: 2px 0; }
+  .signature-block { text-align: left; }
+
+  @media print {
+    html, body { background: #ffffff; }
+    .rpp-page {
+      margin: 0;
+      box-shadow: none;
+      width: auto;
+      min-height: 0;
+    }
+    @page { size: A4; margin: 12.7mm; }
+  }
+</style>
+</head>
+<body>
+<div class="rpp-page">
+
+  <!-- ══════════════ HEADER BANNER ══════════════ -->
+  <div class="rpp-banner">
+    <img class="logo" data-marker="2b" data-field="school_logo_url" src="assets/logo.gif" alt="Logo">
+    <img class="banner-img" data-marker="2b" data-field="school_banner_url" src="assets/banner.gif" alt="SMPI AL-HAMIDIYAH">
+  </div>
+
+  <!-- ══════════════ TITLE ══════════════ -->
+  <div class="rpp-title-block">
+    <h1 data-marker="0">PERENCANAAN PEMBELAJARAN MENDALAM</h1>
+    <h2 data-marker="0">(DEEP LEARNING LESSON PLAN)</h2>
+    <p class="rpp-topic">&ldquo;<span data-marker="1" data-field="topic">&lt;&lt;Lesson Title&gt;&gt;</span>&rdquo;</p>
+  </div>
+
+  <!-- ══════════════ INFO BLOCK ══════════════ -->
+  <div class="rpp-info">
+    <div class="rpp-info-row"><span class="label" data-marker="0">Educational Departement</span><span class="colon" data-marker="0">:</span><span data-marker="2b" data-field="school_name"></span></div>
+    <div class="rpp-info-row"><span class="label" data-marker="0">Subject</span><span class="colon" data-marker="0">:</span><span data-marker="1" data-field="subject"></span></div>
+    <div class="rpp-info-row"><span class="label" data-marker="0">Grade/ Semester</span><span class="colon" data-marker="0">:</span><span><span data-marker="1" data-field="grade"></span>/ <span data-marker="1" data-field="semester"></span></span></div>
+    <div class="rpp-info-row"><span class="label" data-marker="0">CP-Phase</span><span class="colon" data-marker="0">:</span><span data-marker="1" data-field="cp_phase"></span></div>
+    <div class="rpp-info-row"><span class="label" data-marker="0">Time Allocation</span><span class="colon" data-marker="0">:</span><span data-marker="1" data-field="duration"></span></div>
+    <div class="rpp-info-row"><span class="label" data-marker="0">Meeting Number</span><span class="colon" data-marker="0">:</span><span data-marker="1" data-field="meeting_number"></span></div>
+    <div class="rpp-info-row"><span class="label" data-marker="0">Prepared by</span><span class="colon" data-marker="0">:</span><span data-marker="2b" data-field="teacher_name"></span></div>
+    <div class="rpp-info-row"><span class="label" data-marker="0">School Year</span><span class="colon" data-marker="0">:</span><span data-marker="1" data-field="school_year"></span></div>
+  </div>
+
+  <!-- ══════════════ MAIN TABLE ══════════════ -->
+  <table class="rpp-table">
+    <colgroup>
+      <col style="width:19.6%">
+      <col style="width:29.2%">
+      <col style="width:23.2%">
+      <col style="width:2.85%">
+      <col style="width:25.15%">
+    </colgroup>
+    <tbody id="rpp-tbody">
+
+      <!-- ─── Identifikasi / Identification (rowspan 3) ─── -->
+      <tr>
+        <td class="pane-left" rowspan="3" data-marker="0"><strong>Identifikasi</strong><br><em class="small">Identification</em></td>
+        <td class="pane-mid" data-marker="0"><strong>Peserta Didik</strong><br><em class="small">(Students)</em></td>
+        <td class="pane-right" colspan="3" data-marker="3" data-field="peserta_didik"></td>
+      </tr>
+      <tr>
+        <td class="pane-mid" data-marker="0"><strong>Materi Pelajaran</strong><br><em class="small">(Learning Material)</em></td>
+        <td class="pane-right" colspan="3" data-marker="3" data-field="materi_pelajaran"></td>
+      </tr>
+      <tr>
+        <td class="pane-mid" data-marker="0"><strong>Dimensi Profil Lulusan</strong><br><em class="small">(Graduate Profile Dimensions)</em></td>
+        <td class="pane-right" colspan="3">
+          <ul class="checkbox-list" data-marker="3" data-field="graduate_profile_selected">
+            <li data-item="Keimanan dan Ketakwaan terhadap Tuhan YME / Faith and Devotion to God Almighty"><span class="chk">&#9744;</span>Keimanan dan Ketakwaan terhadap Tuhan YME / Faith and Devotion to God Almighty</li>
+            <li data-item="Kewargaan / Citizenship"><span class="chk">&#9744;</span>Kewargaan / Citizenship</li>
+            <li data-item="Penalaran Kritis / Critical Thinking"><span class="chk">&#9744;</span>Penalaran Kritis / Critical Thinking</li>
+            <li data-item="Kemandirian / Independence"><span class="chk">&#9744;</span>Kemandirian / Independence</li>
+            <li data-item="Kreativitas / Creativity"><span class="chk">&#9744;</span>Kreativitas / Creativity</li>
+            <li data-item="Kolaborasi / Collaboration"><span class="chk">&#9744;</span>Kolaborasi / Collaboration</li>
+            <li data-item="Komunikasi / Communication"><span class="chk">&#9744;</span>Komunikasi / Communication</li>
+            <li data-item="Kesehatan / Health"><span class="chk">&#9744;</span>Kesehatan / Health</li>
+          </ul>
+        </td>
+      </tr>
+
+      <!-- ─── Kearifan Lokal Sekolah / School Wisdom (rowspan 2) ─── -->
+      <tr>
+        <td class="pane-left" rowspan="2" data-marker="0"><strong>Kearifan Lokal Sekolah</strong><br><em class="small">School Wisdom</em></td>
+        <td class="pane-mid" data-marker="0"><strong>Pengembangan Karakter SANTRI KITAB</strong><br><em class="small">Character Development of SANTRI KITAB</em></td>
+        <td class="pane-right" colspan="3">
+          <ul class="checkbox-list" data-marker="3" data-field="santri_kitab_selected">
+            <li data-item="Komunikasi"><span class="chk">&#9744;</span>Komunikasi</li>
+            <li data-item="Inovasi"><span class="chk">&#9744;</span>Inovasi</li>
+            <li data-item="Terbuka"><span class="chk">&#9744;</span>Terbuka</li>
+            <li data-item="Argumentatif"><span class="chk">&#9744;</span>Argumentatif</li>
+            <li data-item="Berintegritas"><span class="chk">&#9744;</span>Berintegritas</li>
+          </ul>
+        </td>
+      </tr>
+      <tr>
+        <td class="pane-mid" data-marker="0"><strong>Internalisasi Nilai Agama</strong><br><em class="small">Internalization of Religious Values</em></td>
+        <td class="pane-right" colspan="3" data-marker="3" data-field="internalisasi_nilai_agama"></td>
+      </tr>
+
+      <!-- ─── Desain Pembelajaran / Learning Design (rowspan 11, matches original) ─── -->
+      <tr>
+        <td class="pane-left" rowspan="11" data-marker="0"><strong>Desain Pembelajaran</strong><br><em class="small">Learning Design</em></td>
+        <td class="pane-mid pane-header" colspan="4" data-marker="0"><strong>Capaian Pembelajaran</strong><br><em class="small">(Learning Outcomes)</em></td>
+      </tr>
+      <tr>
+        <td class="pane-mid" data-marker="0"><strong>Elemen</strong><br><em class="small">(Element)</em></td>
+        <td class="pane-mid" colspan="2" data-marker="0"><strong>Kompetensi</strong><br><em class="small">(Competence)</em></td>
+        <td class="pane-mid" data-marker="0"><strong>Konten</strong><br><em class="small">(Content)</em></td>
+      </tr>
+      <tr>
+        <td class="pane-right" data-marker="3" data-field="capaian_element"></td>
+        <td class="pane-right" colspan="2" data-marker="3" data-field="capaian_competence"></td>
+        <td class="pane-right" data-marker="3" data-field="capaian_content"></td>
+      </tr>
+      <tr>
+        <td class="pane-mid" data-marker="0"><strong>Lintas Disiplin Ilmu</strong><br><em class="small">(Interdisciplinary)</em></td>
+        <td class="pane-right" colspan="3" data-marker="3" data-field="lintas_disiplin_ilmu"></td>
+      </tr>
+      <tr>
+        <td class="pane-mid" data-marker="0"><strong>Tujuan Pembelajaran</strong><br><em class="small">(Learning Objectives)</em></td>
+        <td class="pane-right" colspan="3" data-marker="3" data-field="tujuan_pembelajaran"></td>
+      </tr>
+      <tr>
+        <td class="pane-mid pane-header" colspan="4" data-marker="0"><strong>Praktik Pedagogis</strong><br><em class="small">(Pedagogical Practices)</em></td>
+      </tr>
+      <tr>
+        <td class="pane-mid" data-marker="0"><strong>Model</strong></td>
+        <td class="pane-mid" data-marker="0"><strong>Strategy</strong></td>
+        <td class="pane-mid" colspan="2" data-marker="0"><strong>Method</strong></td>
+      </tr>
+      <tr>
+        <td class="pane-right" data-marker="3" data-field="model"></td>
+        <td class="pane-right" data-marker="3" data-field="strategy"></td>
+        <td class="pane-right" colspan="2" data-marker="3" data-field="method"></td>
+      </tr>
+      <tr>
+        <td class="pane-mid" data-marker="0"><strong>Kemitraan Pembelajaran</strong><br><em class="small">(Learning Partnerships)</em></td>
+        <td class="pane-right" colspan="3" data-marker="3" data-field="kemitraan"></td>
+      </tr>
+      <tr>
+        <td class="pane-mid" data-marker="0"><strong>Lingkungan Pembelajaran</strong><br><em class="small">(Learning Environment)</em></td>
+        <td class="pane-right" colspan="3" data-marker="3" data-field="lingkungan"></td>
+      </tr>
+      <tr>
+        <td class="pane-mid" data-marker="0"><strong>Pemanfaatan Digital</strong><br><em class="small">(Digital Utilization)</em></td>
+        <td class="pane-right" colspan="3" data-marker="3" data-field="digital"></td>
+      </tr>
+
+      <!-- ─── Pengalaman Belajar / Learning Experiences ───
+           rowspan on the left-pane cell below is set dynamically by
+           js/render/rpp.js to (1 + 12 × pertemuanCount) once the
+           <template> below has been expanded N times. -->
+      <tr>
+        <td class="pane-left" id="pengalaman-cell" rowspan="12" data-marker="0"><strong>Pengalaman Belajar</strong><br><em class="small">Learning Experiences</em></td>
+        <td class="pane-mid pane-yellow" data-marker="0"><strong>Langkah-langkah Pembelajaran</strong><br><em class="small">(Instructional Steps)</em></td>
+        <td class="pane-right pane-yellow" colspan="3" data-marker="0"><strong>Prinsip Pembelajaran</strong><br><em class="small">(Principles of Learning)</em><br>Mindful | Meaningful | Joyful</td>
+      </tr>
+
+      <!-- ═══ REPEATING BLOCK — one clone per pertemuan (M2 extension) ═══ -->
+      <template data-repeat="pertemuan">
+        <tr>
+          <td colspan="4" class="pane-orange pertemuan-title" data-marker="0" data-pertemuan-title></td>
+        </tr>
+        <tr>
+          <td colspan="4" class="pane-orange" data-marker="0">Opening</td>
+        </tr>
+        <tr>
+          <td colspan="4" class="pane-right" data-marker="3" data-field="opening"></td>
+        </tr>
+        <tr>
+          <td colspan="4" class="pane-orange" data-marker="0">Main</td>
+        </tr>
+        <tr>
+          <td class="pane-mid pane-orange" data-marker="0"><strong>Memahami</strong><br><em class="small">Understanding</em></td>
+          <td class="pane-right sub-legend" colspan="3" data-marker="0">Mindful*** | Meaningful** | Joyful* <span class="small">(Pilih yang sesuai dan input)</span></td>
+        </tr>
+        <tr>
+          <td colspan="4" class="pane-right" data-marker="3" data-field="memahami"></td>
+        </tr>
+        <tr>
+          <td class="pane-mid pane-orange" data-marker="0"><strong>Mengaplikasi</strong><br><em class="small">Applying</em></td>
+          <td class="pane-right sub-legend" colspan="3" data-marker="0">Mindful*** | Meaningful** | Joyful* <span class="small">(Pilih yang sesuai dan input)</span></td>
+        </tr>
+        <tr>
+          <td colspan="4" class="pane-right" data-marker="3" data-field="mengaplikasi"></td>
+        </tr>
+        <tr>
+          <td class="pane-mid pane-orange" data-marker="0"><strong>Merefleksikan</strong><br><em class="small">Reflecting</em></td>
+          <td class="pane-right sub-legend" colspan="3" data-marker="0">Mindful*** | Meaningful** | Joyful* <span class="small">(Pilih yang sesuai dan input)</span></td>
+        </tr>
+        <tr>
+          <td colspan="4" class="pane-right" data-marker="3" data-field="merefleksi"></td>
+        </tr>
+        <tr>
+          <td colspan="4" class="pane-orange" data-marker="0">Penutup</td>
+        </tr>
+        <tr>
+          <td colspan="4" class="pane-right" data-marker="3" data-field="closing"></td>
+        </tr>
+      </template>
+
+      <!-- ─── Asesmen / Assessment (rowspan 3) ─── -->
+      <tr>
+        <td class="pane-left" rowspan="3" data-marker="0"><strong>Asesmen</strong><br><em class="small">Assessment</em></td>
+        <td class="pane-mid" data-marker="0"><strong>Awal Pembelajaran</strong><br><em class="small">as learning</em></td>
+        <td class="pane-right" colspan="3" data-marker="3" data-field="asesmen_awal"></td>
+      </tr>
+      <tr>
+        <td class="pane-mid" data-marker="0"><strong>Proses Pembelajaran</strong><br><em class="small">for learning</em></td>
+        <td class="pane-right" colspan="3" data-marker="3" data-field="asesmen_proses"></td>
+      </tr>
+      <tr>
+        <td class="pane-mid" data-marker="0"><strong>Akhir Pembelajaran</strong><br><em class="small">of learning</em></td>
+        <td class="pane-right" colspan="3" data-marker="3" data-field="asesmen_akhir"></td>
+      </tr>
+
+      <!-- ─── Learning Media, Tools, and Materials ─── -->
+      <tr>
+        <td class="pane-left" data-marker="0"><strong>Learning Media, Tools, and Materials</strong></td>
+        <td class="pane-right" colspan="4" data-marker="3" data-field="learning_media"></td>
+      </tr>
+
+      <!-- ─── Signature (white cells in the original, side-by-side blocks) ─── -->
+      <tr>
+        <td class="pane-left" data-marker="0"><strong>Signature</strong></td>
+        <td class="pane-right signature-block" data-marker="0">
+          <p>Acknowledged by,</p>
+          <p><strong>Principal</strong></p>
+          <p>&nbsp;</p>
+          <p>&nbsp;</p>
+          <p data-marker="2b" data-field="principal_name">(Principal Name)</p>
+          <p>NIK. <span data-marker="2b" data-field="principal_nik"></span></p>
+        </td>
+        <td class="pane-right signature-block" colspan="3" data-marker="0">
+          <p><span data-marker="2b" data-field="city"></span>, <span data-marker="2a" data-field="date"></span></p>
+          <p><strong>Subject Teacher</strong></p>
+          <p>&nbsp;</p>
+          <p>&nbsp;</p>
+          <p data-marker="2b" data-field="teacher_name">(Teacher Name)</p>
+        </td>
+      </tr>
+
+    </tbody>
+  </table>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,27 @@
+{
+  "mapel": "Pendidikan Pancasila",
+  "fase": "D",
+  "redaksi": "nasional",
+  "sumber": "Keputusan Kepala Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP) Kementerian Pendidikan Dasar dan Menengah No. 046/H/KR/2025 tentang Capaian Pembelajaran pada PAUD, Jenjang Pendidikan Dasar, dan Jenjang Pendidikan Menengah — Bagian II Capaian Pembelajaran Pendidikan Pancasila, Fase D",
+  "sumberUrl": "https://jdih.kemendikdasmen.go.id/",
+  "sumberLocalFile": "E:\\Claude Cowork\\SMPI AHA\\Perangkat Pembelajaran\\8. Misc\\uncategorized\\School & Exam Admin\\Landasan Yuridis\\Kepka_BSKAP_No_01k17e8396ajn15j3hcw0k773b_copy.pdf (PDF hal. 85-88 dari 1691 hal.)",
+  "catatan": "Ditranskripsi verbatim dari ekstraksi teks PyMuPDF (fitz) atas dokumen PDF resmi (SALINAN, watermark jdih.kemendikdasmen.go.id) yang disimpan lokal. Nomor butir asli dokumen: 4.1-4.4 (4 = urutan Fase D di antara Fase A-F).",
+  "elemen": [
+    {
+      "nama": "Pancasila",
+      "teks": "Memahami sejarah kelahiran Pancasila; memahami kedudukan Pancasila sebagai dasar negara, pandangan hidup bangsa, dan ideologi negara serta penerapannya dalam kehidupan sehari-hari; memahami makna keterkaitan Pancasila dengan Undang-Undang Dasar Negara Republik Indonesia Tahun 1945, Bhinneka Tunggal Ika, dan Negara Kesatuan Republik Indonesia."
+    },
+    {
+      "nama": "Undang-Undang Dasar Negara Republik Indonesia Tahun 1945",
+      "teks": "Menerapkan norma dan aturan; memahami tata urutan peraturan perundang-undangan yang berlaku di Indonesia; menggunakan hak dan menerapkan kewajiban sebagai warga negara; memahami sejarah, fungsi, dan kedudukan Undang-Undang Dasar Negara Republik Indonesia Tahun 1945; mempraktikkan kemerdekaan berpendapat sebagai warga negara dalam era keterbukaan informasi."
+    },
+    {
+      "nama": "Bhinneka Tunggal Ika",
+      "teks": "Mengidentifikasi keberagaman suku bangsa, agama dan kepercayaan, ras, dan antargolongan dalam bingkai Bhinneka Tunggal Ika dan menerima keberagaman dalam kehidupan bermasyarakat; memahami pentingnya pelestarian tradisi, kearifan lokal, dan budaya daerah sebagai identitas nasional; menumbuhkan sikap tanggung jawab dan berperan aktif melestarikan praktik tradisi, kearifan lokal, dan budaya daerah dalam masyarakat global."
+    },
+    {
+      "nama": "Negara Kesatuan Republik Indonesia",
+      "teks": "Memahami Proklamasi Kemerdekaan Republik Indonesia; memahami wilayah Negara Kesatuan Republik Indonesia dalam konteks wawasan nusantara; berpartisipasi aktif untuk menjaga keutuhan wilayah Negara Kesatuan Republik Indonesia."
+    }
+  ]
+}

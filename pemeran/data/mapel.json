@@ -1,0 +1,105 @@
+{
+  "sumber": "Permendikdasmen (Peraturan Menteri Pendidikan Dasar dan Menengah) No. 13 Tahun 2025 tentang Perubahan atas Permendikbudristek No. 12 Tahun 2024 tentang Kurikulum pada PAUD, Jenjang Pendidikan Dasar, dan Jenjang Pendidikan Menengah — Lampiran II, Tabel 6 (Alokasi waktu mapel SMP/MTs kelas VII-VIII) dan Tabel 7 (kelas IX)",
+  "sumberUrl": "https://jdih.kemendikdasmen.go.id/sjdih/siperpu/dokumen/salinan/Permendikdasmen_No_13_Tahun_2025_ttg_Perubahan_atas_Permendikbudristek_No_12_Tahun_2024_ttg_Kurikulum_pada_Pendidikan_Anak_Usia_Dini_Jenjang_Dikdasmen.pdf",
+  "sumberLocalFile": "E:\\Claude Cowork\\SMPI AHA\\Perangkat Pembelajaran\\8. Misc\\uncategorized\\School & Exam Admin\\Landasan Yuridis\\Permendikdasmen_No_13_Tahun_2025_ttg_Perubahan_atas_Permendikbudristek_No_12_Tahun_2024_ttg_Kurikulum_pada_Pendidikan_Anak_Usia_Dini_Jenjang_Dikdasmen.pdf (hlm. 16-19 / PDF hal. 22-25, watermark jdih.kemendikdasmen.go.id — dicocokkan persis dengan URL resmi di atas)",
+  "catatan": "jpPerTahun di bawah = kolom 'Alokasi Intrakurikuler Per Tahun' pada Tabel 6/7 (BUKAN 'Total JP Per Tahun', yang menjumlahkan Kokurikuler). Konvensi ini dipilih karena angka ESP yang dikonfirmasi sekolah (72/72/64) persis cocok dengan baris 'Muatan Lokal' pada kolom Intrakurikuler (Kokurikuler mulok = '-'). Kelas VII-VIII memakai Tabel 6 (asumsi 1 tahun = 36 minggu, 1 JP = 40 menit); Kelas IX memakai Tabel 7 (asumsi 1 tahun = 32 minggu, 1 JP = 40 menit). Alokasi Kokurikuler per tahun (tidak dipakai pipeline saat ini, dicatat untuk referensi): mapel wajib non-mulok/non-pilihan = 36 JP (kelas 7-8) / 32 JP (kelas 9); mapel pilihan (Koding & AI) dan Muatan Lokal = 0.",
+  "mapel": [
+    {
+      "id": "pendidikan-agama-islam",
+      "nama": "Pendidikan Agama Islam dan Budi Pekerti",
+      "jpPerTahun": { "7": 72, "8": 72, "9": 64 },
+      "mulok": false,
+      "cpFile": null,
+      "catatan": "CP verbatim belum ditranskripsi pada M0 (di luar 6 mapel prioritas milestone ini); lihat data/NEEDS_SOURCE.md — jadwalkan di M5 (rollout semua mapel)."
+    },
+    {
+      "id": "pendidikan-pancasila",
+      "nama": "Pendidikan Pancasila",
+      "jpPerTahun": { "7": 72, "8": 72, "9": 64 },
+      "mulok": false,
+      "cpFile": "pendidikan-pancasila.json"
+    },
+    {
+      "id": "bahasa-indonesia",
+      "nama": "Bahasa Indonesia",
+      "jpPerTahun": { "7": 180, "8": 180, "9": 160 },
+      "mulok": false,
+      "cpFile": "bahasa-indonesia.json"
+    },
+    {
+      "id": "matematika",
+      "nama": "Matematika",
+      "jpPerTahun": { "7": 144, "8": 144, "9": 128 },
+      "mulok": false,
+      "cpFile": "matematika.json"
+    },
+    {
+      "id": "ipa",
+      "nama": "Ilmu Pengetahuan Alam",
+      "jpPerTahun": { "7": 144, "8": 144, "9": 128 },
+      "mulok": false,
+      "cpFile": "ipa.json"
+    },
+    {
+      "id": "ips",
+      "nama": "Ilmu Pengetahuan Sosial",
+      "jpPerTahun": { "7": 108, "8": 108, "9": 96 },
+      "mulok": false,
+      "cpFile": "ips.json"
+    },
+    {
+      "id": "bahasa-inggris",
+      "nama": "Bahasa Inggris",
+      "jpPerTahun": { "7": 108, "8": 108, "9": 96 },
+      "mulok": false,
+      "cpFile": "bahasa-inggris.json"
+    },
+    {
+      "id": "pjok",
+      "nama": "Pendidikan Jasmani, Olahraga, dan Kesehatan",
+      "jpPerTahun": { "7": 72, "8": 72, "9": 64 },
+      "mulok": false,
+      "cpFile": null,
+      "catatan": "CP verbatim belum ditranskripsi pada M0 (di luar 6 mapel prioritas milestone ini); lihat data/NEEDS_SOURCE.md — jadwalkan di M5 (rollout semua mapel)."
+    },
+    {
+      "id": "informatika",
+      "nama": "Informatika",
+      "jpPerTahun": { "7": 72, "8": 72, "9": 64 },
+      "mulok": false,
+      "cpFile": null,
+      "catatan": "CP verbatim belum ditranskripsi pada M0 (di luar 6 mapel prioritas milestone ini); lihat data/NEEDS_SOURCE.md — jadwalkan di M5 (rollout semua mapel)."
+    },
+    {
+      "id": "seni-budaya-prakarya",
+      "nama": "Seni, Budaya, dan Prakarya",
+      "jpPerTahun": { "7": 72, "8": 72, "9": 64 },
+      "mulok": false,
+      "cpFile": null,
+      "catatan": "CP verbatim belum ditranskripsi pada M0 (di luar 6 mapel prioritas milestone ini); lihat data/NEEDS_SOURCE.md — jadwalkan di M5 (rollout semua mapel)."
+    },
+    {
+      "id": "koding-ai",
+      "nama": "Koding dan Kecerdasan Artifisial",
+      "kategori": "pilihan",
+      "jpPerTahun": { "7": 72, "8": 72, "9": 64 },
+      "mulok": false,
+      "catatan": "Mapel pilihan, diterapkan bertahap mulai TA 2025-2026 (Pasal 32A); sekolah menyediakan sesuai sumber daya."
+    },
+    {
+      "id": "esp",
+      "nama": "ESP (English for Specific Purposes)",
+      "jpPerTahun": { "7": 72, "8": 72, "9": 64 },
+      "mulok": true,
+      "cpFile": "esp_kontekstual.json",
+      "catatan": "Angka JP dikonfirmasi sekolah (school-confirmed), sekaligus cocok dengan slot Muatan Lokal resmi (72/72/64 intrakurikuler)."
+    },
+    {
+      "id": "mulok-lain",
+      "nama": "Muatan Lokal lainnya (mis. Kitab Kuning/Tahfidz/mulok tambahan sekolah)",
+      "mulok": true,
+      "jpPerTahun": null,
+      "catatan": "JP diisi manual saat setup — di luar slot Muatan Lokal resmi Permendikdasmen jika sekolah menambah jam mulok tersendiri."
+    }
+  ]
+}

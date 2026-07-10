@@ -1,0 +1,4 @@
+{
+  "//": "Scoped ONLY to pemeran/js/** — tells Node (not the browser; browsers don't look at package.json at all) to treat these .js files as ES modules, so pipeline.test.js can `node pipeline.test.js` with the exact same import/export syntax the app already uses. Does not affect Mr.D/api/*.js (CommonJS, outside this folder) and is inert as a served static file for the deployed site.",
+  "type": "module"
+}

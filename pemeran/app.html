@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pemeran — Perangkat Pembelajaran</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/paper.css">
+</head>
+<body>
+
+<header class="app-header no-print">
+  <div class="app-header-inner row-between">
+    <div>
+      <div class="plan-title" id="plan-title">Memuat…</div>
+      <div class="plan-sub" id="plan-sub"></div>
+    </div>
+    <div id="autosave" class="autosave"><span class="autosave-dot"></span><span>—</span></div>
+  </div>
+  <div class="app-header-inner">
+    <nav class="rail" id="rail"></nav>
+  </div>
+</header>
+
+<main class="shell" id="stage"></main>
+
+<div class="shell no-print center">
+  <a href="index.html" class="muted small">← Kembali ke Beranda</a>
+</div>
+
+<script type="module">
+import { mount } from './js/wizard.js';
+
+mount({
+  rail: document.getElementById('rail'),
+  stage: document.getElementById('stage'),
+  autosave: document.getElementById('autosave'),
+  title: document.getElementById('plan-title'),
+  sub: document.getElementById('plan-sub'),
+}).catch((e) => {
+  document.getElementById('stage').innerHTML =
+    '<div class="placeholder card"><div class="big-icon">⚠️</div>'
+    + '<h2>Tidak bisa memuat dokumen</h2>'
+    + '<p class="muted">' + String((e && e.message) || e) + '</p>'
+    + '<a class="btn btn-outline" href="index.html">Kembali ke Beranda</a></div>';
+});
+</script>
+</body>
+</html>

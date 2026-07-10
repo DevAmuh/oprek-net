@@ -1,0 +1,25 @@
+{
+  "mapel": "ESP (English for Specific Purposes)",
+  "fase": "D",
+  "redaksi": "kontekstual",
+  "sumber": "Capaian kontekstual ESP SMPI Al-Hamidiyah (disahkan via KOSP)",
+  "sumberFile": "E:\\Claude Cowork\\SMPI AHA\\Perangkat Pembelajaran\\8. Misc\\uncategorized\\School & Exam Admin\\Landasan Yuridis\\CP B. Inggris.txt",
+  "catatan": "File sumber berisi redaksi 3-elemen (Menyimak-Berbicara, Membaca-Memirsa, Menulis-Mempresentasikan), bukan redaksi 4-elemen bertema sains. Teks ID dan EN ditranskripsi verbatim dari file; field 'teks' = versi Bahasa Indonesia (dipakai di dokumen), field 'teksEn' = versi Inggris asli file.",
+  "elemen": [
+    {
+      "nama": "Menyimak - Berbicara",
+      "teks": "Pada akhir Fase D, peserta didik menggunakan bahasa Inggris untuk berinteraksi dan saling bertukar ide, pengalaman, minat, pendapat dan pandangan dengan guru, teman sebaya dan orang lain dalam berbagai macam konteks familiar yang formal dan informal. Dengan pengulangan dan penggantian kosakata, peserta didik memahami ide utama dan detil yang relevan dari diskusi atau presentasi mengenai berbagai macam topik yang telah familiar dan dalam konteks kehidupan di sekolah dan di rumah. Mereka terlibat dalam diskusi, misalnya memberikan pendapat, membuat perbandingan dan menyampaikan preferensi. Mereka menjelaskan dan memperjelas jawaban mereka menggunakan struktur kalimat dan kata kerja sederhana.",
+      "teksEn": "By the end of Phase D, students use English to interact and exchange ideas, experiences, interests, opinions and views with teachers, peers and others in an increasing variety of familiar formal and informal contexts. With some repetition and rewording, they comprehend the main ideas and relevant details of discussions or presentations on a variety of general interest topics. They engage in discussion such as giving opinions, making comparisons and stating preferences. They explain and clarify their answers using basic sentence structure and verb tenses."
+    },
+    {
+      "nama": "Membaca - Memirsa",
+      "teks": "Pada akhir fase D, peserta didik membaca dan merespon teks familiar dan tidak familiar yang mengandung struktur yang telah dipelajari dan kosakata yang familiar secara mandiri. Mereka mencari dan mengevaluasi ide utama dan informasi spesifik dalam berbagai jenis teks. Teks ini dapat berbentuk cetak atau digital, termasuk diantaranya teks visual, multimodal atau interaktif. Mereka mengidentifikasi tujuan teks dan mulai melakukan inferensi untuk memahami informasi tersirat dalam sebuah teks.",
+      "teksEn": "By the end of Phase D, students independently read and respond to familiar and unfamiliar texts containing predictable structures and familiar vocabulary. They locate and evaluate main ideas and specific information in texts of different genres. These texts may be in the form of print or digital texts, including visual, multimodal or interactive texts. They identify the purpose of texts and begin to make inference to comprehend implicit information in the text."
+    },
+    {
+      "nama": "Menulis - Mempresentasikan",
+      "teks": "Pada akhir Fase D, peserta didik mengomunikasikan ide dan pengalaman mereka melalui paragraf sederhana dan terstruktur, menunjukkan perkembangan dalam penggunaan kosakata spesifik dan struktur kalimat sederhana. Menggunakan contoh, mereka membuat perencanaan, menulis, dan menyajikan teks informasi, imajinasi dan persuasi dengan menggunakan kalimat sederhana dan majemuk untuk menyusun argumen dan menjelaskan atau mempertahankan suatu pendapat.",
+      "teksEn": "By the end of Phase D, students communicate their ideas and experience through simple, organized paragraphs, demonstrating a developing use of specific vocabulary and simple sentence structures. Using models, they plan, create and present informative, imaginative and persuasive texts in simple and compound sentences to structure arguments and to explain or justify a position. They include basic information and detail, and also vary their sentence construction in their writing. Students express ideas in the present, future, and past tenses. They use time markers, adverbs of frequency and common conjunctions to link ideas. Their attempts to spell new words are based on known English letter-sound relationships and they use punctuation and capitalization with consistency."
+    }
+  ]
+}

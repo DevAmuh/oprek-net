@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pemeran — SMPI Al-Hamidiyah</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/paper.css">
+</head>
+<body>
+
+<main class="shell shell-narrow" id="app">
+
+  <!-- ================= GATE ================= -->
+  <section id="view-gate" class="stack-lg">
+    <div class="center">
+      <h1>Pemeran</h1>
+      <p class="muted">Perangkat Pembelajaran — SMPI Al-Hamidiyah</p>
+    </div>
+    <div class="card card-pad-lg">
+      <div class="field">
+        <label for="in-pass">Kode Akses</label>
+        <div class="pass-field">
+          <input type="password" id="in-pass" placeholder="Masukkan kode akses sekolah" autocomplete="off">
+          <button type="button" class="pass-toggle" id="btn-pass-toggle" aria-label="Tampilkan kode">👁</button>
+        </div>
+        <div class="field-hint">Tanyakan kode akses ke rekan guru atau admin jika belum punya.</div>
+      </div>
+      <button class="btn btn-primary btn-block btn-lg" id="btn-gate-submit">Masuk</button>
+    </div>
+  </section>
+
+  <!-- ================= NAME GRID ================= -->
+  <section id="view-names" class="stack-lg hidden">
+    <div class="center">
+      <h1>Siapa Anda?</h1>
+      <p class="muted">Pilih nama untuk melanjutkan.</p>
+    </div>
+    <div class="name-grid" id="name-grid"></div>
+    <div class="center">
+      <button class="btn btn-ghost" id="btn-back-to-gate">← Kembali</button>
+    </div>
+  </section>
+
+  <!-- ================= BERANDA ================= -->
+  <section id="view-beranda" class="stack-lg hidden">
+    <div class="row-between">
+      <div>
+        <h1 id="beranda-hello">Halo</h1>
+        <p class="muted" id="beranda-sub">SMPI Al-Hamidiyah</p>
+      </div>
+      <button class="btn btn-ghost" id="btn-switch-name">Ganti nama</button>
+    </div>
+
+    <div>
+      <h2>Dokumen Saya</h2>
+      <div class="grid grid-2" id="plan-grid"></div>
+    </div>
+  </section>
+
+</main>
+
+<script type="module">
+import { getPass, setPass, clearPass, toast, call } from './js/api.js';
+import { setTeacher, getTeacher, STAGES } from './js/state.js';
+
+const viewGate = document.getElementById('view-gate');
+const viewNames = document.getElementById('view-names');
+const viewBeranda = document.getElementById('view-beranda');
+
+function showView(view) {
+  [viewGate, viewNames, viewBeranda].forEach((v) => v.classList.add('hidden'));
+  view.classList.remove('hidden');
+}
+
+function stageLabel(id) {
+  const s = STAGES.find((x) => x.id === id);
+  return s ? s.label : (id || 'Data');
+}
+function formatDate(iso) {
+  try {
+    return new Date(iso).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+  } catch (e) { return ''; }
+}
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
+
+// ---- Gate ----
+const inPass = document.getElementById('in-pass');
+const btnPassToggle = document.getElementById('btn-pass-toggle');
+const btnGateSubmit = document.getElementById('btn-gate-submit');
+
+btnPassToggle.addEventListener('click', () => {
+  const showing = inPass.type === 'text';
+  inPass.type = showing ? 'password' : 'text';
+  btnPassToggle.textContent = showing ? '👁' : '🙈';
+});
+inPass.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitGate(); });
+btnGateSubmit.addEventListener('click', submitGate);
+
+async function submitGate() {
+  const pass = inPass.value.trim();
+  if (!pass) { toast('Isi kode akses dulu.', { error: true }); return; }
+
+  btnGateSubmit.disabled = true;
+  btnGateSubmit.textContent = 'Memeriksa…';
+  const result = await tryLogin(pass);
+  btnGateSubmit.disabled = false;
+  btnGateSubmit.textContent = 'Masuk';
+
+  if (!result.ok) {
+    toast(result.message, { error: true });
+    return;
+  }
+  setPass(pass);
+  renderNameGrid(result.teachers);
+  showView(viewNames);
+}
+
+// Dedicated login check — deliberately does NOT go through js/api.js's call(),
+// because that wrapper's 401 handling shows a "session expired" toast, which
+// is the wrong message for a first-time wrong-passcode attempt.
+async function tryLogin(pass) {
+  let res;
+  try {
+    res = await fetch('/api/pemeran', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'list_teachers', pass }),
+    });
+  } catch (e) {
+    return { ok: false, message: 'Tidak bisa terhubung ke server. Periksa koneksi internet Anda.' };
+  }
+  let data = null;
+  try { data = await res.json(); } catch (e) { /* non-JSON (e.g. local static server) */ }
+  if (res.status === 401) return { ok: false, message: 'Kode akses salah.' };
+  if (!res.ok) return { ok: false, message: (data && data.error) || ('Terjadi kesalahan tak terduga (kode ' + res.status + ').') };
+  return { ok: true, teachers: (data && data.teachers) || [] };
+}
+
+// ---- Name grid ----
+const nameGrid = document.getElementById('name-grid');
+document.getElementById('btn-back-to-gate').addEventListener('click', () => {
+  clearPass();
+  showView(viewGate);
+});
+
+function renderNameGrid(teachers) {
+  nameGrid.innerHTML = '';
+  if (!teachers.length) {
+    nameGrid.innerHTML = '<p class="empty">Belum ada guru terdaftar. Hubungi admin.</p>';
+    return;
+  }
+  teachers.forEach((t) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'name-btn';
+    btn.textContent = t.name;
+    btn.addEventListener('click', () => enterBeranda(t));
+    nameGrid.appendChild(btn);
+  });
+}
+
+// ---- Beranda ----
+document.getElementById('btn-switch-name').addEventListener('click', async () => {
+  showView(viewNames);
+  const result = await tryLogin(getPass());
+  if (result.ok) renderNameGrid(result.teachers);
+});
+
+async function enterBeranda(teacher) {
+  setTeacher(teacher);
+  document.getElementById('beranda-hello').textContent = 'Halo, ' + teacher.name;
+  document.getElementById('beranda-sub').textContent = teacher.is_owner
+    ? 'SMPI Al-Hamidiyah · akun pemilik'
+    : 'SMPI Al-Hamidiyah';
+  showView(viewBeranda);
+  await renderPlanGrid(teacher);
+}
+
+async function renderPlanGrid(teacher) {
+  const grid = document.getElementById('plan-grid');
+  grid.innerHTML = '<p class="muted">Memuat…</p>';
+  let plans = [];
+  try {
+    const r = await call('list_plans', { teacherId: teacher.id });
+    plans = r.plans || [];
+  } catch (e) {
+    grid.innerHTML = '';
+  }
+
+  grid.innerHTML = '';
+  plans.forEach((p) => {
+    const a = document.createElement('a');
+    a.className = 'plan-card';
+    a.href = 'app.html?plan=' + encodeURIComponent(p.id);
+    a.innerHTML = `
+      <h3>${escapeHtml(p.mapel)}</h3>
+      <div class="meta">Kelas ${escapeHtml(p.kelas)} · ${escapeHtml(p.tahun_ajaran)}</div>
+      <div class="row-between">
+        <span class="chip chip-accent">${escapeHtml(stageLabel(p.stage))}</span>
+        <span class="muted small">${escapeHtml(formatDate(p.updated_at))}</span>
+      </div>
+    `;
+    grid.appendChild(a);
+  });
+
+  const newCard = document.createElement('a');
+  newCard.className = 'plan-card-new';
+  newCard.href = 'app.html?new=1&teacher=' + encodeURIComponent(teacher.id);
+  newCard.textContent = '＋ Buat Perangkat Baru';
+  grid.appendChild(newCard);
+}
+
+// ---- Resume a session already unlocked in this tab ----
+(function boot() {
+  const pass = getPass();
+  const teacher = getTeacher();
+  if (pass && teacher) {
+    enterBeranda(teacher);
+  } else if (pass) {
+    tryLogin(pass).then((result) => {
+      if (result.ok) { renderNameGrid(result.teachers); showView(viewNames); }
+      else { clearPass(); showView(viewGate); }
+    });
+  }
+})();
+</script>
+</body>
+</html>

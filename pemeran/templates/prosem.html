@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Program Semester</title>
+<style>
+  /* Structure verified against the school's real docx (Prosem - ESP - Grade 7
+     - Smt 2 - TA 2025-2026.docx): 3-column header block (SATUAN PENDIDIKAN/
+     MATA PELAJARAN/FASE-KELAS | Semester/Tahun Pelajaran/Alokasi Waktu | KKTP),
+     landscape weekly matrix (No | Capaian Pembelajaran | Elemen | Materi |
+     Alokasi Waktu | Bulan x minggu 1..5, 'v' marks), Total JP row, signature. */
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #e8e8e8; font-family: 'Arial Narrow', Arial, 'Segoe UI', sans-serif; }
+  .prosem-page {
+    width: 297mm; min-height: 210mm; margin: 12px auto; padding: 10mm;
+    background: #fff; color: #000; box-shadow: 0 0 8px rgba(0,0,0,0.25);
+    font-size: 9pt; line-height: 1.3;
+  }
+  .header-block { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 8px; font-size: 9.5pt; }
+  .header-col { flex: 1; }
+  .header-row { display: flex; gap: 4px; }
+  .header-row .label { font-weight: bold; width: 140px; flex-shrink: 0; }
+  .title-block { text-align: center; margin: 4px 0 10px; }
+  .title-block h1 { font-size: 12pt; margin: 0; }
+
+  table.prosem-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  table.prosem-table th, table.prosem-table td {
+    border: 1px solid #000; padding: 2px 3px; text-align: center; vertical-align: middle; font-size: 8pt;
+  }
+  table.prosem-table th { background: #F7CBAC; font-weight: bold; }
+  table.prosem-table td.materi-cell { text-align: left; }
+  table.prosem-table td.cp-cell { text-align: left; }
+  table.prosem-table tr.sumatif-row td { background: #FFCE3C; font-weight: bold; }
+  table.prosem-table tr.total-row td { background: #F4B083; font-weight: bold; }
+  table.prosem-table td.mark { font-weight: bold; }
+
+  .signature-block { display: flex; justify-content: space-between; margin-top: 14px; font-size: 9.5pt; }
+  .signature-block p { margin: 2px 0; }
+
+  @media print {
+    html, body { background: #fff; }
+    .prosem-page { margin: 0; box-shadow: none; width: auto; min-height: 0; }
+    @page { size: A4 landscape; margin: 10mm; }
+  }
+</style>
+</head>
+<body>
+<div class="prosem-page">
+
+  <div class="title-block" data-marker="0"><h1>PROGRAM SEMESTER</h1></div>
+
+  <div class="header-block">
+    <div class="header-col">
+      <div class="header-row"><span class="label" data-marker="0">SATUAN PENDIDIKAN</span><span>:</span> <span data-marker="2b" data-field="school_name"></span></div>
+      <div class="header-row"><span class="label" data-marker="0">MATA PELAJARAN</span><span>:</span> <span data-marker="1" data-field="subject"></span></div>
+      <div class="header-row"><span class="label" data-marker="0">FASE/ KELAS</span><span>:</span> <span data-marker="1" data-field="fase_kelas"></span></div>
+    </div>
+    <div class="header-col">
+      <div class="header-row"><span class="label" data-marker="0">Semester</span><span>:</span> <span data-marker="1" data-field="semester"></span></div>
+      <div class="header-row"><span class="label" data-marker="0">Tahun Pelajaran</span><span>:</span> <span data-marker="1" data-field="school_year"></span></div>
+      <div class="header-row"><span class="label" data-marker="0">Alokasi Waktu</span><span>:</span> <span data-marker="1" data-field="alokasi_waktu"></span></div>
+    </div>
+    <div class="header-col" style="flex:0 0 160px; text-align:right;">
+      <div class="header-row"><span class="label" data-marker="0">KKTP</span><span>:</span> <span data-marker="1" data-field="kktp_threshold"></span></div>
+    </div>
+  </div>
+
+  <!-- The matrix table body is built programmatically by js/render/prosem.js
+       (month/week columns are dynamic per mingguEfektif) — see #prosem-table-mount. -->
+  <div id="prosem-table-mount"></div>
+
+  <div class="signature-block">
+    <div data-marker="0">
+      <p>Mengetahui,</p>
+      <p><strong>Kepala Sekolah</strong></p>
+      <p>&nbsp;</p><p>&nbsp;</p>
+      <p data-marker="2b" data-field="principal_name"></p>
+      <p>NIK. <span data-marker="2b" data-field="principal_nik"></span></p>
+    </div>
+    <div data-marker="0">
+      <p><span data-marker="2b" data-field="city"></span>, <span data-marker="2a" data-field="date"></span></p>
+      <p><strong data-marker="0">Guru Mata Pelajaran</strong></p>
+      <p>&nbsp;</p><p>&nbsp;</p>
+      <p data-marker="2b" data-field="teacher_name"></p>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

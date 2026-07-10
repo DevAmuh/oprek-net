@@ -1,0 +1,63 @@
+{
+  "dimensiProfilLulusan": [
+    "Keimanan dan Ketakwaan terhadap Tuhan YME",
+    "Kewargaan",
+    "Penalaran Kritis",
+    "Kreativitas",
+    "Kolaborasi",
+    "Kemandirian",
+    "Kesehatan",
+    "Komunikasi"
+  ],
+  "santriKitab": [
+    "Komunikasi",
+    "Inovasi",
+    "Terbuka",
+    "Argumentatif",
+    "Berintegritas"
+  ],
+  "bloom": {
+    "C1": {
+      "label": "Mengingat",
+      "verba": ["mengidentifikasi", "menyebutkan", "mendaftar", "mendefinisikan", "mengenali"]
+    },
+    "C2": {
+      "label": "Memahami",
+      "verba": ["menjelaskan", "mendeskripsikan", "menginterpretasi", "merangkum", "membandingkan", "mencontohkan"]
+    },
+    "C3": {
+      "label": "Menerapkan",
+      "verba": ["menerapkan", "menggunakan", "mendemonstrasikan", "menghitung", "melaksanakan", "mengoperasikan"]
+    },
+    "C4": {
+      "label": "Menganalisis",
+      "verba": ["menganalisis", "membedakan", "mengorganisasi", "menguji", "mendekonstruksi"]
+    },
+    "C5": {
+      "label": "Mengevaluasi",
+      "verba": ["mengevaluasi", "menilai", "mengkritik", "memutuskan", "memverifikasi"]
+    },
+    "C6": {
+      "label": "Mencipta",
+      "verba": ["merancang", "menyusun", "mengkreasikan", "memproduksi", "merumuskan", "mengembangkan"]
+    }
+  },
+  "intervalDefault": [
+    { "max": 60, "label": "Kurang" },
+    { "min": 61, "max": 70, "label": "Cukup" },
+    { "min": 71, "max": 80, "label": "Baik" },
+    { "min": 81, "max": 100, "label": "Sangat Baik" }
+  ],
+  "kktpThreshold": 78,
+  "sumatifDefault": [
+    { "jenis": "STS1", "jp": 2, "semester": 1 },
+    { "jenis": "SAS", "jp": 2, "semester": 1 },
+    { "jenis": "STS2", "jp": 2, "semester": 2 },
+    { "jenis": "SAT", "jp": 2, "semester": 2 }
+  ],
+  "mingguEfektifDefault": {
+    "ganjil": 18,
+    "genap": 17,
+    "genapKelas9": 14
+  }
+}
