@@ -27,8 +27,12 @@ export function toast(message, opts) {
   const el = document.createElement('div');
   el.className = 'toast' + (opts.error ? ' is-error' : '');
   el.textContent = message;
+  el.title = 'Klik untuk menutup';
+  el.addEventListener('click', () => el.remove()); // dismiss on click
   toastWrap.appendChild(el);
-  setTimeout(() => { el.remove(); }, opts.duration || 4200);
+  // Errors carry actionable text — give them longer to read; success is brief.
+  const ms = opts.duration || (opts.error ? 9000 : 4200);
+  setTimeout(() => { el.remove(); }, ms);
 }
 
 /**
