@@ -77,6 +77,38 @@ const CONFIG_ERROR = 'Server tidak dapat membaca pengaturan dari database. Pasti
   + 'SUPABASE_SERVICE_ROLE_KEY di Vercel berisi kunci service_role (secret) proyek '
   + 'Supabase "Sandbox" — bukan kunci anon/publishable — lalu redeploy.';
 
+// ---- V2c: AES-256-GCM secret decryption (BYOK API keys) --------------------
+// Duplicated verbatim from api/pemeran.js (this file is deliberately
+// self-contained — zero shared modules across api/*.js). Only decryptSecret
+// is needed here (pemeran.js's admin actions own the encrypt path); kept as
+// a pair anyway so the format stays obviously self-describing.
+//   encryptSecret(plaintext) -> "v1:<iv_b64>:<tag_b64>:<ct_b64>"
+//   decryptSecret(blob)      -> plaintext, or null on ANY failure (never
+//                                throws into the request path).
+function pemeranSecretKey() {
+  const secret = (process.env.PEMERAN_SECRET || '').trim();
+  if (!secret) return null;
+  return crypto.createHash('sha256').update(secret, 'utf8').digest();
+}
+
+function decryptSecret(blob) {
+  try {
+    const key = pemeranSecretKey();
+    if (!key || typeof blob !== 'string') return null;
+    const parts = blob.split(':');
+    if (parts.length !== 4 || parts[0] !== 'v1') return null;
+    const iv = Buffer.from(parts[1], 'base64');
+    const tag = Buffer.from(parts[2], 'base64');
+    const ct = Buffer.from(parts[3], 'base64');
+    const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
+    decipher.setAuthTag(tag);
+    const pt = Buffer.concat([decipher.update(ct), decipher.final()]);
+    return pt.toString('utf8');
+  } catch (e) {
+    return null; // tampered/foreign/corrupt blob, wrong key, etc. — never throw
+  }
+}
+
 // ---- konstanta (kept in sync with pemeran/data/konstanta.json) ------------
 const DIMENSI_PROFIL_LULUSAN = [
   'Keimanan dan Ketakwaan terhadap Tuhan YME',
@@ -322,11 +354,19 @@ const SINGLE_FIELD_TYPES = {
 // generation doesn't risk the 60s function limit; the client only
 // ever sees the final parsed JSON.
 // =============================================================
-async function streamClaude(body) {
+async function streamClaude(body, apiKey) {
+  if (!apiKey) {
+    // V2c: no stored admin key AND no ANTHROPIC_API_KEY env var. Shaped like
+    // an Anthropic auth failure (status 401) so fallbackWorthy() below
+    // correctly treats it as fallback-worthy instead of a dead end.
+    const e = new Error('Kunci Anthropic belum diatur (baik di panel admin maupun ANTHROPIC_API_KEY di Vercel).');
+    e.status = 401;
+    throw e;
+  }
   const r = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
-      'x-api-key': process.env.ANTHROPIC_API_KEY,
+      'x-api-key': apiKey,
       'anthropic-version': '2023-06-01',
       'content-type': 'application/json',
     },
@@ -506,6 +546,39 @@ const OR_MAX_ATTEMPT_MS = 30000;  // per-attempt ceiling even when budget is amp
 // One request per Vercel invocation → module scope is a safe per-request slot.
 let forceProvider = null;   // 'anthropic' | 'openrouter' | null (auto)
 let requestStartMs = 0;     // set at handler entry; anchors the OpenRouter budget
+let cachedAiConfig = null;  // set at handler entry; V2c BYOK resolution (see below)
+
+// =============================================================
+// V2c BYOK — reads the `ai_config` row from pemeran_settings ONCE per
+// request (cachedAiConfig is reset to null at handler entry, so this is a
+// per-invocation cache, not a warm-lambda cache — the admin panel can change
+// the row between requests and every new request picks it up). Resolution
+// order per key: decrypted stored key ?? process.env.<ENV> ?? null. This
+// closes the "roster rots" problem (model/fallback list now admin-editable)
+// AND lets the school switch models (e.g. to claude-sonnet-4-6) without a
+// redeploy. Falls back to the pre-V2c hardcoded defaults if the row is
+// missing/unreadable, so nothing breaks for a project that hasn't run the
+// V2c migration or hasn't set PEMERAN_SECRET yet.
+// =============================================================
+async function resolveAiConfig() {
+  if (cachedAiConfig) return cachedAiConfig;
+  let ai = {};
+  try {
+    const r = await supa('/rest/v1/pemeran_settings?select=value&key=eq.ai_config');
+    const row = r.ok && Array.isArray(r.json) && r.json[0];
+    ai = (row && row.value) || {};
+  } catch (e) {
+    ai = {}; // Supabase hiccup — fall through to env-var-only resolution below
+  }
+  const keys = ai.keys || {};
+  cachedAiConfig = {
+    anthropicKey: decryptSecret(keys.anthropic) || (process.env.ANTHROPIC_API_KEY || '').trim() || null,
+    openrouterKey: decryptSecret(keys.openrouter) || (process.env.OPENROUTER_API_KEY || '').trim() || null,
+    anthropicModel: (ai.anthropicModel && String(ai.anthropicModel).trim()) || MODEL,
+    openrouterModels: (Array.isArray(ai.openrouterModels) && ai.openrouterModels.length) ? ai.openrouterModels : OPENROUTER_MODELS,
+  };
+  return cachedAiConfig;
+}
 
 // Anthropic failures that justify falling back: billing/credit (the whole point),
 // auth, rate-limit, and provider-side outages. Plain 400s do NOT fall back —
@@ -528,13 +601,15 @@ function flattenAnthropicContent(content) {
   return '';
 }
 
-async function callOpenRouter(anthropicBody) {
-  const key = (process.env.OPENROUTER_API_KEY || '').trim();
+async function callOpenRouter(anthropicBody, cfg) {
+  const key = (cfg && cfg.openrouterKey) || '';
   if (!key) {
     const e = new Error('OPENROUTER_KEY_MISSING');
     e.noKey = true;
     throw e;
   }
+  const models = (cfg && Array.isArray(cfg.openrouterModels) && cfg.openrouterModels.length)
+    ? cfg.openrouterModels : OPENROUTER_MODELS;
 
   const messages = [];
   const sys = flattenAnthropicContent(anthropicBody.system);
@@ -565,7 +640,7 @@ async function callOpenRouter(anthropicBody) {
   let lastErr = null;
   let ranOutOfTime = false;
   const anchor = requestStartMs || Date.now();
-  for (const model of OPENROUTER_MODELS) {
+  for (const model of models) {
     // Budget guard: only start an attempt if enough wall-clock remains to
     // plausibly finish it AND still return before the 60s function cap.
     const remaining = OR_TOTAL_BUDGET_MS - (Date.now() - anchor);
@@ -635,31 +710,39 @@ async function callOpenRouter(anthropicBody) {
   throw (lastErr || new Error('Semua model cadangan gratis gagal.'));
 }
 
-// The single entry every action uses. Primary = Anthropic Haiku; on
-// billing/outage failures (or an explicit provider override) → OpenRouter.
+// The single entry every action uses. Primary = Anthropic (BYOK-resolved
+// model/key via resolveAiConfig()); on billing/outage failures (or an
+// explicit provider override) → OpenRouter (also BYOK-resolved).
 async function callModel(requestBody) {
+  const cfg = await resolveAiConfig();
+  // V2c: the admin-configured model (or its 'claude-haiku-4-5' default)
+  // always wins over whatever literal the caller put in requestBody.model —
+  // every call site still writes `model: MODEL` for readability, but this is
+  // the actual model that goes out over the wire.
+  const body = Object.assign({}, requestBody, { model: cfg.anthropicModel });
+
   if (forceProvider === 'openrouter') {
     try {
-      return await callOpenRouter(requestBody);
+      return await callOpenRouter(body, cfg);
     } catch (e) {
       if (e && e.noKey) {
         throw new Error('Cadangan gratis belum disiapkan — tambahkan OPENROUTER_API_KEY '
-          + '(kunci akun gratis openrouter.ai) di Vercel → Environment Variables, lalu redeploy.');
+          + '(kunci akun gratis openrouter.ai) di Vercel → Environment Variables atau di panel admin, lalu coba lagi.');
       }
       throw e;
     }
   }
   try {
-    return await streamClaude(requestBody);
+    return await streamClaude(body, cfg.anthropicKey);
   } catch (err) {
     if (forceProvider === 'anthropic' || !fallbackWorthy(err)) throw err;
     try {
-      return await callOpenRouter(requestBody);
+      return await callOpenRouter(body, cfg);
     } catch (orErr) {
       if (orErr && orErr.noKey) {
         throw new Error('AI utama gagal (' + String(err.message || err).slice(0, 200) + ') '
           + 'dan cadangan gratis belum disiapkan — tambahkan OPENROUTER_API_KEY '
-          + '(kunci akun gratis openrouter.ai) di Vercel → Environment Variables, lalu redeploy.');
+          + '(kunci akun gratis openrouter.ai) di Vercel → Environment Variables atau di panel admin, lalu redeploy.');
       }
       throw new Error('AI utama gagal (' + String(err.message || err).slice(0, 160) + ') '
         + 'dan semua model cadangan gratis juga gagal (' + String(orErr.message || orErr).slice(0, 160) + '). Coba lagi nanti.');
@@ -1443,6 +1526,7 @@ async function regenerateItem(body, res) {
 module.exports = async (req, res) => {
   try {
     requestStartMs = Date.now(); // anchor the OpenRouter fallback wall-clock budget
+    cachedAiConfig = null;       // V2c: force a fresh ai_config read for this invocation
     let body = req.body;
     if (typeof body === 'string') { try { body = JSON.parse(body); } catch (e) { body = {}; } }
     body = body || {};
@@ -1453,11 +1537,10 @@ module.exports = async (req, res) => {
       return res.status(413).json({ error: 'Permintaan terlalu besar.' });
     }
 
-    if (!process.env.ANTHROPIC_API_KEY) {
-      return res.status(500).json({
-        error: 'AI belum disiapkan — tambahkan ANTHROPIC_API_KEY di Vercel → Settings → Environment Variables, lalu redeploy.',
-      });
-    }
+    // V2c: no more hard upfront requirement for ANTHROPIC_API_KEY — an
+    // admin-configured stored key (BYOK) can substitute. If NEITHER is
+    // configured, callModel()/streamClaude() below surface a clear error
+    // per-action instead of a blanket 500 here.
     if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
       return res.status(500).json({
         error: 'Server belum disiapkan — tambahkan SUPABASE_SERVICE_ROLE_KEY di Vercel → Settings → Environment Variables, lalu redeploy.',

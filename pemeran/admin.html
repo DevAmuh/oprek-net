@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Served at dhiya.id/pemeran (no trailing-slash redirect), so all relative
+     paths must resolve against /pemeran/, not the site root. -->
+<base href="/pemeran/">
+<title>Pemeran — Panel Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/paper.css">
+</head>
+<body>
+
+<main class="shell" id="app">
+
+  <!-- ================= GATE (second passcode) ================= -->
+  <section id="view-gate" class="stack-lg">
+    <div class="center">
+      <h1>Panel Admin</h1>
+      <p class="muted">Pengaturan AI, sekolah, dan default — Pemeran</p>
+    </div>
+    <div class="card card-pad-lg">
+      <div class="field">
+        <label for="in-admin-pass">Kode Admin</label>
+        <div class="pass-field">
+          <input type="password" id="in-admin-pass" placeholder="Masukkan kode admin" autocomplete="off">
+          <button type="button" class="pass-toggle" id="btn-admin-pass-toggle" aria-label="Tampilkan kode">👁</button>
+        </div>
+        <div class="field-hint">Kode admin berbeda dari kode akses biasa guru. <strong>Catatan keamanan:</strong>
+          otentikasi di sini masih berbasis kode saja (belum peran per-pengguna) — siapa pun yang tahu kode admin
+          dapat mengubah pengaturan ini. Peran per-pengguna yang sesungguhnya akan hadir pada milestone multi-sekolah.</div>
+      </div>
+      <button class="btn btn-primary btn-block btn-lg" id="btn-admin-submit">Masuk</button>
+    </div>
+    <div class="center">
+      <a href="index.html" class="muted small">← Kembali ke Beranda</a>
+    </div>
+  </section>
+
+  <!-- ================= PANEL ================= -->
+  <section id="view-panel" class="stack-lg hidden">
+    <div class="row-between">
+      <div>
+        <h1>Panel Admin</h1>
+        <p class="muted">Perubahan di sini berlaku untuk seluruh sekolah.</p>
+      </div>
+      <a href="index.html" class="btn btn-ghost">← Beranda</a>
+    </div>
+
+    <!-- ---- AI ---- -->
+    <details class="collapse-card admin-section" open>
+      <summary>🤖 AI</summary>
+      <div class="collapse-body stack">
+
+        <div class="field">
+          <label for="ai-primary-provider">Provider utama</label>
+          <select id="ai-primary-provider">
+            <option value="anthropic">Anthropic (utama, kualitas terbaik)</option>
+            <option value="openrouter">OpenRouter (paksa pakai cadangan gratis)</option>
+          </select>
+          <div class="field-hint">Biasanya biarkan "Anthropic" — sistem otomatis pindah ke cadangan gratis kalau kredit/Anthropic bermasalah.</div>
+        </div>
+
+        <div class="field">
+          <label for="ai-anthropic-model">Model Anthropic</label>
+          <select id="ai-anthropic-model"></select>
+        </div>
+
+        <div class="field">
+          <label for="ai-openrouter-models">Roster model cadangan (OpenRouter), satu id per baris</label>
+          <textarea id="ai-openrouter-models" rows="4" spellcheck="false"></textarea>
+          <div class="field-hint">Dicoba berurutan dari atas ke bawah sampai salah satu berhasil. Cari id model gratis terbaru di openrouter.ai/models.</div>
+        </div>
+
+        <div class="field">
+          <label>Kunci API Anthropic <span id="ai-anthropic-key-badge" class="badge badge-muted">…</span></label>
+          <div class="row">
+            <input type="password" id="ai-anthropic-key" placeholder="Tempel kunci baru (kosongkan bila tidak ganti)" autocomplete="off" style="flex:1;">
+            <button type="button" class="btn btn-outline btn-sm" id="btn-anthropic-key-clear">Hapus</button>
+            <button type="button" class="btn btn-outline btn-sm" id="btn-test-anthropic">Tes koneksi</button>
+          </div>
+          <div id="test-anthropic-result" class="test-result muted small"></div>
+          <div class="field-hint">Kunci hanya-tulis — nilai yang tersimpan tidak pernah ditampilkan kembali di sini. Kosong = pakai ANTHROPIC_API_KEY dari server (jika ada).</div>
+        </div>
+
+        <div class="field">
+          <label>Kunci API OpenRouter <span id="ai-openrouter-key-badge" class="badge badge-muted">…</span></label>
+          <div class="row">
+            <input type="password" id="ai-openrouter-key" placeholder="Tempel kunci baru (kosongkan bila tidak ganti)" autocomplete="off" style="flex:1;">
+            <button type="button" class="btn btn-outline btn-sm" id="btn-openrouter-key-clear">Hapus</button>
+            <button type="button" class="btn btn-outline btn-sm" id="btn-test-openrouter">Tes koneksi</button>
+          </div>
+          <div id="test-openrouter-result" class="test-result muted small"></div>
+          <div class="field-hint">Kosong = pakai OPENROUTER_API_KEY dari server (jika ada).</div>
+        </div>
+
+        <button class="btn btn-primary" id="btn-save-ai">Simpan Pengaturan AI</button>
+      </div>
+    </details>
+
+    <!-- ---- Sekolah ---- -->
+    <details class="collapse-card admin-section">
+      <summary>🏫 Sekolah</summary>
+      <div class="collapse-body stack">
+        <div class="field">
+          <label for="sch-nama">Nama sekolah</label>
+          <input type="text" id="sch-nama">
+        </div>
+        <div class="field">
+          <label for="tahun-ajaran">Tahun ajaran</label>
+          <input type="text" id="tahun-ajaran" placeholder="mis. 2026/2027">
+        </div>
+        <div class="field">
+          <label for="sch-kota">Kota</label>
+          <input type="text" id="sch-kota">
+        </div>
+        <div class="field">
+          <label for="sch-kepsek">Nama Kepala Sekolah</label>
+          <input type="text" id="sch-kepsek">
+        </div>
+        <div class="field">
+          <label for="sch-kepsek-nik">NIK Kepala Sekolah</label>
+          <input type="text" id="sch-kepsek-nik">
+        </div>
+        <div class="field">
+          <label for="sch-logo-file">Logo sekolah (opsional, maks ~60KB)</label>
+          <input type="file" id="sch-logo-file" accept="image/*">
+          <img id="sch-logo-preview" class="logo-preview hidden" alt="Pratinjau logo">
+        </div>
+        <div class="field">
+          <label for="sch-banner-file">Banner dokumen (opsional, maks ~60KB)</label>
+          <input type="file" id="sch-banner-file" accept="image/*">
+          <img id="sch-banner-preview" class="logo-preview hidden" alt="Pratinjau banner">
+        </div>
+        <button class="btn btn-primary" id="btn-save-school">Simpan Profil Sekolah</button>
+      </div>
+    </details>
+
+    <!-- ---- Default ---- -->
+    <details class="collapse-card admin-section">
+      <summary>⚙️ Default</summary>
+      <div class="collapse-body stack">
+        <div class="field">
+          <label for="def-menit-per-jp">Menit per JP</label>
+          <input type="number" id="def-menit-per-jp" min="1" max="120">
+        </div>
+        <div class="field">
+          <label for="def-max-pertemuan">Maks pertemuan per unit</label>
+          <input type="number" id="def-max-pertemuan" min="1" max="20">
+        </div>
+        <div class="field">
+          <label for="def-minggu-ganjil">Minggu efektif — Semester Ganjil</label>
+          <input type="number" id="def-minggu-ganjil" min="1" max="30">
+        </div>
+        <div class="field">
+          <label for="def-minggu-genap">Minggu efektif — Semester Genap</label>
+          <input type="number" id="def-minggu-genap" min="1" max="30">
+        </div>
+        <div class="field-hint">Nilai ini disimpan sebagai default acuan sekolah. Dokumen yang sudah ada tidak berubah otomatis.</div>
+        <button class="btn btn-primary" id="btn-save-defaults">Simpan Default</button>
+      </div>
+    </details>
+
+    <!-- ---- Keamanan ---- -->
+    <details class="collapse-card admin-section">
+      <summary>🔐 Keamanan</summary>
+      <div class="collapse-body stack">
+        <div class="field">
+          <label>Ganti Kode Akses (guru)</label>
+          <input type="password" id="new-passcode" placeholder="Kode akses baru" autocomplete="off">
+          <input type="password" id="new-passcode-confirm" placeholder="Ulangi kode akses baru" autocomplete="off" style="margin-top:8px;">
+          <div class="field-hint">Semua guru harus memakai kode baru ini untuk masuk setelah disimpan.</div>
+          <button class="btn btn-outline" id="btn-change-passcode" style="margin-top:8px;">Ganti Kode Akses</button>
+        </div>
+        <div class="field">
+          <label>Ganti Kode Admin</label>
+          <input type="password" id="new-admin-passcode" placeholder="Kode admin baru" autocomplete="off">
+          <input type="password" id="new-admin-passcode-confirm" placeholder="Ulangi kode admin baru" autocomplete="off" style="margin-top:8px;">
+          <button class="btn btn-outline" id="btn-change-admin-passcode" style="margin-top:8px;">Ganti Kode Admin</button>
+        </div>
+      </div>
+    </details>
+
+    <!-- ---- Dasbor ---- -->
+    <details class="collapse-card admin-section">
+      <summary>📊 Dasbor Biaya AI</summary>
+      <div class="collapse-body stack">
+        <button class="btn btn-outline btn-sm" id="btn-refresh-dasbor">Muat ulang</button>
+        <div id="dasbor-totals" class="muted">Memuat…</div>
+        <div id="dasbor-per-model"></div>
+      </div>
+    </details>
+
+    <!-- ---- Dalam pertimbangan (placeholders, not built) ---- -->
+    <div class="card consideration-card">
+      <h3>Dalam pertimbangan</h3>
+      <p class="muted small">Belum dibangun — hanya dicadangkan ruangnya di struktur data untuk sekarang.</p>
+      <div class="field">
+        <label><input type="checkbox" disabled> Override kunci API per guru (tiap guru pakai kunci sendiri)</label>
+      </div>
+      <div class="field">
+        <label><input type="checkbox" disabled> Roster siswa di dalam aplikasi (saat ini nama diisi langsung di Excel)</label>
+      </div>
+    </div>
+
+  </section>
+
+</main>
+
+<script type="module" src="js/admin.js"></script>
+</body>
+</html>

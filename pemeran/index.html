@@ -54,7 +54,10 @@
         <h1 id="beranda-hello">Halo</h1>
         <p class="muted" id="beranda-sub">SMPI Al-Hamidiyah</p>
       </div>
-      <button class="btn btn-ghost" id="btn-switch-name">Ganti nama</button>
+      <div class="row">
+        <a href="admin.html" class="btn btn-outline hidden" id="btn-admin-link">⚙️ Panel Admin</a>
+        <button class="btn btn-ghost" id="btn-switch-name">Ganti nama</button>
+      </div>
     </div>
 
     <div>
@@ -182,6 +185,10 @@ async function enterBeranda(teacher) {
   document.getElementById('beranda-sub').textContent = teacher.is_owner
     ? 'SMPI Al-Hamidiyah · akun pemilik'
     : 'SMPI Al-Hamidiyah';
+  // V2c: admin panel link — visible only to the owner account. This is a
+  // client-side convenience only; the real gate is the admin passcode
+  // checked server-side on every admin action in api/pemeran.js.
+  document.getElementById('btn-admin-link').classList.toggle('hidden', !teacher.is_owner);
   showView(viewBeranda);
   await renderPlanGrid(teacher);
 }
