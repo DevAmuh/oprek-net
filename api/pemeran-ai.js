@@ -341,7 +341,9 @@ async function streamClaude(body) {
       const parsed = JSON.parse(errText);
       if (parsed && parsed.error && parsed.error.message) msg = parsed.error.message;
     } catch (e) { if (errText) msg += ': ' + errText.slice(0, 300); }
-    throw new Error(msg);
+    const err = new Error(msg);
+    err.status = r.status; // lets callModel() classify billing/outage vs our-own-bug
+    throw err;
   }
 
   const reader = r.body.getReader();
@@ -378,7 +380,9 @@ async function streamClaude(body) {
         if (evt.delta && evt.delta.stop_reason) message.stop_reason = evt.delta.stop_reason;
         if (evt.usage) Object.assign(message.usage, evt.usage);
       } else if (evt.type === 'error' && evt.error) {
-        throw new Error(evt.error.message || 'Claude stream error');
+        const err = new Error(evt.error.message || 'Claude stream error');
+        err.midStream = true; // e.g. overloaded_error — provider-side, fallback-worthy
+        throw err;
       }
     }
   }
@@ -400,6 +404,150 @@ function extractJsonObject(text) {
   const m = raw.match(/\{[\s\S]*\}/);
   if (m) { try { return JSON.parse(m[0]); } catch (e) { /* ignore */ } }
   return null;
+}
+
+// =============================================================
+// OpenRouter fallback — keeps the app alive when the Anthropic
+// wallet runs dry. Haiku stays PRIMARY (quality); free OpenRouter
+// models catch billing/outage failures so generation never bricks.
+// Requires Vercel env OPENROUTER_API_KEY (free account key).
+// =============================================================
+
+// Free-model cascade, best-first (verified free + response_format-capable on
+// openrouter.ai/api/v1/models at integration time, 2026-07-11). `openrouter/free`
+// is OpenRouter's own auto-router over whatever free capacity exists — the
+// catch-all. Roster rots over time; revisit if fallbacks start failing.
+const OPENROUTER_MODELS = [
+  'qwen/qwen3-next-80b-a3b-instruct:free',
+  'nvidia/nemotron-3-super-120b-a12b:free',
+  'openrouter/free',
+];
+const OPENROUTER_ATTEMPT_MS = 25000; // per-model cap; 3 attempts must fit 60s maxDuration
+
+// One request per Vercel invocation → module scope is a safe per-request slot.
+let forceProvider = null; // 'anthropic' | 'openrouter' | null (auto)
+
+// Anthropic failures that justify falling back: billing/credit (the whole point),
+// auth, rate-limit, and provider-side outages. Plain 400s do NOT fall back —
+// those are our own request bugs and masking them would hide real defects.
+function fallbackWorthy(err) {
+  if (!err) return false;
+  if (err.midStream) return true;                    // mid-stream provider error
+  const s = Number(err.status);
+  if ([401, 402, 403, 429, 500, 502, 503, 529].includes(s)) return true;
+  if (s === 400) return /credit|billing|balance/i.test(String(err.message || ''));
+  if (!s) return true;                               // network-level failure (fetch threw)
+  return false;
+}
+
+function flattenAnthropicContent(content) {
+  if (typeof content === 'string') return content;
+  if (Array.isArray(content)) {
+    return content.map((b) => (typeof b === 'string' ? b : (b && b.text) || '')).join('\n');
+  }
+  return '';
+}
+
+async function callOpenRouter(anthropicBody) {
+  const key = (process.env.OPENROUTER_API_KEY || '').trim();
+  if (!key) {
+    const e = new Error('OPENROUTER_KEY_MISSING');
+    e.noKey = true;
+    throw e;
+  }
+
+  const messages = [];
+  const sys = flattenAnthropicContent(anthropicBody.system);
+  if (sys) messages.push({ role: 'system', content: sys });
+  for (const m of (anthropicBody.messages || [])) {
+    messages.push({ role: m.role, content: flattenAnthropicContent(m.content) });
+  }
+
+  const schema = anthropicBody.output_config
+    && anthropicBody.output_config.format
+    && anthropicBody.output_config.format.schema;
+
+  let lastErr = null;
+  for (const model of OPENROUTER_MODELS) {
+    const payload = {
+      model,
+      messages,
+      max_tokens: anthropicBody.max_tokens || 4000,
+    };
+    // strict:false = best-effort guidance; support varies wildly across free
+    // models and we validate the JSON ourselves below anyway.
+    if (schema) {
+      payload.response_format = {
+        type: 'json_schema',
+        json_schema: { name: 'result', strict: false, schema },
+      };
+    }
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), OPENROUTER_ATTEMPT_MS);
+      const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        signal: ctrl.signal,
+        headers: {
+          Authorization: 'Bearer ' + key,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://www.dhiya.id/pemeran',
+          'X-Title': 'Pemeran',
+        },
+        body: JSON.stringify(payload),
+      });
+      clearTimeout(timer);
+      const data = await r.json().catch(() => null);
+      if (!r.ok) {
+        lastErr = new Error((data && data.error && data.error.message) || ('OpenRouter HTTP ' + r.status));
+        continue; // next model
+      }
+      const text = data && data.choices && data.choices[0]
+        && data.choices[0].message && data.choices[0].message.content;
+      if (!text) { lastErr = new Error('OpenRouter: jawaban kosong dari ' + model); continue; }
+      // Actions assume parseable JSON — enforce it here so a schema-ignoring
+      // free model rolls to the next candidate instead of breaking the caller.
+      if (schema && !extractJsonObject(text)) {
+        lastErr = new Error('OpenRouter: ' + model + ' tidak mengembalikan JSON valid');
+        continue;
+      }
+      const u = (data && data.usage) || {};
+      return {
+        content: [{ type: 'text', text }],
+        usage: { input_tokens: u.prompt_tokens ?? null, output_tokens: u.completion_tokens ?? null },
+        model: 'or:' + ((data && data.model) || model), // 'or:' prefix marks fallback rows in gen_log
+        stop_reason: 'end_turn',
+        _fb: true,
+      };
+    } catch (e) {
+      lastErr = (e && e.name === 'AbortError')
+        ? new Error('OpenRouter: ' + model + ' melebihi batas waktu')
+        : e;
+    }
+  }
+  throw (lastErr || new Error('Semua model cadangan OpenRouter gagal.'));
+}
+
+// The single entry every action uses. Primary = Anthropic Haiku; on
+// billing/outage failures (or an explicit provider override) → OpenRouter.
+async function callModel(requestBody) {
+  if (forceProvider === 'openrouter') return callOpenRouter(requestBody);
+  try {
+    return await streamClaude(requestBody);
+  } catch (err) {
+    if (forceProvider === 'anthropic' || !fallbackWorthy(err)) throw err;
+    try {
+      return await callOpenRouter(requestBody);
+    } catch (orErr) {
+      if (orErr && orErr.noKey) {
+        throw new Error('AI utama gagal (' + String(err.message || err).slice(0, 200) + ') '
+          + 'dan cadangan gratis belum disiapkan — tambahkan OPENROUTER_API_KEY '
+          + '(kunci akun gratis openrouter.ai) di Vercel → Environment Variables, lalu redeploy.');
+      }
+      throw new Error('AI utama gagal (' + String(err.message || err).slice(0, 160) + ') '
+        + 'dan semua model cadangan gratis juga gagal (' + String(orErr.message || orErr).slice(0, 160) + '). Coba lagi nanti.');
+    }
+  }
 }
 
 async function logGen(planId, action, message) {
@@ -501,7 +649,7 @@ async function generateRpp(body, res) {
 
   let message;
   try {
-    message = await streamClaude(requestBody);
+    message = await callModel(requestBody);
   } catch (e) {
     return res.status(502).json({ error: 'Gagal menghubungi AI: ' + String((e && e.message) || e) });
   }
@@ -524,7 +672,7 @@ async function generateRpp(body, res) {
   if (data.pertemuan.length > unit.pertemuanCount) data.pertemuan = data.pertemuan.slice(0, unit.pertemuanCount);
 
   await logGen(body.planId, 'generate_rpp', message);
-  return res.status(200).json({ ok: true, data, pertemuanCount: unit.pertemuanCount });
+  return res.status(200).json({ ok: true, fallback: (message && message._fb) || undefined, data, pertemuanCount: unit.pertemuanCount });
 }
 
 async function regenerateField(body, res) {
@@ -572,7 +720,7 @@ Kembalikan HANYA objek JSON {"value": ...} sesuai skema.`;
 
   let message;
   try {
-    message = await streamClaude(requestBody);
+    message = await callModel(requestBody);
   } catch (e) {
     return res.status(502).json({ error: 'Gagal menghubungi AI: ' + String((e && e.message) || e) });
   }
@@ -587,7 +735,7 @@ Kembalikan HANYA objek JSON {"value": ...} sesuai skema.`;
   }
 
   await logGen(body.planId, 'regenerate_field', message);
-  return res.status(200).json({ ok: true, field, value: data.value, meetingIndex });
+  return res.status(200).json({ ok: true, fallback: (message && message._fb) || undefined, field, value: data.value, meetingIndex });
 }
 
 // =============================================================
@@ -686,7 +834,7 @@ async function generateTp(body, res) {
 
   let message;
   try {
-    message = await streamClaude(requestBody);
+    message = await callModel(requestBody);
   } catch (e) {
     return res.status(502).json({ error: 'Gagal menghubungi AI: ' + String((e && e.message) || e) });
   }
@@ -699,7 +847,7 @@ async function generateTp(body, res) {
   }
 
   await logGen(body.planId, 'generate_tp', message);
-  return res.status(200).json({ ok: true, perElemen: data.perElemen });
+  return res.status(200).json({ ok: true, fallback: (message && message._fb) || undefined, perElemen: data.perElemen });
 }
 
 // ---- TAHAP 2 — KKTP (SOP §6.2 pohon keputusan) -----------------------------
@@ -772,7 +920,7 @@ async function generateKktp(body, res) {
 
   let message;
   try {
-    message = await streamClaude(requestBody);
+    message = await callModel(requestBody);
   } catch (e) {
     return res.status(502).json({ error: 'Gagal menghubungi AI: ' + String((e && e.message) || e) });
   }
@@ -785,7 +933,7 @@ async function generateKktp(body, res) {
   }
 
   await logGen(body.planId, 'generate_kktp', message);
-  return res.status(200).json({ ok: true, items: data.items });
+  return res.status(200).json({ ok: true, fallback: (message && message._fb) || undefined, items: data.items });
 }
 
 // ---- TAHAP 3 — ATP (SOP §7.2 pengelompokan + urutan prasyarat) ------------
@@ -863,7 +1011,7 @@ async function generateAtp(body, res) {
 
   let message;
   try {
-    message = await streamClaude(requestBody);
+    message = await callModel(requestBody);
   } catch (e) {
     return res.status(502).json({ error: 'Gagal menghubungi AI: ' + String((e && e.message) || e) });
   }
@@ -876,7 +1024,7 @@ async function generateAtp(body, res) {
   }
 
   await logGen(body.planId, 'generate_atp', message);
-  return res.status(200).json({ ok: true, units: data.units });
+  return res.status(200).json({ ok: true, fallback: (message && message._fb) || undefined, units: data.units });
 }
 
 // ---- Mulok — draft capaian kontekstual (clearly badged as a KOSP draft) ---
@@ -922,7 +1070,7 @@ async function draftCapaianMulok(body, res) {
 
   let message;
   try {
-    message = await streamClaude(requestBody);
+    message = await callModel(requestBody);
   } catch (e) {
     return res.status(502).json({ error: 'Gagal menghubungi AI: ' + String((e && e.message) || e) });
   }
@@ -935,7 +1083,7 @@ async function draftCapaianMulok(body, res) {
   }
 
   await logGen(body.planId, 'draft_capaian_mulok', message);
-  return res.status(200).json({ ok: true, elemen: data.elemen });
+  return res.status(200).json({ ok: true, fallback: (message && message._fb) || undefined, elemen: data.elemen });
 }
 
 // ---- per-row regenerate (TP row / KKTP row) — sibling to regenerate_field -
@@ -969,13 +1117,13 @@ async function regenerateItem(body, res) {
       },
     };
     let message;
-    try { message = await streamClaude(requestBody); } catch (e) {
+    try { message = await callModel(requestBody); } catch (e) {
       return res.status(502).json({ error: 'Gagal menghubungi AI: ' + String((e && e.message) || e) });
     }
     const data = extractJsonObject(textOf(message));
     if (!data) return res.status(502).json({ error: 'AI mengirim respons yang tidak bisa dibaca. Coba lagi.' });
     await logGen(body.planId, 'regenerate_item_tp', message);
-    return res.status(200).json({ ok: true, target, value: data });
+    return res.status(200).json({ ok: true, fallback: (message && message._fb) || undefined, target, value: data });
   }
 
   if (target === 'kktp') {
@@ -1005,13 +1153,13 @@ async function regenerateItem(body, res) {
       },
     };
     let message;
-    try { message = await streamClaude(requestBody); } catch (e) {
+    try { message = await callModel(requestBody); } catch (e) {
       return res.status(502).json({ error: 'Gagal menghubungi AI: ' + String((e && e.message) || e) });
     }
     const data = extractJsonObject(textOf(message));
     if (!data) return res.status(502).json({ error: 'AI mengirim respons yang tidak bisa dibaca. Coba lagi.' });
     await logGen(body.planId, 'regenerate_item_kktp', message);
-    return res.status(200).json({ ok: true, target, value: data });
+    return res.status(200).json({ ok: true, fallback: (message && message._fb) || undefined, target, value: data });
   }
 
   return res.status(400).json({ error: 'target tidak dikenal (gunakan "tp" atau "kktp").' });
@@ -1044,6 +1192,11 @@ module.exports = async (req, res) => {
     const gate = await verifyPass(body.pass);
     if (gate === 'config') return res.status(500).json({ error: CONFIG_ERROR, detail: lastConfigError });
     if (gate !== 'ok') return res.status(401).json({ error: 'Kode akses salah.' });
+
+    // Optional per-request provider override ('anthropic' | 'openrouter').
+    // Passcode-gated like everything else; used for testing the fallback
+    // path and as a manual free-mode escape hatch.
+    forceProvider = (body.provider === 'openrouter' || body.provider === 'anthropic') ? body.provider : null;
 
     switch (body.action) {
       case 'generate_rpp':          return await generateRpp(body, res);

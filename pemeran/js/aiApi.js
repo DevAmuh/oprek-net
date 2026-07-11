@@ -37,5 +37,11 @@ export async function callAi(action, payload) {
     throw new Error(msg);
   }
 
+  // Server fell back to a free OpenRouter model (Anthropic credit empty/down).
+  // Tell the teacher once per result so quality dips aren't a mystery.
+  if (data && data.fallback) {
+    toast('Dibuat dengan model cadangan gratis (kredit AI utama habis/terganggu) — periksa hasil lebih teliti.', { duration: 7000 });
+  }
+
   return data;
 }
