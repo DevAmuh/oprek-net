@@ -547,6 +547,21 @@ async function callOpenRouter(anthropicBody) {
     && anthropicBody.output_config.format
     && anthropicBody.output_config.format.schema;
 
+  // Free models honour a response_format schema only loosely (strict:false is
+  // required — many reject strict:true outright). Reinforcing the EXACT shape
+  // as plain-text instruction dramatically improves the odds their JSON matches
+  // what the deterministic caller expects (e.g. the top-level `perElemen` key),
+  // instead of a validly-parsed-but-wrong-shape object the caller then rejects.
+  if (schema) {
+    messages.push({
+      role: 'user',
+      content: 'PENTING (format keluaran): Balas HANYA dengan satu objek JSON yang '
+        + 'PERSIS mengikuti struktur/kunci skema berikut — tanpa teks lain, tanpa '
+        + 'membungkusnya di bawah kunci tambahan, tanpa markdown/```:\n'
+        + JSON.stringify(schema),
+    });
+  }
+
   let lastErr = null;
   let ranOutOfTime = false;
   const anchor = requestStartMs || Date.now();
