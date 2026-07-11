@@ -1,15 +1,20 @@
 // =============================================================
-// Pemeran — Stage: Ekspor
+// Pemeran — Stage: Dokumen (V2b — replaces "Ekspor")
 // -------------------------------------------------------------
-// Per-document MHT/PDF/HTML/DOCX buttons (TP&KKTP, Prota/ATP, Prosem x2
-// semester, each RPP) + the validator panel (SOP §12.A, validate.js).
-// Red errors block export with an explanation (plan's Validator section).
-// M4: DOCX export added (render/docHtml/toDocx.js + export/docx.js),
-// "Unduh Semua (.zip)" (fflate, client-side), and an owner-only
-// gen_log cost readout.
+// A grid of ALL document previews (TP&KKTP, Prota/ATP, Prosem x2
+// semesters, each RPP) — not just a bare button list like the old Ekspor
+// screen: every card renders a live iframe preview alongside its
+// export buttons, so a teacher can see what's about to download before
+// committing to a file. TP&KKTP's preview is in-place editable (V2b #6 —
+// render/docHtml/editable.js, same engine RPP's preview uses) so a
+// last-look typo fix doesn't require a trip back to the Data stage.
+// Keeps V2a's de-gated exports (withExportGate — errors show a confirm
+// sheet, never a hard block) + the shared validator panel + "Unduh Semua"
+// zip + the owner-only cost readout. Adds a clearly-labeled placeholder
+// card for the V2d gradebook (not built this phase).
 // =============================================================
 
-import { state } from '../state.js';
+import { state, setTps, setKktps } from '../state.js';
 import { toast, call } from '../api.js';
 import { takeValidatorFocusArea } from '../validate.js';
 import { renderValidatorPanel as renderSharedValidatorPanel, withExportGate } from '../validatorPanel.js';
@@ -17,12 +22,13 @@ import { renderTpKktpHtml } from '../render/tpkktp.js';
 import { renderProtaHtml } from '../render/prota.js';
 import { renderProsemHtml } from '../render/prosem.js';
 import { renderRppHtml, renderRppCombinedHtml } from '../render/rpp.js';
-import { distributeProsem } from '../pipeline.js';
+import { distributeProsemWithOverrides } from '../pipeline.js';
 import { downloadMht, buildMht } from '../export/mht.js';
 import { printRppHtml } from '../export/pdf.js';
 import { exportRppHtml } from '../export/html.js';
 import { downloadDocx } from '../export/docx.js';
 import { buildDocxBlob } from '../render/docHtml/toDocx.js';
+import { wireEditable } from '../render/docHtml/editable.js';
 
 function escapeHtml(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => (
@@ -30,21 +36,22 @@ function escapeHtml(s) {
   ));
 }
 
-// One entry per exportable document: { key, label, build() -> {html}, [combine] }
-// `combine` (RPP docs with >1 meeting only) builds the "Gabungkan semua →
-// PDF" paginated doc (render/rpp.js's renderRppCombinedHtml) — same helper
-// the RPP stage's own combine button uses, so the two never drift.
+// One entry per exportable document: { key, label, build() -> {html}, [combine], [editable] }
 async function collectDocs() {
-  const { header, cp, tps, kktps, units, sumatif, config, rpps } = state.spine;
+  const { header, cp, tps, kktps, units, sumatif, config, rpps, prosem } = state.spine;
   const docs = [];
 
   if (tps.length || kktps.length) {
-    docs.push({ key: 'tpkktp', label: 'TP & KKTP', build: () => renderTpKktpHtml({ header, tps, kktps }) });
+    docs.push({
+      key: 'tpkktp', label: 'TP & KKTP',
+      build: () => renderTpKktpHtml({ header, tps, kktps }),
+      editable: 'tpkktp',
+    });
   }
   if (units.length) {
     docs.push({ key: 'prota', label: 'Prota & ATP', build: () => renderProtaHtml({ header, cpElemen: cp.elemen, tps, units, sumatif }) });
 
-    const computed = distributeProsem(units, sumatif, config, header.kelas);
+    const computed = distributeProsemWithOverrides(units, sumatif, config, header.kelas, prosem.overrides);
     docs.push({
       key: 'prosem1', label: 'Prosem — Semester Ganjil',
       build: () => renderProsemHtml({ header, config, semesterNum: 1, semesterData: computed.semester1, units, tps, cpElemen: cp.elemen }),
@@ -74,14 +81,23 @@ export async function render(container) {
     <div class="stack-lg">
       <div class="card card-pad-lg">
         <div class="row-between">
-          <h2>Ekspor Dokumen</h2>
+          <h2>Dokumen</h2>
           <button class="btn btn-outline" id="btn-download-all">⬇ Unduh Semua (.zip)</button>
         </div>
-        <p class="muted small">Setiap dokumen dapat diunduh sebagai MHT (dibuka langsung di Word), DOCX, dicetak/disimpan sebagai PDF, atau diunduh sebagai HTML mandiri. "Unduh Semua" membundel MHT + DOCX tiap dokumen dalam satu berkas .zip.</p>
+        <p class="muted small">Setiap dokumen bisa dipratinjau langsung di bawah, lalu diunduh sebagai MHT (dibuka langsung di Word), DOCX, dicetak/disimpan sebagai PDF, atau HTML mandiri. "Unduh Semua" membundel MHT + DOCX tiap dokumen dalam satu berkas .zip. Sel TP &amp; KKTP di pratinjau bisa disunting langsung di sini.</p>
       </div>
       <div class="card card-pad-lg" id="validator-panel"></div>
       ${isOwner ? '<div class="card card-pad-lg" id="cost-panel"></div>' : ''}
       <div class="stack" id="docs-list"></div>
+      <div class="card card-pad-lg" style="opacity:0.7;">
+        <div class="row-between">
+          <div>
+            <h3 style="margin:0 0 4px;">📗 Buku Nilai (KKTP) — segera</h3>
+            <p class="muted small" style="margin:0;">Workbook xlsx per rombel (kolom KKTP, ambang batas tuntas, kolom nilai kosong untuk diisi guru) — direncanakan untuk fase berikutnya (V2d). Belum tersedia di fase ini.</p>
+          </div>
+          <button class="btn btn-outline" disabled>Segera hadir</button>
+        </div>
+      </div>
     </div>
   `;
 
@@ -92,12 +108,12 @@ export async function render(container) {
     // A fix (e.g. "Normalkan ulang JP") can change unit/RPP data the doc
     // list's own build() closures capture — re-collect so a re-export
     // reflects the just-applied fix, not stale pre-fix data.
-    onChange: async () => { docsCache = await collectDocs(); renderDocsList(container, docsCache); },
+    onChange: async () => { docsCache = await collectDocs(); await renderDocsList(container, docsCache); },
   });
 
   const docs = await collectDocs();
   docsCache = docs;
-  renderDocsList(container, docs);
+  await renderDocsList(container, docs);
 
   if (isOwner) renderCostPanel(container);
 
@@ -108,7 +124,7 @@ export async function render(container) {
 // on any validator error); withExportGate() (validatorPanel.js) shows a
 // confirm sheet listing the actual findings only when there's an
 // error-level one, "Tetap ekspor" / "Perbaiki dulu" — never a silent block.
-function renderDocsList(container, docs) {
+async function renderDocsList(container, docs) {
   const list = container.querySelector('#docs-list');
   if (!docs.length) {
     list.innerHTML = '<div class="card"><p class="muted">Belum ada dokumen untuk diekspor — lengkapi tahap-tahap sebelumnya dulu.</p></div>';
@@ -116,14 +132,19 @@ function renderDocsList(container, docs) {
   }
 
   list.innerHTML = docs.map((d) => `
-    <div class="card row-between" data-doc="${d.key}">
-      <strong>${escapeHtml(d.label)}</strong>
-      <div class="row">
-        <button class="btn btn-outline" data-action="mht" data-key="${d.key}">Unduh MHT</button>
-        <button class="btn btn-outline" data-action="docx" data-key="${d.key}">Unduh DOCX</button>
-        <button class="btn btn-outline" data-action="pdf" data-key="${d.key}">Cetak / PDF</button>
-        <button class="btn btn-outline" data-action="html" data-key="${d.key}">Unduh HTML</button>
-        ${d.combine ? `<button class="btn btn-outline" data-action="combine" data-key="${d.key}">Gabungkan → PDF</button>` : ''}
+    <div class="card" data-doc="${d.key}">
+      <div class="row-between">
+        <strong>${escapeHtml(d.label)}</strong>
+        <div class="row">
+          <button class="btn btn-outline" data-action="mht" data-key="${d.key}">Unduh MHT</button>
+          <button class="btn btn-outline" data-action="docx" data-key="${d.key}">Unduh DOCX</button>
+          <button class="btn btn-outline" data-action="pdf" data-key="${d.key}">Cetak / PDF</button>
+          <button class="btn btn-outline" data-action="html" data-key="${d.key}">Unduh HTML</button>
+          ${d.combine ? `<button class="btn btn-outline" data-action="combine" data-key="${d.key}">Gabungkan → PDF</button>` : ''}
+        </div>
+      </div>
+      <div class="doc-preview-frame">
+        <iframe title="Pratinjau ${escapeHtml(d.label)}" data-preview="${d.key}" style="width:100%; min-height:480px; border:0; display:block;"></iframe>
       </div>
     </div>
   `).join('');
@@ -149,6 +170,45 @@ function renderDocsList(container, docs) {
         }
       });
     });
+  });
+
+  // Render each doc's live preview iframe, wiring TP&KKTP's cells editable
+  // (V2b #6) so a last-look fix doesn't require leaving this screen.
+  for (const d of docs) {
+    const iframe = list.querySelector(`iframe[data-preview="${d.key}"]`);
+    if (!iframe) continue;
+    try {
+      const { html } = await d.build();
+      await new Promise((resolve) => {
+        iframe.addEventListener('load', resolve, { once: true });
+        iframe.srcdoc = html;
+      });
+      if (d.editable === 'tpkktp') wireTpKktpEditable(iframe);
+    } catch (e) {
+      // leave that one preview blank; export buttons still work independently
+    }
+  }
+}
+
+/** V2b #6 — TP&KKTP preview editability: writes straight back to
+ *  spine.tps[i].rumusan / spine.kktps[i].kriteria via the __<i> suffix
+ *  render/tpkktp.js's buildTpTable/buildKktpTable emit. Per the shared
+ *  engine's caret-preservation rule, this never re-renders the iframe being
+ *  edited — only the underlying spine changes; the doc list itself is only
+ *  rebuilt on the next explicit action (export click, or a validator fix's
+ *  onChange). */
+function wireTpKktpEditable(iframe) {
+  wireEditable(iframe, {
+    writeField: (baseField, i, text) => {
+      if (i == null) return;
+      if (baseField === 'tp_rumusan') {
+        const tps = (state.spine.tps || []).map((t, idx) => (idx === i ? Object.assign({}, t, { rumusan: text }) : t));
+        setTps(tps);
+      } else if (baseField === 'kktp_kriteria') {
+        const kktps = (state.spine.kktps || []).map((k, idx) => (idx === i ? Object.assign({}, k, { kriteria: text }) : k));
+        setKktps(kktps);
+      }
+    },
   });
 }
 
@@ -177,11 +237,7 @@ function sanitizeFilename(name) {
 // fallback if a DOCX ever fails to open cleanly in Word. A CDN ESM zip
 // lib is a client-only dependency — the zero-npm-deps constraint in the
 // plan applies to the serverless functions (api/*.js), not the browser
-// module graph, so this doesn't violate it. Sequential-individual-
-// download was the fallback option; a real zip was chosen because it's a
-// single click/download instead of 2×N popup-triggered downloads (MHT+
-// DOCX per doc), which browsers often throttle/block as a "download
-// flood" past a handful of files.
+// module graph, so this doesn't violate it.
 async function onDownloadAllZip(container, docs) {
   if (!docs.length) return toast('Belum ada dokumen untuk diunduh.', { error: true });
   await withExportGate(() => runDownloadAllZip(container, docs));
@@ -248,11 +304,6 @@ async function runDownloadAllZip(container, docs) {
 }
 
 // ---- Owner-only estimated cost readout (pemeran_gen_log aggregate) --------
-// Haiku 4.5 published pricing: $1/MTok input, $5/MTok output; prompt-cache
-// read ~0.1x input, cache write ~1.25x input (per the plan's own figures).
-// Labeled "Estimasi" throughout — gen_log's per-call token counts are exact,
-// but the USD->IDR conversion below uses a fixed approximate rate, not a
-// live FX feed.
 const HAIKU_PRICE_PER_MTOK = { input: 1.0, output: 5.0, cacheRead: 0.1, cacheWrite: 1.25 };
 const USD_TO_IDR_APPROX = 16000;
 

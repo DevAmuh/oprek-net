@@ -5,24 +5,42 @@
 
 import { call } from './api.js';
 
+// V2b — flow/UX redesign: 8 stages collapsed to 5. "data" merges the old
+// setup+cp+tp+kktp screens into one (identity form + CP panel + TP/KKTP
+// table); "ekspor" is renamed "dokumen" (now a grid of ALL doc previews,
+// not just a button list). See migrateStageId() below for the compatibility
+// shim that keeps pre-V2b plans (real ones live in Supabase) loading onto a
+// sensible stage.
 export const STAGES = [
-  { id: 'setup',  label: 'Data' },
-  { id: 'cp',     label: 'CP' },
-  { id: 'tp',     label: 'TP' },
-  { id: 'kktp',   label: 'KKTP' },
-  { id: 'atp',    label: 'ATP/Prota' },
-  { id: 'prosem', label: 'Prosem' },
-  { id: 'rpp',    label: 'RPP' },
-  { id: 'ekspor', label: 'Ekspor' },
+  { id: 'data',    label: 'Data & Tujuan' },
+  { id: 'atp',     label: 'ATP/Prota' },
+  { id: 'prosem',  label: 'Prosem' },
+  { id: 'rpp',     label: 'RPP' },
+  { id: 'dokumen', label: 'Dokumen' },
 ];
 const STAGE_IDS = STAGES.map((s) => s.id);
 
+// Old (pre-V2b) stage id -> new stage id. Anything not listed here that also
+// isn't a current STAGE_IDS member falls back to 'data' (the safest place to
+// land — it re-renders whatever identity/CP/TP/KKTP data is already in the
+// spine and lets the teacher confirm/continue from there).
+const STAGE_MIGRATION = {
+  setup: 'data', cp: 'data', tp: 'data', kktp: 'data',
+  ekspor: 'dokumen',
+};
+
+/** Map any persisted stage id (old or new) to a valid current STAGE id. */
+export function migrateStageId(id) {
+  if (STAGE_IDS.includes(id)) return id;
+  return STAGE_MIGRATION[id] || 'data';
+}
+
 export function stageIndex(id) {
-  const i = STAGE_IDS.indexOf(id);
+  const i = STAGE_IDS.indexOf(migrateStageId(id));
   return i < 0 ? 0 : i;
 }
 export function stageLabel(id) {
-  const s = STAGES.find((x) => x.id === id);
+  const s = STAGES.find((x) => x.id === migrateStageId(id));
   return s ? s.label : id;
 }
 
@@ -45,7 +63,13 @@ export function defaultSpine() {
     kktps: [],
     units: [],
     sumatif: [],
-    prosem: { mingguEfektif: { ganjil: 18, genap: 17 }, rows: [] },
+    // V2b #4 — `overrides` keyed by row id (unit.id, or a sumatif's `jenis`
+    // string): { [rowId]: { manual:true, cells:[{bulan,minggu,jp}, ...] } }.
+    // Set by stages/prosem.js's click-to-move-JP handler; consumed by
+    // pipeline.distributeProsemWithOverrides() so recompute() never stomps a
+    // row the teacher has manually rearranged. "Susun ulang otomatis" clears
+    // this back to {}.
+    prosem: { mingguEfektif: { ganjil: 18, genap: 17 }, rows: [], overrides: {} },
     rpps: [],
     config: {
       jpPerMinggu: null, jpPerPertemuan: null, totalJpTahun: null, kktpThreshold: 78,
@@ -61,7 +85,7 @@ export const state = {
   teacher: null,
   plan: null,          // full row once loaded/created
   spine: defaultSpine(),
-  stage: 'setup',
+  stage: 'data',
   loading: true,
   saveStatus: 'idle',  // 'idle' | 'saving' | 'saved' | 'error'
   saveError: null,
@@ -95,7 +119,7 @@ export async function init() {
     state.planId = null;
     state.plan = null;
     state.spine = defaultSpine();
-    state.stage = 'setup';
+    state.stage = 'data';
     if (state.teacher) state.spine.header.guru = state.teacher.name || '';
     try {
       const s = await call('get_settings', {});
@@ -129,9 +153,13 @@ function applyPlanRow(plan) {
     config: Object.assign({}, defaults.config, saved.config || {}),
     prosem: Object.assign({}, defaults.prosem, saved.prosem || {}, {
       mingguEfektif: Object.assign({}, defaults.prosem.mingguEfektif, (saved.prosem || {}).mingguEfektif || {}),
+      overrides: Object.assign({}, defaults.prosem.overrides, (saved.prosem || {}).overrides || {}),
     }),
   });
-  state.stage = plan.stage || 'setup';
+  // V2b — migrate any pre-V2b stage id (setup/cp/tp/kktp/ekspor) onto the
+  // new 5-stage registry so old plans (real ones live in Supabase) always
+  // land on a valid, reachable stage.
+  state.stage = migrateStageId(plan.stage);
 }
 
 function setSaveStatus(status, err) {

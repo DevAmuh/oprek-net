@@ -491,6 +491,133 @@ function sumatifLabel(jenis) {
   return map[jenis] || jenis || 'Sumatif';
 }
 
+// =============================================================
+// V2b #4 — Prosem manual overrides (click-a-cell-to-move-JP)
+// =============================================================
+
+/**
+ * Apply teacher-made manual cell placements on top of distributeProsem()'s
+ * auto-computed rows. A row is only overridden when its stored override's
+ * cells still sum to that row's totalJp (a unit whose JP changed elsewhere
+ * — e.g. an ATP edit — silently falls back to auto-distribution for that
+ * row rather than showing a JP total that no longer adds up; the teacher
+ * re-does the manual placement if they still want it, same "surface, don't
+ * silently misreport" spirit as the rest of the validator).
+ * @param {Array} units
+ * @param {Array} sumatif
+ * @param {object} config
+ * @param {number|string} kelas
+ * @param {object} [overrides]  spine.prosem.overrides — { [rowId]: { manual, cells } }
+ */
+export function distributeProsemWithOverrides(units, sumatif, config, kelas, overrides) {
+  const computed = distributeProsem(units, sumatif, config, kelas);
+  if (!overrides || typeof overrides !== 'object') return computed;
+
+  for (const sem of [1, 2]) {
+    const data = sem === 1 ? computed.semester1 : computed.semester2;
+    data.rows = data.rows.map((row) => {
+      const ov = overrides[row.id];
+      if (!ov || !ov.manual || !Array.isArray(ov.cells)) return row;
+      const sum = ov.cells.reduce((s, c) => s + (Number(c.jp) || 0), 0);
+      if (sum !== row.totalJp) return row; // stale override — fall back to auto silently
+      return Object.assign({}, row, { cells: ov.cells.map((c) => ({ ...c })), manual: true });
+    });
+  }
+  return computed;
+}
+
+/**
+ * Move one week-slot's JP allocation within the SAME row (unit or sumatif
+ * band) from `from` {bulan,minggu} to `to` {bulan,minggu} — the row's total
+ * JP is always preserved (the moved cell keeps its jp value; nothing else
+ * about the row changes). Returns the row's new `cells` array (for the
+ * caller to persist into spine.prosem.overrides[rowId]), or null if the
+ * move is invalid (no such source cell, or destination already occupied).
+ * @param {object} semesterData  distributeProsem(...).semester1|2 (post-
+ *        override, i.e. what's currently on screen — so a second move
+ *        composes on top of the first)
+ * @param {string} rowId
+ * @param {{bulan:string, minggu:number}} from
+ * @param {{bulan:string, minggu:number}} to
+ * @returns {Array|null}
+ */
+export function moveProsemCell(semesterData, rowId, from, to) {
+  const row = (semesterData.rows || []).find((r) => r.id === rowId);
+  if (!row) return null;
+  const cells = row.cells.map((c) => ({ ...c }));
+  const fromIdx = cells.findIndex((c) => c.bulan === from.bulan && c.minggu === from.minggu);
+  if (fromIdx < 0) return null;
+  const destOccupied = cells.some((c) => c.bulan === to.bulan && c.minggu === to.minggu);
+  if (destOccupied) return null;
+  cells[fromIdx] = { bulan: to.bulan, minggu: to.minggu, jp: cells[fromIdx].jp };
+  return cells;
+}
+
+// =============================================================
+// V2b #7 — cascade a TP-code rename (KKTP prefix, units.tpKodes, rpps refs)
+// =============================================================
+
+/**
+ * TP codes are shown as an editable field in the merged Data stage (V2b) —
+ * renaming one must cascade everywhere the OLD code is referenced, so
+ * nothing goes "orphaned" the way validate.js's checkTpNoOrphans would
+ * otherwise flag: the TP's own kode, its KKTP's kode ("KKTP-"+kode) and
+ * tpKode, every unit.tpKodes entry, and every RPP entry's cached
+ * unit.tpList/kktpList (RPP entries snapshot TP/KKTP text at creation time
+ * rather than re-reading spine.tps live, so they need the same rewrite).
+ * Pure function — never mutates `spine`, returns a NEW spine object
+ * (shallow-immutable per touched array/object) so callers can feed it
+ * straight into state.js's replaceSpine() the same way validate.js's
+ * fix.apply() results do.
+ * @param {object} spine
+ * @param {string} oldKode
+ * @param {string} newKode
+ * @returns {object} a new spine
+ */
+export function renameTpKode(spine, oldKode, newKode) {
+  const s = spine || {};
+  const oldK = String(oldKode || '').trim();
+  const newK = String(newKode || '').trim();
+  if (!oldK || !newK || oldK === newK) return s;
+
+  const tps = (s.tps || []).map((t) => (t.kode === oldK ? Object.assign({}, t, { kode: newK }) : t));
+
+  const oldKktpKode = `KKTP-${oldK}`;
+  const newKktpKode = `KKTP-${newK}`;
+  const kktps = (s.kktps || []).map((k) => {
+    if (k.tpKode !== oldK) return k;
+    return Object.assign({}, k, {
+      tpKode: newK,
+      kode: k.kode === oldKktpKode ? newKktpKode : k.kode,
+    });
+  });
+
+  const units = (s.units || []).map((u) => (
+    Array.isArray(u.tpKodes) && u.tpKodes.includes(oldK)
+      ? Object.assign({}, u, { tpKodes: u.tpKodes.map((k) => (k === oldK ? newK : k)) })
+      : u
+  ));
+
+  const rpps = (s.rpps || []).map((entry) => {
+    const unit = entry.unit || {};
+    let changed = false;
+    const tpList = Array.isArray(unit.tpList) ? unit.tpList.map((t) => {
+      if (t.kode !== oldK) return t;
+      changed = true;
+      return Object.assign({}, t, { kode: newK });
+    }) : unit.tpList;
+    const kktpList = Array.isArray(unit.kktpList) ? unit.kktpList.map((k) => {
+      if (k.kode !== oldKktpKode) return k;
+      changed = true;
+      return Object.assign({}, k, { kode: newKktpKode });
+    }) : unit.kktpList;
+    if (!changed) return entry;
+    return Object.assign({}, entry, { unit: Object.assign({}, unit, { tpList, kktpList }) });
+  });
+
+  return Object.assign({}, s, { tps, kktps, units, rpps });
+}
+
 /** Flatten distributeProsem()'s {semester1,semester2} shape into the flat
  *  row-per-week-cell list spine.prosem.rows actually stores. Shared by
  *  oneshot.js (initial build) and validate.js's "Susun ulang Prosem" fix

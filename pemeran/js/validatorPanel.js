@@ -1,7 +1,7 @@
 // =============================================================
 // Pemeran — shared validator panel + export-confirm-sheet UI (V2a #6, #7)
 // -------------------------------------------------------------
-// Two small, self-contained DOM widgets shared by stages/ekspor.js and
+// Two small, self-contained DOM widgets shared by stages/dokumen.js and
 // stages/rpp.js (both need "here are the findings, fix or jump to them"
 // and "export is blocked by errors — confirm anyway?" UI, and duplicating
 // either one across both files would drift):
@@ -43,7 +43,7 @@ const LEVEL_FG = { ok: 'var(--good)', warn: 'var(--warn)', error: 'var(--bad)' }
  *        applied (so the caller can re-render its own doc list/preview —
  *        the panel itself always re-renders in place regardless).
  * @param {string} [opts.focusArea]  when set, that area's findings are
- *        scrolled into view and briefly highlighted (used by ekspor.js's
+ *        scrolled into view and briefly highlighted (used by dokumen.js's
  *        "jump here from a stage's validator chip" flow).
  * @returns {{ results: Array, level: string }}
  */
@@ -131,7 +131,7 @@ export function confirmExportWithFindings(results) {
       <div style="position:fixed; inset:0; z-index:2100; background:rgba(43,36,32,0.55); display:flex; align-items:center; justify-content:center; padding:24px;">
         <div class="card card-pad-lg" style="max-width:540px; width:100%;">
           <h3 style="margin:0 0 8px;">${errors.length} hal perlu diperiksa sebelum ekspor</h3>
-          <p class="muted small" style="margin:0 0 8px;">Validator menemukan kesalahan berikut. Anda tetap bisa mengekspor sekarang — perbaiki nanti di tahap Ekspor.</p>
+          <p class="muted small" style="margin:0 0 8px;">Validator menemukan kesalahan berikut. Anda tetap bisa mengekspor sekarang — perbaiki nanti di tahap Dokumen.</p>
           <div class="stack" style="margin-bottom:var(--space-3); max-height:40vh; overflow:auto; gap:0;">
             ${errors.map((r) => `<div style="padding:6px 0; border-bottom:1px solid var(--line);">✗ ${escapeHtml(r.pesan)}</div>`).join('')}
           </div>
@@ -147,7 +147,7 @@ export function confirmExportWithFindings(results) {
     overlay.querySelector('#btn-fix-first').addEventListener('click', () => {
       overlay.remove();
       const first = errors[0];
-      location.hash = '#/' + (first && first.stageId ? first.stageId : 'ekspor');
+      location.hash = '#/' + (first && first.stageId ? first.stageId : 'dokumen');
       resolve(false);
     });
   });

@@ -53,6 +53,12 @@ function buildSemesterSection(semLabel, semData, tps, cpElemen) {
     }
 
     const unit = item.ref;
+    // V2b #6 — `unit.urutan` (1-based, dense, assigned by pipeline.buildUnits)
+    // doubles as a stable GLOBAL numeric suffix for data-field: a per-
+    // semester loop index would collide (semester 1's unit #1 and semester
+    // 2's unit #1 would both emit "__0"), since this function is called
+    // once per semester with its own local item list.
+    const fieldIdx = (Number(unit.urutan) || 1) - 1;
     const unitTps = unit.tpKodes.map((k) => tps.find((t) => t.kode === k)).filter(Boolean);
     const elemenNames = [...new Set(unitTps.map((t) => t.elemen))];
     const cpText = elemenNames.map((n) => (cpElemen.find((e) => e.nama === n) || {}).teks).filter(Boolean).join(' / ');
@@ -66,8 +72,8 @@ function buildSemesterSection(semLabel, semData, tps, cpElemen) {
         + `<td>${escapeHtml(tp.kode)}</td>`
         + `<td>${escapeHtml(tp.rumusan)}</td>`
         + `<td class="center">${escapeHtml(bloomShort(tp.bloom))}</td>`
-        + `<td class="center">${escapeHtml(unit.nama)}</td>`
-        + (i === 0 ? `<td class="center" rowspan="${unitTps.length}">${unit.jp}</td>` : '')
+        + (i === 0 ? `<td class="center" data-marker="3" data-field="unit_nama__${fieldIdx}" rowspan="${unitTps.length}">${escapeHtml(unit.nama)}</td>` : '')
+        + (i === 0 ? `<td class="center" data-marker="3" data-field="unit_jp__${fieldIdx}" rowspan="${unitTps.length}">${unit.jp}</td>` : '')
         + '</tr>';
     });
     html += `<tr class="total-band"><td colspan="5">Total Unit "${escapeHtml(unit.nama)}": ${unit.jp} JP</td></tr>`;

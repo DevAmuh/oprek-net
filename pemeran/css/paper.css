@@ -266,6 +266,97 @@ input:disabled, select:disabled, input[readonly]{
 .validator-chip{ border: none; cursor: pointer; font: inherit; }
 .validator-chip:hover{ filter: brightness(0.96); }
 
+/* --- V2b: split-pane layout (Data/ATP stages) -------------------------
+   Desktop: two columns, right pane sticky (Prota/CP live preview stays in
+   view while the left pane's form/board scrolls). Below ~1000px: collapses
+   to a single stacked column — no horizontal scroll, full-width panes. */
+.split-pane{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+  align-items: start;
+}
+.split-pane-right{
+  position: sticky;
+  top: calc(var(--space-3) + 64px); /* clears the sticky app-header */
+}
+@media (max-width: 1000px){
+  .split-pane{ grid-template-columns: 1fr; }
+  .split-pane-right{ position: static; top: auto; }
+}
+
+/* --- V2b: collapsible section card (<details>-based) ------------------- */
+.collapse-card{
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: 0;
+  overflow: hidden;
+}
+.collapse-card > summary{
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-4);
+  font-family: var(--font-head);
+  font-weight: 600;
+  font-size: 1.15rem;
+  color: var(--ink);
+}
+.collapse-card > summary::-webkit-details-marker{ display: none; }
+.collapse-card > summary::after{
+  content: '▾';
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+.collapse-card:not([open]) > summary::after{ transform: rotate(-90deg); }
+.collapse-card .collapse-body{
+  padding: 0 var(--space-4) var(--space-4);
+}
+/* Nested collapse-card rows inside a table cell (Data stage's per-TP KKTP
+   detail row) are visually flatter — no card chrome of their own, just an
+   inset summary/body, since the enclosing <tr>/<td> already reads as one
+   unit with the TP row above it. */
+td .collapse-card{
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+td .collapse-card > summary{
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 6px 10px;
+}
+
+/* --- V2b: scrollable table/doc-preview wrappers with sticky headers ---- */
+.table-scroll{
+  overflow-x: auto;
+  max-height: 70vh;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.table-scroll table{ margin: 0; }
+.table-scroll thead th{
+  position: sticky;
+  top: 0;
+  background: var(--card);
+  z-index: 2;
+}
+.doc-preview-frame{
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  max-height: 80vh;
+}
+
 /* --- RPP meeting tab strip (V2a #4) --- */
 .tab-strip{ display: flex; gap: 4px; flex-wrap: wrap; border-bottom: 2px solid var(--line); margin-bottom: var(--space-3); }
 .tab-btn{

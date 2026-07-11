@@ -2,18 +2,16 @@
 // Pemeran — wizard shell: hash-based screen router + progress rail
 // =============================================================
 
-import { state, STAGES, stageIndex, onChange, init as initState } from './state.js';
+import { state, STAGES, stageIndex, migrateStageId, onChange, init as initState } from './state.js';
 
-// M3: every stage now has a real module — one lookup table drives route().
+// V2b — 5-stage registry (was 8): "data" merges setup+cp+tp+kktp into one
+// split-pane screen; "dokumen" replaces "ekspor" (now a grid of previews).
 const STAGE_MODULES = {
-  setup:  './stages/setup.js',
-  cp:     './stages/cp.js',
-  tp:     './stages/tp.js',
-  kktp:   './stages/kktp.js',
-  atp:    './stages/atp.js',
-  prosem: './stages/prosem.js',
-  rpp:    './stages/rpp.js',
-  ekspor: './stages/ekspor.js',
+  data:    './stages/data.js',
+  atp:     './stages/atp.js',
+  prosem:  './stages/prosem.js',
+  rpp:     './stages/rpp.js',
+  dokumen: './stages/dokumen.js',
 };
 
 let els = null;
@@ -84,7 +82,13 @@ function renderHeader() {
 }
 
 async function route() {
-  const hash = location.hash.replace(/^#\/?/, '') || state.stage;
+  // Bookmarked/back-button hashes may still carry a pre-V2b stage id
+  // (#/setup, #/ekspor, ...) — migrate it the same way a persisted plan's
+  // stage column is migrated, so an old link never dead-ends on "Tahap
+  // tidak dikenal".
+  const rawHash = location.hash.replace(/^#\/?/, '') || state.stage;
+  const hash = migrateStageId(rawHash);
+  if (hash !== rawHash) { location.hash = '#/' + hash; return; } // triggers hashchange -> re-enter route() with the migrated hash
   const modPath = STAGE_MODULES[hash];
   if (modPath) {
     try {

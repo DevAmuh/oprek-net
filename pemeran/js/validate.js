@@ -3,7 +3,7 @@
 // -------------------------------------------------------------
 // Pure functions over the spine; no DOM, no fetch. Each check returns
 // an array of { level: 'ok'|'warn'|'error', pesan, area }. Used by the
-// Ekspor screen's validator panel and by compact per-stage badges.
+// Dokumen screen's validator panel and by compact per-stage badges.
 //
 // The SOP (Panduan Teknis..., Bagian 12.A) lists 7 robot-checkable
 // items; check #5 there ("Keterangan PROSEM harus ada di Kaldik") is
@@ -14,17 +14,17 @@
 // =============================================================
 
 import {
-  aggregateProta, buildUnits, distributeProsem, splitMeetings,
+  aggregateProta, buildUnits, distributeProsemWithOverrides, splitMeetings,
   flattenProsemRows, computePertemuanCount,
 } from './pipeline.js';
 
 // area -> the stage screen where that area's data is edited (drives the
 // validator panel's "↗ Buka tahap" jump button and the per-stage chips'
-// click-to-open-filtered-panel behavior — V2a #7). 'data'/'header' both
-// land on 'setup' or 'tp' depending on which fields the check actually
-// touches; see each check's own stageId override below for finer cases.
+// click-to-open-filtered-panel behavior — V2a #7). V2b collapsed
+// setup/cp/tp/kktp into the single 'data' stage, so every one of those
+// areas now jumps there.
 const AREA_STAGE = {
-  header: 'setup', data: 'tp', cp: 'cp', tp: 'tp', kktp: 'kktp',
+  header: 'data', data: 'data', cp: 'data', tp: 'data', kktp: 'data',
   atp: 'atp', prosem: 'prosem', rpp: 'rpp',
 };
 
@@ -54,11 +54,13 @@ function fixNormalizeJp(spine) {
   return s;
 }
 
-/** "Susun ulang Prosem" — re-run distributeProsem from the current
- *  units/sumatif/config, replacing spine.prosem.rows wholesale. */
+/** "Susun ulang Prosem" — re-run distribution from the current
+ *  units/sumatif/config, replacing spine.prosem.rows. Valid manual
+ *  overrides (V2b #4 — click-to-move-JP) are preserved; only rows with NO
+ *  override, or a now-stale one, actually change. */
 function fixRebuildProsem(spine) {
   const s = deepClone(spine);
-  const computed = distributeProsem(s.units, s.sumatif, s.config, s.header && s.header.kelas);
+  const computed = distributeProsemWithOverrides(s.units, s.sumatif, s.config, s.header && s.header.kelas, s.prosem && s.prosem.overrides);
   s.prosem = Object.assign({}, s.prosem, { rows: flattenProsemRows(computed) });
   return s;
 }
@@ -315,28 +317,28 @@ export function badgeHtml(spine, area) {
 const VALIDATOR_FOCUS_KEY = 'pemeran_validator_focus_area';
 
 /**
- * Wire every badgeHtml() chip inside `container` to jump to the Ekspor
+ * Wire every badgeHtml() chip inside `container` to jump to the Dokumen
  * screen's validator panel, pre-filtered/scrolled to that chip's area.
  * Stage screens call this once after inserting a badgeHtml() chip into the
  * DOM. Uses sessionStorage (read back via takeValidatorFocusArea()) rather
  * than a hash query string because wizard.js's router does an exact
- * STAGE_MODULES[hash] lookup — "#/ekspor?area=atp" wouldn't resolve.
+ * STAGE_MODULES[hash] lookup — "#/dokumen?area=atp" wouldn't resolve.
  */
 export function wireValidatorChips(container) {
   if (!container || !container.querySelectorAll) return;
   container.querySelectorAll('.validator-chip[data-validator-area]').forEach((chip) => {
     chip.addEventListener('click', () => {
       try { sessionStorage.setItem(VALIDATOR_FOCUS_KEY, chip.getAttribute('data-validator-area')); } catch (e) { /* ignore */ }
-      location.hash = '#/ekspor';
+      location.hash = '#/dokumen';
     });
   });
 }
 
-/** One-shot read: the Ekspor screen calls this on mount to see if it should
+/** One-shot read: the Dokumen screen calls this on mount to see if it should
  *  scroll to / highlight one area's findings (set by wireValidatorChips()
  *  above, or by the validator panel's own "↗ Buka tahap" jump for an area
- *  whose stageId happens to be 'ekspor' itself). Clears itself after reading
- *  so it doesn't stick around across unrelated later visits. */
+ *  whose stageId happens to be 'dokumen' itself). Clears itself after
+ *  reading so it doesn't stick around across unrelated later visits. */
 export function takeValidatorFocusArea() {
   try {
     const v = sessionStorage.getItem(VALIDATOR_FOCUS_KEY);

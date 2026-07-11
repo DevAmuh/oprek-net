@@ -20,7 +20,7 @@
 // reload — not just captured live by exports as before.
 // =============================================================
 
-import { state, setRpps, flushSave } from '../state.js';
+import { state, setRpps, setStage, flushSave } from '../state.js';
 import { toast } from '../api.js';
 import { callAi } from '../aiApi.js';
 import { renderRppHtml, renderRppCombinedHtml } from '../render/rpp.js';
@@ -29,9 +29,10 @@ import { printRppHtml } from '../export/pdf.js';
 import { exportRppHtml } from '../export/html.js';
 import { downloadDocx } from '../export/docx.js';
 import { splitMeetings, computePertemuanCount, draftRppSkeleton } from '../pipeline.js';
-import { badgeHtml } from '../validate.js';
+import { badgeHtml, wireValidatorChips } from '../validate.js';
 import { withExportGate } from '../validatorPanel.js';
 import { generateRppContentForUnit, findResumeState, GENERATION_CANCELLED } from '../rppGen.js';
+import { wireEditable } from '../render/docHtml/editable.js';
 
 const FIELD_LABELS = {
   peserta_didik: 'Peserta Didik',
@@ -62,78 +63,6 @@ function escapeHtml(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => (
     { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
   ));
-}
-
-// ---- rich-text mini-syntax DOM -> text serializer (V2a #5) -----------------
-// Best-effort reverse of render/docHtml/richTextHtml.js's forward parser:
-// walks the (possibly hand-edited) cell DOM and reconstructs the ✓/•/-/o/N.
-// line-prefix + **bold**/*italic* mini-syntax it started from. Handles both
-// the unmodified richTextToHtml() output (one <p class="rt-line..."> per
-// line) and typical contenteditable edits (browsers split lines into new
-// <p>/<div> on Enter, or use <br> for soft breaks) — not a full round-trip
-// guarantee for arbitrarily mangled DOM, but covers what a teacher actually
-// does when editing text in place.
-const NBSP_RE = / /g;
-
-function inlineNodeToMiniSyntax(node) {
-  let out = '';
-  node.childNodes.forEach((child) => {
-    if (child.nodeType === Node.TEXT_NODE) {
-      out += child.nodeValue;
-    } else if (child.nodeType === Node.ELEMENT_NODE) {
-      const tag = child.tagName;
-      if (tag === 'STRONG' || tag === 'B') {
-        out += '**' + inlineNodeToMiniSyntax(child).trim() + '**';
-      } else if (tag === 'EM' || tag === 'I') {
-        out += '*' + inlineNodeToMiniSyntax(child).trim() + '*';
-      } else if (tag === 'BR') {
-        out += '\n';
-      } else {
-        out += inlineNodeToMiniSyntax(child);
-      }
-    }
-  });
-  return out;
-}
-
-function stripLinePrefix(rawLine) {
-  const t = rawLine.replace(NBSP_RE, ' ');
-  let m;
-  if ((m = t.match(/^\s*✓\s+([\s\S]*)$/))) return '✓ ' + m[1].trim();
-  if ((m = t.match(/^\s*[•\-]\s+([\s\S]*)$/))) return '• ' + m[1].trim();
-  if ((m = t.match(/^\s*[○o]\s+([\s\S]*)$/))) return 'o ' + m[1].trim();
-  if ((m = t.match(/^\s*(\d+)\.\s+([\s\S]*)$/))) return m[1] + '. ' + m[2].trim();
-  return t.trim();
-}
-
-/** Serialize one editable RPP cell's current DOM back into the mini-syntax
- *  string entry.content[field] (or entry.content.pertemuan[i][field])
- *  stores. */
-function serializeCellToMiniSyntax(cellEl) {
-  const clone = cellEl.cloneNode(true);
-  clone.querySelectorAll('.pemeran-regen-btn').forEach((b) => b.remove());
-
-  const blockChildren = Array.from(clone.children).filter((c) => ['P', 'DIV', 'LI'].includes(c.tagName));
-  if (blockChildren.length) {
-    return blockChildren
-      .map((el) => stripLinePrefix(inlineNodeToMiniSyntax(el)))
-      .filter((l) => l.length)
-      .join('\n');
-  }
-  // No block children — plain text / <br>-separated lines typed directly
-  // into a cell that started out empty (e.g. a fresh Kerangka Instan
-  // placeholder before the teacher's first edit).
-  return inlineNodeToMiniSyntax(clone)
-    .split('\n')
-    .map((l) => stripLinePrefix(l))
-    .filter((l) => l.length)
-    .join('\n');
-}
-
-function itemShortLabel(dataItem) {
-  const s = String(dataItem || '');
-  const idx = s.indexOf(' / ');
-  return (idx >= 0 ? s.slice(0, idx) : s).trim();
 }
 
 // ---- topic-stub parsing -----------------------------------------------------
@@ -305,6 +234,10 @@ export async function render(container) {
       </div>
       `}
       <div id="rpp-preview-wrap"></div>
+      <div class="row-between">
+        <span></span>
+        <button class="btn btn-primary btn-lg" id="btn-next">Lanjut ke Dokumen →</button>
+      </div>
     </div>
   `;
 
@@ -315,8 +248,23 @@ export async function render(container) {
     container.querySelector('#btn-dummy-unit').addEventListener('click', () => onCreateFromUnit(container, false));
   }
   wireManualForm(container);
+  container.querySelector('#btn-next').addEventListener('click', () => onNext(container));
 
   if (activeId) await showPreview(container, currentEntry());
+}
+
+// V2b — the RPP stage previously had no forward-navigation button at all
+// (state.stage stayed 'rpp' forever unless a whole one-shot AI/Kerangka
+// Instan chain ran), so the Dokumen stage was unreachable from the rail on
+// a purely manual walkthrough. Advancing here doesn't require an RPP to
+// exist yet — a teacher may legitimately want to preview/export Prota/
+// Prosem/TP&KKTP docs before any RPP is drafted.
+async function onNext(container) {
+  const btn = container.querySelector('#btn-next');
+  btn.disabled = true; btn.textContent = 'Menyimpan…';
+  const ok = await setStage('dokumen');
+  btn.disabled = false; btn.textContent = 'Lanjut ke Dokumen →';
+  if (ok) location.hash = '#/dokumen';
 }
 
 function manualFormHtml() {
@@ -415,6 +363,8 @@ function renderList(container) {
     });
     grid.appendChild(btn);
   });
+
+  wireValidatorChips(container);
 }
 
 async function onCreate(container, useAi) {
@@ -676,76 +626,16 @@ async function onCombinePdf(container, entry) {
 }
 
 function wireEditableCells(iframe, entry, container) {
-  const doc = iframe.contentDocument;
-  if (!doc) return;
-
-  const style = doc.createElement('style');
-  style.textContent = `
-    .pemeran-editable{ outline-offset:1px; cursor:text; }
-    .pemeran-editable:hover{ outline:1.5px dashed #146b64; }
-    .pemeran-editable:focus{ outline:1.5px solid #146b64; background:#f5fbfa; }
-    .pemeran-regen-btn{
-      position:absolute; top:1px; right:1px; z-index:5;
-      border:none; background:#fff; border-radius:999px; width:18px; height:18px;
-      font-size:10px; line-height:18px; padding:0; cursor:pointer; text-align:center;
-      box-shadow:0 1px 3px rgba(0,0,0,0.3); opacity:0.55;
-    }
-    .pemeran-regen-btn:hover{ opacity:1; }
-    ul.checkbox-list li{ cursor:pointer; }
-    @media print{ .pemeran-regen-btn{ display:none !important; } }
-  `;
-  doc.head.appendChild(style);
-
-  // Checkbox toggles — click a dimensi/santri-kitab item to check/uncheck
-  // it, persisting the selected labels straight back into
-  // entry.content[baseField] (V2a #5 — must survive reload).
-  Array.from(doc.querySelectorAll('ul.checkbox-list[data-field]')).forEach((ul) => {
-    const baseField = ul.getAttribute('data-field'); // unit-level only, never suffixed
-    Array.from(ul.querySelectorAll('li[data-item]')).forEach((li) => {
-      li.addEventListener('click', () => {
-        const chk = li.querySelector('.chk');
-        if (!chk) return;
-        chk.textContent = chk.textContent.trim() === '☑' ? '☐' : '☑';
-        const selected = Array.from(ul.querySelectorAll('li[data-item]'))
-          .filter((x) => { const c = x.querySelector('.chk'); return c && c.textContent.trim() === '☑'; })
-          .map((x) => itemShortLabel(x.getAttribute('data-item')));
-        entry.content[baseField] = selected;
-        persistOneEntry(entry);
-        flushSave().catch(() => {});
-      });
-    });
-  });
-
-  // Editable content cells + per-field regenerate button + debounced
-  // save-back-to-spine (V2a #5).
-  const cells = Array.from(doc.querySelectorAll('[data-marker="3"][data-field]'));
-  for (const cell of cells) {
-    if (cell.classList.contains('checkbox-list')) continue;
-    const rawField = cell.getAttribute('data-field');
-    if (!rawField || rawField === 'tujuan_pembelajaran') continue;
-    const m = rawField.match(/^(.+)__(\d+)$/);
-    const baseField = m ? m[1] : rawField;
-    const meetingIndex = m ? Number(m[2]) : null;
-
-    cell.setAttribute('contenteditable', 'true');
-    cell.classList.add('pemeran-editable');
-    cell.style.position = 'relative';
-
-    const btn = doc.createElement('button');
-    btn.type = 'button';
-    btn.className = 'pemeran-regen-btn';
-    btn.textContent = '\u{1F504}';
-    btn.title = 'Regenerasi bagian "' + (FIELD_LABELS[baseField] || baseField) + '" dengan AI';
-    btn.addEventListener('click', (evt) => {
-      evt.preventDefault();
-      evt.stopPropagation();
-      regenerateField(container, entry, baseField, meetingIndex);
-    });
-    cell.appendChild(btn);
-
-    let debounceTimer = null;
-    const commit = () => {
-      const text = serializeCellToMiniSyntax(cell);
+  wireEditable(iframe, {
+    fieldLabel: (baseField) => FIELD_LABELS[baseField] || baseField,
+    skipFields: new Set(['tujuan_pembelajaran']),
+    writeCheckbox: (baseField, selected) => {
+      // unit-level only, never suffixed (V2a #5 — must survive reload)
+      entry.content[baseField] = selected;
+      persistOneEntry(entry);
+      flushSave().catch(() => {});
+    },
+    writeField: (baseField, meetingIndex, text) => {
       if (meetingIndex != null) {
         entry.content.pertemuan = entry.content.pertemuan || [];
         entry.content.pertemuan[meetingIndex] = entry.content.pertemuan[meetingIndex] || {};
@@ -754,17 +644,15 @@ function wireEditableCells(iframe, entry, container) {
         entry.content[baseField] = text;
       }
       persistOneEntry(entry);
-    };
-    cell.addEventListener('input', () => {
-      if (debounceTimer) clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(commit, 300);
-    });
-    cell.addEventListener('blur', () => {
-      if (debounceTimer) { clearTimeout(debounceTimer); debounceTimer = null; }
-      commit();
-      flushSave().catch(() => {}); // deliberate "done editing this cell" signal — save NOW, don't wait for the 2s autosave debounce
-    });
-  }
+      // deliberate 'done editing this cell' signal on every commit (debounced
+      // input AND blur both call writeField) — save NOW rather than waiting
+      // for the 2s autosave debounce, same as V2a's original behavior.
+      flushSave().catch(() => {});
+    },
+    onRegen: (baseField, meetingIndex) => {
+      regenerateField(container, entry, baseField, meetingIndex);
+    },
+  });
 }
 
 async function regenerateField(container, entry, baseField, meetingIndex) {

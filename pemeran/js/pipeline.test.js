@@ -11,6 +11,7 @@ import {
   distributeProsem, splitMeetings, ensurePesertaDidikDapat, clampBloom,
   normalizeConfig, computePertemuanCount, formatDurationLabel, flattenProsemRows,
   draftTpFromCp, draftKktp, draftUnits, draftRppSkeleton, RPP_PLACEHOLDER,
+  distributeProsemWithOverrides, moveProsemCell, renameTpKode,
 } from './pipeline.js';
 
 let passed = 0;
@@ -417,6 +418,87 @@ test('flattenProsemRows: every distributeProsem() cell becomes one flat row, JP 
   const sumJp = rows.reduce((s, r) => s + r.jp, 0);
   assert.equal(sumJp, 4);
   assert.ok(rows.every((r) => r.materi === 'Unit 1'));
+});
+
+// -------------------------------------------------------------
+// V2b #4 — Prosem manual-override (click-cell-to-move-JP) helpers.
+// -------------------------------------------------------------
+test('moveProsemCell: moves one week-slot within a row, preserving the row\'s total JP', () => {
+  const units = [{ id: 'u1', nama: 'Unit 1', jp: 4, semester: 1, urutan: 1, tpKodes: [], bobot: 1 }];
+  const config = { jpPerMinggu: 2, mingguEfektif: { ganjil: 18, genap: 17 } };
+  const computed = distributeProsem(units, [], config, 7);
+  const row = computed.semester1.rows[0];
+  const before = row.cells.reduce((s, c) => s + c.jp, 0);
+  const from = { bulan: row.cells[0].bulan, minggu: row.cells[0].minggu };
+  const to = { bulan: 'Desember', minggu: 4 }; // an empty slot far from the auto-assigned ones
+  const newCells = moveProsemCell(computed.semester1, row.id, from, to);
+  assert.ok(newCells, 'expected a valid move');
+  const after = newCells.reduce((s, c) => s + c.jp, 0);
+  assert.equal(after, before);
+  assert.ok(newCells.some((c) => c.bulan === 'Desember' && c.minggu === 4));
+  assert.ok(!newCells.some((c) => c.bulan === from.bulan && c.minggu === from.minggu));
+});
+
+test('moveProsemCell: rejects a move onto an already-occupied destination cell', () => {
+  const units = [{ id: 'u1', nama: 'Unit 1', jp: 4, semester: 1, urutan: 1, tpKodes: [], bobot: 1 }];
+  const config = { jpPerMinggu: 2, mingguEfektif: { ganjil: 18, genap: 17 } };
+  const computed = distributeProsem(units, [], config, 7);
+  const row = computed.semester1.rows[0];
+  assert.ok(row.cells.length >= 2, 'need at least 2 cells for this test');
+  const from = { bulan: row.cells[0].bulan, minggu: row.cells[0].minggu };
+  const to = { bulan: row.cells[1].bulan, minggu: row.cells[1].minggu }; // already occupied
+  assert.equal(moveProsemCell(computed.semester1, row.id, from, to), null);
+});
+
+test('distributeProsemWithOverrides: a valid override (cells still sum to totalJp) replaces the row\'s auto cells', () => {
+  const units = [{ id: 'u1', nama: 'Unit 1', jp: 4, semester: 1, urutan: 1, tpKodes: [], bobot: 1 }];
+  const config = { jpPerMinggu: 2, mingguEfektif: { ganjil: 18, genap: 17 } };
+  const overrides = { u1: { manual: true, cells: [{ bulan: 'Desember', minggu: 1, jp: 4 }] } };
+  const computed = distributeProsemWithOverrides(units, [], config, 7, overrides);
+  const row = computed.semester1.rows.find((r) => r.id === 'u1');
+  assert.deepEqual(row.cells, [{ bulan: 'Desember', minggu: 1, jp: 4 }]);
+  assert.equal(row.manual, true);
+});
+
+test('distributeProsemWithOverrides: a STALE override (sum no longer matches totalJp, e.g. unit JP changed) falls back to auto silently', () => {
+  const units = [{ id: 'u1', nama: 'Unit 1', jp: 6, semester: 1, urutan: 1, tpKodes: [], bobot: 1 }]; // jp changed from 4 to 6
+  const config = { jpPerMinggu: 2, mingguEfektif: { ganjil: 18, genap: 17 } };
+  const overrides = { u1: { manual: true, cells: [{ bulan: 'Desember', minggu: 1, jp: 4 }] } }; // stale: sums to 4, not 6
+  const computed = distributeProsemWithOverrides(units, [], config, 7, overrides);
+  const row = computed.semester1.rows.find((r) => r.id === 'u1');
+  assert.notEqual(row.manual, true);
+  assert.equal(row.cells.reduce((s, c) => s + c.jp, 0), 6);
+});
+
+// -------------------------------------------------------------
+// V2b #7 — renameTpKode cascades a TP-code rename through KKTP (code +
+// tpKode), units.tpKodes, and rpps' cached unit.tpList/kktpList.
+// -------------------------------------------------------------
+test('renameTpKode: renames the TP itself, its KKTP (code + tpKode), unit.tpKodes, and rpps refs', () => {
+  const spine = {
+    tps: [{ kode: 'D.7.1.2', rumusan: 'x' }, { kode: 'D.7.1.3', rumusan: 'y' }],
+    kktps: [{ kode: 'KKTP-D.7.1.2', tpKode: 'D.7.1.2' }, { kode: 'KKTP-D.7.1.3', tpKode: 'D.7.1.3' }],
+    units: [{ id: 'u1', nama: 'Unit 1', tpKodes: ['D.7.1.2', 'D.7.1.3'] }],
+    rpps: [{ id: 'r1', unit: { unitId: 'u1', tpList: [{ kode: 'D.7.1.2', rumusan: 'x' }], kktpList: [{ kode: 'KKTP-D.7.1.2', kriteria: 'z' }] } }],
+  };
+  const out = renameTpKode(spine, 'D.7.1.2', 'D.7.1.9');
+  assert.equal(out.tps[0].kode, 'D.7.1.9');
+  assert.equal(out.tps[1].kode, 'D.7.1.3'); // untouched
+  assert.equal(out.kktps[0].kode, 'KKTP-D.7.1.9');
+  assert.equal(out.kktps[0].tpKode, 'D.7.1.9');
+  assert.deepEqual(out.units[0].tpKodes, ['D.7.1.9', 'D.7.1.3']);
+  assert.equal(out.rpps[0].unit.tpList[0].kode, 'D.7.1.9');
+  assert.equal(out.rpps[0].unit.kktpList[0].kode, 'KKTP-D.7.1.9');
+  // original untouched (pure function)
+  assert.equal(spine.tps[0].kode, 'D.7.1.2');
+});
+
+test('renameTpKode: no-op when oldKode/newKode are equal, empty, or the TP doesn\'t exist', () => {
+  const spine = { tps: [{ kode: 'D.7.1.2' }], kktps: [], units: [], rpps: [] };
+  assert.equal(renameTpKode(spine, 'D.7.1.2', 'D.7.1.2'), spine);
+  assert.equal(renameTpKode(spine, '', 'D.7.1.9'), spine);
+  const out = renameTpKode(spine, 'D.9.9.9', 'D.9.9.8'); // no TP with that code
+  assert.equal(out.tps[0].kode, 'D.7.1.2');
 });
 
 // -------------------------------------------------------------

@@ -58,12 +58,21 @@ function buildMatrixHtml(semesterData, unitMetaById) {
     html += `<td>${escapeHtml(isSumatif ? '' : meta.elemen)}</td>`;
     html += `<td class="materi-cell">${escapeHtml(row.materi)}</td>`;
     html += `<td>${row.totalJp}</td>`;
-    const marked = new Array(slots.length).fill(false);
+    // V2b #4 — each week cell carries its row/week identity so
+    // stages/prosem.js can attach a click-to-move-JP handler directly to
+    // the live iframe DOM (this matrix is built programmatically outside
+    // the data-marker system, so the shared editable.js engine doesn't
+    // apply here — a bespoke handler is the documented approach).
+    const jpBySlot = new Array(slots.length).fill(0);
     for (const c of row.cells) {
       const idx = slotIndex(c.bulan, c.minggu);
-      if (idx >= 0) marked[idx] = true;
+      if (idx >= 0) jpBySlot[idx] = c.jp;
     }
-    html += marked.map((m) => `<td class="mark">${m ? 'v' : ''}</td>`).join('');
+    html += slots.map((slot, si) => {
+      const jp = jpBySlot[si];
+      const filled = jp > 0;
+      return `<td class="mark${filled ? ' is-filled' : ''}" data-row-id="${escapeHtml(String(row.id))}" data-bulan="${escapeHtml(slot.bulan)}" data-minggu="${slot.minggu}" data-jp="${filled ? jp : ''}">${filled ? 'v' : ''}</td>`;
+    }).join('');
     html += '</tr>';
   });
 

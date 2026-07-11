@@ -30,7 +30,7 @@
 // failure never loses earlier progress — "keep what succeeded" per the
 // plan. On the FIRST error anywhere in the chain, the run aborts cleanly
 // and surfaces which step failed; nothing after that step runs. On full
-// success, the app navigates to Ekspor with the validator panel showing.
+// success, the app navigates to Dokumen with the validator panel showing.
 //
 // Design choice: re-running either chain always regenerates CP-through-RPP
 // fresh (no partial-resume bookkeeping across STAGES) — simpler, and
@@ -243,13 +243,13 @@ export async function runOneshot(onProgress) {
   const FIXED_STAGES = 5; // CP, TP, KKTP, ATP, Prosem
   let i = 0;
 
+  // V2b: CP/TP/KKTP all live on the single 'data' stage now — no
+  // intermediate setStage() between them (was setStage('tp')/('kktp')).
   report('Menyiapkan CP…', ++i, null);
   await stepCp();
-  await setStage('tp');
 
   report('Membuat TP dengan AI…', ++i, null);
   const tps = await stepTp();
-  await setStage('kktp');
 
   report('Membuat KKTP dengan AI…', ++i, null);
   await stepKktp(tps);
@@ -271,7 +271,7 @@ export async function runOneshot(onProgress) {
     await flushSave(); // persist each RPP immediately — a later unit's failure must not lose this one
   }
 
-  await setStage('ekspor');
+  await setStage('dokumen');
   return { ok: true, unitCount: units.length };
 }
 
@@ -333,11 +333,9 @@ export async function runKerangkaInstan(onProgress) {
 
   report('Memuat CP…', ++i, null);
   await stepCp();
-  await setStage('tp');
 
   report('Menyusun TP dari CP…', ++i, null);
   const tps = stepTpDraft();
-  await setStage('kktp');
 
   const konstanta = await loadJson('data/konstanta.json');
 
@@ -360,7 +358,7 @@ export async function runKerangkaInstan(onProgress) {
   }
   await flushSave();
 
-  await setStage('ekspor');
+  await setStage('dokumen');
   return { ok: true, unitCount: units.length };
 }
 
@@ -407,7 +405,7 @@ async function runChainWithOverlay({ icon, runner, label, successMsg }) {
     });
     overlay.remove();
     toast(successMsg);
-    location.hash = '#/ekspor';
+    location.hash = '#/dokumen';
   } catch (e) {
     overlay.remove();
     toast(label + ' berhenti: ' + String((e && e.message) || e) + ' (langkah sebelumnya yang sudah berhasil tetap tersimpan.)', { error: true });

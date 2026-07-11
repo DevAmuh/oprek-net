@@ -19,13 +19,20 @@ function bloomLabel(bloom) {
   return bloom ? `${bloom} (${labels[bloom] || ''})` : '';
 }
 
+// V2b #6 — `data-marker="3" data-field="tp_rumusan__<i>"` on the rumusan
+// cell makes render/docHtml/editable.js's wireEditable() able to decorate
+// it exactly like an RPP cell (contenteditable + debounced commit); the
+// caller (stages/dokumen.js) writes the edited text back to
+// spine.tps[i].rumusan. Plain escaped text (not richTextToHtml) is fine as
+// the initial cell content — wireEditable doesn't require the marker
+// engine's substitute() step to have produced it, only the attribute.
 function buildTpTable(tps) {
   let html = '<table class="doc-table"><thead><tr>'
     + '<th style="width:90px;">Kode TP</th><th style="width:120px;">Elemen</th><th>Rumusan TP</th><th style="width:130px;">Kata Kerja (level Bloom)</th>'
     + '</tr></thead><tbody>';
-  for (const t of tps) {
-    html += `<tr><td class="center">${escapeHtml(t.kode)}</td><td>${escapeHtml(t.elemen)}</td><td>${escapeHtml(t.rumusan)}</td><td class="center">${escapeHtml(bloomLabel(t.bloom))}</td></tr>`;
-  }
+  tps.forEach((t, i) => {
+    html += `<tr><td class="center">${escapeHtml(t.kode)}</td><td>${escapeHtml(t.elemen)}</td><td data-marker="3" data-field="tp_rumusan__${i}">${escapeHtml(t.rumusan)}</td><td class="center">${escapeHtml(bloomLabel(t.bloom))}</td></tr>`;
+  });
   html += '</tbody></table>';
   return html;
 }
@@ -34,9 +41,9 @@ function buildKktpTable(kktps) {
   let html = '<table class="doc-table"><thead><tr>'
     + '<th style="width:110px;">Kode KKTP</th><th style="width:90px;">Kode TP Induk</th><th style="width:80px;">Metode</th><th>Kriteria/Rentang</th><th style="width:140px;">Instrumen Rujukan</th>'
     + '</tr></thead><tbody>';
-  for (const k of kktps) {
-    html += `<tr><td class="center">${escapeHtml(k.kode)}</td><td class="center">${escapeHtml(k.tpKode)}</td><td class="center">${escapeHtml(k.metode)}</td><td>${escapeHtml(k.kriteria)}</td><td>${escapeHtml(k.instrumen)}</td></tr>`;
-  }
+  kktps.forEach((k, i) => {
+    html += `<tr><td class="center">${escapeHtml(k.kode)}</td><td class="center">${escapeHtml(k.tpKode)}</td><td class="center">${escapeHtml(k.metode)}</td><td data-marker="3" data-field="kktp_kriteria__${i}">${escapeHtml(k.kriteria)}</td><td>${escapeHtml(k.instrumen)}</td></tr>`;
+  });
   html += '</tbody></table>';
   return html;
 }

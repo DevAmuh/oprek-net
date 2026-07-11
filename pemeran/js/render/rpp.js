@@ -236,7 +236,7 @@ export async function renderRppHtml({ header, unit, content, menitPerJp, meeting
  * Meeting Number/Time Allocation for THAT meeting), concatenated into ONE
  * HTML document with `page-break-after:always` between pages, ready for
  * export/pdf.js's existing print path. Reused as-is by both the RPP stage's
- * per-unit combine button and the Ekspor screen's per-RPP combine button —
+ * per-unit combine button and the Dokumen screen's per-RPP combine button —
  * single source of truth so the two never drift.
  * @returns {Promise<{html: string, warnings: string[]}>}
  */

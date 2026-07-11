@@ -1,18 +1,35 @@
 // =============================================================
-// Pemeran — Stage: ATP/Prota
+// Pemeran — Stage: ATP/Prota (V2b — split-pane redesign)
 // -------------------------------------------------------------
 // AI groups TPs into 3-5-per-unit units (pipeline.buildUnits verifies
-// coverage + computes JP). Manual editing (rename, move TP chips
-// between units, reorder, change semester) re-runs buildUnits so JP
-// figures stay correct after every edit. "Tampilan Prota" toggles to
-// the aggregated per-semester view (pipeline.aggregateProta).
+// coverage + computes JP). LEFT pane: the unit board (rename, reorder,
+// move-TP, semester, sumatif, add/delete — each re-running buildUnits via
+// recompute() so JP figures stay correct after every edit). RIGHT pane: the
+// live paper Prota preview (sticky on desktop, stacked below on mobile),
+// replacing V2a's toggle-between-views button — teachers now see the real
+// exported document update as they edit the unit board. The JP totals bar
+// is always visible above both panes.
+//
+// V2b #6 — the Prota preview's unit-name/unit-JP cells are themselves
+// editable (render/prota.js emits data-marker="3" data-field="unit_nama__
+// <i>"/"unit_jp__<i>"): a name edit writes straight to spine.units; a JP
+// edit is NOT stored as a raw number (the plan explicitly forbids that) —
+// it's translated into that unit's `bobot` (buildUnits' proportional-share
+// weight) and buildUnits() is re-run immediately, so the number that
+// actually lands is always a fresh recomputed sum. This is a best-effort,
+// approximate interpretation (bobot isn't literally "desired JP" unless
+// every unit's bobot already happens to track JP 1:1) — flagged in the
+// phase report for review; it never breaks the ΣJP invariant even when it
+// doesn't hit the exact typed number on the first try.
 // =============================================================
 
 import { state, setUnits, setSumatif, setStage } from '../state.js';
 import { toast } from '../api.js';
 import { callAi } from '../aiApi.js';
-import { buildUnits, aggregateProta } from '../pipeline.js';
-import { badgeHtml } from '../validate.js';
+import { buildUnits, normalizeConfig } from '../pipeline.js';
+import { renderProtaHtml } from '../render/prota.js';
+import { wireEditable } from '../render/docHtml/editable.js';
+import { badgeHtml, wireValidatorChips } from '../validate.js';
 
 function escapeHtml(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => (
@@ -22,7 +39,6 @@ function escapeHtml(s) {
 
 let units = [];
 let sumatif = [];
-let showProta = false;
 let rootEl = null;
 
 const SUMATIF_DEFAULT_FALLBACK = [
@@ -49,7 +65,7 @@ export async function render(container) {
   rootEl = container;
   const tps = state.spine.tps || [];
   if (!tps.length) {
-    container.innerHTML = '<div class="placeholder card"><div class="big-icon">⚠️</div><h2>Belum ada TP</h2><p class="muted">Lengkapi tahap TP dan KKTP terlebih dahulu.</p></div>';
+    container.innerHTML = '<div class="placeholder card"><div class="big-icon">⚠️</div><h2>Belum ada TP</h2><p class="muted">Lengkapi tahap Data (TP &amp; KKTP) terlebih dahulu.</p></div>';
     return;
   }
 
@@ -71,15 +87,24 @@ export async function render(container) {
           <h2>ATP &amp; Prota</h2>
           <div class="row" style="gap:6px;"><span class="chip">${tps.length} TP</span>${badgeHtml(state.spine, 'atp')}</div>
         </div>
-        <p class="muted small">AI mengelompokkan TP menjadi unit (3-5 TP/unit) terurut prasyarat→kesulitan, lalu JP dihitung otomatis agar totalnya persis sama dengan alokasi resmi.</p>
+        <p class="muted small">AI mengelompokkan TP menjadi unit (3-5 TP/unit) terurut prasyarat→kesulitan, lalu JP dihitung otomatis agar totalnya persis sama dengan alokasi resmi. Pratinjau Prota di kanan diperbarui otomatis — nama unit dan JP juga bisa disunting langsung di sana.</p>
         <div class="row">
           <button class="btn btn-primary btn-lg" id="btn-generate">✨ Buatkan ATP dengan AI</button>
           <button class="btn btn-outline" id="btn-dummy">Isi Contoh (tanpa AI)</button>
-          <button class="btn btn-ghost" id="btn-toggle-prota" type="button">${showProta ? 'Tampilan Unit' : 'Tampilan Prota'}</button>
         </div>
       </div>
       <div id="jp-bar"></div>
-      <div id="atp-body"></div>
+      <div class="split-pane">
+        <div class="split-pane-left" id="atp-body"></div>
+        <div class="split-pane-right">
+          <div class="card card-pad-lg">
+            <h3 style="margin-top:0;">Pratinjau Prota</h3>
+            <div class="doc-preview-frame">
+              <iframe id="atp-prota-iframe" title="Pratinjau Prota" style="width:100%; min-height:520px; border:0; display:block;"></iframe>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="row-between">
         <span></span>
         <button class="btn btn-primary btn-lg" id="btn-next">Simpan &amp; Lanjut →</button>
@@ -91,16 +116,15 @@ export async function render(container) {
 
   container.querySelector('#btn-generate').addEventListener('click', () => onGenerate(container, true));
   container.querySelector('#btn-dummy').addEventListener('click', () => onGenerate(container, false));
-  container.querySelector('#btn-toggle-prota').addEventListener('click', () => {
-    showProta = !showProta;
-    render(container);
-  });
   container.querySelector('#btn-next').addEventListener('click', () => onNext(container));
+
+  wireValidatorChips(container);
 }
 
 function renderAll(container) {
   renderJpBar(container);
-  if (showProta) renderProtaView(container); else renderUnitCards(container);
+  renderUnitCards(container);
+  renderProtaPreview(container);
 }
 
 function renderJpBar(container) {
@@ -192,8 +216,6 @@ function dummyUnits(tps) {
       semester: out.length % 2 === 0 ? 1 : 2,
     });
   }
-  // Rebalance semester roughly 50/50 by unit count rather than strict alternation
-  // when there's an odd number of units, alternation above already does this well enough.
   return out;
 }
 
@@ -256,7 +278,7 @@ function renderUnitCards(container) {
 
   el.querySelectorAll('.in-unit-nama').forEach((inp) => inp.addEventListener('input', (ev) => {
     const u = units.find((x) => x.id === ev.target.dataset.id);
-    if (u) { u.nama = ev.target.value; persistUnits(); }
+    if (u) { u.nama = ev.target.value; persistUnits(); renderProtaPreview(rootEl); }
   }));
   el.querySelectorAll('.in-semester').forEach((sel) => sel.addEventListener('change', (ev) => {
     const u = units.find((x) => x.id === ev.target.dataset.id);
@@ -301,45 +323,71 @@ function renderUnitCards(container) {
   });
 }
 
-function moveUnit(id, dir) {
-  const i = units.findIndex((u) => u.id === id);
-  const j = i + dir;
-  if (i < 0 || j < 0 || j >= units.length) return;
-  const tmp = units[i];
-  units[i] = units[j];
-  units[j] = tmp;
-  units.forEach((u, idx) => { u.urutan = idx + 1; });
-  persistUnits();
-  renderAll(rootEl);
+// ---- V2b — live Prota preview (right pane), editable per #6 ---------------
+async function renderProtaPreview(container) {
+  const iframe = container.querySelector('#atp-prota-iframe');
+  if (!iframe) return;
+  const { header, cp, tps } = state.spine;
+  try {
+    const { html } = await renderProtaHtml({ header, cpElemen: cp.elemen, tps, units, sumatif });
+    await new Promise((resolve) => {
+      iframe.addEventListener('load', resolve, { once: true });
+      iframe.srcdoc = html;
+    });
+    wireEditable(iframe, {
+      writeField: (baseField, i, text) => onProtaFieldEdit(baseField, i, text),
+    });
+  } catch (e) {
+    // leave the previous preview on screen rather than blanking it
+  }
 }
 
-function renderProtaView(container) {
-  const el = container.querySelector('#atp-body');
-  const prota = aggregateProta(units, sumatif);
-  const semBlock = (sem, data) => `
-    <div class="card">
-      <h3>Semester ${sem === 1 ? 'Ganjil' : 'Genap'} — ${data.totalJp} JP</h3>
-      <table style="width:100%; border-collapse:collapse;">
-        <thead><tr style="text-align:left; border-bottom:2px solid var(--line-strong);">
-          <th style="padding:6px;">Unit Pembelajaran</th><th style="padding:6px;">Kode TP Tercakup</th><th style="padding:6px; width:70px;">JP</th>
-        </tr></thead>
-        <tbody>
-          ${data.items.map((it) => it.tipe === 'unit' ? `
-            <tr style="border-bottom:1px solid var(--line);">
-              <td style="padding:6px;">${escapeHtml(it.ref.nama)}</td>
-              <td style="padding:6px;" class="small muted">${it.ref.tpKodes.map(escapeHtml).join(', ')}</td>
-              <td style="padding:6px;">${it.jp}</td>
-            </tr>` : `
-            <tr style="border-bottom:1px solid var(--line); background:var(--bg-soft);">
-              <td style="padding:6px;" colspan="2"><em>${escapeHtml(it.ref.jenis)}</em></td>
-              <td style="padding:6px;">${it.jp}</td>
-            </tr>`).join('')}
-        </tbody>
-      </table>
-    </div>
-  `;
-  el.innerHTML = `<div class="stack">${semBlock(1, prota.semester1)}${semBlock(2, prota.semester2)}
-    <div class="card"><strong>Total JP Tahun: ${prota.totalJpTahun}</strong></div></div>`;
+/** unit.urutan is 1-based + dense (buildUnits assigns it), matching the
+ *  fieldIdx render/prota.js's buildSemesterSection uses for "unit_nama__<i>"
+ *  /"unit_jp__<i>" — see that file's comment for why a global ordinal
+ *  (rather than a per-semester loop index) is required here. */
+function findUnitByFieldIdx(i) {
+  return units.find((u) => (Number(u.urutan) || 0) - 1 === i);
+}
+
+function onProtaFieldEdit(baseField, i, text) {
+  if (i == null) return;
+  const unit = findUnitByFieldIdx(i);
+  if (!unit) return;
+
+  if (baseField === 'unit_nama') {
+    const name = text.trim();
+    if (!name || name === unit.nama) return;
+    unit.nama = name;
+    persistUnits();
+    // Sibling pane only (caret-preservation rule) — the prota iframe itself
+    // (mid-edit) is left alone; the left-hand unit board picks up the
+    // rename immediately since its input reflects `units` on next render.
+    renderUnitCards(rootEl);
+    return;
+  }
+
+  if (baseField === 'unit_jp') {
+    // "JP edits must route through buildUnits recompute (never store a raw
+    // total)" — a direct number can't be honored exactly without knowing
+    // every other unit's relative share, so it's translated into THIS
+    // unit's `bobot` (buildUnits' proportional weight) and the whole board
+    // is recomputed; the freshly recomputed jp (shown after this) is the
+    // one true number, which may differ slightly from what was typed if
+    // other units' bobot isn't already JP-scaled. Snapped to a jpPerPertemuan
+    // multiple, matching buildUnits' own rounding convention.
+    const requested = Number(String(text).replace(/[^\d.]/g, ''));
+    if (!(requested > 0)) return;
+    const jpp = normalizeConfig(state.spine.config).jpPerPertemuan;
+    unit.bobot = Math.max(jpp, Math.round(requested / jpp) * jpp);
+    if (recompute()) {
+      renderJpBar(rootEl);
+      renderUnitCards(rootEl);
+      // prota iframe intentionally NOT re-rendered here (caret-preservation
+      // rule) — it'll show the recomputed, possibly-adjusted JP next time
+      // this stage is (re)rendered (tab switch, navigating back, etc).
+    }
+  }
 }
 
 async function onNext(container) {

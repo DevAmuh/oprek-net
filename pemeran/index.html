@@ -67,7 +67,7 @@
 
 <script type="module">
 import { getPass, setPass, clearPass, toast, call } from './js/api.js';
-import { setTeacher, getTeacher, STAGES } from './js/state.js';
+import { setTeacher, getTeacher, STAGES, migrateStageId } from './js/state.js';
 
 const viewGate = document.getElementById('view-gate');
 const viewNames = document.getElementById('view-names');
@@ -79,7 +79,7 @@ function showView(view) {
 }
 
 function stageLabel(id) {
-  const s = STAGES.find((x) => x.id === id);
+  const s = STAGES.find((x) => x.id === migrateStageId(id));
   return s ? s.label : (id || 'Data');
 }
 function formatDate(iso) {
