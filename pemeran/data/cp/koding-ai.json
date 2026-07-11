@@ -1,0 +1,27 @@
+{
+  "mapel": "Koding dan Kecerdasan Artifisial",
+  "fase": "D",
+  "redaksi": "nasional",
+  "sumber": "Keputusan Kepala Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP) Kementerian Pendidikan Dasar dan Menengah No. 046/H/KR/2025 tentang Capaian Pembelajaran pada PAUD, Jenjang Pendidikan Dasar, dan Jenjang Pendidikan Menengah — Bagian XXVIII Capaian Pembelajaran Koding dan Kecerdasan Artifisial (KA), Fase D",
+  "sumberUrl": "https://jdih.kemendikdasmen.go.id/",
+  "sumberLocalFile": "E:\\Claude Cowork\\SMPI AHA\\Mr. D\\8. Misc\\uncategorized\\School & Exam Admin\\Landasan Yuridis\\Kepka_BSKAP_No_01k17e8396ajn15j3hcw0k773b_copy.pdf (PDF hal. 344 dari 1691 hal.)",
+  "catatan": "Fase D CP untuk mapel ini MEMANG ADA di dokumen — dikonfirmasi langsung, bukan diasumsikan (lihat NEEDS_SOURCE.md M0 yang mempertanyakan hal ini). Ditranskripsi verbatim dari ekstraksi teks PyMuPDF (fitz) atas dokumen PDF resmi (SALINAN, watermark jdih.kemendikdasmen.go.id) yang disimpan lokal. Nomor butir asli dokumen: 2.1-2.4 (2 = urutan Fase D; dokumen mendefinisikan Fase C, D, E, dan F untuk mapel ini, dimulai dari Fase C, tidak ada Fase A/B). 'KA' adalah singkatan 'Kecerdasan Artifisial' sebagaimana dipakai berulang dalam teks asli dokumen — dipertahankan verbatim.",
+  "elemen": [
+    {
+      "nama": "Berpikir Komputasional",
+      "teks": "Menerapkan pengelolaan data, pemecahan masalah sederhana dalam kehidupan masyarakat secara sistematis, dan menuliskan instruksi."
+    },
+    {
+      "nama": "Literasi Digital",
+      "teks": "Memproduksi dan mendiseminasi konten digital berupa audio, video, slide, dan infografis."
+    },
+    {
+      "nama": "Literasi dan Etika Kecerdasan Artifisial",
+      "teks": "Memahami perbedaan cara manusia dan KA menggabungkan informasi dari beberapa perangkat penginderaan atau sensor, memahami bagaimana komputer memaknai informasi dari perangkat penginderaan atau sensor, memahami kualitas data, serta manfaat dan dampak KA pada kehidupan masyarakat. Memahami etika penggunaan KA dalam kehidupan sehari-hari seperti menjaga data pribadi dalam menggunakan KA, KA adalah sebagai alat bantu sehingga manusia tidak boleh tergantung dan percaya sepenuhnya pada KA karena KA masih sangat mungkin menghasilkan output yang salah, bias, atau melakukan halusinasi, serta menganalisis konten deep fake dalam bentuk gambar, audio, atau video."
+    },
+    {
+      "nama": "Pemanfaatan dan Pengembangan Kecerdasan Artifisial",
+      "teks": "Menggunakan perangkat KA sederhana dengan kritis dan mampu menuliskan input bermakna ke dalam sistem KA."
+    }
+  ]
+}

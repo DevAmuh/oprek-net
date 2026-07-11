@@ -1,0 +1,31 @@
+{
+  "mapel": "Seni Musik",
+  "fase": "D",
+  "redaksi": "nasional",
+  "sumber": "Keputusan Kepala Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP) Kementerian Pendidikan Dasar dan Menengah No. 046/H/KR/2025 tentang Capaian Pembelajaran pada PAUD, Jenjang Pendidikan Dasar, dan Jenjang Pendidikan Menengah — Bagian XVIII.1 Capaian Pembelajaran Seni Musik, Fase D",
+  "sumberUrl": "https://jdih.kemendikdasmen.go.id/",
+  "sumberLocalFile": "E:\\Claude Cowork\\SMPI AHA\\Mr. D\\8. Misc\\uncategorized\\School & Exam Admin\\Landasan Yuridis\\Kepka_BSKAP_No_01k17e8396ajn15j3hcw0k773b_copy.pdf (PDF hal. 241 dari 1691 hal.)",
+  "catatan": "Ditranskripsi verbatim dari ekstraksi teks PyMuPDF (fitz) atas dokumen PDF resmi (SALINAN, watermark jdih.kemendikdasmen.go.id) yang disimpan lokal. Nomor butir asli dokumen: 4.1-4.5 (4 = urutan Fase D di antara Fase A-F). Seni Musik adalah 1 dari 4 varian mata pelajaran 'Seni Budaya' (Musik/Rupa/Teater/Tari) dalam dokumen ini — satuan pendidikan memilih SATU varian saja untuk diajarkan (lihat cp/seni-rupa.json, cp/seni-teater.json, cp/seni-tari.json untuk varian lain, dan cp/prakarya-*.json untuk alternatif Prakarya pada slot JP yang sama).",
+  "elemen": [
+    {
+      "nama": "Mengalami (Experiencing)",
+      "teks": "Mengenali dan menerapkan unsur-unsur musik berupa nada, irama, dan melodi, dengan alat musik berbasis teknologi yang sesuai dengan kondisi setempat serta mengidentifikasi karakteristik musik dari berbagai genre dan era."
+    },
+    {
+      "nama": "Merefleksikan (Reflecting)",
+      "teks": "Melakukan umpan balik kemampuan bermain musik, karya musik diri sendiri atau orang lain sesuai dengan genre menggunakan istilah musik yang tepat."
+    },
+    {
+      "nama": "Berpikir dan Bekerja Artistik (Thinking and Working Artistically)",
+      "teks": "Menerapkan seluruh proses berpraktik musik untuk perbaikan dan perkembangan keterampilan bermusik; menyajikan musik sederhana dari daerah setempat dan Nusantara; dan menyajikan karya-karya musik modern Indonesia dengan interpretasi dan ekspresi yang tepat, baik secara individu maupun berkelompok."
+    },
+    {
+      "nama": "Menciptakan (Creating)",
+      "teks": "Mengenali dan menghasilkan lagu sederhana dengan mengembangkan irama dan melodi menggunakan berbagai alat musik."
+    },
+    {
+      "nama": "Berdampak (Impacting)",
+      "teks": "Menunjukkan minat, empati, dan kepedulian terhadap isu-isu di lingkungan sekitar melalui kegiatan bermusik."
+    }
+  ]
+}

@@ -9,8 +9,7 @@
       "nama": "Pendidikan Agama Islam dan Budi Pekerti",
       "jpPerTahun": { "7": 72, "8": 72, "9": 64 },
       "mulok": false,
-      "cpFile": null,
-      "catatan": "CP verbatim belum ditranskripsi pada M0 (di luar 6 mapel prioritas milestone ini); lihat data/NEEDS_SOURCE.md — jadwalkan di M5 (rollout semua mapel)."
+      "cpFile": "pai.json"
     },
     {
       "id": "pendidikan-pancasila",
@@ -59,24 +58,78 @@
       "nama": "Pendidikan Jasmani, Olahraga, dan Kesehatan",
       "jpPerTahun": { "7": 72, "8": 72, "9": 64 },
       "mulok": false,
-      "cpFile": null,
-      "catatan": "CP verbatim belum ditranskripsi pada M0 (di luar 6 mapel prioritas milestone ini); lihat data/NEEDS_SOURCE.md — jadwalkan di M5 (rollout semua mapel)."
+      "cpFile": "pjok.json"
     },
     {
       "id": "informatika",
       "nama": "Informatika",
       "jpPerTahun": { "7": 72, "8": 72, "9": 64 },
       "mulok": false,
-      "cpFile": null,
-      "catatan": "CP verbatim belum ditranskripsi pada M0 (di luar 6 mapel prioritas milestone ini); lihat data/NEEDS_SOURCE.md — jadwalkan di M5 (rollout semua mapel)."
+      "cpFile": "informatika.json"
     },
     {
-      "id": "seni-budaya-prakarya",
-      "nama": "Seni, Budaya, dan Prakarya",
+      "id": "seni-musik",
+      "nama": "Seni Musik",
       "jpPerTahun": { "7": 72, "8": 72, "9": 64 },
       "mulok": false,
-      "cpFile": null,
-      "catatan": "CP verbatim belum ditranskripsi pada M0 (di luar 6 mapel prioritas milestone ini); lihat data/NEEDS_SOURCE.md — jadwalkan di M5 (rollout semua mapel)."
+      "cpFile": "seni-musik.json",
+      "catatan": "1 dari 8 varian slot 'Seni, Budaya, dan Prakarya' (Permendikdasmen 13/2025) — sekolah memilih SATU varian saja untuk diajarkan: Seni Musik/Rupa/Teater/Tari atau Prakarya Budi Daya/Kerajinan/Pengolahan/Rekayasa. Entri placeholder tunggal 'seni-budaya-prakarya' pada M0 digantikan 8 entri varian ini pada M5 setelah semuanya ditranskripsi verbatim."
+    },
+    {
+      "id": "seni-rupa",
+      "nama": "Seni Rupa",
+      "jpPerTahun": { "7": 72, "8": 72, "9": 64 },
+      "mulok": false,
+      "cpFile": "seni-rupa.json",
+      "catatan": "1 dari 8 varian slot 'Seni, Budaya, dan Prakarya' — sekolah memilih SATU varian saja (lihat catatan pada entri seni-musik)."
+    },
+    {
+      "id": "seni-teater",
+      "nama": "Seni Teater",
+      "jpPerTahun": { "7": 72, "8": 72, "9": 64 },
+      "mulok": false,
+      "cpFile": "seni-teater.json",
+      "catatan": "1 dari 8 varian slot 'Seni, Budaya, dan Prakarya' — sekolah memilih SATU varian saja (lihat catatan pada entri seni-musik)."
+    },
+    {
+      "id": "seni-tari",
+      "nama": "Seni Tari",
+      "jpPerTahun": { "7": 72, "8": 72, "9": 64 },
+      "mulok": false,
+      "cpFile": "seni-tari.json",
+      "catatan": "1 dari 8 varian slot 'Seni, Budaya, dan Prakarya' — sekolah memilih SATU varian saja (lihat catatan pada entri seni-musik)."
+    },
+    {
+      "id": "prakarya-budidaya",
+      "nama": "Prakarya Budi Daya",
+      "jpPerTahun": { "7": 72, "8": 72, "9": 64 },
+      "mulok": false,
+      "cpFile": "prakarya-budidaya.json",
+      "catatan": "1 dari 8 varian slot 'Seni, Budaya, dan Prakarya' — sekolah memilih SATU varian saja (lihat catatan pada entri seni-musik)."
+    },
+    {
+      "id": "prakarya-kerajinan",
+      "nama": "Prakarya Kerajinan",
+      "jpPerTahun": { "7": 72, "8": 72, "9": 64 },
+      "mulok": false,
+      "cpFile": "prakarya-kerajinan.json",
+      "catatan": "1 dari 8 varian slot 'Seni, Budaya, dan Prakarya' — sekolah memilih SATU varian saja (lihat catatan pada entri seni-musik)."
+    },
+    {
+      "id": "prakarya-pengolahan",
+      "nama": "Prakarya Pengolahan",
+      "jpPerTahun": { "7": 72, "8": 72, "9": 64 },
+      "mulok": false,
+      "cpFile": "prakarya-pengolahan.json",
+      "catatan": "1 dari 8 varian slot 'Seni, Budaya, dan Prakarya' — sekolah memilih SATU varian saja (lihat catatan pada entri seni-musik)."
+    },
+    {
+      "id": "prakarya-rekayasa",
+      "nama": "Prakarya Rekayasa",
+      "jpPerTahun": { "7": 72, "8": 72, "9": 64 },
+      "mulok": false,
+      "cpFile": "prakarya-rekayasa.json",
+      "catatan": "1 dari 8 varian slot 'Seni, Budaya, dan Prakarya' — sekolah memilih SATU varian saja (lihat catatan pada entri seni-musik)."
     },
     {
       "id": "koding-ai",
@@ -84,6 +137,7 @@
       "kategori": "pilihan",
       "jpPerTahun": { "7": 72, "8": 72, "9": 64 },
       "mulok": false,
+      "cpFile": "koding-ai.json",
       "catatan": "Mapel pilihan, diterapkan bertahap mulai TA 2025-2026 (Pasal 32A); sekolah menyediakan sesuai sumber daya."
     },
     {

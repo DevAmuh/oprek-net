@@ -1,0 +1,31 @@
+{
+  "mapel": "Seni Rupa",
+  "fase": "D",
+  "redaksi": "nasional",
+  "sumber": "Keputusan Kepala Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP) Kementerian Pendidikan Dasar dan Menengah No. 046/H/KR/2025 tentang Capaian Pembelajaran pada PAUD, Jenjang Pendidikan Dasar, dan Jenjang Pendidikan Menengah — Bagian XVIII.2 Capaian Pembelajaran Seni Rupa, Fase D",
+  "sumberUrl": "https://jdih.kemendikdasmen.go.id/",
+  "sumberLocalFile": "E:\\Claude Cowork\\SMPI AHA\\Mr. D\\8. Misc\\uncategorized\\School & Exam Admin\\Landasan Yuridis\\Kepka_BSKAP_No_01k17e8396ajn15j3hcw0k773b_copy.pdf (PDF hal. 248-249 dari 1691 hal.)",
+  "catatan": "Ditranskripsi verbatim dari ekstraksi teks PyMuPDF (fitz) atas dokumen PDF resmi (SALINAN, watermark jdih.kemendikdasmen.go.id) yang disimpan lokal. Nomor butir asli dokumen: 4.1-4.5 (4 = urutan Fase D di antara Fase A-F). Seni Rupa adalah 1 dari 4 varian mata pelajaran 'Seni Budaya' (Musik/Rupa/Teater/Tari) dalam dokumen ini — satuan pendidikan memilih SATU varian saja untuk diajarkan (lihat cp/seni-musik.json, cp/seni-teater.json, cp/seni-tari.json untuk varian lain, dan cp/prakarya-*.json untuk alternatif Prakarya pada slot JP yang sama).",
+  "elemen": [
+    {
+      "nama": "Mengalami (Experiencing)",
+      "teks": "Menganalisis unsur rupa dan prinsip desain dalam benda-benda di sekitar/karya seni rupa."
+    },
+    {
+      "nama": "Merefleksikan (Reflecting)",
+      "teks": "Merefleksikan dan mengapresiasi karya diri sendiri dan teman sekelas; membandingkan unsur rupa, prinsip desain, dan fungsi karya seni rupa menggunakan kosa kata seni rupa yang sesuai."
+    },
+    {
+      "nama": "Berpikir dan Bekerja Artistik (Thinking and Working Artistically)",
+      "teks": "Mengaplikasikan variasi teknik penggunaan alat dan bahan yang dimiliki untuk berkarya; mengeksplorasi alternatif/potensi alat dan bahan yang ada di lingkungan sekitar."
+    },
+    {
+      "nama": "Menciptakan (Making/Creating)",
+      "teks": "Membuat karya seni rupa berdasarkan pengalaman dan/atau hasil pengamatan terhadap lingkungan sekitar, dengan mempertimbangkan fungsi, menggunakan gaya atau teknik yang telah dipelajari."
+    },
+    {
+      "nama": "Berdampak (Impacting)",
+      "teks": "Menghasilkan karya seni rupa untuk merespon pengalaman sehari-hari dan mengekspresikan perasaan atau minat."
+    }
+  ]
+}

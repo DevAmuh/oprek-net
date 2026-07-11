@@ -1,0 +1,31 @@
+{
+  "mapel": "Pendidikan Agama Islam dan Budi Pekerti",
+  "fase": "D",
+  "redaksi": "nasional",
+  "sumber": "Keputusan Kepala Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP) Kementerian Pendidikan Dasar dan Menengah No. 046/H/KR/2025 tentang Capaian Pembelajaran pada PAUD, Jenjang Pendidikan Dasar, dan Jenjang Pendidikan Menengah — Bagian I.1 Capaian Pembelajaran Pendidikan Agama Islam dan Budi Pekerti, Fase D",
+  "sumberUrl": "https://jdih.kemendikdasmen.go.id/",
+  "sumberLocalFile": "E:\\Claude Cowork\\SMPI AHA\\Mr. D\\8. Misc\\uncategorized\\School & Exam Admin\\Landasan Yuridis\\Kepka_BSKAP_No_01k17e8396ajn15j3hcw0k773b_copy.pdf (PDF hal. 28-29 dari 1691 hal.)",
+  "catatan": "Ditranskripsi verbatim dari ekstraksi teks PyMuPDF (fitz) atas dokumen PDF resmi (SALINAN, watermark jdih.kemendikdasmen.go.id) yang disimpan lokal. Redaksi ini adalah redaksi Islam saja (Bagian I.1 dari I.1-I.6 di dokumen, yang mencakup PAI dan budi pekerti agama-agama lain) — sesuai kebutuhan sekolah (SMPI Al-Hamidiyah). Nomor butir asli dokumen: 4.1-4.5 (4 = urutan Fase D di antara Fase A-E; dokumen ini menetapkan Fase A, B, C, D, dan E untuk PAI, tidak ada Fase F terpisah pada bagian ini).",
+  "elemen": [
+    {
+      "nama": "Al-Qur'an Hadis",
+      "teks": "Memahami ayat Al-Qur'an dan hadis tentang pentingnya iman, takwa, toleransi, cinta tanah air, semangat keilmuan dan sabar dalam menghadapi musibah dan ujian."
+    },
+    {
+      "nama": "Akidah",
+      "teks": "Memahami rukun iman dan hal-hal yang dapat meneguhkan iman."
+    },
+    {
+      "nama": "Akhlak",
+      "teks": "Memahami ikhlas, bersyukur kepada Allah Swt., cinta rasul, husnuzan, kasih sayang kepada sesama dan lingkungan alam."
+    },
+    {
+      "nama": "Fikih",
+      "teks": "Memahami ketentuan sujud, salat, kewajiban terhadap jenazah, haji dan umrah, penyembelihan hewan, kurban, akikah, dan rukhsah dalam perspektif mazhab fikih."
+    },
+    {
+      "nama": "Sejarah Peradaban Islam",
+      "teks": "Memahami peradaban Bani Umayyah, Abbasiyyah, Fatimiyah, Turki Usmani, Syafawi, dan Mughal."
+    }
+  ]
+}

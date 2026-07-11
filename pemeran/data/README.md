@@ -1,9 +1,15 @@
-# Pemeran — data/ (M0: curriculum data prep)
+# Pemeran — data/ (M0 + M5: curriculum data prep)
 
 This directory holds the "burned-in" curriculum data the Pemeran wizard reads at
 runtime: constants, the Fase D subject/JP table, and verbatim Capaian Pembelajaran
 (CP) per mapel. Nothing here is AI-generated — every number and every CP sentence
 is either transcribed from an official document or specified directly in the plan.
+
+M0 covered 6 priority mapel; M5 (this pass) rolled out verbatim CP for every
+remaining Fase D mapel — Pendidikan Agama Islam dan Budi Pekerti (PAI), PJOK,
+Informatika, Koding dan Kecerdasan Artifisial, all 4 Seni Budaya variants, and all
+4 Prakarya variants — 12 new `cp/*.json` files in total, all linked from
+`mapel.json`.
 
 ## Files
 
@@ -22,10 +28,13 @@ is either transcribed from an official document or specified directly in the pla
   matched byte-for-byte against the canonical URL found via web search). `jpPerTahun`
   uses the **Intrakurikuler** column (not the Kokurikuler-inclusive Total), a
   convention chosen because it's the only one that reproduces the school-confirmed
-  ESP numbers (72/72/64). 6 of 12 wajib mapel have `cpFile` pointing into `cp/`;
-  the remaining 5 (Agama Islam, PJOK, Informatika, Seni Budaya, Koding & AI) plus
-  the "Muatan Lokal lainnya" placeholder are flagged `cpFile: null` with a reason —
-  see `NEEDS_SOURCE.md`.
+  ESP numbers (72/72/64). As of M5, every wajib/pilihan mapel entry has a `cpFile`
+  pointing into `cp/` (M0 left 5 as `cpFile: null`; M5 filled all of them in,
+  including replacing the single `seni-budaya-prakarya` placeholder with 8 separate
+  entries — one per Seni/Prakarya variant, since the school teaches only one and
+  the source document treats Prakarya as an alternative to Seni Budaya for the same
+  JP slot). Only `mulok-lain` (a placeholder for an optional extra mulok the school
+  may or may not use) still has `jpPerTahun: null`.
 
 - **`cp/esp_kontekstual.json`** — The school's own ESP (English for Specific
   Purposes) mulok capaian, transcribed verbatim (Indonesian + English) from
@@ -39,20 +48,31 @@ is either transcribed from an official document or specified directly in the pla
 
 - **`cp/bahasa-indonesia.json`, `cp/matematika.json`, `cp/ipa.json`,
   `cp/ips.json`, `cp/bahasa-inggris.json`, `cp/pendidikan-pancasila.json`** —
-  Verbatim Fase D CP for the 6 mandated subjects. Source: **Keputusan Kepala
-  BSKAP Kemendikdasmen No. 046/H/KR/2025**, local PDF copy at
-  `E:\Claude Cowork\SMPI AHA\Perangkat Pembelajaran\8. Misc\uncategorized\School & Exam Admin\Landasan Yuridis\Kepka_BSKAP_No_01k17e8396ajn15j3hcw0k773b_copy.pdf`
-  (1691 pages, watermarked `jdih.kemendikdasmen.go.id`). The portal
-  (guru.kemendikdasmen.go.id) was not scraped — the owner already had the exact
-  gazetted PDF on disk, which is a stronger source than a portal summary. Each
-  file cites the exact PDF page range in `sumberLocalFile`. Text extraction used
-  PyMuPDF (`fitz`) — plain `pypdf` produced garbled word-per-line output on this
-  particular PDF and was abandoned after a first failed attempt.
+  Verbatim Fase D CP for the 6 mandated subjects transcribed in M0. Source:
+  **Keputusan Kepala BSKAP Kemendikdasmen No. 046/H/KR/2025**, local PDF copy.
+  **Their `sumberLocalFile` still cites the M0-era path**
+  (`E:\Claude Cowork\SMPI AHA\Perangkat Pembelajaran\8. Misc\...`), which **no
+  longer exists** — that folder is now a `.7z` archive. See the "PERUBAHAN LOKASI
+  FILE SUMBER" note in `NEEDS_SOURCE.md` for the current path; page numbers cited
+  in these 6 files are still valid, only the folder location changed.
 
-- **`NEEDS_SOURCE.md`** — The 5 remaining wajib mapel (Agama Islam, PJOK,
-  Informatika, Seni Budaya, Koding & AI) are out of M0's 6-subject scope, not a
-  fetch failure. Their section/page locations in the same 046/H/KR/2025 PDF are
-  already recorded there so M5 doesn't need to re-search.
+- **`cp/pai.json`, `cp/pjok.json`, `cp/informatika.json`, `cp/koding-ai.json`,
+  `cp/seni-musik.json`, `cp/seni-rupa.json`, `cp/seni-teater.json`,
+  `cp/seni-tari.json`, `cp/prakarya-budidaya.json`, `cp/prakarya-kerajinan.json`,
+  `cp/prakarya-pengolahan.json`, `cp/prakarya-rekayasa.json`** — Verbatim Fase D
+  CP for every remaining mapel, transcribed in M5 from the same
+  **Kepka BSKAP No. 046/H/KR/2025** PDF, using the **current** file path (see
+  `NEEDS_SOURCE.md`). Same method as M0: PyMuPDF (`fitz`) text extraction, exact
+  PDF page range cited per file in `sumberLocalFile`. Notable findings recorded
+  in each file's `catatan`: Informatika's Fase D only defines 2 of the mapel's 4
+  elements (Analisis Data / Algoritma dan Pemrograman start at Fase F); Koding
+  dan Kecerdasan Artifisial's Fase D CP does exist (M0 had flagged this as
+  uncertain); Prakarya is confirmed as a genuine Fase D alternative to Seni
+  Budaya for the same JP slot, not a separate mapel.
+
+- **`NEEDS_SOURCE.md`** — Confirms all mapel from the M0 punch list are now
+  transcribed; documents the source-folder relocation since M0 and the
+  structural findings above in more detail.
 
 ## Sources (full citations)
 
@@ -69,12 +89,15 @@ is either transcribed from an official document or specified directly in the pla
 This is the mandatory human spot-check before these files feed the generation
 pipeline. Please verify:
 
-- [ ] **Spot-check 2-3 CP files against the source PDF directly** (open
-      `Kepka_BSKAP_No_01k17e8396ajn15j3hcw0k773b_copy.pdf` at the page numbers
-      cited in each `cp/*.json`'s `sumberLocalFile`, e.g. Matematika = PDF hal.
-      116-118) — confirm every sentence matches character-for-character. This is
-      the highest-risk step: verbatim transcription errors would silently corrupt
-      every downstream TP/KKTP/ATP/RPP for that subject.
+- [ ] **Spot-check 2-3 CP files against the source PDF directly**, including at
+      least one of the 12 new M5 files (e.g. PAI = PDF hal. 28-29, PJOK = PDF
+      hal. 313-314) — open
+      `Kepka_BSKAP_No_01k17e8396ajn15j3hcw0k773b_copy.pdf` at the **current**
+      path (see `NEEDS_SOURCE.md` — the M0-era path no longer exists) at the
+      page numbers cited in each `cp/*.json`'s `sumberLocalFile`, and confirm
+      every sentence matches character-for-character. This is the highest-risk
+      step: verbatim transcription errors would silently corrupt every
+      downstream TP/KKTP/ATP/RPP for that subject.
 - [ ] **Confirm `bahasa-inggris.json` vs `esp_kontekstual.json` are meant to
       diverge.** They currently describe Fase D English competency quite
       differently (current national wording vs. an apparently older redaksi the
@@ -87,11 +110,13 @@ pipeline. Please verify:
       are handled separately from the weekly subject schedule Prosem will
       distribute). If the school actually wants Total JP (Intra+Koku) as the
       pacing basis, every non-mulok number in `mapel.json` needs to change.
-- [ ] **Decide the 5 deferred mapel's scope for M5** (Agama Islam, PJOK,
-      Informatika, Seni Budaya, Koding & AI) — in particular, which single Seni
-      and Prakarya variant the school actually teaches (the source document lists
-      4 Seni options and 4 Prakarya options as alternatives, only 1 of which
-      should be locked into that subject's `cp/*.json`).
+- [ ] **Pick the ONE Seni/Prakarya variant the school actually teaches.** All 8
+      variants now ship as separate `mapel.json` entries
+      (`seni-musik`/`seni-rupa`/`seni-teater`/`seni-tari`/
+      `prakarya-budidaya`/`prakarya-kerajinan`/`prakarya-pengolahan`/
+      `prakarya-rekayasa`) so the wizard/generator can offer a choice, but the
+      school still needs to settle on one for actual lesson-plan generation —
+      the other 7 entries should stay unused (or be removed later) once decided.
 - [ ] **Confirm "Muatan Lokal lainnya" is actually needed** — right now it's a
       placeholder with `jpPerTahun: null`; if the school's only mulok is ESP,
       this entry can be deleted.

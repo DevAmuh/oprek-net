@@ -1,0 +1,27 @@
+{
+  "mapel": "Prakarya Budi Daya",
+  "fase": "D",
+  "redaksi": "nasional",
+  "sumber": "Keputusan Kepala Badan Standar, Kurikulum, dan Asesmen Pendidikan (BSKAP) Kementerian Pendidikan Dasar dan Menengah No. 046/H/KR/2025 tentang Capaian Pembelajaran pada PAUD, Jenjang Pendidikan Dasar, dan Jenjang Pendidikan Menengah — Bagian XIX.1 Capaian Pembelajaran Prakarya Budi Daya, Fase D",
+  "sumberUrl": "https://jdih.kemendikdasmen.go.id/",
+  "sumberLocalFile": "E:\\Claude Cowork\\SMPI AHA\\Mr. D\\8. Misc\\uncategorized\\School & Exam Admin\\Landasan Yuridis\\Kepka_BSKAP_No_01k17e8396ajn15j3hcw0k773b_copy.pdf (PDF hal. 272 dari 1691 hal.)",
+  "catatan": "Ditranskripsi verbatim dari ekstraksi teks PyMuPDF (fitz) atas dokumen PDF resmi (SALINAN, watermark jdih.kemendikdasmen.go.id) yang disimpan lokal. Nomor butir asli dokumen: 1.1-1.4 (1 = urutan Fase D; dokumen hanya mendefinisikan Fase D dan E untuk mapel Prakarya). Dokumen menyatakan 'Mata Pelajaran Prakarya terdiri dari empat aspek berdasarkan jenis keterampilan yaitu kerajinan, rekayasa, budi daya, dan pengolahan' — Prakarya berkedudukan sebagai ALTERNATIF terhadap Seni Budaya untuk slot JP yang sama (nama asli slot mapel di Permendikdasmen 13/2025: 'Seni, Budaya, dan Prakarya'). Satuan pendidikan memilih SATU varian saja dari kedelapan pilihan (4 Seni + 4 Prakarya) — lihat cp/prakarya-kerajinan.json, cp/prakarya-pengolahan.json, cp/prakarya-rekayasa.json untuk varian Prakarya lain, dan cp/seni-*.json untuk varian Seni.",
+  "elemen": [
+    {
+      "nama": "Eksplorasi dan Observasi",
+      "teks": "Menjelaskan aspek-aspek penting budi daya berdasarkan hasil observasi; menjelaskan produk budi daya serta modifikasi bahan, alat, dan teknik bila diperlukan sesuai potensi lingkungan/kearifan lokal berdasarkan hasil eksplorasi."
+    },
+    {
+      "nama": "Desain/Perencanaan",
+      "teks": "Menyusun rencana kegiatan budi daya serta modifikasi bahan, alat, dan teknik bila diperlukan, sesuai potensi lingkungan/kearifan lokal."
+    },
+    {
+      "nama": "Produksi",
+      "teks": "Menghasilkan produk budi daya yang aman berdasarkan potensi lingkungan/kearifan lokal dengan modifikasi bahan, alat, dan teknik bila diperlukan, serta ditampilkan dalam kemasan sederhana."
+    },
+    {
+      "nama": "Evaluasi dan Refleksi",
+      "teks": "Mengevaluasi dan merefleksikan proses serta produk budi daya yang dihasilkan."
+    }
+  ]
+}
