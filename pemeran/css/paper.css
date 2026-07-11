@@ -138,6 +138,7 @@ a{ color: var(--accent-dark); }
 
 .btn-block{ width: 100%; }
 .btn-lg{ min-height: 56px; font-size: 1.15rem; }
+.btn-sm{ min-height: 36px; padding: 0 var(--space-3); font-size: 0.88rem; }
 
 /* --- form fields --- */
 label{ display: block; font-weight: 600; margin-bottom: var(--space-2); }
@@ -262,6 +263,17 @@ input:disabled, select:disabled, input[readonly]{
   color: var(--ink-soft);
 }
 .chip-accent{ background: var(--accent-soft); color: var(--accent-dark); }
+.validator-chip{ border: none; cursor: pointer; font: inherit; }
+.validator-chip:hover{ filter: brightness(0.96); }
+
+/* --- RPP meeting tab strip (V2a #4) --- */
+.tab-strip{ display: flex; gap: 4px; flex-wrap: wrap; border-bottom: 2px solid var(--line); margin-bottom: var(--space-3); }
+.tab-btn{
+  border: none; background: transparent; cursor: pointer; font-family: var(--font-body); font-weight: 600;
+  padding: var(--space-2) var(--space-3); border-bottom: 3px solid transparent; color: var(--ink-soft);
+}
+.tab-btn:hover{ color: var(--ink); }
+.tab-btn.is-active{ color: var(--accent-dark); border-bottom-color: var(--accent); }
 
 /* --- progress rail (wizard) --- */
 .rail{

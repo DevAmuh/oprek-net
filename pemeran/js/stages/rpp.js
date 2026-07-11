@@ -1,36 +1,37 @@
 // =============================================================
-// Pemeran — Stage: RPP (M2 vertical slice)
+// Pemeran — Stage: RPP
 // -------------------------------------------------------------
-// ATP/units don't exist until M3, so this stage works from a manual
-// "topic stub" mini-form (topik, TP/KKTP pasted as lines, JP,
-// semester) instead of a real unit list. Flow:
-//   topic stub -> "Buat dengan AI" (generate_rpp) or "Isi Contoh"
-//   (local dummy, no backend needed) -> paper preview (iframe) with
-//   click-to-edit cells + per-field 🔄 regenerate -> MHT/PDF/HTML export.
+// Flow: topic stub (manual) or a real ATP unit -> "Buat dengan AI"
+// (per-meeting orchestration: one generate_rpp_base call + N sequential
+// generate_rpp_meeting calls, resumable) or "Isi Contoh" (local dummy,
+// no backend) -> per-meeting tab preview (click-to-edit cells + per-field
+// 🔄 regenerate) -> MHT/DOCX/PDF/HTML export per meeting, or one combined
+// paginated PDF across all meetings.
 //
-// Persistence: each generated RPP is stored as {id, unit, content} in
-// spine.rpps (see state.js's setRpps — a deliberately ad-hoc M2 shape;
-// M3's pipeline.js will reconcile it with the plan's formal
-// {unitId, judul, pertemuanCount, fields, pertemuan} spine shape).
-// Contenteditable edits made directly in the preview are captured live
-// by every export (each export serializes the iframe's current DOM),
-// but are NOT reverse-parsed back into the stored `content` object —
-// reopening a saved RPP restores the last generated/regenerated
-// content, not hand-edits. Full round-tripping of arbitrary
-// contenteditable HTML back into the ✓/•/-/**/* mini-syntax is
-// deferred; see the M2 report for details.
+// Persistence: each RPP is stored as {id, unit, content} in spine.rpps
+// (state.js's setRpps). Meetings arrive one at a time during AI
+// generation and are persisted AS THEY ARRIVE (persistOneEntry below,
+// merged against the CURRENT state.spine.rpps rather than a possibly-
+// stale local snapshot — see persistOneEntry's doc comment) so a later
+// meeting's failure never loses earlier ones, and navigating away and
+// back mid-generation never clobbers progress. In-preview edits
+// (contenteditable cells + checkbox toggles) are reverse-parsed back into
+// the stored `content` object on debounced input/blur, so they survive a
+// reload — not just captured live by exports as before.
 // =============================================================
 
-import { state, setRpps } from '../state.js';
+import { state, setRpps, flushSave } from '../state.js';
 import { toast } from '../api.js';
 import { callAi } from '../aiApi.js';
-import { renderRppHtml } from '../render/rpp.js';
+import { renderRppHtml, renderRppCombinedHtml } from '../render/rpp.js';
 import { downloadMht } from '../export/mht.js';
 import { printRppHtml } from '../export/pdf.js';
 import { exportRppHtml } from '../export/html.js';
 import { downloadDocx } from '../export/docx.js';
-import { splitMeetings } from '../pipeline.js';
-import { badgeHtml, runValidator, overallLevel } from '../validate.js';
+import { splitMeetings, computePertemuanCount, draftRppSkeleton } from '../pipeline.js';
+import { badgeHtml } from '../validate.js';
+import { withExportGate } from '../validatorPanel.js';
+import { generateRppContentForUnit, findResumeState, GENERATION_CANCELLED } from '../rppGen.js';
 
 const FIELD_LABELS = {
   peserta_didik: 'Peserta Didik',
@@ -63,6 +64,78 @@ function escapeHtml(s) {
   ));
 }
 
+// ---- rich-text mini-syntax DOM -> text serializer (V2a #5) -----------------
+// Best-effort reverse of render/docHtml/richTextHtml.js's forward parser:
+// walks the (possibly hand-edited) cell DOM and reconstructs the ✓/•/-/o/N.
+// line-prefix + **bold**/*italic* mini-syntax it started from. Handles both
+// the unmodified richTextToHtml() output (one <p class="rt-line..."> per
+// line) and typical contenteditable edits (browsers split lines into new
+// <p>/<div> on Enter, or use <br> for soft breaks) — not a full round-trip
+// guarantee for arbitrarily mangled DOM, but covers what a teacher actually
+// does when editing text in place.
+const NBSP_RE = / /g;
+
+function inlineNodeToMiniSyntax(node) {
+  let out = '';
+  node.childNodes.forEach((child) => {
+    if (child.nodeType === Node.TEXT_NODE) {
+      out += child.nodeValue;
+    } else if (child.nodeType === Node.ELEMENT_NODE) {
+      const tag = child.tagName;
+      if (tag === 'STRONG' || tag === 'B') {
+        out += '**' + inlineNodeToMiniSyntax(child).trim() + '**';
+      } else if (tag === 'EM' || tag === 'I') {
+        out += '*' + inlineNodeToMiniSyntax(child).trim() + '*';
+      } else if (tag === 'BR') {
+        out += '\n';
+      } else {
+        out += inlineNodeToMiniSyntax(child);
+      }
+    }
+  });
+  return out;
+}
+
+function stripLinePrefix(rawLine) {
+  const t = rawLine.replace(NBSP_RE, ' ');
+  let m;
+  if ((m = t.match(/^\s*✓\s+([\s\S]*)$/))) return '✓ ' + m[1].trim();
+  if ((m = t.match(/^\s*[•\-]\s+([\s\S]*)$/))) return '• ' + m[1].trim();
+  if ((m = t.match(/^\s*[○o]\s+([\s\S]*)$/))) return 'o ' + m[1].trim();
+  if ((m = t.match(/^\s*(\d+)\.\s+([\s\S]*)$/))) return m[1] + '. ' + m[2].trim();
+  return t.trim();
+}
+
+/** Serialize one editable RPP cell's current DOM back into the mini-syntax
+ *  string entry.content[field] (or entry.content.pertemuan[i][field])
+ *  stores. */
+function serializeCellToMiniSyntax(cellEl) {
+  const clone = cellEl.cloneNode(true);
+  clone.querySelectorAll('.pemeran-regen-btn').forEach((b) => b.remove());
+
+  const blockChildren = Array.from(clone.children).filter((c) => ['P', 'DIV', 'LI'].includes(c.tagName));
+  if (blockChildren.length) {
+    return blockChildren
+      .map((el) => stripLinePrefix(inlineNodeToMiniSyntax(el)))
+      .filter((l) => l.length)
+      .join('\n');
+  }
+  // No block children — plain text / <br>-separated lines typed directly
+  // into a cell that started out empty (e.g. a fresh Kerangka Instan
+  // placeholder before the teacher's first edit).
+  return inlineNodeToMiniSyntax(clone)
+    .split('\n')
+    .map((l) => stripLinePrefix(l))
+    .filter((l) => l.length)
+    .join('\n');
+}
+
+function itemShortLabel(dataItem) {
+  const s = String(dataItem || '');
+  const idx = s.indexOf(' / ');
+  return (idx >= 0 ? s.slice(0, idx) : s).trim();
+}
+
 // ---- topic-stub parsing -----------------------------------------------------
 function parseCodeLines(text) {
   return String(text || '')
@@ -82,14 +155,7 @@ function parseKktpLines(text) {
   return parseCodeLines(text).map((r) => ({ kode: r.kode, kriteria: r.rest }));
 }
 
-function computePertemuanCount(jp, jpPerPertemuan) {
-  const jpp = Number(jpPerPertemuan) > 0 ? Number(jpPerPertemuan) : 2;
-  return Math.max(1, Math.ceil((Number(jp) || jpp) / jpp));
-}
-
-// ---- M3: build the RPP "unit" shape from a real spine.units entry ---------
-// (spine.units doesn't exist until the ATP stage runs pipeline.buildUnits —
-// until then this stage falls back to the M2 manual topic-stub form below.)
+// ---- build the RPP "unit" shape from a real spine.units entry --------------
 function unitFromAtp(unit) {
   const config = state.spine.config;
   const tps = (state.spine.tps || []).filter((t) => unit.tpKodes.includes(t.kode));
@@ -167,13 +233,35 @@ function unitForRequest(unit) {
 let entries = []; // [{id, unit, content}]
 let activeId = null;
 let rootEl = null;
+let activeMeetingTab = 0; // number (0-based meeting index) | 'all'
+let generatingEntryId = null; // entry.id currently mid-AI-generation, or null
+let cancelRequested = false;
 
 function currentEntry() {
   return entries.find((e) => e.id === activeId) || null;
 }
 
+/** Bulk replace — used right after entries/entries[i] is mutated directly
+ *  (create/replace-in-place flows, always synchronous in direct response to
+ *  a click, so the module-local `entries` snapshot is guaranteed fresh). */
 function persistEntries() {
   setRpps(entries.map((e) => ({ id: e.id, unit: e.unit, content: e.content })));
+}
+
+/** Merge-by-id persistence for anything that can happen mid-async-flow
+ *  (per-meeting AI generation, debounced cell edits) — reads the CURRENT
+ *  state.spine.rpps rather than the possibly-stale module-local `entries`
+ *  snapshot, so navigating away from the RPP stage and back (which rebuilds
+ *  `entries` fresh from state.spine.rpps in render() below) can never
+ *  clobber progress a still-running background generation already saved. */
+function persistOneEntry(entry) {
+  const current = Array.isArray(state.spine.rpps) ? state.spine.rpps.slice() : [];
+  const idx = current.findIndex((e) => e.id === entry.id);
+  const plain = { id: entry.id, unit: entry.unit, content: entry.content };
+  if (idx >= 0) current[idx] = plain; else current.push(plain);
+  setRpps(current);
+  const localIdx = entries.findIndex((e) => e.id === entry.id);
+  if (localIdx >= 0) entries[localIdx] = entry;
 }
 
 export async function render(container) {
@@ -182,6 +270,7 @@ export async function render(container) {
     id: e.id, unit: e.unit, content: e.content,
   })) : [];
   activeId = entries.length ? entries[entries.length - 1].id : null;
+  activeMeetingTab = 0;
 
   const units = state.spine.units || [];
   const doneUnitIds = new Set(entries.filter((e) => e.unit.unitId).map((e) => e.unit.unitId));
@@ -321,6 +410,7 @@ function renderList(container) {
       <div class="meta">${e.unit.pertemuanCount} pertemuan &middot; ${e.unit.jp} JP &middot; Semester ${e.unit.semester === 2 ? 'Genap' : 'Ganjil'}</div>`;
     btn.addEventListener('click', async () => {
       activeId = e.id;
+      activeMeetingTab = 0;
       await showPreview(rootEl, currentEntry());
     });
     grid.appendChild(btn);
@@ -343,73 +433,166 @@ async function onCreate(container, useAi) {
     tpList: parseTpLines(container.querySelector('#in-tp').value),
     kktpList: parseKktpLines(container.querySelector('#in-kktp').value),
   };
-  await createEntry(container, useAi, unit, { genSel: '#btn-generate', dummySel: '#btn-dummy' });
+  await createEntry(container, useAi, unit);
 }
 
-/** Shared by both the ATP-driven picker and the manual topic-stub form. */
-async function createEntry(container, useAi, unit, sel) {
-  sel = sel || { genSel: '#btn-generate-unit', dummySel: '#btn-dummy-unit' };
-  const genBtn = container.querySelector(sel.genSel);
-  const dummyBtn = container.querySelector(sel.dummySel);
-  if (genBtn) genBtn.disabled = true;
-  if (dummyBtn) dummyBtn.disabled = true;
-  const genLabel = genBtn && genBtn.textContent;
-  const dummyLabel = dummyBtn && dummyBtn.textContent;
-  if (useAi && genBtn) genBtn.textContent = 'Membuat…';
-  if (!useAi && dummyBtn) dummyBtn.textContent = 'Membuat…';
-
-  let content = null;
-  try {
-    if (useAi) {
-      const r = await callAi('generate_rpp', { planId: state.planId, unit: unitForRequest(unit) });
-      content = r.data;
-      if (r.pertemuanCount) unit.pertemuanCount = r.pertemuanCount;
-    } else {
-      content = dummyContent(unit);
-    }
-  } catch (e) {
-    if (genBtn) { genBtn.disabled = false; genBtn.textContent = genLabel; }
-    if (dummyBtn) { dummyBtn.disabled = false; dummyBtn.textContent = dummyLabel; }
-    return; // callAi/local error path already toasted where relevant
+/** Shared by both the ATP-driven picker and the manual topic-stub form.
+ *  AI path: creates/replaces the entry with a zero-AI skeleton (via
+ *  pipeline.draftRppSkeleton — same shape the free "Kerangka Instan" path
+ *  uses, so a mid-generation entry always has a valid, previewable shape)
+ *  and immediately kicks off the per-meeting orchestration. Dummy path:
+ *  fills instantly with illustrative example content, no network call. */
+async function createEntry(container, useAi, unit) {
+  const existingIdx = unit.unitId ? entries.findIndex((e) => e.unit.unitId === unit.unitId) : -1;
+  if (existingIdx >= 0 && generatingEntryId === entries[existingIdx].id) {
+    toast('Pembuatan RPP untuk unit ini sedang berjalan.', { error: true });
+    return;
   }
 
-  if (genBtn) { genBtn.disabled = false; genBtn.textContent = genLabel; }
-  if (dummyBtn) { dummyBtn.disabled = false; dummyBtn.textContent = dummyLabel; }
+  let content;
+  if (useAi) {
+    const skeleton = draftRppSkeleton(unit, state.spine.config);
+    unit.pertemuanCount = skeleton.pertemuanCount;
+    content = skeleton.content;
+  } else {
+    content = dummyContent(unit);
+  }
 
-  // Re-generating for a unit that already has an RPP replaces it in place
-  // (same unitId) rather than piling up duplicate entries for that unit.
-  const existingIdx = unit.unitId ? entries.findIndex((e) => e.unit.unitId === unit.unitId) : -1;
-  const entry = { id: existingIdx >= 0 ? entries[existingIdx].id : 'rpp_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), unit, content };
+  const entry = {
+    id: existingIdx >= 0 ? entries[existingIdx].id : 'rpp_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    unit,
+    content,
+  };
   if (existingIdx >= 0) entries[existingIdx] = entry; else entries.push(entry);
   activeId = entry.id;
+  activeMeetingTab = 0;
   persistEntries();
   renderList(container);
-  toast(useAi ? 'RPP berhasil dibuat oleh AI.' : 'RPP contoh berhasil diisi (offline, tanpa AI).');
-  await showPreview(container, entry);
+
+  if (useAi) {
+    toast('Membuat RPP dengan AI — mengisi bagian identitas lalu tiap pertemuan satu per satu…');
+    await showPreview(container, entry);
+    await generateAllMeetingsAi(container, entry);
+  } else {
+    toast('RPP contoh berhasil diisi (offline, tanpa AI).');
+    await showPreview(container, entry);
+  }
 }
 
-// ---- preview + edit + export ------------------------------------------------
+// ---- per-meeting AI orchestration (V2a #3) ---------------------------------
+// Thin UI wrapper over rppGen.js's generateRppContentForUnit (shared with
+// oneshot.js's owner-only full-AI chain, so the retry/resume/base+meeting
+// call sequencing can never drift between the two entry points). This
+// wrapper owns: the progress banner, the "Batal" cancel flag, and
+// persisting each step AS IT ARRIVES via persistOneEntry + an immediate
+// flushSave (not the debounced autosave) so a later meeting's failure never
+// loses earlier ones and navigating away mid-generation never loses
+// progress either.
+async function generateAllMeetingsAi(container, entry, opts) {
+  opts = opts || {};
+  if (generatingEntryId === entry.id) {
+    toast('Pembuatan RPP untuk unit ini sedang berjalan.', { error: true });
+    return;
+  }
+  generatingEntryId = entry.id;
+  cancelRequested = false;
+
+  try {
+    await generateRppContentForUnit({
+      unit: entry.unit,
+      content: entry.content,
+      header: state.spine.header,
+      planId: state.planId,
+      config: state.spine.config,
+      resume: !!opts.resume,
+      onProgress: (info) => renderGenerationBanner(container, Object.assign({ active: true }, info)),
+      isCancelled: () => cancelRequested,
+      onStepDone: async () => {
+        persistOneEntry(entry);
+        await flushSave();
+      },
+    });
+    generatingEntryId = null;
+    toast('RPP berhasil dibuat oleh AI untuk seluruh pertemuan.');
+  } catch (e) {
+    generatingEntryId = null;
+    const cancelled = e && e.message === GENERATION_CANCELLED;
+    toast(cancelled
+      ? 'Pembuatan RPP dibatalkan — bagian yang sudah selesai tetap tersimpan.'
+      : 'Pembuatan RPP berhenti: ' + String((e && e.message) || e) + ' — bagian yang sudah selesai tetap tersimpan.',
+    { error: !cancelled });
+  }
+
+  if (currentEntry() && currentEntry().id === entry.id) await showPreview(container, entry);
+}
+
+function renderGenerationBanner(container, info) {
+  const el = container.querySelector('#rpp-progress');
+  if (!el) return; // stage navigated away mid-generation — generation itself continues in the background
+  el.innerHTML = `
+    <div class="card" style="background:var(--accent-soft); border-color:var(--accent-line); margin-bottom:var(--space-3);">
+      <div class="row-between">
+        <strong>⚡ ${escapeHtml(info.label)}</strong>
+        <button type="button" class="btn btn-ghost btn-sm" id="btn-cancel-gen">Batal</button>
+      </div>
+      <div class="muted small">Langkah ${info.step} dari ${info.total}</div>
+    </div>
+  `;
+  const cancelBtn = el.querySelector('#btn-cancel-gen');
+  if (cancelBtn) cancelBtn.addEventListener('click', () => { cancelRequested = true; });
+}
+
+function renderResumeBanner(container, entry) {
+  const el = container.querySelector('#rpp-progress');
+  if (!el) return;
+  const rs = findResumeState(entry.unit, entry.content);
+  if (!rs) { el.innerHTML = ''; return; }
+  const label = rs.baseNeeds ? 'bagian identitas unit' : `Pertemuan ${rs.firstMissing + 1}`;
+  el.innerHTML = `
+    <div class="card" style="background:var(--warn-soft); border-color:var(--line); margin-bottom:var(--space-3);">
+      <div class="row-between" style="gap:var(--space-3);">
+        <span>RPP ini belum lengkap dibuat AI — lanjut dari <strong>${escapeHtml(label)}</strong>.</span>
+        <button type="button" class="btn btn-primary btn-sm" id="btn-resume-gen">▶ Lanjutkan</button>
+      </div>
+    </div>
+  `;
+  const btn = el.querySelector('#btn-resume-gen');
+  if (btn) btn.addEventListener('click', () => generateAllMeetingsAi(container, entry, { resume: true }));
+}
+
+// ---- preview: meeting tab strip + edit + export ----------------------------
+function renderTabsHtml(total, active) {
+  const meetingTabs = Array.from({ length: total }, (_, i) => (
+    `<button type="button" class="tab-btn${active === i ? ' is-active' : ''}" data-tab="${i}">Pertemuan ${i + 1}</button>`
+  )).join('');
+  const allTab = total > 1
+    ? `<button type="button" class="tab-btn${active === 'all' ? ' is-active' : ''}" data-tab="all">Semua</button>`
+    : '';
+  return meetingTabs + allTab;
+}
+
 async function showPreview(container, entry) {
   const wrap = container.querySelector('#rpp-preview-wrap');
   if (!entry) { wrap.innerHTML = ''; return; }
 
-  // Export buttons are blocked whenever the validator has any error-level
-  // finding (SOP §12.A red errors block export — plan's Validator section),
-  // same rule the Ekspor screen's document list enforces.
-  const level = overallLevel(runValidator(state.spine));
-  const blocked = level === 'error';
-  const blockAttrs = 'disabled title="Perbaiki kesalahan validator (tanda merah) dulu sebelum mengekspor — lihat tahap Ekspor."';
+  const total = entry.unit.pertemuanCount || 1;
+  if (activeMeetingTab !== 'all' && (typeof activeMeetingTab !== 'number' || activeMeetingTab >= total || activeMeetingTab < 0)) {
+    activeMeetingTab = 0;
+  }
 
   wrap.innerHTML = `
     <div class="card card-pad-lg">
       <div class="row-between">
         <h2>Pratinjau — ${escapeHtml(entry.unit.topik)}</h2>
-        <div class="row">
-          <button class="btn btn-outline" id="btn-export-mht" ${blocked ? blockAttrs : ''}>Unduh MHT (Word)</button>
-          <button class="btn btn-outline" id="btn-export-docx" ${blocked ? blockAttrs : ''}>Unduh DOCX</button>
-          <button class="btn btn-outline" id="btn-export-pdf" ${blocked ? blockAttrs : ''}>Cetak / Simpan PDF</button>
-          <button class="btn btn-outline" id="btn-export-html" ${blocked ? blockAttrs : ''}>Unduh HTML</button>
-        </div>
+        ${total > 1 ? '<button type="button" class="btn btn-outline" id="btn-combine-pdf">📎 Gabungkan semua → PDF</button>' : ''}
+      </div>
+      <div id="rpp-progress"></div>
+      <div class="tab-strip" id="rpp-tabs">${renderTabsHtml(total, activeMeetingTab)}</div>
+      <div class="row" style="margin-bottom:var(--space-3);">
+        <button class="btn btn-outline" id="btn-export-mht">Unduh MHT (Word)</button>
+        <button class="btn btn-outline" id="btn-export-docx">Unduh DOCX</button>
+        <button class="btn btn-outline" id="btn-export-pdf">Cetak / Simpan PDF</button>
+        <button class="btn btn-outline" id="btn-export-html">Unduh HTML</button>
       </div>
       <p class="muted small">Klik langsung pada sel berwarna putih untuk menyunting teks, atau pakai 🔄 di pojok sel untuk meregenerasi bagian itu dengan AI. Klik kotak ☐ untuk mencentang/batal.</p>
       <div id="rpp-warnings"></div>
@@ -419,20 +602,46 @@ async function showPreview(container, entry) {
     </div>
   `;
 
+  if (generatingEntryId !== entry.id) renderResumeBanner(container, entry);
+
+  container.querySelectorAll('#rpp-tabs [data-tab]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const v = btn.dataset.tab;
+      activeMeetingTab = v === 'all' ? 'all' : Number(v);
+      await showPreview(container, entry);
+    });
+  });
+
+  const combineBtn = container.querySelector('#btn-combine-pdf');
+  if (combineBtn) combineBtn.addEventListener('click', () => onCombinePdf(container, entry));
+
+  await renderActiveTab(container, entry);
+}
+
+async function renderActiveTab(container, entry) {
+  const iframe = container.querySelector('#rpp-iframe');
+  const total = entry.unit.pertemuanCount || 1;
+  const meetingIndex = activeMeetingTab === 'all' ? undefined : activeMeetingTab;
+
   let html;
   try {
-    const result = await renderRppHtml({ header: state.spine.header, unit: entry.unit, content: entry.content, menitPerJp: state.spine.config.menitPerJp });
+    const result = await renderRppHtml({
+      header: state.spine.header, unit: entry.unit, content: entry.content,
+      menitPerJp: state.spine.config.menitPerJp, meetingIndex,
+    });
     html = result.html;
-    if (result.warnings && result.warnings.length) {
-      container.querySelector('#rpp-warnings').innerHTML =
-        '<p class="muted small">Catatan template: ' + result.warnings.map(escapeHtml).join(' · ') + '</p>';
+    const warnEl = container.querySelector('#rpp-warnings');
+    if (warnEl) {
+      warnEl.innerHTML = (result.warnings && result.warnings.length)
+        ? '<p class="muted small">Catatan template: ' + result.warnings.map(escapeHtml).join(' · ') + '</p>'
+        : '';
     }
   } catch (e) {
+    const wrap = container.querySelector('#rpp-preview-wrap');
     wrap.innerHTML = `<div class="placeholder card"><div class="big-icon">⚠️</div><h2>Gagal merender pratinjau</h2><p class="muted">${escapeHtml((e && e.message) || e)}</p></div>`;
     return;
   }
 
-  const iframe = container.querySelector('#rpp-iframe');
   await new Promise((resolve) => {
     iframe.addEventListener('load', resolve, { once: true });
     iframe.srcdoc = html;
@@ -440,10 +649,30 @@ async function showPreview(container, entry) {
 
   wireEditableCells(iframe, entry, container);
 
-  container.querySelector('#btn-export-mht').addEventListener('click', () => exportCurrent(iframe, entry, 'mht'));
-  container.querySelector('#btn-export-docx').addEventListener('click', () => exportCurrent(iframe, entry, 'docx'));
-  container.querySelector('#btn-export-pdf').addEventListener('click', () => exportCurrent(iframe, entry, 'pdf'));
-  container.querySelector('#btn-export-html').addEventListener('click', () => exportCurrent(iframe, entry, 'html'));
+  const label = meetingIndex == null
+    ? 'RPP - ' + entry.unit.topik
+    : `RPP - ${entry.unit.topik} - Pertemuan ${meetingIndex + 1} dari ${total}`;
+  container.querySelector('#btn-export-mht').addEventListener('click', () => withExportGate(() => exportCurrent(iframe, label, 'mht')));
+  container.querySelector('#btn-export-docx').addEventListener('click', () => withExportGate(() => exportCurrent(iframe, label, 'docx')));
+  container.querySelector('#btn-export-pdf').addEventListener('click', () => withExportGate(() => exportCurrent(iframe, label, 'pdf')));
+  container.querySelector('#btn-export-html').addEventListener('click', () => withExportGate(() => exportCurrent(iframe, label, 'html')));
+}
+
+async function onCombinePdf(container, entry) {
+  await withExportGate(async () => {
+    const btn = container.querySelector('#btn-combine-pdf');
+    if (btn) { btn.disabled = true; btn.textContent = 'Menyiapkan…'; }
+    try {
+      const { html } = await renderRppCombinedHtml({
+        header: state.spine.header, unit: entry.unit, content: entry.content, menitPerJp: state.spine.config.menitPerJp,
+      });
+      printRppHtml(html);
+    } catch (e) {
+      toast('Gagal menggabungkan PDF: ' + String((e && e.message) || e), { error: true });
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = '📎 Gabungkan semua → PDF'; }
+    }
+  });
 }
 
 function wireEditableCells(iframe, entry, container) {
@@ -467,16 +696,28 @@ function wireEditableCells(iframe, entry, container) {
   `;
   doc.head.appendChild(style);
 
-  // Checkbox toggles — click a dimensi/santri-kitab item to check/uncheck it.
-  Array.from(doc.querySelectorAll('ul.checkbox-list li[data-item]')).forEach((li) => {
-    li.addEventListener('click', () => {
-      const chk = li.querySelector('.chk');
-      if (!chk) return;
-      chk.textContent = chk.textContent.trim() === '☑' ? '☐' : '☑';
+  // Checkbox toggles — click a dimensi/santri-kitab item to check/uncheck
+  // it, persisting the selected labels straight back into
+  // entry.content[baseField] (V2a #5 — must survive reload).
+  Array.from(doc.querySelectorAll('ul.checkbox-list[data-field]')).forEach((ul) => {
+    const baseField = ul.getAttribute('data-field'); // unit-level only, never suffixed
+    Array.from(ul.querySelectorAll('li[data-item]')).forEach((li) => {
+      li.addEventListener('click', () => {
+        const chk = li.querySelector('.chk');
+        if (!chk) return;
+        chk.textContent = chk.textContent.trim() === '☑' ? '☐' : '☑';
+        const selected = Array.from(ul.querySelectorAll('li[data-item]'))
+          .filter((x) => { const c = x.querySelector('.chk'); return c && c.textContent.trim() === '☑'; })
+          .map((x) => itemShortLabel(x.getAttribute('data-item')));
+        entry.content[baseField] = selected;
+        persistOneEntry(entry);
+        flushSave().catch(() => {});
+      });
     });
   });
 
-  // Editable content cells + per-field regenerate button.
+  // Editable content cells + per-field regenerate button + debounced
+  // save-back-to-spine (V2a #5).
   const cells = Array.from(doc.querySelectorAll('[data-marker="3"][data-field]'));
   for (const cell of cells) {
     if (cell.classList.contains('checkbox-list')) continue;
@@ -501,6 +742,28 @@ function wireEditableCells(iframe, entry, container) {
       regenerateField(container, entry, baseField, meetingIndex);
     });
     cell.appendChild(btn);
+
+    let debounceTimer = null;
+    const commit = () => {
+      const text = serializeCellToMiniSyntax(cell);
+      if (meetingIndex != null) {
+        entry.content.pertemuan = entry.content.pertemuan || [];
+        entry.content.pertemuan[meetingIndex] = entry.content.pertemuan[meetingIndex] || {};
+        entry.content.pertemuan[meetingIndex][baseField] = text;
+      } else {
+        entry.content[baseField] = text;
+      }
+      persistOneEntry(entry);
+    };
+    cell.addEventListener('input', () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(commit, 300);
+    });
+    cell.addEventListener('blur', () => {
+      if (debounceTimer) { clearTimeout(debounceTimer); debounceTimer = null; }
+      commit();
+      flushSave().catch(() => {}); // deliberate "done editing this cell" signal — save NOW, don't wait for the 2s autosave debounce
+    });
   }
 }
 
@@ -530,20 +793,21 @@ async function regenerateField(container, entry, baseField, meetingIndex) {
   } else {
     entry.content[baseField] = r.value;
   }
-  persistEntries();
+  persistOneEntry(entry);
+  await flushSave();
   toast('Bagian berhasil diregenerasi.');
   await showPreview(container, entry);
 }
 
 // ---- exports (always serialize the LIVE iframe DOM, so any hand-edits or
-// checkbox toggles the teacher just made are captured) -----------------------
+// checkbox toggles the teacher just made are captured even before the
+// debounced save-back above commits them to entry.content) -----------------
 function liveHtml(iframe) {
   return '<!DOCTYPE html>\n' + iframe.contentDocument.documentElement.outerHTML;
 }
 
-async function exportCurrent(iframe, entry, kind) {
+async function exportCurrent(iframe, label, kind) {
   const html = liveHtml(iframe);
-  const label = 'RPP - ' + entry.unit.topik;
   try {
     if (kind === 'mht') {
       await downloadMht(html, label);

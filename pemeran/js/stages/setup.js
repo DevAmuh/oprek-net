@@ -136,7 +136,8 @@ export async function render(container) {
   wireSimpleFields(container);
   container.querySelector('#btn-next').addEventListener('click', () => onNext(container));
 
-  // M4: owner-only "⚡ Generate Semuanya" — renders nothing for non-owners.
+  // V2a #9: "⚡ Kerangka Instan (tanpa AI)" for every teacher, plus an
+  // owner-only "✨ Generate Semuanya dengan AI" button alongside it.
   mountOneshotButton(container.querySelector('#oneshot-host'));
 }
 

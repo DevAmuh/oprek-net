@@ -395,15 +395,84 @@ function textOf(message) {
   return (message.content || []).filter((b) => b.type === 'text').map((b) => b.text).join('\n');
 }
 
+// =============================================================
+// V2a #8 — fallback-output sanitizer. Free/fallback OpenRouter models (and,
+// occasionally, Haiku too under pressure) emit unresolved placeholder
+// brackets ("[masukkan topik]"), stray pseudo-HTML tags, control chars, or
+// junk/mojibake Unicode instead of real content. A real character
+// WHITELIST (not just stripping a few known-bad patterns) is used here —
+// applied to every string in every parsed AI response, for ALL providers
+// (cheap insurance, not just the OpenRouter path), right where
+// extractJsonObject() turns raw model text into a JS value, so nothing
+// downstream (client UI, DOCX/MHT/PDF export) ever sees it.
+// =============================================================
+const SANITIZE_KEEP_EXTRA = new Set([
+  '✓', // ✓
+  '•', // •
+  '–', '—', // – —
+  '☐', '☑', // ☐ ☑
+  '°', // °
+  '≥', '≤', // ≥ ≤
+  '×', // ×
+  '′', // ′
+  '‘', '’', // ' '
+  '“', '”', // " "
+  '…', // …
+]);
+// [masukkan topik di sini] / [...] placeholder brackets a lazy model left unresolved.
+const BRACKET_PLACEHOLDER_RE = /\[[^[\]\n]{0,80}\]/g;
+// stray <tag>/</tag> pseudo-HTML/markdown a model wasn't asked to produce.
+const STRAY_TAG_RE = /<\/?[a-zA-Z][^<>\n]{0,80}>/g;
+
+function isAllowedChar(ch) {
+  const code = ch.codePointAt(0);
+  if (code === 9 || code === 10 || code === 13) return true; // tab / \n / \r
+  if (code >= 0x20 && code <= 0x7e) return true; // ASCII printable
+  if (code >= 0xa0 && code <= 0xff) return true; // Latin-1 supplement (loanwords/accents)
+  return SANITIZE_KEEP_EXTRA.has(ch);
+}
+
+function sanitizeText(s) {
+  if (typeof s !== 'string' || !s) return s;
+  const before = s.length;
+  let out = s.replace(BRACKET_PLACEHOLDER_RE, '').replace(STRAY_TAG_RE, '');
+  out = Array.from(out).filter(isAllowedChar).join('');
+  out = out
+    .split('\n')
+    .map((line) => line.replace(/[ \t]+/g, ' ').trim())
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+  if (before > 20 && (before - out.length) / before > 0.05) {
+    console.warn('[sanitize] stripped ~' + Math.round((1 - out.length / before) * 100) + '% of a field (' + before + ' -> ' + out.length + ' chars): "' + s.slice(0, 60) + '..."');
+  }
+  return out;
+}
+
+/** Recursively sanitize every string value in a parsed AI JSON response. */
+function sanitizeDeep(value) {
+  if (typeof value === 'string') return sanitizeText(value);
+  if (Array.isArray(value)) return value.map(sanitizeDeep);
+  if (value && typeof value === 'object') {
+    const out = {};
+    for (const k of Object.keys(value)) out[k] = sanitizeDeep(value[k]);
+    return out;
+  }
+  return value;
+}
+
 function extractJsonObject(text) {
   let raw = (text || '').trim();
   if (raw.startsWith('```')) {
     raw = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
   }
-  try { return JSON.parse(raw); } catch (e) { /* fall through */ }
-  const m = raw.match(/\{[\s\S]*\}/);
-  if (m) { try { return JSON.parse(m[0]); } catch (e) { /* ignore */ } }
-  return null;
+  let parsed = null;
+  try { parsed = JSON.parse(raw); } catch (e) { /* fall through */ }
+  if (!parsed) {
+    const m = raw.match(/\{[\s\S]*\}/);
+    if (m) { try { parsed = JSON.parse(m[0]); } catch (e) { /* ignore */ } }
+  }
+  return parsed ? sanitizeDeep(parsed) : null;
 }
 
 // =============================================================
@@ -645,44 +714,201 @@ ${kktpLines}
 Susun seluruh field sesuai skema yang diberikan, mengikuti aturan format, nada, dan panjang pada instruksi sistem.`;
 }
 
+// V2a #3 root cause: the OLD generate_rpp asked for ALL meetings' content
+// (up to 15 x 5 rich-text fields) in ONE Haiku call (max_tokens 8000) — the
+// 504 on any unit with more than a handful of meetings. Split into:
+//   generate_rpp_base    — the ~19 unit-level fields only, NO "pertemuan".
+//   generate_rpp_meeting — ONE meeting's 5 phases only.
+// so the client can orchestrate N small, individually-retriable calls with
+// visible progress instead of one big one that either fully succeeds or
+// times out with nothing to show for it.
+
+function rppBaseSchema() {
+  const full = rppContentSchema();
+  const properties = Object.assign({}, full.properties);
+  delete properties.pertemuan;
+  return {
+    type: 'object',
+    properties,
+    required: full.required.filter((k) => k !== 'pertemuan'),
+    additionalProperties: false,
+  };
+}
+
+function buildBaseUserPrompt(unit) {
+  const tpLines = unit.tpList.length
+    ? unit.tpList.map((t) => `${t.kode}: ${t.rumusan}`).join('\n')
+    : '(belum ada TP spesifik — susun konten berdasarkan topik & CP saja)';
+  const kktpLines = unit.kktpList.length
+    ? unit.kktpList.map((k) => `${k.kode}: ${k.kriteria}`).join('\n')
+    : '(belum ada KKTP spesifik)';
+
+  return `Buatkan HANYA bagian identitas/konten tingkat-UNIT RPP berikut — BUKAN isi per pertemuan. Field "pertemuan" TIDAK termasuk skema ini; setiap pertemuan akan diminta secara terpisah setelah ini, jadi jangan menyinggung konten pertemuan tertentu di field manapun.
+
+Mata Pelajaran: ${unit.mapel || '(tidak disebutkan)'}
+Kelas: ${unit.kelas ? 'VII/VIII/IX (angka ' + unit.kelas + ')' : '(tidak disebutkan)'}
+Semester: ${unit.semester === 2 ? 'Genap' : 'Ganjil'}
+Topik/Judul Unit: "${unit.topik || '(tidak disebutkan)'}"
+Total JP unit ini: ${unit.jp} JP (1 JP = 40 menit), ${unit.pertemuanCount} pertemuan.
+
+Konteks Capaian Pembelajaran (elemen terkait, verbatim dari CP nasional/kontekstual — jangan diubah, hanya jadi acuan):
+${unit.cpElemen || '(tidak disebutkan — gunakan judul topik sebagai acuan utama)'}
+
+Tujuan Pembelajaran (TP) yang harus dicapai unit ini (kode TP JANGAN diulang di keluaran Anda — ini hanya konteks):
+${tpLines}
+
+Kriteria Ketercapaian TP (KKTP) terkait (konteks saja):
+${kktpLines}
+
+Susun seluruh field sesuai skema yang diberikan (field tingkat-unit saja, TANPA "pertemuan"), mengikuti aturan format, nada, dan panjang pada instruksi sistem.`;
+}
+
+function buildMeetingUserPrompt(unit, meetingIndex, tpChunk, jp, menit) {
+  const chunk = Array.isArray(tpChunk) && tpChunk.length ? tpChunk : unit.tpList;
+  const tpLines = chunk.length
+    ? chunk.map((t) => `${t.kode}: ${t.rumusan}`).join('\n')
+    : '(tidak ada TP spesifik untuk pertemuan ini — gunakan topik/CP unit sebagai acuan)';
+  const jpThis = Number(jp) > 0 ? Number(jp) : unit.jpPerPertemuan;
+  const menitThis = Number(menit) > 0 ? Number(menit) : jpThis * 40;
+
+  return `Buatkan HANYA konten 5 fase SATU pertemuan RPP (opening, memahami, mengaplikasi, merefleksi, closing) — bukan seluruh RPP, bukan pertemuan lain.
+
+Mata Pelajaran: ${unit.mapel || '(tidak disebutkan)'}
+Kelas: ${unit.kelas ? 'VII/VIII/IX (angka ' + unit.kelas + ')' : '(tidak disebutkan)'}
+Semester: ${unit.semester === 2 ? 'Genap' : 'Ganjil'}
+Topik/Judul Unit: "${unit.topik || '(tidak disebutkan)'}"
+Pertemuan ke: ${meetingIndex + 1} dari ${unit.pertemuanCount} — sesuaikan posisi (pengantar/pendalaman/penutup unit) dengan urutan ini.
+JP pertemuan ini: ${jpThis} JP (${menitThis} menit total).
+
+Konteks Capaian Pembelajaran (acuan, verbatim, jangan diubah):
+${unit.cpElemen || '(tidak disebutkan — gunakan judul topik sebagai acuan utama)'}
+
+Tujuan Pembelajaran (TP) yang menjadi FOKUS pertemuan ini (kode TP JANGAN diulang di keluaran):
+${tpLines}
+
+Kembalikan HANYA field opening/memahami/mengaplikasi/merefleksi/closing sesuai skema, mengikuti aturan format, nada, dan panjang pada instruksi sistem.`;
+}
+
+/** Shared core: one Haiku/OpenRouter call for the unit-level base fields
+ *  (no "pertemuan"). Used by both generate_rpp_base and the deprecated
+ *  generate_rpp alias below. */
+async function generateRppBaseContent(unit) {
+  const requestBody = {
+    model: MODEL,
+    max_tokens: 2500,
+    system: [{ type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
+    messages: [{ role: 'user', content: buildBaseUserPrompt(unit) }],
+    output_config: { format: { type: 'json_schema', schema: rppBaseSchema() } },
+  };
+  const message = await callModel(requestBody);
+  if (message.stop_reason === 'refusal') return { refusal: true, message };
+  return { data: extractJsonObject(textOf(message)), message };
+}
+
+/** Shared core: one Haiku/OpenRouter call for ONE meeting's 5 phases. */
+async function generateRppMeetingContent(unit, meetingIndex, tpChunk, jp, menit) {
+  const requestBody = {
+    model: MODEL,
+    max_tokens: 1200,
+    system: [{ type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
+    messages: [{ role: 'user', content: buildMeetingUserPrompt(unit, meetingIndex, tpChunk, jp, menit) }],
+    output_config: { format: { type: 'json_schema', schema: pertemuanItemSchema() } },
+  };
+  const message = await callModel(requestBody);
+  if (message.stop_reason === 'refusal') return { refusal: true, message };
+  return { data: extractJsonObject(textOf(message)), message };
+}
+
+async function generateRppBase(body, res) {
+  const unit = normalizeUnit(body.unit);
+  if (!unit.topik) return res.status(400).json({ error: 'Topik/nama unit wajib diisi.' });
+
+  let result;
+  try {
+    result = await generateRppBaseContent(unit);
+  } catch (e) {
+    return res.status(502).json({ error: 'Gagal menghubungi AI: ' + String((e && e.message) || e) });
+  }
+  if (result.refusal) {
+    return res.status(502).json({ error: 'AI menolak membuat konten untuk permintaan ini. Coba ubah topik atau data unit, lalu coba lagi.' });
+  }
+  if (!result.data) {
+    return res.status(502).json({ error: 'AI mengirim respons yang tidak bisa dibaca. Coba lagi.' });
+  }
+
+  await logGen(body.planId, 'generate_rpp_base', result.message);
+  return res.status(200).json({ ok: true, fallback: (result.message && result.message._fb) || undefined, data: result.data });
+}
+
+async function generateRppMeeting(body, res) {
+  const unit = normalizeUnit(body.unit);
+  if (!unit.topik) return res.status(400).json({ error: 'Topik/nama unit wajib diisi.' });
+
+  const meetingIndex = Number.isInteger(body.meetingIndex) && body.meetingIndex >= 0 ? body.meetingIndex : 0;
+  const tpChunk = Array.isArray(body.tpChunk) ? body.tpChunk.slice(0, 10).map((t) => ({
+    kode: clampStr(t && t.kode, 40),
+    rumusan: clampStr(t && t.rumusan, 400),
+  })) : unit.tpList;
+  const jp = Number(body.jp) > 0 ? Number(body.jp) : unit.jpPerPertemuan;
+  const menit = Number(body.menit) > 0 ? Number(body.menit) : jp * 40;
+
+  let result;
+  try {
+    result = await generateRppMeetingContent(unit, meetingIndex, tpChunk, jp, menit);
+  } catch (e) {
+    return res.status(502).json({ error: 'Gagal menghubungi AI: ' + String((e && e.message) || e) });
+  }
+  if (result.refusal) {
+    return res.status(502).json({ error: 'AI menolak permintaan ini. Coba lagi.' });
+  }
+  if (!result.data) {
+    return res.status(502).json({ error: 'AI mengirim respons yang tidak bisa dibaca. Coba lagi.' });
+  }
+
+  await logGen(body.planId, 'generate_rpp_meeting', result.message);
+  return res.status(200).json({ ok: true, fallback: (result.message && result.message._fb) || undefined, meetingIndex, data: result.data });
+}
+
+/** DEPRECATED — kept only so an old cached client page (or anything mid-
+ *  deploy) doesn't hard-break: delegates to the same base+per-meeting core
+ *  functions above, looped server-side. New client code MUST use
+ *  generate_rpp_base + generate_rpp_meeting instead (per-meeting progress,
+ *  per-meeting retry, resumability — none of which this alias provides). */
 async function generateRpp(body, res) {
   const unit = normalizeUnit(body.unit);
   if (!unit.topik) return res.status(400).json({ error: 'Topik/nama unit wajib diisi.' });
 
-  const requestBody = {
-    model: MODEL,
-    max_tokens: 8000,
-    system: [{ type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
-    messages: [{ role: 'user', content: buildUserPrompt(unit) }],
-    output_config: { format: { type: 'json_schema', schema: rppContentSchema() } },
-  };
-
-  let message;
+  let baseResult;
   try {
-    message = await callModel(requestBody);
+    baseResult = await generateRppBaseContent(unit);
   } catch (e) {
     return res.status(502).json({ error: 'Gagal menghubungi AI: ' + String((e && e.message) || e) });
   }
-
-  if (message.stop_reason === 'refusal') {
+  if (baseResult.refusal) {
     return res.status(502).json({ error: 'AI menolak membuat konten untuk permintaan ini. Coba ubah topik atau data unit, lalu coba lagi.' });
   }
-
-  const data = extractJsonObject(textOf(message));
-  if (!data) {
+  if (!baseResult.data) {
     return res.status(502).json({ error: 'AI mengirim respons yang tidak bisa dibaca. Coba lagi.' });
   }
 
-  // Defensive: pad/truncate the pertemuan array to the exact requested count
-  // so the client never has to guard against a short/long array.
-  if (!Array.isArray(data.pertemuan)) data.pertemuan = [];
-  while (data.pertemuan.length < unit.pertemuanCount) {
-    data.pertemuan.push({ opening: '', memahami: '', mengaplikasi: '', merefleksi: '', closing: '' });
-  }
-  if (data.pertemuan.length > unit.pertemuanCount) data.pertemuan = data.pertemuan.slice(0, unit.pertemuanCount);
+  const data = baseResult.data;
+  data.pertemuan = [];
+  let usedFallback = !!(baseResult.message && baseResult.message._fb);
 
-  await logGen(body.planId, 'generate_rpp', message);
-  return res.status(200).json({ ok: true, fallback: (message && message._fb) || undefined, data, pertemuanCount: unit.pertemuanCount });
+  for (let i = 0; i < unit.pertemuanCount; i++) {
+    let mResult;
+    try {
+      mResult = await generateRppMeetingContent(unit, i, unit.tpList, unit.jpPerPertemuan, unit.jpPerPertemuan * 40);
+    } catch (e) {
+      data.pertemuan.push({ opening: '', memahami: '', mengaplikasi: '', merefleksi: '', closing: '' });
+      continue;
+    }
+    data.pertemuan.push(mResult.data || { opening: '', memahami: '', mengaplikasi: '', merefleksi: '', closing: '' });
+    if (mResult.message && mResult.message._fb) usedFallback = true;
+  }
+
+  await logGen(body.planId, 'generate_rpp', baseResult.message);
+  return res.status(200).json({ ok: true, fallback: usedFallback || undefined, data, pertemuanCount: unit.pertemuanCount });
 }
 
 async function regenerateField(body, res) {
@@ -1209,6 +1435,8 @@ module.exports = async (req, res) => {
     forceProvider = (body.provider === 'openrouter' || body.provider === 'anthropic') ? body.provider : null;
 
     switch (body.action) {
+      case 'generate_rpp_base':     return await generateRppBase(body, res);
+      case 'generate_rpp_meeting':  return await generateRppMeeting(body, res);
       case 'generate_rpp':          return await generateRpp(body, res);
       case 'regenerate_field':      return await regenerateField(body, res);
       case 'generate_tp':           return await generateTp(body, res);

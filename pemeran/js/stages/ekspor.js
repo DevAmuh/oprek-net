@@ -11,11 +11,12 @@
 
 import { state } from '../state.js';
 import { toast, call } from '../api.js';
-import { runValidator, overallLevel } from '../validate.js';
+import { takeValidatorFocusArea } from '../validate.js';
+import { renderValidatorPanel as renderSharedValidatorPanel, withExportGate } from '../validatorPanel.js';
 import { renderTpKktpHtml } from '../render/tpkktp.js';
 import { renderProtaHtml } from '../render/prota.js';
 import { renderProsemHtml } from '../render/prosem.js';
-import { renderRppHtml } from '../render/rpp.js';
+import { renderRppHtml, renderRppCombinedHtml } from '../render/rpp.js';
 import { distributeProsem } from '../pipeline.js';
 import { downloadMht, buildMht } from '../export/mht.js';
 import { printRppHtml } from '../export/pdf.js';
@@ -29,11 +30,10 @@ function escapeHtml(s) {
   ));
 }
 
-const LEVEL_ICON = { ok: '✓', warn: '⚠', error: '✗' };
-const LEVEL_BG = { ok: 'var(--good-soft)', warn: 'var(--warn-soft)', error: 'var(--bad-soft)' };
-const LEVEL_FG = { ok: 'var(--good)', warn: 'var(--warn)', error: 'var(--bad)' };
-
-// One entry per exportable document: { key, label, build() -> {html} }
+// One entry per exportable document: { key, label, build() -> {html}, [combine] }
+// `combine` (RPP docs with >1 meeting only) builds the "Gabungkan semua →
+// PDF" paginated doc (render/rpp.js's renderRppCombinedHtml) — same helper
+// the RPP stage's own combine button uses, so the two never drift.
 async function collectDocs() {
   const { header, cp, tps, kktps, units, sumatif, config, rpps } = state.spine;
   const docs = [];
@@ -55,9 +55,13 @@ async function collectDocs() {
     });
   }
   for (const entry of (rpps || [])) {
+    const total = (entry.unit && entry.unit.pertemuanCount) || 1;
     docs.push({
       key: 'rpp_' + entry.id, label: 'RPP — ' + (entry.unit && entry.unit.topik),
       build: () => renderRppHtml({ header, unit: entry.unit, content: entry.content, menitPerJp: config.menitPerJp }),
+      combine: total > 1
+        ? () => renderRppCombinedHtml({ header, unit: entry.unit, content: entry.content, menitPerJp: config.menitPerJp })
+        : null,
     });
   }
   return docs;
@@ -81,58 +85,45 @@ export async function render(container) {
     </div>
   `;
 
-  const results = runValidator(state.spine);
-  const level = overallLevel(results);
-  renderValidatorPanel(container, results, level);
+  let docsCache = [];
+  const focusArea = takeValidatorFocusArea();
+  renderSharedValidatorPanel(container.querySelector('#validator-panel'), {
+    focusArea,
+    // A fix (e.g. "Normalkan ulang JP") can change unit/RPP data the doc
+    // list's own build() closures capture — re-collect so a re-export
+    // reflects the just-applied fix, not stale pre-fix data.
+    onChange: async () => { docsCache = await collectDocs(); renderDocsList(container, docsCache); },
+  });
 
   const docs = await collectDocs();
-  renderDocsList(container, docs, level);
+  docsCache = docs;
+  renderDocsList(container, docs);
 
   if (isOwner) renderCostPanel(container);
 
-  container.querySelector('#btn-download-all').addEventListener('click', () => onDownloadAllZip(container, docs, level));
+  container.querySelector('#btn-download-all').addEventListener('click', () => onDownloadAllZip(container, docsCache));
 }
 
-function renderValidatorPanel(container, results, level) {
-  const panel = container.querySelector('#validator-panel');
-  const grouped = { error: [], warn: [], ok: [] };
-  results.forEach((r) => grouped[r.level].push(r));
-
-  panel.innerHTML = `
-    <div class="row-between">
-      <h3 style="margin:0;">Validator (SOP §12.A)</h3>
-      <span class="chip" style="background:${LEVEL_BG[level]}; color:${LEVEL_FG[level]};">
-        ${level === 'ok' ? '✓ Semua pemeriksaan lolos' : level === 'warn' ? '⚠ Ada peringatan' : '✗ Ada kesalahan — ekspor diblokir'}
-      </span>
-    </div>
-    <div class="stack" style="margin-top:var(--space-3);">
-      ${['error', 'warn', 'ok'].flatMap((lv) => grouped[lv].map((r) => `
-        <div style="display:flex; gap:8px; align-items:flex-start; padding:6px 0; border-bottom:1px solid var(--line);">
-          <span style="color:${LEVEL_FG[lv]}; font-weight:700;">${LEVEL_ICON[lv]}</span>
-          <span>${escapeHtml(r.pesan)}</span>
-        </div>
-      `)).join('')}
-    </div>
-  `;
-}
-
-function renderDocsList(container, docs, level) {
+// V2a #6 — export buttons are ALWAYS enabled now (no more dead-end grey-out
+// on any validator error); withExportGate() (validatorPanel.js) shows a
+// confirm sheet listing the actual findings only when there's an
+// error-level one, "Tetap ekspor" / "Perbaiki dulu" — never a silent block.
+function renderDocsList(container, docs) {
   const list = container.querySelector('#docs-list');
   if (!docs.length) {
     list.innerHTML = '<div class="card"><p class="muted">Belum ada dokumen untuk diekspor — lengkapi tahap-tahap sebelumnya dulu.</p></div>';
     return;
   }
-  const blocked = level === 'error';
-  const blockAttrs = 'disabled title="Perbaiki kesalahan validator (tanda merah) dulu sebelum mengekspor."';
 
   list.innerHTML = docs.map((d) => `
     <div class="card row-between" data-doc="${d.key}">
       <strong>${escapeHtml(d.label)}</strong>
       <div class="row">
-        <button class="btn btn-outline" data-action="mht" data-key="${d.key}" ${blocked ? blockAttrs : ''}>Unduh MHT</button>
-        <button class="btn btn-outline" data-action="docx" data-key="${d.key}" ${blocked ? blockAttrs : ''}>Unduh DOCX</button>
-        <button class="btn btn-outline" data-action="pdf" data-key="${d.key}" ${blocked ? blockAttrs : ''}>Cetak / PDF</button>
-        <button class="btn btn-outline" data-action="html" data-key="${d.key}" ${blocked ? blockAttrs : ''}>Unduh HTML</button>
+        <button class="btn btn-outline" data-action="mht" data-key="${d.key}">Unduh MHT</button>
+        <button class="btn btn-outline" data-action="docx" data-key="${d.key}">Unduh DOCX</button>
+        <button class="btn btn-outline" data-action="pdf" data-key="${d.key}">Cetak / PDF</button>
+        <button class="btn btn-outline" data-action="html" data-key="${d.key}">Unduh HTML</button>
+        ${d.combine ? `<button class="btn btn-outline" data-action="combine" data-key="${d.key}">Gabungkan → PDF</button>` : ''}
       </div>
     </div>
   `).join('');
@@ -141,15 +132,22 @@ function renderDocsList(container, docs, level) {
     btn.addEventListener('click', async () => {
       const doc = docs.find((d) => d.key === btn.dataset.key);
       if (!doc) return;
-      btn.disabled = true;
-      try {
-        const { html } = await doc.build();
-        await runExport(btn.dataset.action, html, doc.label);
-      } catch (e) {
-        toast('Gagal mengekspor ' + doc.label + ': ' + String((e && e.message) || e), { error: true });
-      } finally {
-        btn.disabled = level === 'error';
-      }
+      await withExportGate(async () => {
+        btn.disabled = true;
+        try {
+          if (btn.dataset.action === 'combine') {
+            const { html } = await doc.combine();
+            printRppHtml(html);
+          } else {
+            const { html } = await doc.build();
+            await runExport(btn.dataset.action, html, doc.label);
+          }
+        } catch (e) {
+          toast('Gagal mengekspor ' + doc.label + ': ' + String((e && e.message) || e), { error: true });
+        } finally {
+          btn.disabled = false;
+        }
+      });
     });
   });
 }
@@ -184,10 +182,12 @@ function sanitizeFilename(name) {
 // single click/download instead of 2×N popup-triggered downloads (MHT+
 // DOCX per doc), which browsers often throttle/block as a "download
 // flood" past a handful of files.
-async function onDownloadAllZip(container, docs, level) {
-  if (level === 'error') return toast('Perbaiki kesalahan validator dulu sebelum mengunduh semua dokumen.', { error: true });
+async function onDownloadAllZip(container, docs) {
   if (!docs.length) return toast('Belum ada dokumen untuk diunduh.', { error: true });
+  await withExportGate(() => runDownloadAllZip(container, docs));
+}
 
+async function runDownloadAllZip(container, docs) {
   const btn = container.querySelector('#btn-download-all');
   if (btn) { btn.disabled = true; btn.textContent = 'Menyiapkan zip…'; }
   toast(`Menyiapkan zip untuk ${docs.length} dokumen…`);
@@ -243,7 +243,7 @@ async function onDownloadAllZip(container, docs, level) {
   } catch (e) {
     toast('Gagal membuat zip: ' + String((e && e.message) || e), { error: true });
   } finally {
-    if (btn) { btn.disabled = level === 'error'; btn.textContent = '⬇ Unduh Semua (.zip)'; }
+    if (btn) { btn.disabled = false; btn.textContent = '⬇ Unduh Semua (.zip)'; }
   }
 }
 

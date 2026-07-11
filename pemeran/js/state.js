@@ -182,6 +182,19 @@ export function setProsem(partial) {
   scheduleSave();
 }
 
+/** V2a #7 — generic setter used by the validator panel's "⚡ Perbaiki"
+ *  buttons: a fix's apply(spine) returns a whole mutated-clone spine (it
+ *  works on a deep clone, never the live state.spine, so it stays a pure
+ *  function per validate.js's contract); this is what actually commits
+ *  that result back into live state + schedules the save. Top-level
+ *  Object.assign is safe here (unlike applyPlanRow's load-time merge)
+ *  because the fix functions always return a full spine shape (every
+ *  top-level key present, deep-cloned from the current state.spine). */
+export function replaceSpine(newSpine) {
+  if (newSpine && typeof newSpine === 'object') Object.assign(state.spine, newSpine);
+  scheduleSave();
+}
+
 export function scheduleSave() {
   if (state.saveTimer) clearTimeout(state.saveTimer);
   state.saveTimer = setTimeout(() => { flushSave().catch(() => {}); }, 2000);

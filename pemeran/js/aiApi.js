@@ -7,8 +7,20 @@
 
 import { getPass, clearPass, toast } from './api.js';
 
-export async function callAi(action, payload) {
+/**
+ * @param {string} action
+ * @param {object} [payload]
+ * @param {object} [opts]
+ * @param {boolean} [opts.silent]  suppress the error toast on a failed
+ *        network/non-ok response (the 401 "session expired" toast still
+ *        fires regardless — that's a global concern, not a per-call one).
+ *        Used by stages/rpp.js's "retry once" orchestration so a transient
+ *        first-attempt failure doesn't toast twice before the real,
+ *        final-failure message.
+ */
+export async function callAi(action, payload, opts) {
   payload = payload || {};
+  opts = opts || {};
   let res;
   try {
     res = await fetch('/api/pemeran-ai', {
@@ -17,7 +29,7 @@ export async function callAi(action, payload) {
       body: JSON.stringify(Object.assign({ action, pass: getPass() }, payload)),
     });
   } catch (e) {
-    toast('Tidak bisa terhubung ke server AI. Periksa koneksi internet Anda.', { error: true });
+    if (!opts.silent) toast('Tidak bisa terhubung ke server AI. Periksa koneksi internet Anda.', { error: true });
     throw e;
   }
 
@@ -33,7 +45,7 @@ export async function callAi(action, payload) {
 
   if (!res.ok) {
     const msg = (data && data.error) || ('Terjadi kesalahan tak terduga (kode ' + res.status + ').');
-    toast(msg, { error: true });
+    if (!opts.silent) toast(msg, { error: true });
     throw new Error(msg);
   }
 
