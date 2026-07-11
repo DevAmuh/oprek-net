@@ -531,7 +531,17 @@ async function callOpenRouter(anthropicBody) {
 // The single entry every action uses. Primary = Anthropic Haiku; on
 // billing/outage failures (or an explicit provider override) → OpenRouter.
 async function callModel(requestBody) {
-  if (forceProvider === 'openrouter') return callOpenRouter(requestBody);
+  if (forceProvider === 'openrouter') {
+    try {
+      return await callOpenRouter(requestBody);
+    } catch (e) {
+      if (e && e.noKey) {
+        throw new Error('Cadangan gratis belum disiapkan — tambahkan OPENROUTER_API_KEY '
+          + '(kunci akun gratis openrouter.ai) di Vercel → Environment Variables, lalu redeploy.');
+      }
+      throw e;
+    }
+  }
   try {
     return await streamClaude(requestBody);
   } catch (err) {
