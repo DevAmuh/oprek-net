@@ -482,19 +482,30 @@ function extractJsonObject(text) {
 // Requires Vercel env OPENROUTER_API_KEY (free account key).
 // =============================================================
 
-// Free-model cascade, best-first (verified free + response_format-capable on
-// openrouter.ai/api/v1/models at integration time, 2026-07-11). `openrouter/free`
-// is OpenRouter's own auto-router over whatever free capacity exists — the
-// catch-all. Roster rots over time; revisit if fallbacks start failing.
+// Free-model cascade, FAST-first (verified free + response_format-capable on
+// openrouter.ai/api/v1/models, 2026-07-12). Speed matters more than peak
+// quality here — this is a fallback whose output is already flagged "draft,
+// periksa lebih teliti", and the whole cascade must finish inside Vercel's
+// 60s Hobby function cap (cannot be raised). The 80B/120B models that were
+// here before regularly blew the budget → 504; small MoE/instruct models
+// respond in time. `openrouter/free` is OpenRouter's auto-router catch-all.
+// Roster rots — the V2c admin panel makes this list editable.
 const OPENROUTER_MODELS = [
-  'qwen/qwen3-next-80b-a3b-instruct:free',
-  'nvidia/nemotron-3-super-120b-a12b:free',
+  'google/gemma-4-26b-a4b-it:free',
+  'openai/gpt-oss-20b:free',
   'openrouter/free',
 ];
-const OPENROUTER_ATTEMPT_MS = 25000; // per-model cap; 3 attempts must fit 60s maxDuration
+// Hard wall-clock budget for the WHOLE cascade, measured from function entry
+// (requestStartMs) so the time Haiku already burned on the auto path counts.
+// 48s < the 60s Vercel cap, leaving margin to serialize the response. Without
+// this, 3 sequential slow attempts 504'd instead of returning a clean error.
+const OR_TOTAL_BUDGET_MS = 48000;
+const OR_MIN_ATTEMPT_MS = 8000;   // don't start an attempt that can't plausibly finish
+const OR_MAX_ATTEMPT_MS = 30000;  // per-attempt ceiling even when budget is ample
 
 // One request per Vercel invocation → module scope is a safe per-request slot.
-let forceProvider = null; // 'anthropic' | 'openrouter' | null (auto)
+let forceProvider = null;   // 'anthropic' | 'openrouter' | null (auto)
+let requestStartMs = 0;     // set at handler entry; anchors the OpenRouter budget
 
 // Anthropic failures that justify falling back: billing/credit (the whole point),
 // auth, rate-limit, and provider-side outages. Plain 400s do NOT fall back —
@@ -537,7 +548,15 @@ async function callOpenRouter(anthropicBody) {
     && anthropicBody.output_config.format.schema;
 
   let lastErr = null;
+  let ranOutOfTime = false;
+  const anchor = requestStartMs || Date.now();
   for (const model of OPENROUTER_MODELS) {
+    // Budget guard: only start an attempt if enough wall-clock remains to
+    // plausibly finish it AND still return before the 60s function cap.
+    const remaining = OR_TOTAL_BUDGET_MS - (Date.now() - anchor);
+    if (remaining < OR_MIN_ATTEMPT_MS) { ranOutOfTime = true; break; }
+    const attemptMs = Math.min(OR_MAX_ATTEMPT_MS, remaining - 3000);
+
     const payload = {
       model,
       messages,
@@ -553,7 +572,7 @@ async function callOpenRouter(anthropicBody) {
     }
     try {
       const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), OPENROUTER_ATTEMPT_MS);
+      const timer = setTimeout(() => ctrl.abort(), attemptMs);
       const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         signal: ctrl.signal,
@@ -594,7 +613,11 @@ async function callOpenRouter(anthropicBody) {
         : e;
     }
   }
-  throw (lastErr || new Error('Semua model cadangan OpenRouter gagal.'));
+  if (ranOutOfTime || (lastErr && /batas waktu/.test(String(lastErr.message)))) {
+    throw new Error('Model cadangan gratis sedang lambat/sibuk (kehabisan waktu). '
+      + 'Coba lagi sebentar lagi, atau isi ulang kredit AI utama untuk hasil instan.');
+  }
+  throw (lastErr || new Error('Semua model cadangan gratis gagal.'));
 }
 
 // The single entry every action uses. Primary = Anthropic Haiku; on
@@ -1404,6 +1427,7 @@ async function regenerateItem(body, res) {
 // ---- entry point ------------------------------------------------------------
 module.exports = async (req, res) => {
   try {
+    requestStartMs = Date.now(); // anchor the OpenRouter fallback wall-clock budget
     let body = req.body;
     if (typeof body === 'string') { try { body = JSON.parse(body); } catch (e) { body = {}; } }
     body = body || {};
