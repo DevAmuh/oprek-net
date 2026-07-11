@@ -363,17 +363,35 @@ async function streamClaude(body, apiKey) {
     e.status = 401;
     throw e;
   }
-  const r = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify(Object.assign({}, body, { stream: true })),
-  });
+  // Bound the whole primary attempt with an abort timeout. A credit-throttled
+  // Haiku sometimes STALLS the SSE stream instead of returning a fast 400 —
+  // with no timeout that hangs the function until Vercel kills it at 60s (a
+  // 504), and the OpenRouter fallback never runs. 30s is generous for a real
+  // Haiku generation yet bails a hang early, leaving the entry-anchored
+  // OpenRouter budget enough room to answer before the 60s cap. An abort
+  // throws (no .status) → fallbackWorthy() treats it as fallback-worthy.
+  const ctrl = new AbortController();
+  const haikuTimer = setTimeout(() => ctrl.abort(), STREAM_TIMEOUT_MS);
+  let r;
+  try {
+    r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      signal: ctrl.signal,
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify(Object.assign({}, body, { stream: true })),
+    });
+  } catch (e) {
+    clearTimeout(haikuTimer);
+    if (e && e.name === 'AbortError') throw new Error('AI utama (Anthropic) tidak merespons tepat waktu.');
+    throw e;
+  }
 
   if (!r.ok || !r.body) {
+    clearTimeout(haikuTimer);
     let errText = '';
     try { errText = await r.text(); } catch (e) { /* ignore */ }
     let msg = 'Claude API error ' + r.status;
@@ -392,39 +410,47 @@ async function streamClaude(body, apiKey) {
   const blocks = [];
   const message = { stop_reason: null, usage: {}, model: null };
 
-  while (true) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    buf += decoder.decode(value, { stream: true });
-    let idx;
-    while ((idx = buf.indexOf('\n\n')) >= 0) {
-      const raw = buf.slice(0, idx);
-      buf = buf.slice(idx + 2);
-      let dataStr = '';
-      for (const line of raw.split('\n')) {
-        if (line.startsWith('data:')) dataStr += line.slice(5).trim();
-      }
-      if (!dataStr) continue;
-      let evt;
-      try { evt = JSON.parse(dataStr); } catch (e) { continue; }
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      let idx;
+      while ((idx = buf.indexOf('\n\n')) >= 0) {
+        const raw = buf.slice(0, idx);
+        buf = buf.slice(idx + 2);
+        let dataStr = '';
+        for (const line of raw.split('\n')) {
+          if (line.startsWith('data:')) dataStr += line.slice(5).trim();
+        }
+        if (!dataStr) continue;
+        let evt;
+        try { evt = JSON.parse(dataStr); } catch (e) { continue; }
 
-      if (evt.type === 'message_start' && evt.message) {
-        message.usage = evt.message.usage || {};
-        message.model = evt.message.model;
-      } else if (evt.type === 'content_block_start') {
-        blocks[evt.index] = Object.assign({ text: '' }, evt.content_block);
-      } else if (evt.type === 'content_block_delta') {
-        const b = blocks[evt.index];
-        if (b && evt.delta && evt.delta.type === 'text_delta') b.text += evt.delta.text;
-      } else if (evt.type === 'message_delta') {
-        if (evt.delta && evt.delta.stop_reason) message.stop_reason = evt.delta.stop_reason;
-        if (evt.usage) Object.assign(message.usage, evt.usage);
-      } else if (evt.type === 'error' && evt.error) {
-        const err = new Error(evt.error.message || 'Claude stream error');
-        err.midStream = true; // e.g. overloaded_error — provider-side, fallback-worthy
-        throw err;
+        if (evt.type === 'message_start' && evt.message) {
+          message.usage = evt.message.usage || {};
+          message.model = evt.message.model;
+        } else if (evt.type === 'content_block_start') {
+          blocks[evt.index] = Object.assign({ text: '' }, evt.content_block);
+        } else if (evt.type === 'content_block_delta') {
+          const b = blocks[evt.index];
+          if (b && evt.delta && evt.delta.type === 'text_delta') b.text += evt.delta.text;
+        } else if (evt.type === 'message_delta') {
+          if (evt.delta && evt.delta.stop_reason) message.stop_reason = evt.delta.stop_reason;
+          if (evt.usage) Object.assign(message.usage, evt.usage);
+        } else if (evt.type === 'error' && evt.error) {
+          const err = new Error(evt.error.message || 'Claude stream error');
+          err.midStream = true; // e.g. overloaded_error — provider-side, fallback-worthy
+          throw err;
+        }
       }
     }
+  } catch (e) {
+    // Timeout mid-stream (abort) or transport error → fallback-worthy (no .status).
+    if (e && e.name === 'AbortError') throw new Error('AI utama (Anthropic) berhenti merespons di tengah jalan.');
+    throw e;
+  } finally {
+    clearTimeout(haikuTimer);
   }
 
   message.content = blocks;
@@ -539,9 +565,13 @@ const OPENROUTER_MODELS = [
 // (requestStartMs) so the time Haiku already burned on the auto path counts.
 // 48s < the 60s Vercel cap, leaving margin to serialize the response. Without
 // this, 3 sequential slow attempts 504'd instead of returning a clean error.
-const OR_TOTAL_BUDGET_MS = 48000;
+const OR_TOTAL_BUDGET_MS = 44000; // whole OpenRouter cascade, from function entry
 const OR_MIN_ATTEMPT_MS = 8000;   // don't start an attempt that can't plausibly finish
 const OR_MAX_ATTEMPT_MS = 30000;  // per-attempt ceiling even when budget is ample
+// Bound the PRIMARY Anthropic attempt so a credit-throttled Haiku that stalls
+// the SSE stream can't hang the whole function to the 60s Vercel cap (which
+// left the fallback no room and 504'd). Generous enough for a real generation.
+const STREAM_TIMEOUT_MS = 30000;
 
 // One request per Vercel invocation → module scope is a safe per-request slot.
 let forceProvider = null;   // 'anthropic' | 'openrouter' | null (auto)
