@@ -2,1028 +2,1701 @@
   "lang": "jp",
   "label": "Japanese — kana → N4",
   "version": "1.0",
+  "categories": [
+    {
+      "id": "kana-kanji",
+      "label": "Kana & Kanji",
+      "blurb": "The character-and-SRS track: the katakana sprint, WaniKani kanji levels with their burnout limits, and handwriting drills. Everything that builds your grip on the writing system itself.",
+      "xFrom": 0,
+      "xTo": 16
+    },
+    {
+      "id": "milestones-exams",
+      "label": "Milestones & Exams",
+      "blurb": "Consolidation checkpoints and the exam ladder — Genki I/II reviews, the N5 mock, JFT-Basic, the N4 block and exam, and the N3 decision. Where you prove the grammar has turned into speed.",
+      "xFrom": 22,
+      "xTo": 40
+    },
+    {
+      "id": "grammar",
+      "label": "Grammar Spine",
+      "blurb": "The Genki I → II backbone, chapter by chapter from です up to 使役受け身. This is the trunk the whole tree hangs off; follow it straight down.",
+      "xFrom": 46,
+      "xTo": 82
+    },
+    {
+      "id": "input-practice",
+      "label": "Input & Practice",
+      "blurb": "The daily-habit strand: listening (Teppei, Comprehensible Japanese), graded reading (Tadoku, NHK Easy), shadowing, plus output — journaling and conversation. Volume over perfection.",
+      "xFrom": 88,
+      "xTo": 100
+    }
+  ],
   "nodes": [
     {
       "id": "jp-katakana",
       "lang": "jp",
       "title": "カタカナ completion sprint",
       "layer": 0,
-      "x": 50,
+      "x": 14,
       "summary": "Week 1 sprint, 15 min/day: Tofugu mnemonics chart, then drill the confusables シツソン and クタケ until they stop being a coin flip. Pass bar: read 30 random katakana loanwords in under 90 seconds — they are mostly English, so this is free vocabulary.",
       "resources": [
-        { "label": "Tofugu — Learn Katakana", "url": "https://www.tofugu.com/japanese/learn-katakana/" },
-        { "label": "RealKana drill", "url": "https://realkana.com/" },
-        { "label": "Anki katakana deck", "ref": "Part 2 — J-SRS block" }
+        {
+          "label": "Tofugu — Learn Katakana",
+          "url": "https://www.tofugu.com/japanese/learn-katakana/"
+        },
+        {
+          "label": "RealKana drill",
+          "url": "https://realkana.com/"
+        },
+        {
+          "label": "Anki katakana deck",
+          "ref": "Part 2 — J-SRS block"
+        }
       ],
       "estHours": 5,
       "prereqs": [],
-      "tag": "P"
+      "tag": "P",
+      "category": "kana-kanji"
     },
     {
       "id": "jp-wanikani-setup",
       "lang": "jp",
       "title": "WaniKani — set the limits",
       "layer": 0,
-      "x": 16,
+      "x": 8,
       "summary": "Before a single new lesson, install the community's burnout rules: ≤15 lessons/day, Apprentice ≤100, reviews ≤150/day. If Apprentice climbs past 100, zero new lessons until it drops. This one rule is the #1 quit-preventer in the whole plan.",
       "resources": [
-        { "label": "WaniKani", "url": "https://www.wanikani.com/" },
-        { "label": "WaniKani forums — burnout / apprentice 100", "url": "https://community.wanikani.com/" }
+        {
+          "label": "WaniKani",
+          "url": "https://www.wanikani.com/"
+        },
+        {
+          "label": "WaniKani forums — burnout / apprentice 100",
+          "url": "https://community.wanikani.com/"
+        }
       ],
       "estHours": 2,
       "prereqs": [],
-      "tag": "P"
+      "tag": "P",
+      "category": "kana-kanji"
     },
     {
       "id": "jp-anki-srs-setup",
       "lang": "jp",
       "title": "J-SRS — Anki, kept separate",
       "layer": 0,
-      "x": 84,
+      "x": 94,
       "summary": "Genki vocabulary and grammar clozes in their own Anki profile, never mixed with the German deck. Reviews first always, new cards only after reviews clear, every answer said aloud. New/day: 5 Leisure, 8 Standard, 12 Accelerated.",
       "resources": [
-        { "label": "Anki", "url": "https://apps.ankiweb.net/" },
-        { "label": "Part 2 — J-SRS procedure", "ref": "03_CURRICULUM_DETAILED.md §J-SRS" }
+        {
+          "label": "Anki",
+          "url": "https://apps.ankiweb.net/"
+        },
+        {
+          "label": "Part 2 — J-SRS procedure",
+          "ref": "03_CURRICULUM_DETAILED.md §J-SRS"
+        }
       ],
       "estHours": 2,
       "prereqs": [],
-      "tag": "P"
+      "tag": "P",
+      "category": "input-practice"
     },
-
     {
       "id": "jp-desu-copula",
       "lang": "jp",
       "title": "Genki 1 — XはYです",
       "layer": 1,
-      "x": 50,
+      "x": 62,
       "summary": "The copula sentence, question particle か, and noun の noun. は marks the topic, not the subject — nail that distinction now or every particle explanation for the next year lands slightly wrong.",
-      "resources": [{ "label": "Genki I ch. 1", "ref": "Genki I ch.1" }],
+      "resources": [
+        {
+          "label": "Genki I ch. 1",
+          "ref": "Genki I ch.1"
+        }
+      ],
       "estHours": 2,
-      "prereqs": ["jp-katakana"],
-      "tag": "P"
+      "prereqs": [
+        "jp-katakana"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
     {
       "id": "jp-wk-l1-4",
       "lang": "jp",
       "title": "WaniKani L1–4",
       "layer": 1,
-      "x": 16,
+      "x": 8,
       "summary": "Radicals and the first kanji at a target ~10–12 days per level. Two short sessions a day beat one long one; your level pace is set by the review load, never by how fast the level-up button appears.",
-      "resources": [{ "label": "WaniKani dashboard", "url": "https://www.wanikani.com/dashboard" }],
+      "resources": [
+        {
+          "label": "WaniKani dashboard",
+          "url": "https://www.wanikani.com/dashboard"
+        }
+      ],
       "estHours": 6,
-      "prereqs": ["jp-wanikani-setup"],
-      "tag": "P"
+      "prereqs": [
+        "jp-wanikani-setup"
+      ],
+      "tag": "P",
+      "category": "kana-kanji"
     },
     {
       "id": "jp-lis-teppei-beginner",
       "lang": "jp",
       "title": "Nihongo con Teppei 入門",
       "layer": 1,
-      "x": 84,
+      "x": 94,
       "summary": "10 minutes a day of comprehensible input from week one. You will not understand much at first, and that is the design — acquisition comes from messages you mostly understand (Krashen's i+1), which needs volume, not perfection.",
-      "resources": [{ "label": "Nihongo con Teppei for Beginners (podcast)", "ref": "Part 2 — J-LIS block" }],
+      "resources": [
+        {
+          "label": "Nihongo con Teppei for Beginners (podcast)",
+          "ref": "Part 2 — J-LIS block"
+        }
+      ],
       "estHours": 5,
-      "prereqs": ["jp-katakana"],
-      "tag": "P"
+      "prereqs": [
+        "jp-katakana"
+      ],
+      "tag": "P",
+      "category": "input-practice"
     },
-
     {
       "id": "jp-numbers-time",
       "lang": "jp",
       "title": "数字・時間・電話番号",
       "layer": 2,
-      "x": 44,
+      "x": 56,
       "summary": "Numbers, telling time, phone numbers and the first counters. Boring, extremely high-frequency, and the difference between surviving a shop or a station and not — drill it aloud, not by re-reading the table.",
-      "resources": [{ "label": "Genki I ch. 1", "ref": "Genki I ch.1" }],
+      "resources": [
+        {
+          "label": "Genki I ch. 1",
+          "ref": "Genki I ch.1"
+        }
+      ],
       "estHours": 2,
-      "prereqs": ["jp-desu-copula"],
-      "tag": "P"
+      "prereqs": [
+        "jp-desu-copula"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
     {
       "id": "jp-kore-sore-are",
       "lang": "jp",
       "title": "これ/それ/あれ・ここ/そこ",
       "layer": 2,
-      "x": 58,
+      "x": 70,
       "summary": "The こそあど demonstrative grid, plus この+noun and 誰の. Output milestone: walk round your flat and name ten objects out loud with no English in between.",
-      "resources": [{ "label": "Genki I ch. 2", "ref": "Genki I ch.2" }],
+      "resources": [
+        {
+          "label": "Genki I ch. 2",
+          "ref": "Genki I ch.2"
+        }
+      ],
       "estHours": 2,
-      "prereqs": ["jp-desu-copula"],
-      "tag": "P"
+      "prereqs": [
+        "jp-desu-copula"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
     {
       "id": "jp-out-journal",
       "lang": "jp",
       "title": "J-OUT — 3-sentence journal",
       "layer": 2,
-      "x": 84,
+      "x": 94,
       "summary": "One output session per week from week 4: three handwritten sentences using this week's grammar point. Kana always, kanji as soon as WaniKani has taught it. Fluency first, accuracy after — finish the thought, then fix it, and every correction becomes an Anki card.",
-      "resources": [{ "label": "Journal template §Japanese", "ref": "02_Journal_Template.pdf" }],
+      "resources": [
+        {
+          "label": "Journal template §Japanese",
+          "ref": "02_Journal_Template.pdf"
+        }
+      ],
       "estHours": 5,
-      "prereqs": ["jp-desu-copula"],
-      "tag": "P"
+      "prereqs": [
+        "jp-desu-copula"
+      ],
+      "tag": "P",
+      "category": "input-practice"
     },
-
     {
       "id": "jp-mo-janai",
       "lang": "jp",
       "title": "も・じゃないです・ね/よ",
       "layer": 3,
-      "x": 50,
+      "x": 62,
       "summary": "Noun negation じゃないです, the 'too' particle も, and the ね/よ sentence-enders that carry most of the social temperature of spoken Japanese. Small pieces, constant payoff.",
-      "resources": [{ "label": "Genki I ch. 2", "ref": "Genki I ch.2" }],
+      "resources": [
+        {
+          "label": "Genki I ch. 2",
+          "ref": "Genki I ch.2"
+        }
+      ],
       "estHours": 2,
-      "prereqs": ["jp-kore-sore-are"],
-      "tag": "P"
+      "prereqs": [
+        "jp-kore-sore-are"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
     {
       "id": "jp-wk-l5-7",
       "lang": "jp",
       "title": "WaniKani L5–7",
       "layer": 3,
-      "x": 16,
+      "x": 8,
       "summary": "Kanji count climbs and so does the review load. Watch the Apprentice counter, not the level number: over 100 means stop lessons, clear the backlog, then resume. Reviews ≤150/day is a hard ceiling, not a suggestion.",
-      "resources": [{ "label": "WaniKani", "url": "https://www.wanikani.com/" }],
+      "resources": [
+        {
+          "label": "WaniKani",
+          "url": "https://www.wanikani.com/"
+        }
+      ],
       "estHours": 6,
-      "prereqs": ["jp-wk-l1-4"],
-      "tag": "P"
+      "prereqs": [
+        "jp-wk-l1-4"
+      ],
+      "tag": "P",
+      "category": "kana-kanji"
     },
     {
       "id": "jp-read-tadoku",
       "lang": "jp",
       "title": "Tadoku graded readers L0–1",
       "layer": 3,
-      "x": 84,
+      "x": 94,
       "summary": "[N] until Genki ch.6, then [P]. Free level-0 readers: no dictionary on the first pass, at most five lookups on the second, read aloud on the third. Genuinely optional this early — never let it crowd out Genki or WaniKani.",
-      "resources": [{ "label": "Tadoku free graded readers", "url": "https://tadoku.org/japanese/free-books/" }],
+      "resources": [
+        {
+          "label": "Tadoku free graded readers",
+          "url": "https://tadoku.org/japanese/free-books/"
+        }
+      ],
       "estHours": 4,
-      "prereqs": ["jp-katakana"],
-      "softPrereqs": ["jp-lis-teppei-beginner"],
-      "tag": "N"
+      "prereqs": [
+        "jp-katakana"
+      ],
+      "softPrereqs": [
+        "jp-lis-teppei-beginner"
+      ],
+      "tag": "N",
+      "category": "input-practice"
     },
-
     {
       "id": "jp-masu-form",
       "lang": "jp",
       "title": "Genki 3 — verb ます/ません",
       "layer": 4,
-      "x": 50,
+      "x": 62,
       "summary": "Your first verbs, in the polite non-past. Learn every verb together with its group (う-verb / る-verb / irregular) from day one — that grouping is what て-form, potential, passive and causative all key off later.",
-      "resources": [{ "label": "Genki I ch. 3", "ref": "Genki I ch.3" }],
+      "resources": [
+        {
+          "label": "Genki I ch. 3",
+          "ref": "Genki I ch.3"
+        }
+      ],
       "estHours": 3,
-      "prereqs": ["jp-desu-copula"],
-      "softPrereqs": ["jp-anki-srs-setup"],
-      "tag": "P"
+      "prereqs": [
+        "jp-desu-copula"
+      ],
+      "softPrereqs": [
+        "jp-anki-srs-setup"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
     {
       "id": "jp-lis-comprehensible",
       "lang": "jp",
       "title": "Comprehensible Japanese",
       "layer": 4,
-      "x": 84,
+      "x": 94,
       "summary": "Visual beginner input: gestures and whiteboard drawings carry the meaning, so comprehension stays comfortably ahead of your grammar. Listen once blind, once with support, steal three phrases into Anki.",
-      "resources": [{ "label": "Comprehensible Japanese (YouTube)", "ref": "Part 2 — J-LIS block" }],
+      "resources": [
+        {
+          "label": "Comprehensible Japanese (YouTube)",
+          "ref": "Part 2 — J-LIS block"
+        }
+      ],
       "estHours": 4,
-      "prereqs": ["jp-lis-teppei-beginner"],
-      "tag": "P"
+      "prereqs": [
+        "jp-lis-teppei-beginner"
+      ],
+      "tag": "P",
+      "category": "input-practice"
     },
-
     {
       "id": "jp-particles-wo-de-ni",
       "lang": "jp",
       "title": "を・で・に・へ",
       "layer": 5,
-      "x": 44,
+      "x": 56,
       "summary": "The core particle set: を object, で place-of-action and means, に destination and time, へ direction. Particles ARE the grammar in Japanese — drill them inside whole sentences, never as a table to memorise.",
-      "resources": [{ "label": "Genki I ch. 3", "ref": "Genki I ch.3" }],
+      "resources": [
+        {
+          "label": "Genki I ch. 3",
+          "ref": "Genki I ch.3"
+        }
+      ],
       "estHours": 3,
-      "prereqs": ["jp-masu-form"],
-      "tag": "P"
+      "prereqs": [
+        "jp-masu-form"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
     {
       "id": "jp-arimasu-imasu",
       "lang": "jp",
       "title": "あります/います・位置",
       "layer": 5,
-      "x": 58,
+      "x": 70,
       "summary": "Existence split by animacy, plus the location words 上/下/前/後ろ/中/となり. Output task: describe your room in eight sentences — the first point where Japanese starts describing your actual life.",
-      "resources": [{ "label": "Genki I ch. 4", "ref": "Genki I ch.4" }],
+      "resources": [
+        {
+          "label": "Genki I ch. 4",
+          "ref": "Genki I ch.4"
+        }
+      ],
       "estHours": 3,
-      "prereqs": ["jp-masu-form"],
-      "tag": "P"
+      "prereqs": [
+        "jp-masu-form"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
     {
       "id": "jp-wk-l8-10",
       "lang": "jp",
       "title": "WaniKani L8–10",
       "layer": 5,
-      "x": 16,
+      "x": 8,
       "summary": "Checkpoint: L8–10 by Dec 2026 keeps you on the Standard track, roughly 600 items known by month 4. If you are behind, slow the incoming lessons — never skip reviews to catch up.",
-      "resources": [{ "label": "WaniKani", "url": "https://www.wanikani.com/" }],
+      "resources": [
+        {
+          "label": "WaniKani",
+          "url": "https://www.wanikani.com/"
+        }
+      ],
       "estHours": 7,
-      "prereqs": ["jp-wk-l5-7"],
-      "tag": "P"
+      "prereqs": [
+        "jp-wk-l5-7"
+      ],
+      "tag": "P",
+      "category": "kana-kanji"
     },
-
     {
       "id": "jp-past-masu",
       "lang": "jp",
       "title": "過去形 — でした・ました",
       "layer": 6,
-      "x": 42,
+      "x": 54,
       "summary": "Past tense of です and of verbs, plus 〜時間 duration expressions. From here 'what I did yesterday' becomes a repeatable journal prompt, and past tense is survival skill number one.",
-      "resources": [{ "label": "Genki I ch. 4", "ref": "Genki I ch.4" }],
+      "resources": [
+        {
+          "label": "Genki I ch. 4",
+          "ref": "Genki I ch.4"
+        }
+      ],
       "estHours": 2,
-      "prereqs": ["jp-masu-form"],
-      "tag": "P"
+      "prereqs": [
+        "jp-masu-form"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
     {
       "id": "jp-i-adjectives",
       "lang": "jp",
       "title": "い-adjectives",
       "layer": 6,
-      "x": 56,
+      "x": 68,
       "summary": "い-adjectives conjugate like verbs — present, past and negative all happen on the adjective itself, with です adding politeness only. Producing 高くなかった cold is the pass test.",
-      "resources": [{ "label": "Genki I ch. 5", "ref": "Genki I ch.5" }],
+      "resources": [
+        {
+          "label": "Genki I ch. 5",
+          "ref": "Genki I ch.5"
+        }
+      ],
       "estHours": 3,
-      "prereqs": ["jp-desu-copula"],
-      "tag": "P"
+      "prereqs": [
+        "jp-desu-copula"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
     {
       "id": "jp-shadowing-genki",
       "lang": "jp",
       "title": "Shadowing Genki dialogues",
       "layer": 6,
-      "x": 84,
+      "x": 94,
       "summary": "Take 30–60 s of audio you already understand and repeat aloud about a beat behind, three passes. Shadowing measurably improves listening and phoneme perception (Hamada 2016) and gets pitch accent into your ear before bad habits set.",
-      "resources": [{ "label": "Genki I dialogue audio", "ref": "Genki I audio" }],
+      "resources": [
+        {
+          "label": "Genki I dialogue audio",
+          "ref": "Genki I audio"
+        }
+      ],
       "estHours": 4,
-      "prereqs": ["jp-lis-teppei-beginner"],
-      "tag": "P"
+      "prereqs": [
+        "jp-lis-teppei-beginner"
+      ],
+      "tag": "P",
+      "category": "input-practice"
     },
-
     {
       "id": "jp-na-adjectives",
       "lang": "jp",
       "title": "な-adjectives・好き/嫌い",
       "layer": 7,
-      "x": 44,
+      "x": 56,
       "summary": "な-adjectives behave like nouns and let です carry the tense — the exact opposite of い-adjectives, which is why they are taught together and confused forever. 好き/嫌い arrive here and take が, not を.",
-      "resources": [{ "label": "Genki I ch. 5", "ref": "Genki I ch.5" }],
+      "resources": [
+        {
+          "label": "Genki I ch. 5",
+          "ref": "Genki I ch.5"
+        }
+      ],
       "estHours": 2,
-      "prereqs": ["jp-i-adjectives"],
-      "tag": "P"
+      "prereqs": [
+        "jp-i-adjectives"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
     {
       "id": "jp-invitations",
       "lang": "jp",
       "title": "〜ませんか・〜ましょう",
       "layer": 7,
-      "x": 58,
+      "x": 70,
       "summary": "Inviting with a negative question and suggesting with ましょう. Tiny grammar, big social return — these are your first structures that do something to another person rather than describe the world.",
-      "resources": [{ "label": "Genki I ch. 3 & 5", "ref": "Genki I ch.3, ch.5" }],
+      "resources": [
+        {
+          "label": "Genki I ch. 3 & 5",
+          "ref": "Genki I ch.3, ch.5"
+        }
+      ],
       "estHours": 2,
-      "prereqs": ["jp-masu-form"],
-      "tag": "P"
+      "prereqs": [
+        "jp-masu-form"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
-
     {
       "id": "jp-te-form",
       "lang": "jp",
       "title": "て-form — the workhorse",
       "layer": 8,
-      "x": 50,
+      "x": 62,
       "summary": "The highest-leverage form in Genki I: drill the conjugation groups hard, with the て-form song if it helps, until they are automatic rather than computed. Requests, permission, prohibition, progressive, sequencing and half of Genki II all hang off this one form.",
       "resources": [
-        { "label": "Genki I ch. 6", "ref": "Genki I ch.6" },
-        { "label": "て-form conjugation song", "ref": "Genki I ch.6 supplement" }
+        {
+          "label": "Genki I ch. 6",
+          "ref": "Genki I ch.6"
+        },
+        {
+          "label": "て-form conjugation song",
+          "ref": "Genki I ch.6 supplement"
+        }
       ],
       "estHours": 6,
-      "prereqs": ["jp-masu-form"],
-      "softPrereqs": ["jp-past-masu"],
-      "tag": "P"
+      "prereqs": [
+        "jp-masu-form"
+      ],
+      "softPrereqs": [
+        "jp-past-masu"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
-
     {
       "id": "jp-te-kudasai",
       "lang": "jp",
       "title": "〜てください",
       "layer": 9,
-      "x": 38,
+      "x": 50,
       "summary": "The everyday request. Trivial once て-form is automatic, which is precisely the point of drilling て-form first — and it is the bottom rung of the politeness ladder you climb in Genki 16.",
-      "resources": [{ "label": "Genki I ch. 6", "ref": "Genki I ch.6" }],
+      "resources": [
+        {
+          "label": "Genki I ch. 6",
+          "ref": "Genki I ch.6"
+        }
+      ],
       "estHours": 2,
-      "prereqs": ["jp-te-form"],
-      "tag": "P"
+      "prereqs": [
+        "jp-te-form"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
     {
       "id": "jp-te-permission",
       "lang": "jp",
       "title": "〜てもいい・〜てはいけません",
       "layer": 9,
-      "x": 50,
+      "x": 62,
       "summary": "Permission and prohibition. Asking 〜てもいいですか is one of the highest-frequency things a learner actually needs to say in Japan, so drill it as a spoken chunk, not as a written pattern.",
-      "resources": [{ "label": "Genki I ch. 6", "ref": "Genki I ch.6" }],
+      "resources": [
+        {
+          "label": "Genki I ch. 6",
+          "ref": "Genki I ch.6"
+        }
+      ],
       "estHours": 2,
-      "prereqs": ["jp-te-form"],
-      "tag": "P"
+      "prereqs": [
+        "jp-te-form"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
     {
       "id": "jp-te-sequencing",
       "lang": "jp",
       "title": "て-chaining・から",
       "layer": 9,
-      "x": 62,
+      "x": 74,
       "summary": "Link three actions in one sentence and give reasons with から. This is the week your sentences stop being one clause long — chain three actions in a single breath as the output milestone.",
-      "resources": [{ "label": "Genki I ch. 6", "ref": "Genki I ch.6" }],
+      "resources": [
+        {
+          "label": "Genki I ch. 6",
+          "ref": "Genki I ch.6"
+        }
+      ],
       "estHours": 3,
-      "prereqs": ["jp-te-form"],
-      "tag": "P"
+      "prereqs": [
+        "jp-te-form"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
-
     {
       "id": "jp-te-iru",
       "lang": "jp",
       "title": "〜ている",
       "layer": 10,
-      "x": 44,
+      "x": 56,
       "summary": "Progressive AND resultant state: 結婚しています means 'is married', not 'is getting married'. English maps badly here, so learn the resultant-state verbs (結婚する, 住む, 知る, 持つ) as an explicit list.",
-      "resources": [{ "label": "Genki I ch. 7", "ref": "Genki I ch.7" }],
+      "resources": [
+        {
+          "label": "Genki I ch. 7",
+          "ref": "Genki I ch.7"
+        }
+      ],
       "estHours": 3,
-      "prereqs": ["jp-te-form"],
-      "tag": "P"
+      "prereqs": [
+        "jp-te-form"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
     {
       "id": "jp-describing-people",
       "lang": "jp",
       "title": "人の描写・Vstem+に行く",
       "layer": 10,
-      "x": 58,
+      "x": 70,
       "summary": "背が高い, 髪が長い: Japanese describes people with が-phrases, not with adjectives stacked before the noun. Plus verb-stem + に行く for 'go somewhere to do something'.",
-      "resources": [{ "label": "Genki I ch. 7", "ref": "Genki I ch.7" }],
+      "resources": [
+        {
+          "label": "Genki I ch. 7",
+          "ref": "Genki I ch.7"
+        }
+      ],
       "estHours": 2,
-      "prereqs": ["jp-i-adjectives"],
-      "softPrereqs": ["jp-te-iru"],
-      "tag": "P"
+      "prereqs": [
+        "jp-i-adjectives"
+      ],
+      "softPrereqs": [
+        "jp-te-iru"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
-
     {
       "id": "jp-short-forms-present",
       "lang": "jp",
       "title": "Short forms (辞書形・ない形)",
       "layer": 11,
-      "x": 50,
+      "x": 62,
       "summary": "Dictionary and ない forms — the gateway to casual speech, quotation, opinions, relative clauses, conditionals and nearly every Genki II structure. Second only to て-form in leverage; treat a weak short form as an emergency.",
-      "resources": [{ "label": "Genki I ch. 8", "ref": "Genki I ch.8" }],
+      "resources": [
+        {
+          "label": "Genki I ch. 8",
+          "ref": "Genki I ch.8"
+        }
+      ],
       "estHours": 4,
-      "prereqs": ["jp-te-form"],
-      "tag": "P"
+      "prereqs": [
+        "jp-te-form"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
-
     {
       "id": "jp-casual-speech",
       "lang": "jp",
       "title": "Casual speech・のが好き",
       "layer": 12,
-      "x": 34,
+      "x": 46,
       "summary": "Drop です/ます, add 何か/何も and のが好き for 'like doing'. Essential for understanding anything real — but keep polite forms as your default output register until someone downshifts first.",
-      "resources": [{ "label": "Genki I ch. 8", "ref": "Genki I ch.8" }],
+      "resources": [
+        {
+          "label": "Genki I ch. 8",
+          "ref": "Genki I ch.8"
+        }
+      ],
       "estHours": 2,
-      "prereqs": ["jp-short-forms-present"],
-      "tag": "P"
+      "prereqs": [
+        "jp-short-forms-present"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
     {
       "id": "jp-to-omoimasu",
       "lang": "jp",
       "title": "〜と思います・〜と言っていました",
       "layer": 12,
-      "x": 46,
+      "x": 58,
       "summary": "Opinions and reported speech both take short forms before と, even when the sentence itself is polite. Write five 〜と思います per journal page until the short form inside a polite sentence stops feeling wrong.",
-      "resources": [{ "label": "Genki I ch. 8", "ref": "Genki I ch.8" }],
+      "resources": [
+        {
+          "label": "Genki I ch. 8",
+          "ref": "Genki I ch.8"
+        }
+      ],
       "estHours": 3,
-      "prereqs": ["jp-short-forms-present"],
-      "tag": "P"
+      "prereqs": [
+        "jp-short-forms-present"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
     {
       "id": "jp-past-short-forms",
       "lang": "jp",
       "title": "Past short forms・まだ〜ていません",
       "layer": 12,
-      "x": 58,
+      "x": 70,
       "summary": "Casual past, quoted past thoughts, and まだ〜ていません for 'haven't done it yet' — never まだしません. Pass test: a mini-diary written entirely in short forms.",
-      "resources": [{ "label": "Genki I ch. 9", "ref": "Genki I ch.9" }],
+      "resources": [
+        {
+          "label": "Genki I ch. 9",
+          "ref": "Genki I ch.9"
+        }
+      ],
       "estHours": 3,
-      "prereqs": ["jp-short-forms-present"],
-      "tag": "P"
+      "prereqs": [
+        "jp-short-forms-present"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
     {
       "id": "jp-comparison",
       "lang": "jp",
       "title": "比較 — より・一番",
       "layer": 12,
-      "x": 70,
+      "x": 82,
       "summary": "AよりBのほうが, 一番, AとBとどちら, plus どこかに/どこにも. Comparison is where you shift from stating facts to stating preferences — 60 seconds aloud comparing your Germany and Japan plans.",
-      "resources": [{ "label": "Genki I ch. 10", "ref": "Genki I ch.10" }],
+      "resources": [
+        {
+          "label": "Genki I ch. 10",
+          "ref": "Genki I ch.10"
+        }
+      ],
       "estHours": 3,
-      "prereqs": ["jp-i-adjectives"],
-      "softPrereqs": ["jp-na-adjectives"],
-      "tag": "P"
+      "prereqs": [
+        "jp-i-adjectives"
+      ],
+      "softPrereqs": [
+        "jp-na-adjectives"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
-
     {
       "id": "jp-tai-form",
       "lang": "jp",
       "title": "〜たい・〜つもり・adj+なる",
       "layer": 13,
-      "x": 44,
+      "x": 56,
       "summary": "Wanting to do something conjugates like an い-adjective and its object may take が. Bundled with 〜つもりだ (intention) and adjective+なる (becoming) — the 'what I want to do in Japan' journal page.",
-      "resources": [{ "label": "Genki I ch. 10–11", "ref": "Genki I ch.10, ch.11" }],
+      "resources": [
+        {
+          "label": "Genki I ch. 10–11",
+          "ref": "Genki I ch.10, ch.11"
+        }
+      ],
       "estHours": 2,
-      "prereqs": ["jp-masu-form"],
-      "tag": "P"
+      "prereqs": [
+        "jp-masu-form"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
     {
       "id": "jp-tari-koto-ga-aru",
       "lang": "jp",
       "title": "〜たり〜たり・〜ことがある",
       "layer": 13,
-      "x": 58,
+      "x": 70,
       "summary": "Listing representative actions and stating experience — both are built on the past short form, which is exactly why they sit after it and not before. Add や for non-exhaustive noun lists.",
-      "resources": [{ "label": "Genki I ch. 11", "ref": "Genki I ch.11" }],
+      "resources": [
+        {
+          "label": "Genki I ch. 11",
+          "ref": "Genki I ch.11"
+        }
+      ],
       "estHours": 3,
-      "prereqs": ["jp-past-short-forms"],
-      "tag": "P"
+      "prereqs": [
+        "jp-past-short-forms"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
-
     {
       "id": "jp-n-desu",
       "lang": "jp",
       "title": "〜んです",
       "layer": 14,
-      "x": 44,
+      "x": 56,
       "summary": "The explanatory の/ん — what makes a question sound curious instead of like an interrogation. Learners overuse it in writing and underuse it in speech; get the feel from listening, not from the rule.",
-      "resources": [{ "label": "Genki I ch. 12", "ref": "Genki I ch.12" }],
+      "resources": [
+        {
+          "label": "Genki I ch. 12",
+          "ref": "Genki I ch.12"
+        }
+      ],
       "estHours": 3,
-      "prereqs": ["jp-short-forms-present"],
-      "tag": "P"
+      "prereqs": [
+        "jp-short-forms-present"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
     {
       "id": "jp-hou-ga-ii-node",
       "lang": "jp",
       "title": "〜ほうがいい・〜ので・〜なきゃ",
       "layer": 14,
-      "x": 58,
+      "x": 70,
       "summary": "Advice with 〜ほうがいいです (past short form — the classic slip), soft reasons with ので, obligation with 〜なきゃいけません, plus 〜すぎる and でしょう. The last new machinery in Genki I.",
-      "resources": [{ "label": "Genki I ch. 12", "ref": "Genki I ch.12" }],
+      "resources": [
+        {
+          "label": "Genki I ch. 12",
+          "ref": "Genki I ch.12"
+        }
+      ],
       "estHours": 4,
-      "prereqs": ["jp-past-short-forms"],
-      "tag": "P"
+      "prereqs": [
+        "jp-past-short-forms"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
-
     {
       "id": "jp-genki-1-done",
       "lang": "jp",
       "title": "Genki I 完了 — consolidation",
       "layer": 15,
-      "x": 50,
+      "x": 32,
       "summary": "No new material: re-drill every miss from ch.1–12 interleaved, one big cumulative test, and a 2-minute recorded self-intro to set beside your week-1 recording. Score ≥80% and advance — the 80% rule, not perfection.",
-      "resources": [{ "label": "Genki I ch. 1–12 review", "ref": "Genki I ch.1–12" }],
+      "resources": [
+        {
+          "label": "Genki I ch. 1–12 review",
+          "ref": "Genki I ch.1–12"
+        }
+      ],
       "estHours": 5,
-      "prereqs": ["jp-n-desu", "jp-hou-ga-ii-node"],
-      "softPrereqs": ["jp-wk-l8-10", "jp-out-journal"],
+      "prereqs": [
+        "jp-n-desu",
+        "jp-hou-ga-ii-node"
+      ],
+      "softPrereqs": [
+        "jp-wk-l8-10",
+        "jp-out-journal"
+      ],
       "milestone": "GenkiI",
-      "tag": "P"
+      "tag": "P",
+      "category": "milestones-exams"
     },
-
     {
       "id": "jp-n5-mock",
       "lang": "jp",
       "title": "N5 mock",
       "layer": 16,
-      "x": 50,
+      "x": 32,
       "summary": "Sit the official JLPT N5 sample papers under exam timing. ≥70% is the green light to book JFT-Basic. Cumulative to this point ≈130 h from today — the N5-equivalent benchmark in Part 6.",
-      "resources": [{ "label": "JLPT official sample questions", "url": "https://www.jlpt.jp/e/samples/forlearners.html" }],
+      "resources": [
+        {
+          "label": "JLPT official sample questions",
+          "url": "https://www.jlpt.jp/e/samples/forlearners.html"
+        }
+      ],
       "estHours": 4,
-      "prereqs": ["jp-genki-1-done"],
+      "prereqs": [
+        "jp-genki-1-done"
+      ],
       "milestone": "N5",
-      "tag": "P"
+      "tag": "P",
+      "category": "milestones-exams"
     },
     {
       "id": "jp-wk-l11-13",
       "lang": "jp",
       "title": "WaniKani L11–13",
       "layer": 16,
-      "x": 16,
+      "x": 8,
       "summary": "Checkpoint: L13–14 by Apr 2027. This is the level band where rushers hit 300–500 reviews/day and quit — hold the ≤15 lessons/day line hardest exactly when a level feels easy.",
-      "resources": [{ "label": "WaniKani", "url": "https://www.wanikani.com/" }],
+      "resources": [
+        {
+          "label": "WaniKani",
+          "url": "https://www.wanikani.com/"
+        }
+      ],
       "estHours": 8,
-      "prereqs": ["jp-wk-l8-10"],
-      "tag": "P"
+      "prereqs": [
+        "jp-wk-l8-10"
+      ],
+      "tag": "P",
+      "category": "kana-kanji"
     },
     {
       "id": "jp-read-nhk-easy",
       "lang": "jp",
       "title": "NHK News Web Easy",
       "layer": 16,
-      "x": 84,
+      "x": 94,
       "summary": "Real news with furigana, from N5+ onward. One article a session: no dictionary on the first pass, ≤5 lookups on the second, read aloud on the third. Reading a full article with lookups is the Phase 1 exit test.",
-      "resources": [{ "label": "NHK News Web Easy", "url": "https://www3.nhk.or.jp/news/easy/" }],
+      "resources": [
+        {
+          "label": "NHK News Web Easy",
+          "url": "https://www3.nhk.or.jp/news/easy/"
+        }
+      ],
       "estHours": 8,
-      "prereqs": ["jp-genki-1-done"],
-      "softPrereqs": ["jp-read-tadoku"],
-      "tag": "P"
+      "prereqs": [
+        "jp-genki-1-done"
+      ],
+      "softPrereqs": [
+        "jp-read-tadoku"
+      ],
+      "tag": "P",
+      "category": "input-practice"
     },
-
     {
       "id": "jp-jft-basic",
       "lang": "jp",
       "title": "JFT-Basic attempt",
       "layer": 17,
-      "x": 62,
+      "x": 32,
       "summary": "Book through Prometric Indonesia in the Dec 2026–Feb 2027 window, once the N5 mock clears 70%. Passing banks the SSW language requirement years early; failing is a free diagnostic on an exam that runs monthly. Either way you win.",
-      "resources": [{ "label": "JFT-Basic via Prometric Indonesia", "ref": "00_MASTER_ROADMAP §2" }],
+      "resources": [
+        {
+          "label": "JFT-Basic via Prometric Indonesia",
+          "ref": "00_MASTER_ROADMAP §2"
+        }
+      ],
       "estHours": 5,
-      "prereqs": ["jp-n5-mock"],
-      "tag": "P"
+      "prereqs": [
+        "jp-n5-mock"
+      ],
+      "tag": "P",
+      "category": "milestones-exams"
     },
     {
       "id": "jp-potential-form",
       "lang": "jp",
       "title": "Potential 〜られる/〜える",
       "layer": 17,
-      "x": 44,
+      "x": 56,
       "summary": "話せる, 食べられる — 'can do', and note the object often flips from を to が. Genki II opens here, and the verb groups you drilled for て-form pay their second dividend.",
-      "resources": [{ "label": "Genki II ch. 13", "ref": "Genki II ch.13" }],
+      "resources": [
+        {
+          "label": "Genki II ch. 13",
+          "ref": "Genki II ch.13"
+        }
+      ],
       "estHours": 3,
-      "prereqs": ["jp-genki-1-done"],
-      "tag": "P"
+      "prereqs": [
+        "jp-genki-1-done"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
     {
       "id": "jp-out-ai-conversation",
       "lang": "jp",
       "title": "J-OUT — conversation practice",
       "layer": 17,
-      "x": 84,
+      "x": 94,
       "summary": "Weekly spoken output: self-talk built on today's grammar point, or a conversation pitched at your exact Genki chapter. Producing forces syntactic processing that listening lets you skip (Swain) — ugly output now beats perfect output never.",
-      "resources": [{ "label": "Part 2 — J-OUT block", "ref": "03_CURRICULUM_DETAILED.md §J-OUT" }],
+      "resources": [
+        {
+          "label": "Part 2 — J-OUT block",
+          "ref": "03_CURRICULUM_DETAILED.md §J-OUT"
+        }
+      ],
       "estHours": 6,
-      "prereqs": ["jp-out-journal"],
-      "softPrereqs": ["jp-casual-speech"],
-      "tag": "P"
+      "prereqs": [
+        "jp-out-journal"
+      ],
+      "softPrereqs": [
+        "jp-casual-speech"
+      ],
+      "tag": "P",
+      "category": "input-practice"
     },
-
     {
       "id": "jp-shi-nara",
       "lang": "jp",
       "title": "〜し・なら",
       "layer": 18,
-      "x": 40,
+      "x": 52,
       "summary": "Stacking reasons with 〜し and topic-shifting with なら, plus frequency-per-period expressions. Both attach to short forms, so they land almost for free now.",
-      "resources": [{ "label": "Genki II ch. 13", "ref": "Genki II ch.13" }],
+      "resources": [
+        {
+          "label": "Genki II ch. 13",
+          "ref": "Genki II ch.13"
+        }
+      ],
       "estHours": 3,
-      "prereqs": ["jp-short-forms-present"],
-      "tag": "P"
+      "prereqs": [
+        "jp-short-forms-present"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
     {
       "id": "jp-sou-desu-looks",
       "lang": "jp",
       "title": "〜そうです(様態)・〜てみる",
       "layer": 18,
-      "x": 54,
+      "x": 66,
       "summary": "'Looks like', formed from the adjective or verb stem, plus 〜てみる 'try doing'. Keep it strictly apart from the hearsay 〜そうです in ch.17 — same word, different attachment, a classic N4 trap.",
-      "resources": [{ "label": "Genki II ch. 13", "ref": "Genki II ch.13" }],
+      "resources": [
+        {
+          "label": "Genki II ch. 13",
+          "ref": "Genki II ch.13"
+        }
+      ],
       "estHours": 3,
-      "prereqs": ["jp-i-adjectives"],
-      "softPrereqs": ["jp-te-form"],
-      "tag": "P"
+      "prereqs": [
+        "jp-i-adjectives"
+      ],
+      "softPrereqs": [
+        "jp-te-form"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
     {
       "id": "jp-lis-teppei-normal",
       "lang": "jp",
       "title": "Teppei 通常版 — N4 listening",
       "layer": 18,
-      "x": 84,
+      "x": 94,
       "summary": "Graduate from the beginner feed to the regular one. Speed, not vocabulary, is what breaks N4 listening — daily minutes at real tempo matter far more than picking harder material.",
-      "resources": [{ "label": "Nihongo con Teppei (podcast)", "ref": "Part 2 — J-LIS block" }],
+      "resources": [
+        {
+          "label": "Nihongo con Teppei (podcast)",
+          "ref": "Part 2 — J-LIS block"
+        }
+      ],
       "estHours": 6,
-      "prereqs": ["jp-lis-comprehensible"],
-      "tag": "P"
+      "prereqs": [
+        "jp-lis-comprehensible"
+      ],
+      "tag": "P",
+      "category": "input-practice"
     },
-
     {
       "id": "jp-hoshii-kamo",
       "lang": "jp",
       "title": "ほしい・〜かもしれません",
       "layer": 19,
-      "x": 38,
+      "x": 50,
       "summary": "Wanting a thing (が, not を) versus wanting to do a thing (〜たい), plus hedging with かもしれません and quantity+も/しか. Japanese hedges constantly; flat assertions sound blunt.",
-      "resources": [{ "label": "Genki II ch. 14", "ref": "Genki II ch.14" }],
+      "resources": [
+        {
+          "label": "Genki II ch. 14",
+          "ref": "Genki II ch.14"
+        }
+      ],
       "estHours": 3,
-      "prereqs": ["jp-short-forms-present"],
-      "tag": "P"
+      "prereqs": [
+        "jp-short-forms-present"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
     {
       "id": "jp-giving-verbs",
       "lang": "jp",
       "title": "あげる/くれる/もらう",
       "layer": 19,
-      "x": 52,
+      "x": 64,
       "summary": "The perspective system — genuinely new machinery with no English equivalent. くれる only works when the action moves toward you or your in-group; get the direction wrong and the sentence is not merely odd, it is rude. Drill with arrows on paper.",
-      "resources": [{ "label": "Genki II ch. 14", "ref": "Genki II ch.14" }],
+      "resources": [
+        {
+          "label": "Genki II ch. 14",
+          "ref": "Genki II ch.14"
+        }
+      ],
       "estHours": 6,
-      "prereqs": ["jp-particles-wo-de-ni"],
-      "tag": "P"
+      "prereqs": [
+        "jp-particles-wo-de-ni"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
-
     {
       "id": "jp-volitional",
       "lang": "jp",
       "title": "Volitional 〜よう・〜ておく",
       "layer": 20,
-      "x": 40,
+      "x": 52,
       "summary": "行こう — 'let's' and 'I think I'll', the casual counterpart of ましょう and the base for 〜ようと思っています. Bundled with 〜ておく, doing something in advance.",
-      "resources": [{ "label": "Genki II ch. 15", "ref": "Genki II ch.15" }],
+      "resources": [
+        {
+          "label": "Genki II ch. 15",
+          "ref": "Genki II ch.15"
+        }
+      ],
       "estHours": 3,
-      "prereqs": ["jp-masu-form"],
-      "tag": "P"
+      "prereqs": [
+        "jp-masu-form"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
     {
       "id": "jp-relative-clauses",
       "lang": "jp",
       "title": "Noun-modifying clauses",
       "layer": 20,
-      "x": 54,
+      "x": 66,
       "summary": "Japanese puts the whole clause BEFORE the noun — 私が昨日買った本. There is no 'which/that', and the verb inside goes short form. Reorder-your-brain territory: drill by taking English relative clauses and building them backwards.",
-      "resources": [{ "label": "Genki II ch. 15", "ref": "Genki II ch.15" }],
+      "resources": [
+        {
+          "label": "Genki II ch. 15",
+          "ref": "Genki II ch.15"
+        }
+      ],
       "estHours": 6,
-      "prereqs": ["jp-short-forms-present"],
-      "softPrereqs": ["jp-past-short-forms"],
-      "tag": "P"
+      "prereqs": [
+        "jp-short-forms-present"
+      ],
+      "softPrereqs": [
+        "jp-past-short-forms"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
     {
       "id": "jp-kanji-handwriting",
       "lang": "jp",
       "title": "Kanji tracing practice",
       "layer": 20,
-      "x": 16,
+      "x": 8,
       "summary": "[N] Trace the kanji WaniKani is teaching you, stroke order included. Motor encoding measurably helps character recognition (Longcamp 2005), five minutes is enough, and it is the cheapest way to break a leech.",
-      "resources": [{ "label": "Kanji grid paper + WaniKani level list", "ref": "Part 1 — handwriting evidence" }],
+      "resources": [
+        {
+          "label": "Kanji grid paper + WaniKani level list",
+          "ref": "Part 1 — handwriting evidence"
+        }
+      ],
       "estHours": 4,
-      "prereqs": ["jp-wanikani-setup"],
-      "tag": "N"
+      "prereqs": [
+        "jp-wanikani-setup"
+      ],
+      "tag": "N",
+      "category": "kana-kanji"
     },
-
     {
       "id": "jp-te-ageru-kureru-morau",
       "lang": "jp",
       "title": "〜てあげる/くれる/もらう",
       "layer": 21,
-      "x": 38,
+      "x": 50,
       "summary": "The giving system applied to actions rather than objects. Same direction rules, now with a whole verb attached — this is the chapter where Japanese politeness stops looking arbitrary and starts looking like geometry.",
-      "resources": [{ "label": "Genki II ch. 16", "ref": "Genki II ch.16" }],
+      "resources": [
+        {
+          "label": "Genki II ch. 16",
+          "ref": "Genki II ch.16"
+        }
+      ],
       "estHours": 4,
-      "prereqs": ["jp-giving-verbs", "jp-te-form"],
-      "tag": "P"
+      "prereqs": [
+        "jp-giving-verbs",
+        "jp-te-form"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
     {
       "id": "jp-te-itadakemasen",
       "lang": "jp",
       "title": "〜ていただけませんか・〜といい",
       "layer": 21,
-      "x": 52,
+      "x": 64,
       "summary": "The request ladder from 〜てください up through 〜てくれない, 〜てもらえますか, 〜ていただけませんか, plus 〜といいですね and 〜てすみませんでした. Register is a real skill in Japanese, not a garnish.",
-      "resources": [{ "label": "Genki II ch. 16", "ref": "Genki II ch.16" }],
+      "resources": [
+        {
+          "label": "Genki II ch. 16",
+          "ref": "Genki II ch.16"
+        }
+      ],
       "estHours": 3,
-      "prereqs": ["jp-te-kudasai"],
-      "tag": "P"
+      "prereqs": [
+        "jp-te-kudasai"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
     {
       "id": "jp-toki-clauses",
       "lang": "jp",
       "title": "〜時 (とき) clauses",
       "layer": 21,
-      "x": 66,
+      "x": 78,
       "summary": "'When...' clauses take short forms, and the tense before 時 is relative to the main clause, not to now. That relative-tense rule is what trips everyone — 日本に行くとき vs 行ったとき mean different halves of the trip.",
-      "resources": [{ "label": "Genki II ch. 16", "ref": "Genki II ch.16" }],
+      "resources": [
+        {
+          "label": "Genki II ch. 16",
+          "ref": "Genki II ch.16"
+        }
+      ],
       "estHours": 3,
-      "prereqs": ["jp-short-forms-present"],
-      "tag": "P"
+      "prereqs": [
+        "jp-short-forms-present"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
-
     {
       "id": "jp-tara",
       "lang": "jp",
       "title": "〜たら",
       "layer": 22,
-      "x": 44,
+      "x": 56,
       "summary": "The most general conditional, built straight off the past short form. Genki gives you four conditionals in total; たら is the one to over-use while the other three settle into place.",
-      "resources": [{ "label": "Genki II ch. 17", "ref": "Genki II ch.17" }],
+      "resources": [
+        {
+          "label": "Genki II ch. 17",
+          "ref": "Genki II ch.17"
+        }
+      ],
       "estHours": 4,
-      "prereqs": ["jp-past-short-forms"],
-      "tag": "P"
+      "prereqs": [
+        "jp-past-short-forms"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
     {
       "id": "jp-sou-desu-hearsay",
       "lang": "jp",
       "title": "〜そうです(伝聞)・〜みたい",
       "layer": 22,
-      "x": 58,
+      "x": 70,
       "summary": "Hearsay そうです attaches to short forms; the 'looks like' one from ch.13 attaches to stems. Same word, different attachment, guaranteed exam question. Plus casual quoting 〜って and 〜みたいです.",
-      "resources": [{ "label": "Genki II ch. 17", "ref": "Genki II ch.17" }],
+      "resources": [
+        {
+          "label": "Genki II ch. 17",
+          "ref": "Genki II ch.17"
+        }
+      ],
       "estHours": 3,
-      "prereqs": ["jp-short-forms-present"],
-      "softPrereqs": ["jp-sou-desu-looks"],
-      "tag": "P"
+      "prereqs": [
+        "jp-short-forms-present"
+      ],
+      "softPrereqs": [
+        "jp-sou-desu-looks"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
     {
       "id": "jp-wk-l14-16",
       "lang": "jp",
       "title": "WaniKani L14–16",
       "layer": 22,
-      "x": 16,
+      "x": 8,
       "summary": "Checkpoint: L16+ by Jun 2027 covers the N4 kanji roughly twice over, with margin. From here WaniKani is exam insurance rather than the bottleneck — reading speed is.",
-      "resources": [{ "label": "WaniKani", "url": "https://www.wanikani.com/" }],
+      "resources": [
+        {
+          "label": "WaniKani",
+          "url": "https://www.wanikani.com/"
+        }
+      ],
       "estHours": 9,
-      "prereqs": ["jp-wk-l11-13"],
-      "tag": "P"
+      "prereqs": [
+        "jp-wk-l11-13"
+      ],
+      "tag": "P",
+      "category": "kana-kanji"
     },
-
     {
       "id": "jp-mae-ni-te-kara",
       "lang": "jp",
       "title": "〜前に・〜てから・〜なくてもいい",
       "layer": 23,
-      "x": 42,
+      "x": 54,
       "summary": "Ordering events precisely: 〜前に takes the dictionary form regardless of when it happened, 〜てから gives 'after doing'. Plus 〜なくてもいいです, 'you don't have to'.",
-      "resources": [{ "label": "Genki II ch. 17", "ref": "Genki II ch.17" }],
+      "resources": [
+        {
+          "label": "Genki II ch. 17",
+          "ref": "Genki II ch.17"
+        }
+      ],
       "estHours": 3,
-      "prereqs": ["jp-te-sequencing"],
-      "tag": "P"
+      "prereqs": [
+        "jp-te-sequencing"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
     {
       "id": "jp-transitive-intransitive",
       "lang": "jp",
       "title": "自動詞・他動詞 pairs",
       "layer": 23,
-      "x": 56,
+      "x": 68,
       "summary": "開ける/開く, つける/つく, 出す/出る — paired verbs where the particle changes with the member you pick. Learn them in pairs, out loud, in sentences; done badly they haunt every N4 reading passage.",
-      "resources": [{ "label": "Genki II ch. 18", "ref": "Genki II ch.18" }],
+      "resources": [
+        {
+          "label": "Genki II ch. 18",
+          "ref": "Genki II ch.18"
+        }
+      ],
       "estHours": 4,
-      "prereqs": ["jp-te-iru"],
-      "tag": "P"
+      "prereqs": [
+        "jp-te-iru"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
     {
       "id": "jp-lis-anime-jp-subs",
       "lang": "jp",
       "title": "Anime with Japanese subtitles",
       "layer": 23,
-      "x": 84,
+      "x": 94,
       "summary": "Rewatch shows whose plot you already know, Japanese subtitles on. Known story means comprehensible input — this is fluency-strand work, done fast and often, not a dictionary exercise.",
-      "resources": [{ "label": "Part 2 — J-LIS, N4 stage", "ref": "03_CURRICULUM_DETAILED.md §J-LIS" }],
+      "resources": [
+        {
+          "label": "Part 2 — J-LIS, N4 stage",
+          "ref": "03_CURRICULUM_DETAILED.md §J-LIS"
+        }
+      ],
       "estHours": 6,
-      "prereqs": ["jp-lis-teppei-normal"],
-      "tag": "P"
+      "prereqs": [
+        "jp-lis-teppei-normal"
+      ],
+      "tag": "P",
+      "category": "input-practice"
     },
-
     {
       "id": "jp-te-shimau-to-nagara",
       "lang": "jp",
       "title": "〜てしまう・〜と・〜ながら",
       "layer": 24,
-      "x": 44,
+      "x": 56,
       "summary": "Completion and regret with 〜てしまう (and its spoken 〜ちゃう), the automatic-consequence conditional 〜と, simultaneous actions with 〜ながら, and 〜ばよかった for hindsight. A dense chapter — split it over two weeks.",
-      "resources": [{ "label": "Genki II ch. 18", "ref": "Genki II ch.18" }],
+      "resources": [
+        {
+          "label": "Genki II ch. 18",
+          "ref": "Genki II ch.18"
+        }
+      ],
       "estHours": 6,
-      "prereqs": ["jp-te-form"],
-      "softPrereqs": ["jp-transitive-intransitive"],
-      "tag": "P"
+      "prereqs": [
+        "jp-te-form"
+      ],
+      "softPrereqs": [
+        "jp-transitive-intransitive"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
     {
       "id": "jp-sonkeigo",
       "lang": "jp",
       "title": "尊敬語 — honorific",
       "layer": 24,
-      "x": 58,
+      "x": 70,
       "summary": "いらっしゃる, 召し上がる, なさる and the お〜になる pattern: you raise the other person. Half a dozen irregular verbs carry most of the real-world load — memorise those cold, derive the rest.",
-      "resources": [{ "label": "Genki II ch. 19", "ref": "Genki II ch.19" }],
+      "resources": [
+        {
+          "label": "Genki II ch. 19",
+          "ref": "Genki II ch.19"
+        }
+      ],
       "estHours": 4,
-      "prereqs": ["jp-te-form"],
-      "tag": "P"
+      "prereqs": [
+        "jp-te-form"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
-
     {
       "id": "jp-hazu-desu",
       "lang": "jp",
       "title": "〜はずです・〜てくれてありがとう",
       "layer": 25,
-      "x": 40,
+      "x": 52,
       "summary": "'Supposed to / ought to be' — expectation grounded in evidence, distinct from かもしれません and でしょう. Plus thanking someone for an action rather than a thing.",
-      "resources": [{ "label": "Genki II ch. 19", "ref": "Genki II ch.19" }],
+      "resources": [
+        {
+          "label": "Genki II ch. 19",
+          "ref": "Genki II ch.19"
+        }
+      ],
       "estHours": 3,
-      "prereqs": ["jp-short-forms-present"],
-      "tag": "P"
+      "prereqs": [
+        "jp-short-forms-present"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
     {
       "id": "jp-kenjougo",
       "lang": "jp",
       "title": "謙譲語 — humble",
       "layer": 25,
-      "x": 54,
+      "x": 66,
       "summary": "Now you lower yourself: 伺う, 申す, いたす, お〜する. The mirror of 尊敬語, and the pair together is what finally makes shop and service Japanese parse. Worth extra drill if SSW work is the goal.",
-      "resources": [{ "label": "Genki II ch. 20", "ref": "Genki II ch.20" }],
+      "resources": [
+        {
+          "label": "Genki II ch. 20",
+          "ref": "Genki II ch.20"
+        }
+      ],
       "estHours": 4,
-      "prereqs": ["jp-sonkeigo"],
-      "tag": "P"
+      "prereqs": [
+        "jp-sonkeigo"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
-
     {
       "id": "jp-embedded-questions",
       "lang": "jp",
       "title": "Embedded questions・〜やすい",
       "layer": 26,
-      "x": 44,
+      "x": 56,
       "summary": "〜か知っていますか and 〜かどうか, plus 〜という〜, 〜ないで and 〜やすい/にくい. Embedded questions keep short forms and lose the question intonation — a frequent N4 reading structure.",
-      "resources": [{ "label": "Genki II ch. 20", "ref": "Genki II ch.20" }],
+      "resources": [
+        {
+          "label": "Genki II ch. 20",
+          "ref": "Genki II ch.20"
+        }
+      ],
       "estHours": 3,
-      "prereqs": ["jp-short-forms-present"],
-      "tag": "P"
+      "prereqs": [
+        "jp-short-forms-present"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
     {
       "id": "jp-passive",
       "lang": "jp",
       "title": "受け身 — passive",
       "layer": 26,
-      "x": 58,
+      "x": 70,
       "summary": "Including the 'suffering passive' — 雨に降られた — which has no English equivalent and is an N4 reading favourite. The conjugation is by verb group again; the semantics are the part that needs drilling.",
-      "resources": [{ "label": "Genki II ch. 21", "ref": "Genki II ch.21" }],
+      "resources": [
+        {
+          "label": "Genki II ch. 21",
+          "ref": "Genki II ch.21"
+        }
+      ],
       "estHours": 4,
-      "prereqs": ["jp-te-form"],
-      "softPrereqs": ["jp-transitive-intransitive"],
-      "tag": "P"
+      "prereqs": [
+        "jp-te-form"
+      ],
+      "softPrereqs": [
+        "jp-transitive-intransitive"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
-
     {
       "id": "jp-te-aru-te-hoshii",
       "lang": "jp",
       "title": "〜てある・〜間に・〜てほしい",
       "layer": 27,
-      "x": 42,
+      "x": 54,
       "summary": "〜てある marks a state somebody deliberately left behind — the transitive twin of 〜ている, and the reason the trans/intrans pairs had to come first. Plus 〜間に 'while' and 〜てほしい 'want someone to'.",
-      "resources": [{ "label": "Genki II ch. 21", "ref": "Genki II ch.21" }],
+      "resources": [
+        {
+          "label": "Genki II ch. 21",
+          "ref": "Genki II ch.21"
+        }
+      ],
       "estHours": 3,
-      "prereqs": ["jp-transitive-intransitive"],
-      "softPrereqs": ["jp-te-iru"],
-      "tag": "P"
+      "prereqs": [
+        "jp-transitive-intransitive"
+      ],
+      "softPrereqs": [
+        "jp-te-iru"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
     {
       "id": "jp-causative",
       "lang": "jp",
       "title": "使役 — causative させる",
       "layer": 27,
-      "x": 56,
+      "x": 68,
       "summary": "Make or let someone do — Japanese does not distinguish the two, context and particle choice (に vs を) do. Same conjugation machinery as the passive, which is why it sits directly after it.",
-      "resources": [{ "label": "Genki II ch. 22", "ref": "Genki II ch.22" }],
+      "resources": [
+        {
+          "label": "Genki II ch. 22",
+          "ref": "Genki II ch.22"
+        }
+      ],
       "estHours": 4,
-      "prereqs": ["jp-passive"],
-      "tag": "P"
+      "prereqs": [
+        "jp-passive"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
-
     {
       "id": "jp-ba-conditional",
       "lang": "jp",
       "title": "〜ば・〜のに・〜のような",
       "layer": 28,
-      "x": 40,
+      "x": 52,
       "summary": "The fourth conditional, plus 〜のに for 'even though / disappointment' and 〜のような. Lay all four conditionals side by side here — たら, と, ば, なら — because telling them apart is a standing N4 exam question.",
-      "resources": [{ "label": "Genki II ch. 22", "ref": "Genki II ch.22" }],
+      "resources": [
+        {
+          "label": "Genki II ch. 22",
+          "ref": "Genki II ch.22"
+        }
+      ],
       "estHours": 3,
-      "prereqs": ["jp-short-forms-present"],
-      "softPrereqs": ["jp-tara"],
-      "tag": "P"
+      "prereqs": [
+        "jp-short-forms-present"
+      ],
+      "softPrereqs": [
+        "jp-tara"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
     {
       "id": "jp-causative-passive",
       "lang": "jp",
       "title": "使役受け身",
       "layer": 28,
-      "x": 54,
+      "x": 66,
       "summary": "'Was made to do' — the last piece of Genki II's verb machinery, and structurally just the two forms you already own, stacked. If passive and causative are solid this is a week; if they are shaky it is a wall.",
-      "resources": [{ "label": "Genki II ch. 23", "ref": "Genki II ch.23" }],
+      "resources": [
+        {
+          "label": "Genki II ch. 23",
+          "ref": "Genki II ch.23"
+        }
+      ],
       "estHours": 4,
-      "prereqs": ["jp-causative", "jp-passive"],
-      "tag": "P"
+      "prereqs": [
+        "jp-causative",
+        "jp-passive"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
     {
       "id": "jp-koto-ni-suru",
       "lang": "jp",
       "title": "〜ことにする・〜ても・〜方",
       "layer": 28,
-      "x": 68,
+      "x": 80,
       "summary": "Deciding (ことにする) versus keeping a habit (ことにしている), concession with 〜ても, 〜まで, and the 〜方 'way of doing' nominaliser. The tidy-up chapter before consolidation.",
-      "resources": [{ "label": "Genki II ch. 23", "ref": "Genki II ch.23" }],
+      "resources": [
+        {
+          "label": "Genki II ch. 23",
+          "ref": "Genki II ch.23"
+        }
+      ],
       "estHours": 3,
-      "prereqs": ["jp-short-forms-present"],
-      "tag": "P"
+      "prereqs": [
+        "jp-short-forms-present"
+      ],
+      "tag": "P",
+      "category": "grammar"
     },
-
     {
       "id": "jp-genki-2-done",
       "lang": "jp",
       "title": "Genki II 完了 — consolidation",
       "layer": 29,
-      "x": 50,
+      "x": 32,
       "summary": "A full sweep of ch.13–23: interleaved grammar test, every miss into Anki, one long spoken monologue. N4 grammar is now complete on paper — the exam block's job is turning it into speed.",
-      "resources": [{ "label": "Genki II ch. 13–23 review", "ref": "Genki II ch.13–23" }],
+      "resources": [
+        {
+          "label": "Genki II ch. 13–23 review",
+          "ref": "Genki II ch.13–23"
+        }
+      ],
       "estHours": 6,
-      "prereqs": ["jp-causative-passive", "jp-koto-ni-suru"],
-      "softPrereqs": ["jp-kenjougo", "jp-wk-l14-16"],
+      "prereqs": [
+        "jp-causative-passive",
+        "jp-koto-ni-suru"
+      ],
+      "softPrereqs": [
+        "jp-kenjougo",
+        "jp-wk-l14-16"
+      ],
       "milestone": "GenkiII",
-      "tag": "P"
+      "tag": "P",
+      "category": "milestones-exams"
     },
-
     {
       "id": "jp-n4-workbook",
       "lang": "jp",
       "title": "N4 公式問題集 — untimed",
       "layer": 30,
-      "x": 44,
+      "x": 28,
       "summary": "Weeks 1–2 of the exam block: one official practice workbook, untimed, then an error autopsy. Every miss becomes an Anki card carrying the reason, not just the right answer.",
-      "resources": [{ "label": "JLPT公式問題集 N4", "ref": "JLPT official practice workbook N4" }],
+      "resources": [
+        {
+          "label": "JLPT公式問題集 N4",
+          "ref": "JLPT official practice workbook N4"
+        }
+      ],
       "estHours": 6,
-      "prereqs": ["jp-genki-2-done"],
-      "tag": "P"
+      "prereqs": [
+        "jp-genki-2-done"
+      ],
+      "tag": "P",
+      "category": "milestones-exams"
     },
     {
       "id": "jp-n4-grammar-sweep",
       "lang": "jp",
       "title": "N4 grammar gap sweep",
       "layer": 30,
-      "x": 58,
+      "x": 36,
       "summary": "Weeks 3–4: sweep the points Genki underweights, using a drill book [N: 日本語総まとめ N4 or TRY! N4]. You are hunting gaps here, not re-teaching yourself things you already produce correctly.",
       "resources": [
-        { "label": "Nihongo So-Matome N4", "ref": "日本語総まとめ N4" },
-        { "label": "TRY! N4", "ref": "TRY! 日本語能力試験 N4" }
+        {
+          "label": "Nihongo So-Matome N4",
+          "ref": "日本語総まとめ N4"
+        },
+        {
+          "label": "TRY! N4",
+          "ref": "TRY! 日本語能力試験 N4"
+        }
       ],
       "estHours": 6,
-      "prereqs": ["jp-genki-2-done"],
-      "tag": "P"
+      "prereqs": [
+        "jp-genki-2-done"
+      ],
+      "tag": "P",
+      "category": "milestones-exams"
     },
-
     {
       "id": "jp-n4-timed-mocks",
       "lang": "jp",
       "title": "N4 timed mocks ×2",
       "layer": 31,
-      "x": 50,
+      "x": 32,
       "summary": "Week 5: two full mocks on the exam clock. Timing is the N4 killer — budget ≤8 minutes per reading passage set and rehearse abandoning a question on schedule rather than finishing it beautifully.",
-      "resources": [{ "label": "JLPT official sample questions", "url": "https://www.jlpt.jp/e/samples/forlearners.html" }],
+      "resources": [
+        {
+          "label": "JLPT official sample questions",
+          "url": "https://www.jlpt.jp/e/samples/forlearners.html"
+        }
+      ],
       "estHours": 5,
-      "prereqs": ["jp-n4-workbook", "jp-n4-grammar-sweep"],
-      "tag": "P"
+      "prereqs": [
+        "jp-n4-workbook",
+        "jp-n4-grammar-sweep"
+      ],
+      "tag": "P",
+      "category": "milestones-exams"
     },
-
     {
       "id": "jp-n4-exam",
       "lang": "jp",
       "title": "JLPT N4 — 受験",
       "layer": 32,
-      "x": 50,
+      "x": 32,
       "summary": "The July 2027 sitting; register in March, the Indonesian window closes fast. Week 6 is taper: reviews only, listening daily, sleep. Cumulative to here ≈300 h from today — the Part 6 working number for N4.",
-      "resources": [{ "label": "JLPT — registration & test dates", "url": "https://www.jlpt.jp/e/" }],
+      "resources": [
+        {
+          "label": "JLPT — registration & test dates",
+          "url": "https://www.jlpt.jp/e/"
+        }
+      ],
       "estHours": 3,
-      "prereqs": ["jp-n4-timed-mocks"],
-      "softPrereqs": ["jp-wk-l14-16"],
+      "prereqs": [
+        "jp-n4-timed-mocks"
+      ],
+      "softPrereqs": [
+        "jp-wk-l14-16"
+      ],
       "milestone": "N4",
-      "tag": "P"
+      "tag": "P",
+      "category": "milestones-exams"
     },
-
     {
       "id": "jp-wk-l17-25",
       "lang": "jp",
       "title": "WaniKani L17–25",
       "layer": 33,
-      "x": 16,
+      "x": 8,
       "summary": "[N] Post-N4 maintenance and the start of the N3 kanji range. The limits never expire — Apprentice ≤100 and reviews ≤150/day are what make a multi-year WaniKani run survivable rather than a slow-motion quit.",
-      "resources": [{ "label": "WaniKani", "url": "https://www.wanikani.com/" }],
+      "resources": [
+        {
+          "label": "WaniKani",
+          "url": "https://www.wanikani.com/"
+        }
+      ],
       "estHours": 20,
-      "prereqs": ["jp-wk-l14-16"],
-      "tag": "N"
+      "prereqs": [
+        "jp-wk-l14-16"
+      ],
+      "tag": "N",
+      "category": "kana-kanji"
     },
     {
       "id": "jp-n3-route",
       "lang": "jp",
       "title": "N3 route — decide Aug 2027",
       "layer": 33,
-      "x": 50,
+      "x": 32,
       "summary": "[N] Roughly +450–600 h via Tobira or Quartet, WaniKani to ~L30 and heavy native input. Only worth it if your SSW sector rewards it. Decision point is the Aug 2027 check-in, not now — this node sits well beyond the 300 h N4 line.",
       "resources": [
-        { "label": "Tobira — Gateway to Advanced Japanese", "ref": "Tobira" },
-        { "label": "Quartet I", "ref": "Quartet: Intermediate Japanese" }
+        {
+          "label": "Tobira — Gateway to Advanced Japanese",
+          "ref": "Tobira"
+        },
+        {
+          "label": "Quartet I",
+          "ref": "Quartet: Intermediate Japanese"
+        }
       ],
       "estHours": 40,
-      "prereqs": ["jp-n4-exam"],
+      "prereqs": [
+        "jp-n4-exam"
+      ],
       "milestone": "N3",
-      "tag": "N"
+      "tag": "N",
+      "category": "milestones-exams"
     }
   ]
 }

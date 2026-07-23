@@ -2,720 +2,1203 @@
   "lang": "de",
   "label": "German — A1 → B1",
   "version": "1.0",
+  "categories": [
+    {
+      "id": "case-endings",
+      "label": "Fälle & Endungen",
+      "blurb": "Genders and articles, the four cases, case-governing prepositions, and every adjective/noun ending that flows from them. The declension spine of German.",
+      "xFrom": 0,
+      "xTo": 16
+    },
+    {
+      "id": "sentence-structure",
+      "label": "Satzbau",
+      "blurb": "How clauses are wired: verb-second, the sentence bracket, negation, and every subordinate, relative and connector pattern that pushes the verb around.",
+      "xFrom": 18,
+      "xTo": 33
+    },
+    {
+      "id": "verb-system",
+      "label": "Verbsystem",
+      "blurb": "Conjugation and the whole tense/mood machine — present, modals, separable verbs, Perfekt/Präteritum, passive, Konjunktiv II and the strong-verb forms.",
+      "xFrom": 35,
+      "xTo": 56
+    },
+    {
+      "id": "milestones-exams",
+      "label": "Meilensteine & Prüfungen",
+      "blurb": "The checkpoints everything funnels into: consolidation weeks, Goethe A1/A2 mocks, the individual B1 modules and the final certificate.",
+      "xFrom": 58,
+      "xTo": 78
+    },
+    {
+      "id": "vocab-communication",
+      "label": "Wortschatz & Kommunikation",
+      "blurb": "Vocabulary domains and real situations — greetings, café, doctor, opinions, plus the Lebenslauf, letters and application texts the whole track builds toward.",
+      "xFrom": 80,
+      "xTo": 90
+    },
+    {
+      "id": "skills-habits",
+      "label": "Fertigkeiten & Gewohnheiten",
+      "blurb": "The daily engine: Anki/FSRS, pronunciation, listening, shadowing, journaling and live speaking practice that turn study into acquisition.",
+      "xFrom": 92,
+      "xTo": 100
+    }
+  ],
   "nodes": [
     {
       "id": "de-anki-setup",
       "lang": "de",
       "title": "Anki + FSRS aufsetzen",
       "layer": 0,
-      "x": 20,
+      "x": 93,
       "summary": "Install Anki, switch on the FSRS scheduler, set new cards/day to your pace and max reviews to 9999. Every noun card is article + noun + plural from day one — a wrong article means the card failed, even if the noun was right.",
       "resources": [
-        { "label": "Anki (kostenlos, Desktop + Handy)", "url": "https://apps.ankiweb.net" },
-        { "label": "G-SRS Blockprozedur", "ref": "03_CURRICULUM_DETAILED.md Part 2 — G-SRS" }
+        {
+          "label": "Anki (kostenlos, Desktop + Handy)",
+          "url": "https://apps.ankiweb.net"
+        },
+        {
+          "label": "G-SRS Blockprozedur",
+          "ref": "03_CURRICULUM_DETAILED.md Part 2 — G-SRS"
+        }
       ],
       "estHours": 2,
       "prereqs": [],
-      "tag": "P"
+      "tag": "P",
+      "category": "skills-habits"
     },
     {
       "id": "de-aussprache",
       "lang": "de",
       "title": "Aussprache & Alphabet",
       "layer": 0,
-      "x": 50,
+      "x": 99,
       "summary": "The sound system before anything else: ei vs. ie, ch (ich- and ach-Laut), the uvular r, ü/ö/ä and ß. Get this wrong now and every Anki card you record in your head for the next year is wrong.",
       "resources": [
-        { "label": "Nicos Weg A1", "url": "https://learngerman.dw.com/en/beginners/c-36519789" },
-        { "label": "Vokal-Leseliste (10 unbekannte Wörter laut)", "ref": "drill-sheet" }
+        {
+          "label": "Nicos Weg A1",
+          "url": "https://learngerman.dw.com/en/beginners/c-36519789"
+        },
+        {
+          "label": "Vokal-Leseliste (10 unbekannte Wörter laut)",
+          "ref": "drill-sheet"
+        }
       ],
       "estHours": 3,
       "prereqs": [],
-      "tag": "P"
+      "tag": "P",
+      "category": "skills-habits"
     },
     {
       "id": "de-zahlen",
       "lang": "de",
       "title": "Zahlen 0–100",
       "layer": 0,
-      "x": 80,
+      "x": 85,
       "summary": "Numbers 0–20, then the reversed teens-and-tens logic (einundzwanzig = one-and-twenty). Cheap to learn, and it unlocks prices, time, dates and phone numbers later.",
       "resources": [
-        { "label": "Nicos Weg A1", "url": "https://learngerman.dw.com/en/beginners/c-36519789" },
-        { "label": "Zahlen-Diktat, 20 Items", "ref": "drill-sheet" }
+        {
+          "label": "Nicos Weg A1",
+          "url": "https://learngerman.dw.com/en/beginners/c-36519789"
+        },
+        {
+          "label": "Zahlen-Diktat, 20 Items",
+          "ref": "drill-sheet"
+        }
       ],
       "estHours": 2,
       "prereqs": [],
-      "tag": "P"
+      "tag": "P",
+      "category": "vocab-communication"
     },
     {
       "id": "de-pronomen-sein",
       "lang": "de",
       "title": "Pronomen + sein",
       "layer": 1,
-      "x": 35,
+      "x": 45,
       "summary": "ich/du/er/sie/es/wir/ihr/sie/Sie plus the irregular workhorse sein. Conjugate it cold, out loud, until it needs no thought — nearly every early sentence you build hangs off it.",
       "resources": [
-        { "label": "Nicos Weg A1", "url": "https://learngerman.dw.com/en/beginners/c-36519789" },
-        { "label": "Netzwerk neu A1, Kap. 1", "ref": "Netzwerk neu A1 ch.1" }
+        {
+          "label": "Nicos Weg A1",
+          "url": "https://learngerman.dw.com/en/beginners/c-36519789"
+        },
+        {
+          "label": "Netzwerk neu A1, Kap. 1",
+          "ref": "Netzwerk neu A1 ch.1"
+        }
       ],
       "estHours": 3,
-      "prereqs": ["de-aussprache"],
-      "tag": "P"
+      "prereqs": [
+        "de-aussprache"
+      ],
+      "tag": "P",
+      "category": "verb-system"
     },
     {
       "id": "de-begruessung",
       "lang": "de",
       "title": "Begrüßen & sich vorstellen",
       "layer": 1,
-      "x": 65,
+      "x": 85,
       "summary": "heißen, kommen, wohnen plus greetings, countries and languages — enough to survive a first exchange. Ends with a recorded 30-second self-intro you will re-record in week 8 to hear the difference.",
       "resources": [
-        { "label": "Nicos Weg A1", "url": "https://learngerman.dw.com/en/beginners/c-36519789" },
-        { "label": "G-OUT: 30-Sek-Aufnahme", "ref": "03_CURRICULUM_DETAILED.md Part 2 — G-OUT" }
+        {
+          "label": "Nicos Weg A1",
+          "url": "https://learngerman.dw.com/en/beginners/c-36519789"
+        },
+        {
+          "label": "G-OUT: 30-Sek-Aufnahme",
+          "ref": "03_CURRICULUM_DETAILED.md Part 2 — G-OUT"
+        }
       ],
       "estHours": 3,
-      "prereqs": ["de-aussprache"],
-      "softPrereqs": ["de-zahlen", "de-anki-setup"],
-      "tag": "P"
+      "prereqs": [
+        "de-aussprache"
+      ],
+      "softPrereqs": [
+        "de-zahlen",
+        "de-anki-setup"
+      ],
+      "tag": "P",
+      "category": "vocab-communication"
     },
     {
       "id": "de-praesens-regular",
       "lang": "de",
       "title": "Präsens: regelmäßige Verben",
       "layer": 2,
-      "x": 30,
+      "x": 45,
       "summary": "The -e/-st/-t/-en ending set, plus the small spelling adjustments (arbeitest, heißt). Arabic already trained you to expect person-marking on the verb; here it is far simpler than you're used to.",
       "resources": [
-        { "label": "Nicos Weg A1", "url": "https://learngerman.dw.com/en/beginners/c-36519789" },
-        { "label": "Konjugationsdrill, 20 Items", "ref": "drill-sheet" }
+        {
+          "label": "Nicos Weg A1",
+          "url": "https://learngerman.dw.com/en/beginners/c-36519789"
+        },
+        {
+          "label": "Konjugationsdrill, 20 Items",
+          "ref": "drill-sheet"
+        }
       ],
       "estHours": 3,
-      "prereqs": ["de-pronomen-sein"],
-      "tag": "P"
+      "prereqs": [
+        "de-pronomen-sein"
+      ],
+      "tag": "P",
+      "category": "verb-system"
     },
     {
       "id": "de-w-fragen",
       "lang": "de",
       "title": "W-Fragen: wer/was/wo/woher",
       "layer": 2,
-      "x": 68,
+      "x": 26,
       "summary": "wer, was, wo, woher, wie, wann — the question words that let you drive a conversation instead of only answering. W-word first, then the verb: your first taste of the position-2 rule.",
       "resources": [
-        { "label": "Nicos Weg A1", "url": "https://learngerman.dw.com/en/beginners/c-36519789" }
+        {
+          "label": "Nicos Weg A1",
+          "url": "https://learngerman.dw.com/en/beginners/c-36519789"
+        }
       ],
       "estHours": 2,
-      "prereqs": ["de-pronomen-sein"],
-      "softPrereqs": ["de-begruessung"],
-      "tag": "P"
+      "prereqs": [
+        "de-pronomen-sein"
+      ],
+      "softPrereqs": [
+        "de-begruessung"
+      ],
+      "tag": "P",
+      "category": "sentence-structure"
     },
     {
       "id": "de-verb-position-2",
       "lang": "de",
       "title": "Verb an Position 2",
       "layer": 3,
-      "x": 50,
+      "x": 26,
       "summary": "The German iron law: in a main clause the conjugated verb sits in slot two, whatever comes first — 'Heute gehe ich', not 'Heute ich gehe'. Drill it from scrambled words until it is reflex, because every later structure is built on top of it.",
       "resources": [
-        { "label": "Nicos Weg A1", "url": "https://learngerman.dw.com/en/beginners/c-36519789" },
-        { "label": "Satzbau-Drill: 10 Sätze aus Wortsalat", "ref": "drill-sheet" }
+        {
+          "label": "Nicos Weg A1",
+          "url": "https://learngerman.dw.com/en/beginners/c-36519789"
+        },
+        {
+          "label": "Satzbau-Drill: 10 Sätze aus Wortsalat",
+          "ref": "drill-sheet"
+        }
       ],
       "estHours": 4,
-      "prereqs": ["de-praesens-regular", "de-w-fragen"],
-      "tag": "P"
+      "prereqs": [
+        "de-praesens-regular",
+        "de-w-fragen"
+      ],
+      "tag": "P",
+      "category": "sentence-structure"
     },
     {
       "id": "de-nomen-genus",
       "lang": "de",
       "title": "Nomen: Genus & Plural",
       "layer": 4,
-      "x": 50,
+      "x": 8,
       "summary": "der/die/das and the plural patterns (-e/-en/-er/-s/umlaut). Your Arabic already accepts arbitrary gender and chaotic broken plurals — the only new habit is learning 'dieLampe, -n' as one single word, never a naked noun.",
       "resources": [
-        { "label": "Nicos Weg A1", "url": "https://learngerman.dw.com/en/beginners/c-36519789" },
-        { "label": "Genus-Quiz, 20 Nomen (Bestehen ≥16)", "ref": "drill-sheet" },
-        { "label": "Netzwerk neu A1, Kap. 3", "ref": "Netzwerk neu A1 ch.3" }
+        {
+          "label": "Nicos Weg A1",
+          "url": "https://learngerman.dw.com/en/beginners/c-36519789"
+        },
+        {
+          "label": "Genus-Quiz, 20 Nomen (Bestehen ≥16)",
+          "ref": "drill-sheet"
+        },
+        {
+          "label": "Netzwerk neu A1, Kap. 3",
+          "ref": "Netzwerk neu A1 ch.3"
+        }
       ],
       "estHours": 5,
-      "prereqs": ["de-verb-position-2"],
-      "softPrereqs": ["de-anki-setup"],
-      "tag": "P"
+      "prereqs": [
+        "de-verb-position-2"
+      ],
+      "softPrereqs": [
+        "de-anki-setup"
+      ],
+      "tag": "P",
+      "category": "case-endings"
     },
     {
       "id": "de-akkusativ",
       "lang": "de",
       "title": "haben + Akkusativ",
       "layer": 5,
-      "x": 35,
+      "x": 8,
       "summary": "haben plus the accusative — and the good news is that only masculine visibly changes (der→den, ein→einen). Your Arabic naṣb instinct plugs straight in here: skip the 'why do cases exist' phase and go directly to drilling.",
       "resources": [
-        { "label": "Nicos Weg A1", "url": "https://learngerman.dw.com/en/beginners/c-36519789" },
-        { "label": "Kasus-Drillblatt (Nom/Akk gemischt)", "ref": "drill-sheet" }
+        {
+          "label": "Nicos Weg A1",
+          "url": "https://learngerman.dw.com/en/beginners/c-36519789"
+        },
+        {
+          "label": "Kasus-Drillblatt (Nom/Akk gemischt)",
+          "ref": "drill-sheet"
+        }
       ],
       "estHours": 5,
-      "prereqs": ["de-nomen-genus"],
-      "tag": "P"
+      "prereqs": [
+        "de-nomen-genus"
+      ],
+      "tag": "P",
+      "category": "case-endings"
     },
     {
       "id": "de-trennbare-verben",
       "lang": "de",
       "title": "Trennbare Verben",
       "layer": 5,
-      "x": 68,
+      "x": 45,
       "summary": "aufstehen → 'ich stehe um sieben auf': the prefix flies to the end of the clause. Nothing in English or Arabic prepares you for this, so it is pure pattern-drill territory, not explanation territory.",
       "resources": [
-        { "label": "Nicos Weg A1", "url": "https://learngerman.dw.com/en/beginners/c-36519789" },
-        { "label": "Trennbare-Verben-Drill, 15 Items", "ref": "drill-sheet" }
+        {
+          "label": "Nicos Weg A1",
+          "url": "https://learngerman.dw.com/en/beginners/c-36519789"
+        },
+        {
+          "label": "Trennbare-Verben-Drill, 15 Items",
+          "ref": "drill-sheet"
+        }
       ],
       "estHours": 4,
-      "prereqs": ["de-verb-position-2"],
-      "tag": "P"
+      "prereqs": [
+        "de-verb-position-2"
+      ],
+      "tag": "P",
+      "category": "verb-system"
     },
     {
       "id": "de-negation",
       "lang": "de",
       "title": "Negation: nicht vs. kein",
       "layer": 6,
-      "x": 20,
+      "x": 26,
       "summary": "One clean rule does most of the work: kein negates nouns that carry an indefinite article or none at all, nicht negates everything else. Fifteen mixed items a day for a week and this stops being a decision.",
       "resources": [
-        { "label": "Nicos Weg A1", "url": "https://learngerman.dw.com/en/beginners/c-36519789" },
-        { "label": "kein/nicht-Drill, 15 Items", "ref": "drill-sheet" }
+        {
+          "label": "Nicos Weg A1",
+          "url": "https://learngerman.dw.com/en/beginners/c-36519789"
+        },
+        {
+          "label": "kein/nicht-Drill, 15 Items",
+          "ref": "drill-sheet"
+        }
       ],
       "estHours": 3,
-      "prereqs": ["de-akkusativ"],
-      "tag": "P"
+      "prereqs": [
+        "de-akkusativ"
+      ],
+      "tag": "P",
+      "category": "sentence-structure"
     },
     {
       "id": "de-possessiv",
       "lang": "de",
       "title": "Possessivartikel",
       "layer": 6,
-      "x": 50,
+      "x": 8,
       "summary": "mein/dein/sein/ihr/unser/euer take exactly the same endings as ein/kein — learn them as one family, not three. This is the first place the ein-word ending grid pays a dividend you'll collect again at A2.",
       "resources": [
-        { "label": "Nicos Weg A1", "url": "https://learngerman.dw.com/en/beginners/c-36519789" }
+        {
+          "label": "Nicos Weg A1",
+          "url": "https://learngerman.dw.com/en/beginners/c-36519789"
+        }
       ],
       "estHours": 3,
-      "prereqs": ["de-akkusativ"],
-      "tag": "P"
+      "prereqs": [
+        "de-akkusativ"
+      ],
+      "tag": "P",
+      "category": "case-endings"
     },
     {
       "id": "de-modalverben",
       "lang": "de",
       "title": "Modalverben + Satzklammer",
       "layer": 6,
-      "x": 80,
+      "x": 45,
       "summary": "können/müssen/wollen conjugate irregularly and push the second verb to the very end as an infinitive: 'Ich kann heute nicht kommen.' This bracket is your first real taste of verb-final German — everything from Perfekt to weil-clauses reuses the shape.",
       "resources": [
-        { "label": "Nicos Weg A1", "url": "https://learngerman.dw.com/en/beginners/c-36519789" },
-        { "label": "Modaltransformation, 12 Items", "ref": "drill-sheet" }
+        {
+          "label": "Nicos Weg A1",
+          "url": "https://learngerman.dw.com/en/beginners/c-36519789"
+        },
+        {
+          "label": "Modaltransformation, 12 Items",
+          "ref": "drill-sheet"
+        }
       ],
       "estHours": 5,
-      "prereqs": ["de-trennbare-verben"],
-      "tag": "P"
+      "prereqs": [
+        "de-trennbare-verben"
+      ],
+      "tag": "P",
+      "category": "verb-system"
     },
     {
       "id": "de-cafe-output",
       "lang": "de",
       "title": "Erstes Gespräch: im Café",
       "layer": 7,
-      "x": 20,
+      "x": 81,
       "summary": "The week-4 rule: forced output starts now, however ugly. Order drinks and food in a role-play and finish the whole exchange without falling back into English — fluency first, accuracy afterwards.",
       "resources": [
-        { "label": "G-OUT Blockprozedur", "ref": "03_CURRICULUM_DETAILED.md Part 2 — G-OUT" },
-        { "label": "Nicos Weg A1", "url": "https://learngerman.dw.com/en/beginners/c-36519789" }
+        {
+          "label": "G-OUT Blockprozedur",
+          "ref": "03_CURRICULUM_DETAILED.md Part 2 — G-OUT"
+        },
+        {
+          "label": "Nicos Weg A1",
+          "url": "https://learngerman.dw.com/en/beginners/c-36519789"
+        }
       ],
       "estHours": 2,
-      "prereqs": ["de-negation", "de-possessiv"],
-      "tag": "P"
+      "prereqs": [
+        "de-negation",
+        "de-possessiv"
+      ],
+      "tag": "P",
+      "category": "vocab-communication"
     },
     {
       "id": "de-uhrzeit-tagesablauf",
       "lang": "de",
       "title": "Uhrzeit & Tagesablauf",
       "layer": 7,
-      "x": 50,
+      "x": 89,
       "summary": "Official time (14:30) and the colloquial system (halb drei — careful, that's 2:30, not 3:30), plus weekdays and routine verbs. Pairs naturally with separable verbs, since your whole day is aufstehen/anfangen/einkaufen.",
       "resources": [
-        { "label": "Nicos Weg A1", "url": "https://learngerman.dw.com/en/beginners/c-36519789" },
-        { "label": "Journal: dein Tag 07:00→22:00", "ref": "02_Journal_Template.pdf" }
+        {
+          "label": "Nicos Weg A1",
+          "url": "https://learngerman.dw.com/en/beginners/c-36519789"
+        },
+        {
+          "label": "Journal: dein Tag 07:00→22:00",
+          "ref": "02_Journal_Template.pdf"
+        }
       ],
       "estHours": 3,
-      "prereqs": ["de-trennbare-verben"],
-      "softPrereqs": ["de-zahlen"],
-      "tag": "P"
+      "prereqs": [
+        "de-trennbare-verben"
+      ],
+      "softPrereqs": [
+        "de-zahlen"
+      ],
+      "tag": "P",
+      "category": "vocab-communication"
     },
     {
       "id": "de-akk-praepositionen",
       "lang": "de",
       "title": "Akkusativpräpositionen",
       "layer": 7,
-      "x": 80,
+      "x": 8,
       "summary": "für, ohne, gegen, um, durch always take the accusative — no thinking required, just memorise the list as a chant. Learning fixed-case prepositions now makes the two-way prepositions at A2 far less frightening.",
       "resources": [
-        { "label": "Nicos Weg A1", "url": "https://learngerman.dw.com/en/beginners/c-36519789" },
-        { "label": "Interleaved Kasusdrill (Nom/Akk), Ziel ≤15% Fehler", "ref": "drill-sheet" }
+        {
+          "label": "Nicos Weg A1",
+          "url": "https://learngerman.dw.com/en/beginners/c-36519789"
+        },
+        {
+          "label": "Interleaved Kasusdrill (Nom/Akk), Ziel ≤15% Fehler",
+          "ref": "drill-sheet"
+        }
       ],
       "estHours": 3,
-      "prereqs": ["de-akkusativ"],
-      "softPrereqs": ["de-modalverben"],
-      "tag": "P"
+      "prereqs": [
+        "de-akkusativ"
+      ],
+      "softPrereqs": [
+        "de-modalverben"
+      ],
+      "tag": "P",
+      "category": "case-endings"
     },
     {
       "id": "de-a11-konsolidierung",
       "lang": "de",
       "title": "A1.1 Konsolidierungswoche",
       "layer": 8,
-      "x": 50,
+      "x": 68,
       "summary": "No new material for a whole week: re-drill every miss from weeks 3–7, sit one big interleaved test, and record a two-minute 'Das bin ich' to compare with your week-1 clip. Score ≥80% and you move on — the 80% rule, not perfection.",
       "resources": [
-        { "label": "Kumulativer Test A1.1", "ref": "drill-sheet" },
-        { "label": "Fortschritts-Tracker", "ref": "01_Progress_Tracker.xlsx" }
+        {
+          "label": "Kumulativer Test A1.1",
+          "ref": "drill-sheet"
+        },
+        {
+          "label": "Fortschritts-Tracker",
+          "ref": "01_Progress_Tracker.xlsx"
+        }
       ],
       "estHours": 3,
-      "prereqs": ["de-akk-praepositionen", "de-modalverben", "de-uhrzeit-tagesablauf", "de-cafe-output"],
-      "tag": "P"
+      "prereqs": [
+        "de-akk-praepositionen",
+        "de-modalverben",
+        "de-uhrzeit-tagesablauf",
+        "de-cafe-output"
+      ],
+      "tag": "P",
+      "category": "milestones-exams"
     },
     {
       "id": "de-dativ",
       "lang": "de",
       "title": "Dativ: Ort mit in/an/auf/bei",
       "layer": 9,
-      "x": 32,
+      "x": 8,
       "summary": "dem/der/dem/den+n, first met as location after in/an/auf/bei answering 'wo?'. Map it to the Arabic majrūr-after-preposition reflex to get started — same instinct, new forms — then drop the crutch fast.",
       "resources": [
-        { "label": "Nicos Weg A1", "url": "https://learngerman.dw.com/en/beginners/c-36519789" },
-        { "label": "Kasus-Drillblatt (Nom/Akk/Dat gemischt)", "ref": "drill-sheet" }
+        {
+          "label": "Nicos Weg A1",
+          "url": "https://learngerman.dw.com/en/beginners/c-36519789"
+        },
+        {
+          "label": "Kasus-Drillblatt (Nom/Akk/Dat gemischt)",
+          "ref": "drill-sheet"
+        }
       ],
       "estHours": 5,
-      "prereqs": ["de-akkusativ"],
-      "softPrereqs": ["de-a11-konsolidierung"],
-      "tag": "P"
+      "prereqs": [
+        "de-akkusativ"
+      ],
+      "softPrereqs": [
+        "de-a11-konsolidierung"
+      ],
+      "tag": "P",
+      "category": "case-endings"
     },
     {
       "id": "de-perfekt-haben",
       "lang": "de",
       "title": "Perfekt mit haben",
       "layer": 9,
-      "x": 68,
+      "x": 45,
       "summary": "ge-...-t on regular verbs, with haben conjugated in slot two and the participle at the end — the bracket again. Past tense is survival skill number one; your journal switches to 'Was habe ich heute gemacht?' from here on.",
       "resources": [
-        { "label": "Nicos Weg A1", "url": "https://learngerman.dw.com/en/beginners/c-36519789" },
-        { "label": "Journalvorlage §German", "ref": "02_Journal_Template.pdf" }
+        {
+          "label": "Nicos Weg A1",
+          "url": "https://learngerman.dw.com/en/beginners/c-36519789"
+        },
+        {
+          "label": "Journalvorlage §German",
+          "ref": "02_Journal_Template.pdf"
+        }
       ],
       "estHours": 5,
-      "prereqs": ["de-a11-konsolidierung"],
-      "tag": "P"
+      "prereqs": [
+        "de-a11-konsolidierung"
+      ],
+      "tag": "P",
+      "category": "verb-system"
     },
     {
       "id": "de-dativ-pronomen",
       "lang": "de",
       "title": "Dativpronomen",
       "layer": 10,
-      "x": 20,
+      "x": 8,
       "summary": "mir/dir/ihm/ihr/uns/euch/ihnen — the pronouns that make 'Kannst du mir helfen?' possible. Small set, huge conversational payoff, and it sets up the dative verbs immediately after.",
       "resources": [
-        { "label": "Nicos Weg A1", "url": "https://learngerman.dw.com/en/beginners/c-36519789" }
+        {
+          "label": "Nicos Weg A1",
+          "url": "https://learngerman.dw.com/en/beginners/c-36519789"
+        }
       ],
       "estHours": 4,
-      "prereqs": ["de-dativ"],
-      "tag": "P"
+      "prereqs": [
+        "de-dativ"
+      ],
+      "tag": "P",
+      "category": "case-endings"
     },
     {
       "id": "de-journal-korrektur",
       "lang": "de",
       "title": "Journal & Fehlerautopsie",
       "layer": 10,
-      "x": 50,
+      "x": 96,
       "summary": "Lock in the loop that makes everything else compound: write the page, get it corrected, turn every correction into an Anki cloze. Cards built from your own errors are the highest-value cards in the deck.",
       "resources": [
-        { "label": "Journalvorlage", "ref": "02_Journal_Template.pdf" },
-        { "label": "G-OUT Blockprozedur", "ref": "03_CURRICULUM_DETAILED.md Part 2 — G-OUT" }
+        {
+          "label": "Journalvorlage",
+          "ref": "02_Journal_Template.pdf"
+        },
+        {
+          "label": "G-OUT Blockprozedur",
+          "ref": "03_CURRICULUM_DETAILED.md Part 2 — G-OUT"
+        }
       ],
       "estHours": 2,
-      "prereqs": ["de-cafe-output"],
-      "tag": "P"
+      "prereqs": [
+        "de-cafe-output"
+      ],
+      "tag": "P",
+      "category": "skills-habits"
     },
     {
       "id": "de-perfekt-sein",
       "lang": "de",
       "title": "Perfekt mit sein",
       "layer": 10,
-      "x": 80,
+      "x": 45,
       "summary": "Verbs of movement and change of state take sein, not haben: 'ich bin gefahren', 'er ist eingeschlafen'. Learn the auxiliary as part of the verb card — infinitive on the front, aux + participle on the back, said aloud.",
       "resources": [
-        { "label": "Nicos Weg A1", "url": "https://learngerman.dw.com/en/beginners/c-36519789" },
-        { "label": "Perfekt-Drill (haben/sein gemischt)", "ref": "drill-sheet" }
+        {
+          "label": "Nicos Weg A1",
+          "url": "https://learngerman.dw.com/en/beginners/c-36519789"
+        },
+        {
+          "label": "Perfekt-Drill (haben/sein gemischt)",
+          "ref": "drill-sheet"
+        }
       ],
       "estHours": 4,
-      "prereqs": ["de-perfekt-haben"],
-      "tag": "P"
+      "prereqs": [
+        "de-perfekt-haben"
+      ],
+      "tag": "P",
+      "category": "verb-system"
     },
     {
       "id": "de-dativverben",
       "lang": "de",
       "title": "Dativverben: gefallen, helfen",
       "layer": 11,
-      "x": 20,
+      "x": 37,
       "summary": "helfen, gefallen, gehören, schmecken and friends flip the logic: the thing is the subject and the person is in the dative ('Wie gefällt dir Berlin?'). Learn each one as a whole phrase rather than trying to reason it out mid-sentence.",
       "resources": [
-        { "label": "Nicos Weg A1", "url": "https://learngerman.dw.com/en/beginners/c-36519789" },
-        { "label": "Dativverben-Anki-Batch", "ref": "drill-sheet" }
+        {
+          "label": "Nicos Weg A1",
+          "url": "https://learngerman.dw.com/en/beginners/c-36519789"
+        },
+        {
+          "label": "Dativverben-Anki-Batch",
+          "ref": "drill-sheet"
+        }
       ],
       "estHours": 3,
-      "prereqs": ["de-dativ-pronomen"],
-      "tag": "P"
+      "prereqs": [
+        "de-dativ-pronomen"
+      ],
+      "tag": "P",
+      "category": "verb-system"
     },
     {
       "id": "de-komparativ",
       "lang": "de",
       "title": "Komparativ & Superlativ",
       "layer": 11,
-      "x": 40,
+      "x": 8,
       "summary": "größer / am größten, plus the irregulars gut-besser-am besten and viel-mehr, and the als/wie distinction English speakers keep getting wrong. Cheap to acquire and it instantly makes your speech sound less like a beginner list.",
       "resources": [
-        { "label": "Nicos Weg A1", "url": "https://learngerman.dw.com/en/beginners/c-36519789" }
+        {
+          "label": "Nicos Weg A1",
+          "url": "https://learngerman.dw.com/en/beginners/c-36519789"
+        }
       ],
       "estHours": 3,
-      "prereqs": ["de-verb-position-2"],
-      "softPrereqs": ["de-nomen-genus"],
-      "tag": "P"
+      "prereqs": [
+        "de-verb-position-2"
+      ],
+      "softPrereqs": [
+        "de-nomen-genus"
+      ],
+      "tag": "P",
+      "category": "case-endings"
     },
     {
       "id": "de-modalverben-2",
       "lang": "de",
       "title": "dürfen/sollen/mögen — Arzt",
       "layer": 11,
-      "x": 60,
+      "x": 45,
       "summary": "The second modal set plus body and health vocabulary, practised as a doctor's-appointment role-play. Directly Ausbildung-relevant: you will need this register long before you need anything literary.",
       "resources": [
-        { "label": "Nicos Weg A1", "url": "https://learngerman.dw.com/en/beginners/c-36519789" },
-        { "label": "Rollenspiel: beim Arzt", "ref": "03_CURRICULUM_DETAILED.md Part 3 — Wk 13" }
+        {
+          "label": "Nicos Weg A1",
+          "url": "https://learngerman.dw.com/en/beginners/c-36519789"
+        },
+        {
+          "label": "Rollenspiel: beim Arzt",
+          "ref": "03_CURRICULUM_DETAILED.md Part 3 — Wk 13"
+        }
       ],
       "estHours": 3,
-      "prereqs": ["de-modalverben"],
-      "tag": "P"
+      "prereqs": [
+        "de-modalverben"
+      ],
+      "tag": "P",
+      "category": "verb-system"
     },
     {
       "id": "de-partizipien-unregelmaessig",
       "lang": "de",
       "title": "25 unregelmäßige Partizipien",
       "layer": 11,
-      "x": 80,
+      "x": 53,
       "summary": "The top 25 strong participles (gegangen, gesprochen, genommen…) cover most of what you'll actually say about yesterday. Brute-force SRS, always aloud, always with the auxiliary attached.",
       "resources": [
-        { "label": "Nicos Weg A1", "url": "https://learngerman.dw.com/en/beginners/c-36519789" },
-        { "label": "Anki: Infinitiv → Aux + Partizip", "ref": "drill-sheet" }
+        {
+          "label": "Nicos Weg A1",
+          "url": "https://learngerman.dw.com/en/beginners/c-36519789"
+        },
+        {
+          "label": "Anki: Infinitiv → Aux + Partizip",
+          "ref": "drill-sheet"
+        }
       ],
       "estHours": 3,
-      "prereqs": ["de-perfekt-sein"],
-      "tag": "P"
+      "prereqs": [
+        "de-perfekt-sein"
+      ],
+      "tag": "P",
+      "category": "verb-system"
     },
     {
       "id": "de-weil-dass",
       "lang": "de",
       "title": "weil / dass — Verb ans Ende",
       "layer": 12,
-      "x": 50,
+      "x": 26,
       "summary": "The single most drilled structure of this stage: after weil, dass, wenn the conjugated verb goes to the very end. Nothing in English or Arabic prepared you for this — expect weeks of clunkiness, keep the daily five-sentence drill running, and push through.",
       "resources": [
-        { "label": "Nicos Weg A1", "url": "https://learngerman.dw.com/en/beginners/c-36519789" },
-        { "label": "Tägliches weil/dass-Drill, 5 Sätze", "ref": "drill-sheet" },
-        { "label": "Netzwerk neu A1, Kap. 11", "ref": "Netzwerk neu A1 ch.11" }
+        {
+          "label": "Nicos Weg A1",
+          "url": "https://learngerman.dw.com/en/beginners/c-36519789"
+        },
+        {
+          "label": "Tägliches weil/dass-Drill, 5 Sätze",
+          "ref": "drill-sheet"
+        },
+        {
+          "label": "Netzwerk neu A1, Kap. 11",
+          "ref": "Netzwerk neu A1 ch.11"
+        }
       ],
       "estHours": 6,
-      "prereqs": ["de-modalverben", "de-perfekt-haben"],
-      "tag": "P"
+      "prereqs": [
+        "de-modalverben",
+        "de-perfekt-haben"
+      ],
+      "tag": "P",
+      "category": "sentence-structure"
     },
     {
       "id": "de-a1-mock",
       "lang": "de",
       "title": "A1-Mock: Goethe Modellsatz",
       "layer": 13,
-      "x": 50,
+      "x": 68,
       "summary": "A full Goethe A1 Modellsatz under real exam timing, all four modules. Pass bar is the real one — ≥60% per module — and ≥80% overall means you enter A2 instead of repeating. This is Milestone German A1.",
       "resources": [
-        { "label": "Goethe-Institut: Prüfungen & Modellsätze", "url": "https://www.goethe.de/en/spr/kup/prf.html" },
-        { "label": "Fortschritts-Tracker", "ref": "01_Progress_Tracker.xlsx" }
+        {
+          "label": "Goethe-Institut: Prüfungen & Modellsätze",
+          "url": "https://www.goethe.de/en/spr/kup/prf.html"
+        },
+        {
+          "label": "Fortschritts-Tracker",
+          "ref": "01_Progress_Tracker.xlsx"
+        }
       ],
       "estHours": 4,
-      "prereqs": ["de-weil-dass", "de-dativverben", "de-komparativ", "de-partizipien-unregelmaessig", "de-modalverben-2"],
+      "prereqs": [
+        "de-weil-dass",
+        "de-dativverben",
+        "de-komparativ",
+        "de-partizipien-unregelmaessig",
+        "de-modalverben-2"
+      ],
       "milestone": "A1",
-      "tag": "P"
+      "tag": "P",
+      "category": "milestones-exams"
     },
     {
       "id": "de-praeteritum-basis",
       "lang": "de",
       "title": "Präteritum: war, hatte, konnte",
       "layer": 14,
-      "x": 20,
+      "x": 45,
       "summary": "Spoken German narrates the past with Perfekt, but sein, haben and the modals use Präteritum instead — war, hatte, konnte, musste, wollte. A small closed set that makes past-state narration sound native rather than translated.",
       "resources": [
-        { "label": "Nicos Weg A2 (DW)", "url": "https://learngerman.dw.com/en/overview/s-13219" },
-        { "label": "Präteritum-Drill, 20 Items", "ref": "drill-sheet" }
+        {
+          "label": "Nicos Weg A2 (DW)",
+          "url": "https://learngerman.dw.com/en/overview/s-13219"
+        },
+        {
+          "label": "Präteritum-Drill, 20 Items",
+          "ref": "drill-sheet"
+        }
       ],
       "estHours": 6,
-      "prereqs": ["de-perfekt-haben"],
-      "softPrereqs": ["de-a1-mock"],
-      "tag": "P"
+      "prereqs": [
+        "de-perfekt-haben"
+      ],
+      "softPrereqs": [
+        "de-a1-mock"
+      ],
+      "tag": "P",
+      "category": "verb-system"
     },
     {
       "id": "de-shadowing",
       "lang": "de",
       "title": "Shadowing starten",
       "layer": 14,
-      "x": 50,
+      "x": 93,
       "summary": "Take 30–60 seconds of audio you already understand and repeat aloud with a one-second delay, three passes, matching rhythm. German targets: crisp final consonants, ü/ö, and falling intonation before a clause-final verb.",
       "resources": [
-        { "label": "Slow German (Podcast)", "url": "https://slowgerman.com" },
-        { "label": "G-SHAD Blockprozedur", "ref": "03_CURRICULUM_DETAILED.md Part 2 — G-SHAD" }
+        {
+          "label": "Slow German (Podcast)",
+          "url": "https://slowgerman.com"
+        },
+        {
+          "label": "G-SHAD Blockprozedur",
+          "ref": "03_CURRICULUM_DETAILED.md Part 2 — G-SHAD"
+        }
       ],
       "estHours": 4,
-      "prereqs": ["de-a1-mock"],
-      "tag": "P"
+      "prereqs": [
+        "de-a1-mock"
+      ],
+      "tag": "P",
+      "category": "skills-habits"
     },
     {
       "id": "de-netzwerk-a2",
       "lang": "de",
       "title": "Netzwerk neu A2 (schriftlich)",
       "layer": 14,
-      "x": 80,
+      "x": 99,
       "summary": "Optional written reinforcement alongside the Nicos Weg spine — and it happens to be the book Goethe Jakarta teaches from, so it aligns you with a possible future course. Cut this first when time is short.",
       "resources": [
-        { "label": "Netzwerk neu A2, Kursbuch", "ref": "Netzwerk neu A2" },
-        { "label": "Netzwerk neu A2, Arbeitsbuch", "ref": "Netzwerk neu A2 workbook" }
+        {
+          "label": "Netzwerk neu A2, Kursbuch",
+          "ref": "Netzwerk neu A2"
+        },
+        {
+          "label": "Netzwerk neu A2, Arbeitsbuch",
+          "ref": "Netzwerk neu A2 workbook"
+        }
       ],
       "estHours": 4,
-      "prereqs": ["de-a1-mock"],
-      "tag": "N"
+      "prereqs": [
+        "de-a1-mock"
+      ],
+      "tag": "N",
+      "category": "skills-habits"
     },
     {
       "id": "de-wechselpraepositionen",
       "lang": "de",
       "title": "Wechselpräpositionen",
       "layer": 15,
-      "x": 20,
+      "x": 8,
       "summary": "in, an, auf, über, unter, vor, hinter, neben, zwischen take accusative for movement (wohin?) and dative for position (wo?). Draw the classic room diagram once, then drill mixed items — the rule is one line long, the automation takes weeks.",
       "resources": [
-        { "label": "Nicos Weg A2 (DW)", "url": "https://learngerman.dw.com/en/overview/s-13219" },
-        { "label": "Zimmerdiagramm + 20 gemischte Items", "ref": "drill-sheet" }
+        {
+          "label": "Nicos Weg A2 (DW)",
+          "url": "https://learngerman.dw.com/en/overview/s-13219"
+        },
+        {
+          "label": "Zimmerdiagramm + 20 gemischte Items",
+          "ref": "drill-sheet"
+        }
       ],
       "estHours": 8,
-      "prereqs": ["de-dativ", "de-akk-praepositionen"],
-      "tag": "P"
+      "prereqs": [
+        "de-dativ",
+        "de-akk-praepositionen"
+      ],
+      "tag": "P",
+      "category": "case-endings"
     },
     {
       "id": "de-imperativ",
       "lang": "de",
       "title": "Imperativ",
       "layer": 15,
-      "x": 50,
+      "x": 45,
       "summary": "Geh! Gehen Sie! Geht! — three forms, one of which drops the pronoun entirely. You need it for instructions, directions and every polite Sie-request you'll make in a shop or an office.",
       "resources": [
-        { "label": "Nicos Weg A2 (DW)", "url": "https://learngerman.dw.com/en/overview/s-13219" }
+        {
+          "label": "Nicos Weg A2 (DW)",
+          "url": "https://learngerman.dw.com/en/overview/s-13219"
+        }
       ],
       "estHours": 4,
-      "prereqs": ["de-akkusativ"],
-      "softPrereqs": ["de-trennbare-verben"],
-      "tag": "P"
+      "prereqs": [
+        "de-akkusativ"
+      ],
+      "softPrereqs": [
+        "de-trennbare-verben"
+      ],
+      "tag": "P",
+      "category": "verb-system"
     },
     {
       "id": "de-hoeren-a2",
       "lang": "de",
       "title": "Hörtraining A2",
       "layer": 15,
-      "x": 80,
+      "x": 96,
       "summary": "The G-LIS protocol done seriously: listen once blind, once with the transcript, then steal three phrases into Anki. Blind-first is the part people skip, and it's the part that actually builds the skill.",
       "resources": [
-        { "label": "Slow German (Podcast)", "url": "https://slowgerman.com" },
-        { "label": "Nicos Weg A2 (DW)", "url": "https://learngerman.dw.com/en/overview/s-13219" }
+        {
+          "label": "Slow German (Podcast)",
+          "url": "https://slowgerman.com"
+        },
+        {
+          "label": "Nicos Weg A2 (DW)",
+          "url": "https://learngerman.dw.com/en/overview/s-13219"
+        }
       ],
       "estHours": 4,
-      "prereqs": ["de-shadowing"],
-      "tag": "P"
+      "prereqs": [
+        "de-shadowing"
+      ],
+      "tag": "P",
+      "category": "skills-habits"
     },
     {
       "id": "de-reflexive-verben",
       "lang": "de",
       "title": "Reflexive Verben",
       "layer": 16,
-      "x": 20,
+      "x": 40,
       "summary": "sich freuen, sich interessieren, sich vorstellen — plus the accusative/dative reflexive split (ich wasche mich vs. ich wasche mir die Hände). This is where feelings and plans become sayable.",
       "resources": [
-        { "label": "Nicos Weg A2 (DW)", "url": "https://learngerman.dw.com/en/overview/s-13219" },
-        { "label": "Reflexivpronomen-Drill", "ref": "drill-sheet" }
+        {
+          "label": "Nicos Weg A2 (DW)",
+          "url": "https://learngerman.dw.com/en/overview/s-13219"
+        },
+        {
+          "label": "Reflexivpronomen-Drill",
+          "ref": "drill-sheet"
+        }
       ],
       "estHours": 6,
-      "prereqs": ["de-dativ-pronomen"],
-      "softPrereqs": ["de-akkusativ"],
-      "tag": "P"
+      "prereqs": [
+        "de-dativ-pronomen"
+      ],
+      "softPrereqs": [
+        "de-akkusativ"
+      ],
+      "tag": "P",
+      "category": "verb-system"
     },
     {
       "id": "de-verb-praeposition",
       "lang": "de",
       "title": "Verb + Präposition",
       "layer": 16,
-      "x": 50,
+      "x": 51,
       "summary": "warten auf + Akk, denken an + Akk, sich freuen über/auf — the preposition is arbitrary and must be learnt with the verb, exactly like an Arabic verb's harf jarr. Never store the verb without its preposition and case.",
       "resources": [
-        { "label": "Nicos Weg A2 (DW)", "url": "https://learngerman.dw.com/en/overview/s-13219" },
-        { "label": "Anki: Verb + Präp + Kasus als eine Karte", "ref": "drill-sheet" }
+        {
+          "label": "Nicos Weg A2 (DW)",
+          "url": "https://learngerman.dw.com/en/overview/s-13219"
+        },
+        {
+          "label": "Anki: Verb + Präp + Kasus als eine Karte",
+          "ref": "drill-sheet"
+        }
       ],
       "estHours": 6,
-      "prereqs": ["de-wechselpraepositionen"],
-      "tag": "P"
+      "prereqs": [
+        "de-wechselpraepositionen"
+      ],
+      "tag": "P",
+      "category": "verb-system"
     },
     {
       "id": "de-sprechen-vc",
       "lang": "de",
       "title": "Sprechen: VC & KI-Gespräch",
       "layer": 16,
-      "x": 80,
+      "x": 96,
       "summary": "From A2 the output block goes live: Discord voice rooms and AI conversation at your level, twice a week. Ugly output now beats perfect output never — finish the thought first, fix it afterwards, and feed the fixes to Anki.",
       "resources": [
-        { "label": "r/German Wiki (Community-Ressourcen)", "url": "https://www.reddit.com/r/German/wiki/index" },
-        { "label": "G-OUT Rotation (a)–(d)", "ref": "03_CURRICULUM_DETAILED.md Part 2 — G-OUT" }
+        {
+          "label": "r/German Wiki (Community-Ressourcen)",
+          "url": "https://www.reddit.com/r/German/wiki/index"
+        },
+        {
+          "label": "G-OUT Rotation (a)–(d)",
+          "ref": "03_CURRICULUM_DETAILED.md Part 2 — G-OUT"
+        }
       ],
       "estHours": 4,
-      "prereqs": ["de-shadowing"],
-      "softPrereqs": ["de-journal-korrektur"],
-      "tag": "P"
+      "prereqs": [
+        "de-shadowing"
+      ],
+      "softPrereqs": [
+        "de-journal-korrektur"
+      ],
+      "tag": "P",
+      "category": "skills-habits"
     },
     {
       "id": "de-adjektiv-endungen-1",
       "lang": "de",
       "title": "Adjektivendungen nach der/die/das",
       "layer": 17,
-      "x": 20,
+      "x": 4,
       "summary": "The notorious 'maths equation' — except after the definite article it is only a two-ending pattern, -e or -en. Demystify it by drilling ten minutes a day, interleaved, not by staring at the table.",
       "resources": [
-        { "label": "Nicos Weg A2 (DW)", "url": "https://learngerman.dw.com/en/overview/s-13219" },
-        { "label": "Adjektivendungen: tägliches Mikrodrill", "ref": "drill-sheet" }
+        {
+          "label": "Nicos Weg A2 (DW)",
+          "url": "https://learngerman.dw.com/en/overview/s-13219"
+        },
+        {
+          "label": "Adjektivendungen: tägliches Mikrodrill",
+          "ref": "drill-sheet"
+        }
       ],
       "estHours": 8,
-      "prereqs": ["de-dativ"],
-      "softPrereqs": ["de-wechselpraepositionen", "de-nomen-genus"],
-      "tag": "P"
+      "prereqs": [
+        "de-dativ"
+      ],
+      "softPrereqs": [
+        "de-wechselpraepositionen",
+        "de-nomen-genus"
+      ],
+      "tag": "P",
+      "category": "case-endings"
     },
     {
       "id": "de-temporale-praepositionen",
       "lang": "de",
       "title": "Temporale Präpositionen",
       "layer": 17,
-      "x": 50,
+      "x": 13,
       "summary": "seit, vor, ab, bis, in, während — when things happen and for how long, each locked to a fixed case. Note that seit + present tense means an action still going on, where English forces a perfect.",
       "resources": [
-        { "label": "Nicos Weg A2 (DW)", "url": "https://learngerman.dw.com/en/overview/s-13219" }
+        {
+          "label": "Nicos Weg A2 (DW)",
+          "url": "https://learngerman.dw.com/en/overview/s-13219"
+        }
       ],
       "estHours": 4,
-      "prereqs": ["de-dativ"],
-      "tag": "P"
+      "prereqs": [
+        "de-dativ"
+      ],
+      "tag": "P",
+      "category": "case-endings"
     },
     {
       "id": "de-nebensaetze-wenn-obwohl",
       "lang": "de",
       "title": "wenn / obwohl / als",
       "layer": 17,
-      "x": 80,
+      "x": 26,
       "summary": "The subordinate-clause family expands, and with it the als-vs-wenn trap: als for a single completed past event, wenn for repeated or present/future ones. Same verb-final machinery you already fought for with weil.",
       "resources": [
-        { "label": "Nicos Weg A2 (DW)", "url": "https://learngerman.dw.com/en/overview/s-13219" },
-        { "label": "als/wenn-Drill, 20 Items", "ref": "drill-sheet" }
+        {
+          "label": "Nicos Weg A2 (DW)",
+          "url": "https://learngerman.dw.com/en/overview/s-13219"
+        },
+        {
+          "label": "als/wenn-Drill, 20 Items",
+          "ref": "drill-sheet"
+        }
       ],
       "estHours": 7,
-      "prereqs": ["de-weil-dass"],
-      "tag": "P"
+      "prereqs": [
+        "de-weil-dass"
+      ],
+      "tag": "P",
+      "category": "sentence-structure"
     },
     {
       "id": "de-adjektiv-endungen-2",
       "lang": "de",
       "title": "Adjektivendungen nach ein/kein",
       "layer": 18,
-      "x": 20,
+      "x": 4,
       "summary": "After ein/kein/mein the adjective has to carry the gender signal the article fails to show — 'ein guter Mann', 'mein kleines Kind'. Target: error rate under 20% by the end of A2, under 10% by B1. It is drillable, not memorable.",
       "resources": [
-        { "label": "Nicos Weg A2 (DW)", "url": "https://learngerman.dw.com/en/overview/s-13219" },
-        { "label": "Interleaved Endungsdrill (der-/ein-Wörter)", "ref": "drill-sheet" }
+        {
+          "label": "Nicos Weg A2 (DW)",
+          "url": "https://learngerman.dw.com/en/overview/s-13219"
+        },
+        {
+          "label": "Interleaved Endungsdrill (der-/ein-Wörter)",
+          "ref": "drill-sheet"
+        }
       ],
       "estHours": 7,
-      "prereqs": ["de-adjektiv-endungen-1"],
-      "tag": "P"
+      "prereqs": [
+        "de-adjektiv-endungen-1"
+      ],
+      "tag": "P",
+      "category": "case-endings"
     },
     {
       "id": "de-ordinalzahlen-datum",
       "lang": "de",
       "title": "Ordinalzahlen & Datum",
       "layer": 18,
-      "x": 50,
+      "x": 13,
       "summary": "der erste, am zweiten, vom 3. bis zum 7. — dates take ordinal numbers with adjective endings, so this quietly doubles as ending practice. Needed for every form, appointment and application you will fill in.",
       "resources": [
-        { "label": "Nicos Weg A2 (DW)", "url": "https://learngerman.dw.com/en/overview/s-13219" }
+        {
+          "label": "Nicos Weg A2 (DW)",
+          "url": "https://learngerman.dw.com/en/overview/s-13219"
+        }
       ],
       "estHours": 3,
-      "prereqs": ["de-zahlen"],
-      "softPrereqs": ["de-temporale-praepositionen"],
-      "tag": "P"
+      "prereqs": [
+        "de-zahlen"
+      ],
+      "softPrereqs": [
+        "de-temporale-praepositionen"
+      ],
+      "tag": "P",
+      "category": "case-endings"
     },
     {
       "id": "de-konnektoren",
       "lang": "de",
       "title": "deshalb / trotzdem / denn",
       "layer": 18,
-      "x": 80,
+      "x": 26,
       "summary": "Three different word orders for three connectors: denn keeps normal order, deshalb and trotzdem take position 1 and kick the verb to slot 2, weil sends it to the end. Sort these out and your reasoning stops sounding like a list.",
       "resources": [
-        { "label": "Nicos Weg A2 (DW)", "url": "https://learngerman.dw.com/en/overview/s-13219" },
-        { "label": "Konnektoren-Wortstellungsdrill", "ref": "drill-sheet" }
+        {
+          "label": "Nicos Weg A2 (DW)",
+          "url": "https://learngerman.dw.com/en/overview/s-13219"
+        },
+        {
+          "label": "Konnektoren-Wortstellungsdrill",
+          "ref": "drill-sheet"
+        }
       ],
       "estHours": 5,
-      "prereqs": ["de-nebensaetze-wenn-obwohl"],
-      "tag": "P"
+      "prereqs": [
+        "de-nebensaetze-wenn-obwohl"
+      ],
+      "tag": "P",
+      "category": "sentence-structure"
     },
     {
       "id": "de-adjektiv-unpreceded",
       "lang": "de",
       "title": "Endungen ohne Artikel",
       "layer": 19,
-      "x": 15,
+      "x": 8,
       "summary": "Unpreceded adjectives ('guter Wein', 'mit frischem Brot') take the ending the missing article would have carried. Genuinely nice-to-have at A2 — it appears mostly in menus, recipes and headlines, so cut it first if the week is tight.",
       "resources": [
-        { "label": "Nicos Weg A2 (DW)", "url": "https://learngerman.dw.com/en/overview/s-13219" }
+        {
+          "label": "Nicos Weg A2 (DW)",
+          "url": "https://learngerman.dw.com/en/overview/s-13219"
+        }
       ],
       "estHours": 3,
-      "prereqs": ["de-adjektiv-endungen-2"],
-      "tag": "N"
+      "prereqs": [
+        "de-adjektiv-endungen-2"
+      ],
+      "tag": "N",
+      "category": "case-endings"
     },
     {
       "id": "de-relativsaetze-1",
       "lang": "de",
       "title": "Relativsätze: Nom + Akk",
       "layer": 19,
-      "x": 38,
+      "x": 21,
       "summary": "der Mann, der …/den … — the relative pronoun looks like the definite article and the verb still goes to the end. This is how you describe people and things precisely: 'der Beruf, den ich machen will'.",
       "resources": [
-        { "label": "Nicos Weg A2 (DW)", "url": "https://learngerman.dw.com/en/overview/s-13219" },
-        { "label": "Relativpronomen-Drill (Nom/Akk)", "ref": "drill-sheet" }
+        {
+          "label": "Nicos Weg A2 (DW)",
+          "url": "https://learngerman.dw.com/en/overview/s-13219"
+        },
+        {
+          "label": "Relativpronomen-Drill (Nom/Akk)",
+          "ref": "drill-sheet"
+        }
       ],
       "estHours": 7,
-      "prereqs": ["de-nebensaetze-wenn-obwohl"],
-      "softPrereqs": ["de-adjektiv-endungen-2"],
-      "tag": "P"
+      "prereqs": [
+        "de-nebensaetze-wenn-obwohl"
+      ],
+      "softPrereqs": [
+        "de-adjektiv-endungen-2"
+      ],
+      "tag": "P",
+      "category": "sentence-structure"
     },
     {
       "id": "de-infinitiv-zu",
       "lang": "de",
       "title": "Infinitiv + zu",
       "layer": 19,
-      "x": 62,
+      "x": 31,
       "summary": "'Ich habe vor, nach Deutschland zu gehen' — the zu-infinitive goes to the end, and separable verbs swallow the zu in the middle (anzufangen). The building block for um…zu and for polite written German.",
       "resources": [
-        { "label": "Nicos Weg A2 (DW)", "url": "https://learngerman.dw.com/en/overview/s-13219" }
+        {
+          "label": "Nicos Weg A2 (DW)",
+          "url": "https://learngerman.dw.com/en/overview/s-13219"
+        }
       ],
       "estHours": 4,
-      "prereqs": ["de-modalverben"],
-      "softPrereqs": ["de-nebensaetze-wenn-obwohl"],
-      "tag": "P"
+      "prereqs": [
+        "de-modalverben"
+      ],
+      "softPrereqs": [
+        "de-nebensaetze-wenn-obwohl"
+      ],
+      "tag": "P",
+      "category": "sentence-structure"
     },
     {
       "id": "de-brief-email-a2",
@@ -725,461 +1208,743 @@
       "x": 85,
       "summary": "Sehr geehrte Damen und Herren … Mit freundlichen Grüßen: the fixed frame of a German formal message, plus the informal register for friends. The Goethe A2 Schreiben module is exactly this, and so is every Ausbildung enquiry later.",
       "resources": [
-        { "label": "Goethe-Institut: Prüfungen & Modellsätze", "url": "https://www.goethe.de/en/spr/kup/prf.html" },
-        { "label": "Netzwerk neu A2, Schreibtraining", "ref": "Netzwerk neu A2 writing" }
+        {
+          "label": "Goethe-Institut: Prüfungen & Modellsätze",
+          "url": "https://www.goethe.de/en/spr/kup/prf.html"
+        },
+        {
+          "label": "Netzwerk neu A2, Schreibtraining",
+          "ref": "Netzwerk neu A2 writing"
+        }
       ],
       "estHours": 5,
-      "prereqs": ["de-konnektoren"],
-      "softPrereqs": ["de-journal-korrektur"],
-      "tag": "P"
+      "prereqs": [
+        "de-konnektoren"
+      ],
+      "softPrereqs": [
+        "de-journal-korrektur"
+      ],
+      "tag": "P",
+      "category": "vocab-communication"
     },
     {
       "id": "de-futur-1",
       "lang": "de",
       "title": "Futur I mit werden",
       "layer": 20,
-      "x": 20,
+      "x": 40,
       "summary": "werden + infinitive at the end — another bracket. In practice Germans use the present tense for the future, so the real payoff is that you now own werden, which is the engine of the passive at B1.",
       "resources": [
-        { "label": "Nicos Weg A2 (DW)", "url": "https://learngerman.dw.com/en/overview/s-13219" }
+        {
+          "label": "Nicos Weg A2 (DW)",
+          "url": "https://learngerman.dw.com/en/overview/s-13219"
+        }
       ],
       "estHours": 3,
-      "prereqs": ["de-modalverben"],
-      "softPrereqs": ["de-konnektoren"],
-      "tag": "P"
+      "prereqs": [
+        "de-modalverben"
+      ],
+      "softPrereqs": [
+        "de-konnektoren"
+      ],
+      "tag": "P",
+      "category": "verb-system"
     },
     {
       "id": "de-konjunktiv-2-hoeflich",
       "lang": "de",
       "title": "Konjunktiv II: Höflichkeit",
       "layer": 20,
-      "x": 50,
+      "x": 51,
       "summary": "würde, könnte, hätte, wäre — the politeness gear of German. 'Könnten Sie mir bitte helfen?' is the register an Ausbildung email or a Goethe speaking module expects, and it costs only six forms to sound grown-up.",
       "resources": [
-        { "label": "Nicos Weg A2 (DW)", "url": "https://learngerman.dw.com/en/overview/s-13219" },
-        { "label": "Höflichkeitsformeln-Drill", "ref": "drill-sheet" }
+        {
+          "label": "Nicos Weg A2 (DW)",
+          "url": "https://learngerman.dw.com/en/overview/s-13219"
+        },
+        {
+          "label": "Höflichkeitsformeln-Drill",
+          "ref": "drill-sheet"
+        }
       ],
       "estHours": 7,
-      "prereqs": ["de-praeteritum-basis", "de-infinitiv-zu"],
-      "tag": "P"
+      "prereqs": [
+        "de-praeteritum-basis",
+        "de-infinitiv-zu"
+      ],
+      "tag": "P",
+      "category": "verb-system"
     },
     {
       "id": "de-lebenslauf",
       "lang": "de",
       "title": "Lebenslauf schreiben",
       "layer": 20,
-      "x": 80,
+      "x": 85,
       "summary": "The German CV is its own genre: tabular, dated, photo-optional, no prose. Draft yours now, while there is still a year to improve it — the document is what turns language study into an actual Ausbildung application.",
       "resources": [
-        { "label": "ausbildung.de", "url": "https://www.ausbildung.de" },
-        { "label": "Lebenslauf-Vorlage (tabellarisch)", "ref": "drill-sheet" }
+        {
+          "label": "ausbildung.de",
+          "url": "https://www.ausbildung.de"
+        },
+        {
+          "label": "Lebenslauf-Vorlage (tabellarisch)",
+          "ref": "drill-sheet"
+        }
       ],
       "estHours": 5,
-      "prereqs": ["de-brief-email-a2"],
-      "softPrereqs": ["de-adjektiv-endungen-2"],
-      "tag": "P"
+      "prereqs": [
+        "de-brief-email-a2"
+      ],
+      "softPrereqs": [
+        "de-adjektiv-endungen-2"
+      ],
+      "tag": "P",
+      "category": "vocab-communication"
     },
     {
       "id": "de-a2-mock",
       "lang": "de",
       "title": "A2-Mock: Goethe Modellsatz",
       "layer": 21,
-      "x": 50,
+      "x": 68,
       "summary": "Full Goethe A2 Modellsatz under exam conditions plus your first Lebenslauf draft reviewed. Milestone German A2 — and the point where past narration should feel fluid and adjective endings sit around 80%.",
       "resources": [
-        { "label": "Goethe-Institut: Prüfungen & Modellsätze", "url": "https://www.goethe.de/en/spr/kup/prf.html" },
-        { "label": "Fortschritts-Tracker", "ref": "01_Progress_Tracker.xlsx" }
+        {
+          "label": "Goethe-Institut: Prüfungen & Modellsätze",
+          "url": "https://www.goethe.de/en/spr/kup/prf.html"
+        },
+        {
+          "label": "Fortschritts-Tracker",
+          "ref": "01_Progress_Tracker.xlsx"
+        }
       ],
       "estHours": 6,
-      "prereqs": ["de-konjunktiv-2-hoeflich", "de-relativsaetze-1", "de-adjektiv-endungen-2", "de-konnektoren", "de-lebenslauf"],
+      "prereqs": [
+        "de-konjunktiv-2-hoeflich",
+        "de-relativsaetze-1",
+        "de-adjektiv-endungen-2",
+        "de-konnektoren",
+        "de-lebenslauf"
+      ],
       "milestone": "A2",
-      "tag": "P"
+      "tag": "P",
+      "category": "milestones-exams"
     },
     {
       "id": "de-easy-german",
       "lang": "de",
       "title": "Easy German Interviews",
       "layer": 22,
-      "x": 20,
+      "x": 96,
       "summary": "Street interviews with real speed, real dialect colour and real filler words — the gap between Nicos Weg and life. Protocol: subtitled pass first, unsubtitled second, three stolen phrases into Anki.",
       "resources": [
-        { "label": "Easy German (YouTube)", "url": "https://www.youtube.com/@EasyGerman" },
-        { "label": "G-LIS Blockprozedur", "ref": "03_CURRICULUM_DETAILED.md Part 2 — G-LIS" }
+        {
+          "label": "Easy German (YouTube)",
+          "url": "https://www.youtube.com/@EasyGerman"
+        },
+        {
+          "label": "G-LIS Blockprozedur",
+          "ref": "03_CURRICULUM_DETAILED.md Part 2 — G-LIS"
+        }
       ],
       "estHours": 8,
-      "prereqs": ["de-hoeren-a2"],
-      "softPrereqs": ["de-a2-mock"],
-      "tag": "P"
+      "prereqs": [
+        "de-hoeren-a2"
+      ],
+      "softPrereqs": [
+        "de-a2-mock"
+      ],
+      "tag": "P",
+      "category": "skills-habits"
     },
     {
       "id": "de-praeteritum-starke-verben",
       "lang": "de",
       "title": "Präteritum starker Verben",
       "layer": 22,
-      "x": 50,
+      "x": 40,
       "summary": "ging, sprach, nahm, fand — you rarely say these, but you read them constantly, because written narrative German runs on Präteritum. This is a reading-comprehension unlock more than a speaking one.",
       "resources": [
-        { "label": "Nicos Weg B1 (DW)", "url": "https://learngerman.dw.com/en/overview/s-13219" },
-        { "label": "Starke-Verben-Tabelle als Anki-Batch", "ref": "drill-sheet" }
+        {
+          "label": "Nicos Weg B1 (DW)",
+          "url": "https://learngerman.dw.com/en/overview/s-13219"
+        },
+        {
+          "label": "Starke-Verben-Tabelle als Anki-Batch",
+          "ref": "drill-sheet"
+        }
       ],
       "estHours": 10,
-      "prereqs": ["de-praeteritum-basis"],
-      "tag": "P"
+      "prereqs": [
+        "de-praeteritum-basis"
+      ],
+      "tag": "P",
+      "category": "verb-system"
     },
     {
       "id": "de-passiv-praesens",
       "lang": "de",
       "title": "Passiv Präsens",
       "layer": 22,
-      "x": 80,
+      "x": 51,
       "summary": "werden + Partizip II: 'Das Formular wird ausgefüllt.' Institutional German — forms, rules, workplace instructions, job ads — is written almost entirely in the passive, so this is a vocational necessity, not a stylistic flourish.",
       "resources": [
-        { "label": "Nicos Weg B1 (DW)", "url": "https://learngerman.dw.com/en/overview/s-13219" },
-        { "label": "Aktiv→Passiv-Transformation, 20 Items", "ref": "drill-sheet" }
+        {
+          "label": "Nicos Weg B1 (DW)",
+          "url": "https://learngerman.dw.com/en/overview/s-13219"
+        },
+        {
+          "label": "Aktiv→Passiv-Transformation, 20 Items",
+          "ref": "drill-sheet"
+        }
       ],
       "estHours": 11,
-      "prereqs": ["de-futur-1", "de-perfekt-haben"],
-      "tag": "P"
+      "prereqs": [
+        "de-futur-1",
+        "de-perfekt-haben"
+      ],
+      "tag": "P",
+      "category": "verb-system"
     },
     {
       "id": "de-plusquamperfekt",
       "lang": "de",
       "title": "Plusquamperfekt",
       "layer": 23,
-      "x": 20,
+      "x": 40,
       "summary": "hatte/war + Partizip II for the past-before-the-past, almost always paired with nachdem. Short unit, but it is what lets you order events in a story instead of listing them.",
       "resources": [
-        { "label": "Nicos Weg B1 (DW)", "url": "https://learngerman.dw.com/en/overview/s-13219" }
+        {
+          "label": "Nicos Weg B1 (DW)",
+          "url": "https://learngerman.dw.com/en/overview/s-13219"
+        }
       ],
       "estHours": 8,
-      "prereqs": ["de-praeteritum-starke-verben"],
-      "tag": "P"
+      "prereqs": [
+        "de-praeteritum-starke-verben"
+      ],
+      "tag": "P",
+      "category": "verb-system"
     },
     {
       "id": "de-passiv-vergangenheit",
       "lang": "de",
       "title": "Passiv Vergangenheit & Modal",
       "layer": 23,
-      "x": 50,
+      "x": 51,
       "summary": "'wurde gebaut', 'ist gebaut worden', 'muss gemacht werden' — the past and modal passives, where the stacking of auxiliaries at the clause end peaks. Read it aloud until the pile-up stops feeling absurd.",
       "resources": [
-        { "label": "Nicos Weg B1 (DW)", "url": "https://learngerman.dw.com/en/overview/s-13219" },
-        { "label": "Passiv-Drill (alle Zeiten gemischt)", "ref": "drill-sheet" }
+        {
+          "label": "Nicos Weg B1 (DW)",
+          "url": "https://learngerman.dw.com/en/overview/s-13219"
+        },
+        {
+          "label": "Passiv-Drill (alle Zeiten gemischt)",
+          "ref": "drill-sheet"
+        }
       ],
       "estHours": 7,
-      "prereqs": ["de-passiv-praesens"],
-      "tag": "P"
+      "prereqs": [
+        "de-passiv-praesens"
+      ],
+      "tag": "P",
+      "category": "verb-system"
     },
     {
       "id": "de-genitiv",
       "lang": "de",
       "title": "Genitiv",
       "layer": 23,
-      "x": 80,
+      "x": 8,
       "summary": "des Mannes / der Frau — the fourth case, and the one Arabic's iḍāfa makes intuitive: possession marked on the possessor. Spoken German often dodges it with von, but B1 reading and any formal writing will not.",
       "resources": [
-        { "label": "Nicos Weg B1 (DW)", "url": "https://learngerman.dw.com/en/overview/s-13219" },
-        { "label": "Kasusdrill inkl. Genitiv, interleaved", "ref": "drill-sheet" }
+        {
+          "label": "Nicos Weg B1 (DW)",
+          "url": "https://learngerman.dw.com/en/overview/s-13219"
+        },
+        {
+          "label": "Kasusdrill inkl. Genitiv, interleaved",
+          "ref": "drill-sheet"
+        }
       ],
       "estHours": 10,
-      "prereqs": ["de-dativ"],
-      "tag": "P"
+      "prereqs": [
+        "de-dativ"
+      ],
+      "tag": "P",
+      "category": "case-endings"
     },
     {
       "id": "de-n-deklination",
       "lang": "de",
       "title": "n-Deklination",
       "layer": 24,
-      "x": 20,
+      "x": 4,
       "summary": "A closed class of masculine nouns (Student, Kollege, Mensch, Herr) that add -n or -en in every case except nominative singular. Small, finite, and a favourite of exam correctors — learn the list and it is free marks.",
       "resources": [
-        { "label": "n-Deklination Wortliste", "ref": "drill-sheet" },
-        { "label": "Nicos Weg B1 (DW)", "url": "https://learngerman.dw.com/en/overview/s-13219" }
+        {
+          "label": "n-Deklination Wortliste",
+          "ref": "drill-sheet"
+        },
+        {
+          "label": "Nicos Weg B1 (DW)",
+          "url": "https://learngerman.dw.com/en/overview/s-13219"
+        }
       ],
       "estHours": 5,
-      "prereqs": ["de-genitiv"],
-      "tag": "P"
+      "prereqs": [
+        "de-genitiv"
+      ],
+      "tag": "P",
+      "category": "case-endings"
     },
     {
       "id": "de-genitiv-praepositionen",
       "lang": "de",
       "title": "wegen / trotz / während",
       "layer": 24,
-      "x": 50,
+      "x": 13,
       "summary": "The genitive prepositions — wegen, trotz, während, innerhalb — are the register marker that separates B1 writing from A2 writing. Colloquial speech uses them with dative; your exam texts should not.",
       "resources": [
-        { "label": "Nicos Weg B1 (DW)", "url": "https://learngerman.dw.com/en/overview/s-13219" }
+        {
+          "label": "Nicos Weg B1 (DW)",
+          "url": "https://learngerman.dw.com/en/overview/s-13219"
+        }
       ],
       "estHours": 6,
-      "prereqs": ["de-genitiv"],
-      "tag": "P"
+      "prereqs": [
+        "de-genitiv"
+      ],
+      "tag": "P",
+      "category": "case-endings"
     },
     {
       "id": "de-da-wo-komposita",
       "lang": "de",
       "title": "da- und wo-Komposita",
       "layer": 24,
-      "x": 80,
+      "x": 26,
       "summary": "darauf, damit, worauf, womit — pronoun substitutes for things after a prepositional verb ('Ich freue mich darauf', 'Worüber sprichst du?'). Impossible to fake, and their absence is a giveaway that you're still translating from English.",
       "resources": [
-        { "label": "Nicos Weg B1 (DW)", "url": "https://learngerman.dw.com/en/overview/s-13219" },
-        { "label": "da-/wo-Drill an deinen Verb+Präp-Karten", "ref": "drill-sheet" }
+        {
+          "label": "Nicos Weg B1 (DW)",
+          "url": "https://learngerman.dw.com/en/overview/s-13219"
+        },
+        {
+          "label": "da-/wo-Drill an deinen Verb+Präp-Karten",
+          "ref": "drill-sheet"
+        }
       ],
       "estHours": 7,
-      "prereqs": ["de-verb-praeposition"],
-      "tag": "P"
+      "prereqs": [
+        "de-verb-praeposition"
+      ],
+      "tag": "P",
+      "category": "sentence-structure"
     },
     {
       "id": "de-relativsaetze-alle-kasus",
       "lang": "de",
       "title": "Relativsätze: alle Kasus",
       "layer": 25,
-      "x": 20,
+      "x": 21,
       "summary": "Dative and genitive relative pronouns (dem, denen, dessen, deren), prepositional relatives ('das Haus, in dem …'), plus wo and was. The single densest structure in B1 Lesen texts.",
       "resources": [
-        { "label": "Nicos Weg B1 (DW)", "url": "https://learngerman.dw.com/en/overview/s-13219" },
-        { "label": "Relativsatz-Drill, alle Kasus interleaved", "ref": "drill-sheet" }
+        {
+          "label": "Nicos Weg B1 (DW)",
+          "url": "https://learngerman.dw.com/en/overview/s-13219"
+        },
+        {
+          "label": "Relativsatz-Drill, alle Kasus interleaved",
+          "ref": "drill-sheet"
+        }
       ],
       "estHours": 10,
-      "prereqs": ["de-relativsaetze-1", "de-genitiv"],
-      "tag": "P"
+      "prereqs": [
+        "de-relativsaetze-1",
+        "de-genitiv"
+      ],
+      "tag": "P",
+      "category": "sentence-structure"
     },
     {
       "id": "de-konjunktiv-2-irreal",
       "lang": "de",
       "title": "Konjunktiv II irreal",
       "layer": 25,
-      "x": 50,
+      "x": 45,
       "summary": "'Wenn ich mehr Zeit hätte, würde ich …' — hypotheticals, regrets and advice, including the past form (hätte gemacht). The politeness forms you already have are the same machinery pointed at unreal situations.",
       "resources": [
-        { "label": "Nicos Weg B1 (DW)", "url": "https://learngerman.dw.com/en/overview/s-13219" },
-        { "label": "Irrealis-Drill: 15 wenn-Sätze", "ref": "drill-sheet" }
+        {
+          "label": "Nicos Weg B1 (DW)",
+          "url": "https://learngerman.dw.com/en/overview/s-13219"
+        },
+        {
+          "label": "Irrealis-Drill: 15 wenn-Sätze",
+          "ref": "drill-sheet"
+        }
       ],
       "estHours": 10,
-      "prereqs": ["de-konjunktiv-2-hoeflich", "de-praeteritum-starke-verben"],
-      "tag": "P"
+      "prereqs": [
+        "de-konjunktiv-2-hoeflich",
+        "de-praeteritum-starke-verben"
+      ],
+      "tag": "P",
+      "category": "verb-system"
     },
     {
       "id": "de-indirekte-fragen",
       "lang": "de",
       "title": "Indirekte Fragen mit ob",
       "layer": 25,
-      "x": 80,
+      "x": 31,
       "summary": "'Können Sie mir sagen, ob/wann/wo …' — questions wrapped in a polite frame, with the verb at the end. This is the single most useful structure for the B1 speaking module and for any real-world counter or phone call.",
       "resources": [
-        { "label": "Nicos Weg B1 (DW)", "url": "https://learngerman.dw.com/en/overview/s-13219" }
+        {
+          "label": "Nicos Weg B1 (DW)",
+          "url": "https://learngerman.dw.com/en/overview/s-13219"
+        }
       ],
       "estHours": 7,
-      "prereqs": ["de-nebensaetze-wenn-obwohl"],
-      "tag": "P"
+      "prereqs": [
+        "de-nebensaetze-wenn-obwohl"
+      ],
+      "tag": "P",
+      "category": "sentence-structure"
     },
     {
       "id": "de-damit-um-zu",
       "lang": "de",
       "title": "damit / um ... zu",
       "layer": 26,
-      "x": 20,
+      "x": 21,
       "summary": "Purpose clauses, split by one rule: um…zu when both halves share a subject, damit when they don't. Exactly the sentence you'll need a hundred times in an application — 'Ich lerne Deutsch, um eine Ausbildung zu machen.'",
       "resources": [
-        { "label": "Nicos Weg B1 (DW)", "url": "https://learngerman.dw.com/en/overview/s-13219" },
-        { "label": "Finalsatz-Drill, 15 Items", "ref": "drill-sheet" }
+        {
+          "label": "Nicos Weg B1 (DW)",
+          "url": "https://learngerman.dw.com/en/overview/s-13219"
+        },
+        {
+          "label": "Finalsatz-Drill, 15 Items",
+          "ref": "drill-sheet"
+        }
       ],
       "estHours": 7,
-      "prereqs": ["de-infinitiv-zu"],
-      "tag": "P"
+      "prereqs": [
+        "de-infinitiv-zu"
+      ],
+      "tag": "P",
+      "category": "sentence-structure"
     },
     {
       "id": "de-adjektiv-automatisierung",
       "lang": "de",
       "title": "Adjektivendungen automatisch",
       "layer": 26,
-      "x": 50,
+      "x": 8,
       "summary": "The final push on endings: mixed der-words, ein-words and no article, at speed, in speech as well as writing. Target is under 10% error — this topic only leaves the rotation after two consecutive weeks below the bar.",
       "resources": [
-        { "label": "Interleaved Endungsdrill auf Zeit", "ref": "drill-sheet" },
-        { "label": "Fortschritts-Tracker (Fehlerquote in Notes)", "ref": "01_Progress_Tracker.xlsx" }
+        {
+          "label": "Interleaved Endungsdrill auf Zeit",
+          "ref": "drill-sheet"
+        },
+        {
+          "label": "Fortschritts-Tracker (Fehlerquote in Notes)",
+          "ref": "01_Progress_Tracker.xlsx"
+        }
       ],
       "estHours": 10,
-      "prereqs": ["de-adjektiv-endungen-2"],
-      "tag": "P"
+      "prereqs": [
+        "de-adjektiv-endungen-2"
+      ],
+      "tag": "P",
+      "category": "case-endings"
     },
     {
       "id": "de-nominalisierung",
       "lang": "de",
       "title": "Nominalisierung",
       "layer": 26,
-      "x": 80,
+      "x": 31,
       "summary": "Turning verbs and clauses into nouns — 'beim Lesen', 'die Verbesserung der Situation'. This is the trick that makes written German compress, and it is why official texts look so dense; learning to build them makes them readable.",
       "resources": [
-        { "label": "Nicos Weg B1 (DW)", "url": "https://learngerman.dw.com/en/overview/s-13219" },
-        { "label": "Nominalisierung/Verbalisierung, 20 Items", "ref": "drill-sheet" }
+        {
+          "label": "Nicos Weg B1 (DW)",
+          "url": "https://learngerman.dw.com/en/overview/s-13219"
+        },
+        {
+          "label": "Nominalisierung/Verbalisierung, 20 Items",
+          "ref": "drill-sheet"
+        }
       ],
       "estHours": 7,
-      "prereqs": ["de-genitiv"],
-      "tag": "P"
+      "prereqs": [
+        "de-genitiv"
+      ],
+      "tag": "P",
+      "category": "sentence-structure"
     },
     {
       "id": "de-partizip-adjektiv",
       "lang": "de",
       "title": "Partizip als Adjektiv",
       "layer": 27,
-      "x": 20,
+      "x": 8,
       "summary": "'die kochende Suppe' / 'die gekochte Suppe' — Partizip I and II used attributively, with full adjective endings. Properly B2 territory; treat it as a bonus that sharpens your reading, and cut it whenever the week is tight.",
       "resources": [
-        { "label": "Nicos Weg B1 (DW)", "url": "https://learngerman.dw.com/en/overview/s-13219" }
+        {
+          "label": "Nicos Weg B1 (DW)",
+          "url": "https://learngerman.dw.com/en/overview/s-13219"
+        }
       ],
       "estHours": 5,
-      "prereqs": ["de-adjektiv-automatisierung"],
-      "tag": "N"
+      "prereqs": [
+        "de-adjektiv-automatisierung"
+      ],
+      "tag": "N",
+      "category": "case-endings"
     },
     {
       "id": "de-meinung-diskussion",
       "lang": "de",
       "title": "Meinung & Diskussion B1",
       "layer": 27,
-      "x": 50,
+      "x": 81,
       "summary": "Meiner Meinung nach / einerseits … andererseits / das stimmt zwar, aber — the phrase bank that lets you argue a position for two minutes without stalling. The B1 Sprechen module is scored on exactly this.",
       "resources": [
-        { "label": "Redemittel-Liste B1 (Meinung, Pro/Contra)", "ref": "drill-sheet" },
-        { "label": "Easy German (YouTube)", "url": "https://www.youtube.com/@EasyGerman" }
+        {
+          "label": "Redemittel-Liste B1 (Meinung, Pro/Contra)",
+          "ref": "drill-sheet"
+        },
+        {
+          "label": "Easy German (YouTube)",
+          "url": "https://www.youtube.com/@EasyGerman"
+        }
       ],
       "estHours": 10,
-      "prereqs": ["de-konnektoren", "de-konjunktiv-2-irreal"],
-      "tag": "P"
+      "prereqs": [
+        "de-konnektoren",
+        "de-konjunktiv-2-irreal"
+      ],
+      "tag": "P",
+      "category": "vocab-communication"
     },
     {
       "id": "de-fachsprache",
       "lang": "de",
       "title": "Fachsprache deines Berufs",
       "layer": 27,
-      "x": 80,
+      "x": 89,
       "summary": "The content pivot: from here your vocabulary work targets your actual Ausbildung field, not general topics. Two hundred field-specific words beat two thousand generic ones when the goal is a workplace, not a certificate.",
       "resources": [
-        { "label": "ausbildung.de — Berufsprofile", "url": "https://www.ausbildung.de" },
-        { "label": "Eigenes Fachwortschatz-Deck (Anki)", "ref": "drill-sheet" }
+        {
+          "label": "ausbildung.de — Berufsprofile",
+          "url": "https://www.ausbildung.de"
+        },
+        {
+          "label": "Eigenes Fachwortschatz-Deck (Anki)",
+          "ref": "drill-sheet"
+        }
       ],
       "estHours": 12,
-      "prereqs": ["de-nominalisierung"],
-      "tag": "P"
+      "prereqs": [
+        "de-nominalisierung"
+      ],
+      "tag": "P",
+      "category": "vocab-communication"
     },
     {
       "id": "de-ausbildung-stellenanzeigen",
       "lang": "de",
       "title": "Stellenanzeigen lesen",
       "layer": 28,
-      "x": 35,
+      "x": 81,
       "summary": "Real job ads as your reading texts: passive constructions, nominalisation, 'Wir erwarten / Sie bringen mit'. It is authentic B1-level input that doubles as market research for the applications you'll send.",
       "resources": [
-        { "label": "ausbildung.de", "url": "https://www.ausbildung.de" }
+        {
+          "label": "ausbildung.de",
+          "url": "https://www.ausbildung.de"
+        }
       ],
       "estHours": 9,
-      "prereqs": ["de-fachsprache"],
-      "tag": "P"
+      "prereqs": [
+        "de-fachsprache"
+      ],
+      "tag": "P",
+      "category": "vocab-communication"
     },
     {
       "id": "de-bewerbungsschreiben",
       "lang": "de",
       "title": "Bewerbungsschreiben",
       "layer": 28,
-      "x": 65,
+      "x": 89,
       "summary": "The German application letter is a tight genre with fixed moves and a Konjunktiv-II politeness register. Write three, get them corrected, keep them — this is the deliverable the whole German track exists to produce.",
       "resources": [
-        { "label": "ausbildung.de — Bewerbung", "url": "https://www.ausbildung.de" },
-        { "label": "Musterbewerbung + Korrekturschleife", "ref": "drill-sheet" }
+        {
+          "label": "ausbildung.de — Bewerbung",
+          "url": "https://www.ausbildung.de"
+        },
+        {
+          "label": "Musterbewerbung + Korrekturschleife",
+          "ref": "drill-sheet"
+        }
       ],
       "estHours": 10,
-      "prereqs": ["de-lebenslauf", "de-konjunktiv-2-hoeflich"],
-      "tag": "P"
+      "prereqs": [
+        "de-lebenslauf",
+        "de-konjunktiv-2-hoeflich"
+      ],
+      "tag": "P",
+      "category": "vocab-communication"
     },
     {
       "id": "de-b1-lesen",
       "lang": "de",
       "title": "B1-Modul: Lesen",
       "layer": 29,
-      "x": 20,
+      "x": 59,
       "summary": "One exam module per fortnight, starting with Lesen: task types, matching logic, and above all pacing. Goethe B1 modules can be passed individually, so a weak module is a retake, not a restart — that alone de-risks the timeline.",
       "resources": [
-        { "label": "Goethe-Institut: Prüfungen & Modellsätze", "url": "https://www.goethe.de/en/spr/kup/prf.html" }
+        {
+          "label": "Goethe-Institut: Prüfungen & Modellsätze",
+          "url": "https://www.goethe.de/en/spr/kup/prf.html"
+        }
       ],
       "estHours": 10,
-      "prereqs": ["de-ausbildung-stellenanzeigen", "de-relativsaetze-alle-kasus"],
-      "tag": "P"
+      "prereqs": [
+        "de-ausbildung-stellenanzeigen",
+        "de-relativsaetze-alle-kasus"
+      ],
+      "tag": "P",
+      "category": "milestones-exams"
     },
     {
       "id": "de-b1-hoeren",
       "lang": "de",
       "title": "B1-Modul: Hören",
       "layer": 29,
-      "x": 40,
+      "x": 65,
       "summary": "Exam listening at native speed, once or twice only, with answers to mark under time pressure. Your Easy German habit is the training base; this node is about the format, the note-taking and the nerve.",
       "resources": [
-        { "label": "Goethe-Institut: Prüfungen & Modellsätze", "url": "https://www.goethe.de/en/spr/kup/prf.html" },
-        { "label": "Easy German (YouTube)", "url": "https://www.youtube.com/@EasyGerman" }
+        {
+          "label": "Goethe-Institut: Prüfungen & Modellsätze",
+          "url": "https://www.goethe.de/en/spr/kup/prf.html"
+        },
+        {
+          "label": "Easy German (YouTube)",
+          "url": "https://www.youtube.com/@EasyGerman"
+        }
       ],
       "estHours": 9,
-      "prereqs": ["de-easy-german"],
-      "tag": "P"
+      "prereqs": [
+        "de-easy-german"
+      ],
+      "tag": "P",
+      "category": "milestones-exams"
     },
     {
       "id": "de-b1-schreiben",
       "lang": "de",
       "title": "B1-Modul: Schreiben",
       "layer": 29,
-      "x": 60,
+      "x": 71,
       "summary": "Three tasks: informal message, forum post, formal letter — each with a fixed structure you can rehearse. Write to the clock, then autopsy the errors into Anki; the marking rewards structure and connectors as much as accuracy.",
       "resources": [
-        { "label": "Goethe-Institut: Prüfungen & Modellsätze", "url": "https://www.goethe.de/en/spr/kup/prf.html" },
-        { "label": "Journal & Korrekturschleife", "ref": "02_Journal_Template.pdf" }
+        {
+          "label": "Goethe-Institut: Prüfungen & Modellsätze",
+          "url": "https://www.goethe.de/en/spr/kup/prf.html"
+        },
+        {
+          "label": "Journal & Korrekturschleife",
+          "ref": "02_Journal_Template.pdf"
+        }
       ],
       "estHours": 10,
-      "prereqs": ["de-bewerbungsschreiben", "de-meinung-diskussion"],
-      "tag": "P"
+      "prereqs": [
+        "de-bewerbungsschreiben",
+        "de-meinung-diskussion"
+      ],
+      "tag": "P",
+      "category": "milestones-exams"
     },
     {
       "id": "de-b1-sprechen",
       "lang": "de",
       "title": "B1-Modul: Sprechen",
       "layer": 29,
-      "x": 80,
+      "x": 77,
       "summary": "Planning something together, then a short presentation with follow-up questions. Twice-weekly speaking simulations from here to exam day — the module rewards keeping the turn going, not being flawless.",
       "resources": [
-        { "label": "Goethe-Institut: Prüfungen & Modellsätze", "url": "https://www.goethe.de/en/spr/kup/prf.html" },
-        { "label": "Sprechsimulation 2×/Woche", "ref": "03_CURRICULUM_DETAILED.md Part 3 — Wk 51–56" }
+        {
+          "label": "Goethe-Institut: Prüfungen & Modellsätze",
+          "url": "https://www.goethe.de/en/spr/kup/prf.html"
+        },
+        {
+          "label": "Sprechsimulation 2×/Woche",
+          "ref": "03_CURRICULUM_DETAILED.md Part 3 — Wk 51–56"
+        }
       ],
       "estHours": 10,
-      "prereqs": ["de-meinung-diskussion", "de-sprechen-vc"],
-      "tag": "P"
+      "prereqs": [
+        "de-meinung-diskussion",
+        "de-sprechen-vc"
+      ],
+      "tag": "P",
+      "category": "milestones-exams"
     },
     {
       "id": "de-b1-modellsatz",
       "lang": "de",
       "title": "Zwei volle B1-Modellsätze",
       "layer": 30,
-      "x": 50,
+      "x": 68,
       "summary": "Two complete Modellsätze under full exam timing, back to back, with a proper error autopsy after each. Timing is what fails candidates who know the grammar, so treat the clock as the thing being trained.",
       "resources": [
-        { "label": "Goethe-Institut: Prüfungen & Modellsätze", "url": "https://www.goethe.de/en/spr/kup/prf.html" },
-        { "label": "Fortschritts-Tracker", "ref": "01_Progress_Tracker.xlsx" }
+        {
+          "label": "Goethe-Institut: Prüfungen & Modellsätze",
+          "url": "https://www.goethe.de/en/spr/kup/prf.html"
+        },
+        {
+          "label": "Fortschritts-Tracker",
+          "ref": "01_Progress_Tracker.xlsx"
+        }
       ],
       "estHours": 12,
-      "prereqs": ["de-b1-lesen", "de-b1-hoeren", "de-b1-schreiben", "de-b1-sprechen"],
-      "tag": "P"
+      "prereqs": [
+        "de-b1-lesen",
+        "de-b1-hoeren",
+        "de-b1-schreiben",
+        "de-b1-sprechen"
+      ],
+      "tag": "P",
+      "category": "milestones-exams"
     },
     {
       "id": "de-goethe-b1",
       "lang": "de",
       "title": "Goethe-Zertifikat B1",
       "layer": 31,
-      "x": 50,
+      "x": 68,
       "summary": "The real exam at Goethe Jakarta — the certificate that unlocks Ausbildung applications. Book the date first and let it drive the last six weeks; the exam calendar is the boss, everything else negotiates.",
       "resources": [
-        { "label": "Goethe-Institut: Prüfungen & Anmeldung", "url": "https://www.goethe.de/en/spr/kup/prf.html" },
-        { "label": "ausbildung.de — Bewerbungen starten", "url": "https://www.ausbildung.de" }
+        {
+          "label": "Goethe-Institut: Prüfungen & Anmeldung",
+          "url": "https://www.goethe.de/en/spr/kup/prf.html"
+        },
+        {
+          "label": "ausbildung.de — Bewerbungen starten",
+          "url": "https://www.ausbildung.de"
+        }
       ],
       "estHours": 10,
-      "prereqs": ["de-b1-modellsatz"],
+      "prereqs": [
+        "de-b1-modellsatz"
+      ],
       "milestone": "B1",
-      "tag": "P"
+      "tag": "P",
+      "category": "milestones-exams"
     }
   ]
 }

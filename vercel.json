@@ -3,7 +3,8 @@
   "functions": {
     "api/ai.js": { "maxDuration": 60 },
     "api/pemeran.js": { "maxDuration": 60 },
-    "api/pemeran-ai.js": { "maxDuration": 60 }
+    "api/pemeran-ai.js": { "maxDuration": 60 },
+    "api/wegweiser-ai.js": { "maxDuration": 60 }
   },
   "rewrites": [
     { "source": "/_next/:path*",     "destination": "https://binge-web-puce.vercel.app/_next/:path*" },

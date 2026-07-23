@@ -1,0 +1,965 @@
+{
+  "version": "1.0",
+  "terms": [
+    {
+      "surface": "ていただけませんか",
+      "reading": null,
+      "romaji": "te itadakemasen ka",
+      "gloss": "\"could you kindly do ~?\" — very polite request; Genki 16"
+    },
+    {
+      "surface": "てくれてありがとう",
+      "reading": null,
+      "romaji": "te kurete arigatou",
+      "gloss": "\"thanks for doing ~\"; Genki 19"
+    },
+    {
+      "surface": "てはいけません",
+      "reading": null,
+      "romaji": "te wa ikemasen",
+      "gloss": "\"must not do ~\" — prohibition; Genki 6"
+    },
+    {
+      "surface": "かもしれません",
+      "reading": null,
+      "romaji": "kamoshiremasen",
+      "gloss": "\"might ~\" — hedging; Genki 14"
+    },
+    {
+      "surface": "言っていました",
+      "reading": "いっていました",
+      "romaji": "itteimashita",
+      "gloss": "\"(someone) said that ~\" — reported speech; Genki 8"
+    },
+    {
+      "surface": "じゃないです",
+      "reading": null,
+      "romaji": "ja nai desu",
+      "gloss": "noun / na-adjective negation \"is not\"; Genki 2"
+    },
+    {
+      "surface": "なくてもいい",
+      "reading": null,
+      "romaji": "nakute mo ii",
+      "gloss": "\"don't have to ~\"; Genki 17"
+    },
+    {
+      "surface": "ていません",
+      "reading": null,
+      "romaji": "te imasen",
+      "gloss": "\"hasn't ~ yet\" (paired with まだ); Genki 9"
+    },
+    {
+      "surface": "ていました",
+      "reading": null,
+      "romaji": "te imashita",
+      "gloss": "past progressive \"was ~ing\"; Genki 7"
+    },
+    {
+      "surface": "てください",
+      "reading": null,
+      "romaji": "te kudasai",
+      "gloss": "\"please do ~\" — polite request; Genki 6"
+    },
+    {
+      "surface": "ことがある",
+      "reading": null,
+      "romaji": "koto ga aru",
+      "gloss": "\"have done ~ before\" — past experience; Genki 11"
+    },
+    {
+      "surface": "ことにする",
+      "reading": null,
+      "romaji": "koto ni suru",
+      "gloss": "\"decide to ~\"; Genki 23"
+    },
+    {
+      "surface": "ほうがいい",
+      "reading": null,
+      "romaji": "hou ga ii",
+      "gloss": "\"had better ~\" — advice; Genki 12"
+    },
+    {
+      "surface": "使役受け身",
+      "reading": "しえきうけみ",
+      "romaji": "shieki ukemi",
+      "gloss": "the causative-passive \"was made to do\"; Genki 23"
+    },
+    {
+      "surface": "公式問題集",
+      "reading": "こうしきもんだいしゅう",
+      "romaji": "koushiki mondaishuu",
+      "gloss": "official practice workbook"
+    },
+    {
+      "surface": "召し上がる",
+      "reading": "めしあがる",
+      "romaji": "meshiagaru",
+      "gloss": "honorific \"to eat / drink\"; Genki 19"
+    },
+    {
+      "surface": "カタカナ",
+      "reading": null,
+      "romaji": "katakana",
+      "gloss": "the angular syllabary for loanwords and foreign names"
+    },
+    {
+      "surface": "ひらがな",
+      "reading": null,
+      "romaji": "hiragana",
+      "gloss": "the cursive syllabary for native words and grammar"
+    },
+    {
+      "surface": "ませんか",
+      "reading": null,
+      "romaji": "masen ka",
+      "gloss": "\"won't you ~?\" — polite invitation; Genki 3"
+    },
+    {
+      "surface": "ましょう",
+      "reading": null,
+      "romaji": "mashou",
+      "gloss": "\"let's ~\" — polite suggestion; Genki 3"
+    },
+    {
+      "surface": "あります",
+      "reading": null,
+      "romaji": "arimasu",
+      "gloss": "\"there is\" for inanimate things; Genki 4"
+    },
+    {
+      "surface": "ています",
+      "reading": null,
+      "romaji": "te imasu",
+      "gloss": "polite progressive or resultant state \"is ~ing\"; Genki 7"
+    },
+    {
+      "surface": "てもいい",
+      "reading": null,
+      "romaji": "te mo ii",
+      "gloss": "\"may do ~\" — permission; Genki 6"
+    },
+    {
+      "surface": "てしまう",
+      "reading": null,
+      "romaji": "te shimau",
+      "gloss": "completion or regret \"end up ~ing\"; Genki 18"
+    },
+    {
+      "surface": "てほしい",
+      "reading": null,
+      "romaji": "te hoshii",
+      "gloss": "\"want someone to do ~\"; Genki 21"
+    },
+    {
+      "surface": "てあげる",
+      "reading": null,
+      "romaji": "te ageru",
+      "gloss": "do ~ for someone (outward/out-group); Genki 16"
+    },
+    {
+      "surface": "てくれる",
+      "reading": null,
+      "romaji": "te kureru",
+      "gloss": "someone does ~ for me / my in-group; Genki 16"
+    },
+    {
+      "surface": "てもらう",
+      "reading": null,
+      "romaji": "te morau",
+      "gloss": "have/get someone to do ~ for me; Genki 16"
+    },
+    {
+      "surface": "そうです",
+      "reading": null,
+      "romaji": "sou desu",
+      "gloss": "\"looks like\" (stem) or \"I hear that\" (short form); Genki 13/17"
+    },
+    {
+      "surface": "のような",
+      "reading": null,
+      "romaji": "no you na",
+      "gloss": "\"like / similar to ~\"; Genki 22"
+    },
+    {
+      "surface": "はずです",
+      "reading": null,
+      "romaji": "hazu desu",
+      "gloss": "\"supposed to be ~\" — expectation from evidence; Genki 19"
+    },
+    {
+      "surface": "頑張って",
+      "reading": "がんばって",
+      "romaji": "ganbatte",
+      "gloss": "\"good luck / do your best!\""
+    },
+    {
+      "surface": "電話番号",
+      "reading": "でんわばんごう",
+      "romaji": "denwabangou",
+      "gloss": "telephone number; Genki 1"
+    },
+    {
+      "surface": "のが好き",
+      "reading": "のがすき",
+      "romaji": "no ga suki",
+      "gloss": "\"like doing ~\" (verb + のが好き); Genki 8"
+    },
+    {
+      "surface": "思います",
+      "reading": "おもいます",
+      "romaji": "omoimasu",
+      "gloss": "\"I think that ~\" (short form + と思います); Genki 8"
+    },
+    {
+      "surface": "でした",
+      "reading": null,
+      "romaji": "deshita",
+      "gloss": "past polite copula \"was/were\"; Genki 4"
+    },
+    {
+      "surface": "ません",
+      "reading": null,
+      "romaji": "masen",
+      "gloss": "polite negative verb ending \"does not ~\"; Genki 3"
+    },
+    {
+      "surface": "ました",
+      "reading": null,
+      "romaji": "mashita",
+      "gloss": "polite past verb ending \"did ~\"; Genki 4"
+    },
+    {
+      "surface": "います",
+      "reading": null,
+      "romaji": "imasu",
+      "gloss": "\"there is\" for animate beings (people, animals); Genki 4"
+    },
+    {
+      "surface": "ている",
+      "reading": null,
+      "romaji": "te iru",
+      "gloss": "progressive or resultant state \"is ~ing / is in a state\"; Genki 7"
+    },
+    {
+      "surface": "てみる",
+      "reading": null,
+      "romaji": "te miru",
+      "gloss": "\"try doing ~\"; Genki 13"
+    },
+    {
+      "surface": "ておく",
+      "reading": null,
+      "romaji": "te oku",
+      "gloss": "\"do ~ in advance / ahead of time\"; Genki 15"
+    },
+    {
+      "surface": "てある",
+      "reading": null,
+      "romaji": "te aru",
+      "gloss": "a state deliberately left behind (transitive); Genki 21"
+    },
+    {
+      "surface": "てから",
+      "reading": null,
+      "romaji": "te kara",
+      "gloss": "\"after doing ~\"; Genki 17"
+    },
+    {
+      "surface": "あげる",
+      "reading": null,
+      "romaji": "ageru",
+      "gloss": "to give (from me/us outward); Genki 14"
+    },
+    {
+      "surface": "くれる",
+      "reading": null,
+      "romaji": "kureru",
+      "gloss": "to give (toward me / my in-group); Genki 14"
+    },
+    {
+      "surface": "もらう",
+      "reading": null,
+      "romaji": "morau",
+      "gloss": "to receive; Genki 14"
+    },
+    {
+      "surface": "ほしい",
+      "reading": null,
+      "romaji": "hoshii",
+      "gloss": "to want (a thing); takes が; Genki 14"
+    },
+    {
+      "surface": "つもり",
+      "reading": null,
+      "romaji": "tsumori",
+      "gloss": "\"intend to ~\"; Genki 10"
+    },
+    {
+      "surface": "んです",
+      "reading": null,
+      "romaji": "n desu",
+      "gloss": "explanatory ending; adds reason or context; Genki 12"
+    },
+    {
+      "surface": "なきゃ",
+      "reading": null,
+      "romaji": "nakya",
+      "gloss": "casual \"have to ~\" (from なければ); Genki 12"
+    },
+    {
+      "surface": "られる",
+      "reading": null,
+      "romaji": "rareru",
+      "gloss": "potential \"can do ~\" (ru-verbs); Genki 13"
+    },
+    {
+      "surface": "みたい",
+      "reading": null,
+      "romaji": "mitai",
+      "gloss": "\"seems like / looks like\"; Genki 17"
+    },
+    {
+      "surface": "させる",
+      "reading": null,
+      "romaji": "saseru",
+      "gloss": "causative \"make / let someone do\"; Genki 22"
+    },
+    {
+      "surface": "やすい",
+      "reading": null,
+      "romaji": "yasui",
+      "gloss": "\"easy to ~\" (verb stem + やすい); Genki 20"
+    },
+    {
+      "surface": "といい",
+      "reading": null,
+      "romaji": "to ii",
+      "gloss": "\"it'd be good if ~ / I hope ~\"; Genki 16"
+    },
+    {
+      "surface": "ながら",
+      "reading": null,
+      "romaji": "nagara",
+      "gloss": "\"while doing ~\" — simultaneous actions; Genki 18"
+    },
+    {
+      "surface": "日本語",
+      "reading": "にほんご",
+      "romaji": "nihongo",
+      "gloss": "the Japanese language"
+    },
+    {
+      "surface": "過去形",
+      "reading": "かこけい",
+      "romaji": "kakokei",
+      "gloss": "the past-tense form; Genki 4"
+    },
+    {
+      "surface": "辞書形",
+      "reading": "じしょけい",
+      "romaji": "jishokei",
+      "gloss": "the dictionary (plain) form; Genki 8"
+    },
+    {
+      "surface": "ない形",
+      "reading": "ないけい",
+      "romaji": "naikei",
+      "gloss": "the plain negative (nai) form; Genki 8"
+    },
+    {
+      "surface": "通常版",
+      "reading": "つうじょうばん",
+      "romaji": "tsuujouban",
+      "gloss": "the regular / standard version"
+    },
+    {
+      "surface": "自動詞",
+      "reading": "じどうし",
+      "romaji": "jidoushi",
+      "gloss": "intransitive verb; Genki 18"
+    },
+    {
+      "surface": "他動詞",
+      "reading": "たどうし",
+      "romaji": "tadoushi",
+      "gloss": "transitive verb; Genki 18"
+    },
+    {
+      "surface": "尊敬語",
+      "reading": "そんけいご",
+      "romaji": "sonkeigo",
+      "gloss": "honorific speech — raises the other person; Genki 19"
+    },
+    {
+      "surface": "謙譲語",
+      "reading": "けんじょうご",
+      "romaji": "kenjougo",
+      "gloss": "humble speech — lowers yourself; Genki 20"
+    },
+    {
+      "surface": "受け身",
+      "reading": "うけみ",
+      "romaji": "ukemi",
+      "gloss": "the passive voice \"X was done (to me)\"; Genki 21"
+    },
+    {
+      "surface": "話せる",
+      "reading": "はなせる",
+      "romaji": "hanaseru",
+      "gloss": "\"can speak\" — potential of 話す; Genki 13"
+    },
+    {
+      "surface": "食べる",
+      "reading": "たべる",
+      "romaji": "taberu",
+      "gloss": "to eat (potential 食べられる); Genki 3"
+    },
+    {
+      "surface": "開ける",
+      "reading": "あける",
+      "romaji": "akeru",
+      "gloss": "to open (something) — transitive; Genki 18"
+    },
+    {
+      "surface": "これ",
+      "reading": null,
+      "romaji": "kore",
+      "gloss": "\"this one\" (near me); kosoado demonstrative; Genki 2"
+    },
+    {
+      "surface": "それ",
+      "reading": null,
+      "romaji": "sore",
+      "gloss": "\"that one\" (near you); kosoado demonstrative; Genki 2"
+    },
+    {
+      "surface": "あれ",
+      "reading": null,
+      "romaji": "are",
+      "gloss": "\"that one over there\"; kosoado demonstrative; Genki 2"
+    },
+    {
+      "surface": "ここ",
+      "reading": null,
+      "romaji": "koko",
+      "gloss": "\"here\"; place demonstrative; Genki 2"
+    },
+    {
+      "surface": "そこ",
+      "reading": null,
+      "romaji": "soko",
+      "gloss": "\"there\" (near you); place demonstrative; Genki 2"
+    },
+    {
+      "surface": "この",
+      "reading": null,
+      "romaji": "kono",
+      "gloss": "\"this ~\" before a noun; adjectival demonstrative; Genki 2"
+    },
+    {
+      "surface": "です",
+      "reading": null,
+      "romaji": "desu",
+      "gloss": "the polite copula \"is/are\"; Genki 1"
+    },
+    {
+      "surface": "ます",
+      "reading": null,
+      "romaji": "masu",
+      "gloss": "polite non-past verb ending; Genki 3"
+    },
+    {
+      "surface": "たい",
+      "reading": null,
+      "romaji": "tai",
+      "gloss": "\"want to do ~\"; conjugates like an i-adjective; Genki 11"
+    },
+    {
+      "surface": "なる",
+      "reading": null,
+      "romaji": "naru",
+      "gloss": "to become; Genki 10"
+    },
+    {
+      "surface": "たり",
+      "reading": null,
+      "romaji": "tari",
+      "gloss": "\"~ and ~ (among other things)\" — listing actions; Genki 11"
+    },
+    {
+      "surface": "ので",
+      "reading": null,
+      "romaji": "node",
+      "gloss": "\"because ~\" — soft/polite reason; Genki 12"
+    },
+    {
+      "surface": "える",
+      "reading": null,
+      "romaji": "eru",
+      "gloss": "potential ending \"can ~\" (u-verbs, e.g. 話せる); Genki 13"
+    },
+    {
+      "surface": "なら",
+      "reading": null,
+      "romaji": "nara",
+      "gloss": "\"if / as for ~\" — topic conditional; Genki 13"
+    },
+    {
+      "surface": "たら",
+      "reading": null,
+      "romaji": "tara",
+      "gloss": "the general conditional \"if / when ~\"; Genki 17"
+    },
+    {
+      "surface": "よう",
+      "reading": null,
+      "romaji": "you",
+      "gloss": "volitional \"let's / I think I'll ~\" (casual); Genki 15"
+    },
+    {
+      "surface": "のに",
+      "reading": null,
+      "romaji": "noni",
+      "gloss": "\"even though ~\" — expresses disappointment; Genki 22"
+    },
+    {
+      "surface": "まだ",
+      "reading": null,
+      "romaji": "mada",
+      "gloss": "\"(not) yet / still\"; Genki 9"
+    },
+    {
+      "surface": "より",
+      "reading": null,
+      "romaji": "yori",
+      "gloss": "\"than ~\" — comparison; Genki 10"
+    },
+    {
+      "surface": "から",
+      "reading": null,
+      "romaji": "kara",
+      "gloss": "\"because ~\" or \"from ~\"; Genki 6"
+    },
+    {
+      "surface": "ても",
+      "reading": null,
+      "romaji": "te mo",
+      "gloss": "\"even if ~\"; Genki 23"
+    },
+    {
+      "surface": "漢字",
+      "reading": "かんじ",
+      "romaji": "kanji",
+      "gloss": "the Chinese characters used in Japanese"
+    },
+    {
+      "surface": "文法",
+      "reading": "ぶんぽう",
+      "romaji": "bunpou",
+      "gloss": "grammar"
+    },
+    {
+      "surface": "単語",
+      "reading": "たんご",
+      "romaji": "tango",
+      "gloss": "vocabulary word"
+    },
+    {
+      "surface": "練習",
+      "reading": "れんしゅう",
+      "romaji": "renshuu",
+      "gloss": "practice"
+    },
+    {
+      "surface": "復習",
+      "reading": "ふくしゅう",
+      "romaji": "fukushuu",
+      "gloss": "review of learned material"
+    },
+    {
+      "surface": "試験",
+      "reading": "しけん",
+      "romaji": "shiken",
+      "gloss": "exam / test"
+    },
+    {
+      "surface": "合格",
+      "reading": "ごうかく",
+      "romaji": "goukaku",
+      "gloss": "passing (an exam)"
+    },
+    {
+      "surface": "入門",
+      "reading": "にゅうもん",
+      "romaji": "nyuumon",
+      "gloss": "introduction / for beginners"
+    },
+    {
+      "surface": "数字",
+      "reading": "すうじ",
+      "romaji": "suuji",
+      "gloss": "number / digit; Genki 1"
+    },
+    {
+      "surface": "時間",
+      "reading": "じかん",
+      "romaji": "jikan",
+      "gloss": "time / hour; Genki 1"
+    },
+    {
+      "surface": "位置",
+      "reading": "いち",
+      "romaji": "ichi",
+      "gloss": "position / location; Genki 4"
+    },
+    {
+      "surface": "好き",
+      "reading": "すき",
+      "romaji": "suki",
+      "gloss": "liked / fond of; takes が; Genki 5"
+    },
+    {
+      "surface": "嫌い",
+      "reading": "きらい",
+      "romaji": "kirai",
+      "gloss": "disliked / hated; takes が; Genki 5"
+    },
+    {
+      "surface": "描写",
+      "reading": "びょうしゃ",
+      "romaji": "byousha",
+      "gloss": "description / depiction"
+    },
+    {
+      "surface": "行く",
+      "reading": "いく",
+      "romaji": "iku",
+      "gloss": "to go; Genki 3"
+    },
+    {
+      "surface": "比較",
+      "reading": "ひかく",
+      "romaji": "hikaku",
+      "gloss": "comparison; Genki 10"
+    },
+    {
+      "surface": "一番",
+      "reading": "いちばん",
+      "romaji": "ichiban",
+      "gloss": "\"the most / number one\" — superlative; Genki 10"
+    },
+    {
+      "surface": "完了",
+      "reading": "かんりょう",
+      "romaji": "kanryou",
+      "gloss": "completion / finished"
+    },
+    {
+      "surface": "様態",
+      "reading": "ようたい",
+      "romaji": "youtai",
+      "gloss": "appearance-based \"looks like\" そうです; Genki 13"
+    },
+    {
+      "surface": "伝聞",
+      "reading": "でんぶん",
+      "romaji": "denbun",
+      "gloss": "hearsay \"I hear that\" そうです; Genki 17"
+    },
+    {
+      "surface": "前に",
+      "reading": "まえに",
+      "romaji": "mae ni",
+      "gloss": "\"before doing ~\" (dictionary form + 前に); Genki 17"
+    },
+    {
+      "surface": "間に",
+      "reading": "あいだに",
+      "romaji": "aida ni",
+      "gloss": "\"while / during ~\"; Genki 21"
+    },
+    {
+      "surface": "使役",
+      "reading": "しえき",
+      "romaji": "shieki",
+      "gloss": "the causative \"make / let someone do\"; Genki 22"
+    },
+    {
+      "surface": "受験",
+      "reading": "じゅけん",
+      "romaji": "juken",
+      "gloss": "sitting / taking an exam"
+    },
+    {
+      "surface": "後ろ",
+      "reading": "うしろ",
+      "romaji": "ushiro",
+      "gloss": "\"behind\"; Genki 4"
+    },
+    {
+      "surface": "高い",
+      "reading": "たかい",
+      "romaji": "takai",
+      "gloss": "\"tall / high / expensive\" — i-adjective; Genki 5"
+    },
+    {
+      "surface": "結婚",
+      "reading": "けっこん",
+      "romaji": "kekkon",
+      "gloss": "marriage (結婚する = to marry); Genki 7"
+    },
+    {
+      "surface": "住む",
+      "reading": "すむ",
+      "romaji": "sumu",
+      "gloss": "to live / reside (resultant 住んでいる); Genki 7"
+    },
+    {
+      "surface": "知る",
+      "reading": "しる",
+      "romaji": "shiru",
+      "gloss": "to know (resultant 知っている); Genki 7"
+    },
+    {
+      "surface": "持つ",
+      "reading": "もつ",
+      "romaji": "motsu",
+      "gloss": "to hold / have; Genki 7"
+    },
+    {
+      "surface": "長い",
+      "reading": "ながい",
+      "romaji": "nagai",
+      "gloss": "\"long\" — i-adjective; Genki 7"
+    },
+    {
+      "surface": "昨日",
+      "reading": "きのう",
+      "romaji": "kinou",
+      "gloss": "\"yesterday\"; Genki 4"
+    },
+    {
+      "surface": "買う",
+      "reading": "かう",
+      "romaji": "kau",
+      "gloss": "to buy; Genki 3"
+    },
+    {
+      "surface": "日本",
+      "reading": "にほん",
+      "romaji": "nihon",
+      "gloss": "Japan"
+    },
+    {
+      "surface": "開く",
+      "reading": "あく",
+      "romaji": "aku",
+      "gloss": "(something) opens — intransitive; Genki 18"
+    },
+    {
+      "surface": "出す",
+      "reading": "だす",
+      "romaji": "dasu",
+      "gloss": "to take out / put out — transitive; Genki 18"
+    },
+    {
+      "surface": "出る",
+      "reading": "でる",
+      "romaji": "deru",
+      "gloss": "to come out / leave — intransitive; Genki 18"
+    },
+    {
+      "surface": "伺う",
+      "reading": "うかがう",
+      "romaji": "ukagau",
+      "gloss": "humble \"to ask / visit / inquire\"; Genki 20"
+    },
+    {
+      "surface": "申す",
+      "reading": "もうす",
+      "romaji": "mousu",
+      "gloss": "humble \"to say / be called\"; Genki 20"
+    },
+    {
+      "surface": "降る",
+      "reading": "ふる",
+      "romaji": "furu",
+      "gloss": "to fall (rain / snow); Genki 21"
+    },
+    {
+      "surface": "ば",
+      "reading": null,
+      "romaji": "ba",
+      "gloss": "the conditional \"if ~\"; Genki 22"
+    },
+    {
+      "surface": "し",
+      "reading": null,
+      "romaji": "shi",
+      "gloss": "\"and what's more ~\" — stacking reasons; Genki 13"
+    },
+    {
+      "surface": "と",
+      "reading": null,
+      "romaji": "to",
+      "gloss": "quotative \"that\", or the conditional \"whenever ~\"; Genki 8/18"
+    },
+    {
+      "surface": "も",
+      "reading": null,
+      "romaji": "mo",
+      "gloss": "\"too / also\"; Genki 2"
+    },
+    {
+      "surface": "の",
+      "reading": null,
+      "romaji": "no",
+      "gloss": "possessive/linking \"~'s / of ~\", or a nominalizer; Genki 1"
+    },
+    {
+      "surface": "か",
+      "reading": null,
+      "romaji": "ka",
+      "gloss": "the question particle; Genki 1"
+    },
+    {
+      "surface": "は",
+      "reading": null,
+      "romaji": "wa",
+      "gloss": "the topic particle (written は, said \"wa\"); Genki 1"
+    },
+    {
+      "surface": "を",
+      "reading": null,
+      "romaji": "o",
+      "gloss": "the direct-object particle (written を); Genki 3"
+    },
+    {
+      "surface": "で",
+      "reading": null,
+      "romaji": "de",
+      "gloss": "\"at / by / with\" — place of action or means; Genki 3"
+    },
+    {
+      "surface": "に",
+      "reading": null,
+      "romaji": "ni",
+      "gloss": "\"to / at / in\" — destination, time, target; Genki 3"
+    },
+    {
+      "surface": "へ",
+      "reading": null,
+      "romaji": "e",
+      "gloss": "\"toward ~\" — direction (written へ); Genki 3"
+    },
+    {
+      "surface": "ね",
+      "reading": null,
+      "romaji": "ne",
+      "gloss": "\"right?\" — seeks agreement; Genki 2"
+    },
+    {
+      "surface": "よ",
+      "reading": null,
+      "romaji": "yo",
+      "gloss": "\"you know\" — asserts new information; Genki 2"
+    },
+    {
+      "surface": "て",
+      "reading": null,
+      "romaji": "te",
+      "gloss": "the te-form connective ending; Genki 6"
+    },
+    {
+      "surface": "い",
+      "reading": null,
+      "romaji": "i",
+      "gloss": "marks i-adjectives (e.g. 高い); Genki 5"
+    },
+    {
+      "surface": "な",
+      "reading": null,
+      "romaji": "na",
+      "gloss": "marks na-adjectives before a noun; Genki 5"
+    },
+    {
+      "surface": "人",
+      "reading": "ひと",
+      "romaji": "hito",
+      "gloss": "person"
+    },
+    {
+      "surface": "時",
+      "reading": "とき",
+      "romaji": "toki",
+      "gloss": "\"when ~\" — time clause; Genki 16"
+    },
+    {
+      "surface": "方",
+      "reading": "かた",
+      "romaji": "kata",
+      "gloss": "\"way of doing ~\" (verb stem + 方); Genki 23"
+    },
+    {
+      "surface": "誰",
+      "reading": "だれ",
+      "romaji": "dare",
+      "gloss": "\"who\"; Genki 2"
+    },
+    {
+      "surface": "上",
+      "reading": "うえ",
+      "romaji": "ue",
+      "gloss": "\"on / above / top\"; Genki 4"
+    },
+    {
+      "surface": "下",
+      "reading": "した",
+      "romaji": "shita",
+      "gloss": "\"under / below\"; Genki 4"
+    },
+    {
+      "surface": "前",
+      "reading": "まえ",
+      "romaji": "mae",
+      "gloss": "\"in front of / before\"; Genki 4"
+    },
+    {
+      "surface": "中",
+      "reading": "なか",
+      "romaji": "naka",
+      "gloss": "\"inside / middle\"; Genki 4"
+    },
+    {
+      "surface": "背",
+      "reading": "せ",
+      "romaji": "se",
+      "gloss": "height / one's back (背が高い = tall); Genki 7"
+    },
+    {
+      "surface": "髪",
+      "reading": "かみ",
+      "romaji": "kami",
+      "gloss": "hair (髪が長い = long hair); Genki 7"
+    },
+    {
+      "surface": "私",
+      "reading": "わたし",
+      "romaji": "watashi",
+      "gloss": "\"I / me\"; Genki 1"
+    },
+    {
+      "surface": "本",
+      "reading": "ほん",
+      "romaji": "hon",
+      "gloss": "book; Genki 1"
+    },
+    {
+      "surface": "雨",
+      "reading": "あめ",
+      "romaji": "ame",
+      "gloss": "rain (雨に降られた = got rained on); Genki 21"
+    }
+  ]
+}
