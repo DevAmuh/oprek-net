@@ -1,0 +1,17 @@
+{
+  "name": "Wegweiser — language-learning command centre",
+  "short_name": "Wegweiser",
+  "description": "German to Goethe B1 and Japanese to JLPT N4, in parallel: a prerequisite skill tree, a daily log, and a pace simulator measured against real exam dates.",
+  "start_url": "/wegweiser/",
+  "scope": "/wegweiser/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#FBFAF8",
+  "theme_color": "#1F3864",
+  "lang": "en",
+  "icons": [
+    { "src": "/wegweiser/favicon.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "any" },
+    { "src": "/wegweiser/icon-192.png", "type": "image/png", "sizes": "192x192" },
+    { "src": "/wegweiser/icon-512.png", "type": "image/png", "sizes": "512x512" }
+  ]
+}

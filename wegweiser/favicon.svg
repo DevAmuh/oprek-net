@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Wegweiser">
+  <title>Wegweiser</title>
+  <!-- A Wegweiser is a signpost: one post, two blades pointing different ways.
+       The blades carry the app's two language colours — paper-white for German,
+       vermilion for Japanese — so the mark reads at 16px and still says
+       "two roads, one plan". -->
+  <rect width="64" height="64" rx="14" fill="#1F3864"/>
+  <path d="M32 19.5 H14 L7 25 L14 30.5 H32 Z" fill="#FBFAF8"/>
+  <path d="M32 33.5 H50 L57 39 L50 44.5 H32 Z" fill="#E8583F"/>
+  <rect x="29.25" y="13" width="5.5" height="39" rx="2.75" fill="#FBFAF8"/>
+</svg>
