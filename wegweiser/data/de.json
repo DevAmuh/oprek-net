@@ -54,6 +54,7 @@
       "layer": 0,
       "x": 93,
       "summary": "Install Anki, switch on the FSRS scheduler, set new cards/day to your pace and max reviews to 9999. Every noun card is article + noun + plural from day one — a wrong article means the card failed, even if the noun was right.",
+      "why": "Set this up once and every hour you study afterwards keeps paying out for months. Skip it and you will learn the same 2,000 words three separate times — and still guess the articles.",
       "resources": [
         {
           "label": "Anki (kostenlos, Desktop + Handy)",
@@ -76,6 +77,7 @@
       "layer": 0,
       "x": 99,
       "summary": "The sound system before anything else: ei vs. ie, ch (ich- and ach-Laut), the uvular r, ü/ö/ä and ß. Get this wrong now and every Anki card you record in your head for the next year is wrong.",
+      "why": "Every word you meet for the next year gets filed away in whatever accent you build this week. Fix ei/ie, ch and the uvular r now and you never have to un-learn two thousand Anki cards later.",
       "resources": [
         {
           "label": "Nicos Weg A1",
@@ -98,6 +100,7 @@
       "layer": 0,
       "x": 85,
       "summary": "Numbers 0–20, then the reversed teens-and-tens logic (einundzwanzig = one-and-twenty). Cheap to learn, and it unlocks prices, time, dates and phone numbers later.",
+      "why": "Two hours buys prices, clock times, dates, house numbers and phone numbers — and a good share of the answers in the Goethe A1 Hören module are simply a number you either caught or you did not.",
       "resources": [
         {
           "label": "Nicos Weg A1",
@@ -120,6 +123,7 @@
       "layer": 1,
       "x": 45,
       "summary": "ich/du/er/sie/es/wir/ihr/sie/Sie plus the irregular workhorse sein. Conjugate it cold, out loud, until it needs no thought — nearly every early sentence you build hangs off it.",
+      "why": "The moment sein is automatic you can say who you are, where you are from and how you feel. Those are your first real German sentences, and the backbone of the 30-second self-intro you record this week.",
       "resources": [
         {
           "label": "Nicos Weg A1",
@@ -144,6 +148,7 @@
       "layer": 1,
       "x": 85,
       "summary": "heißen, kommen, wohnen plus greetings, countries and languages — enough to survive a first exchange. Ends with a recorded 30-second self-intro you will re-record in week 8 to hear the difference.",
+      "why": "The opening of every Goethe A1 speaking task, and of every conversation you will ever start in Germany. Get it automatic and the first two minutes of the exam cost you nothing.",
       "resources": [
         {
           "label": "Nicos Weg A1",
@@ -172,6 +177,7 @@
       "layer": 2,
       "x": 45,
       "summary": "The -e/-st/-t/-en ending set, plus the small spelling adjustments (arbeitest, heißt). Arabic already trained you to expect person-marking on the verb; here it is far simpler than you're used to.",
+      "why": "Four endings and hundreds of verbs switch on at once — what anyone does, wants, buys or says. Arabic already taught you to expect the verb to agree with its person, so this costs you far less than it costs an English speaker.",
       "resources": [
         {
           "label": "Nicos Weg A1",
@@ -196,6 +202,7 @@
       "layer": 2,
       "x": 26,
       "summary": "wer, was, wo, woher, wie, wann — the question words that let you drive a conversation instead of only answering. W-word first, then the verb: your first taste of the position-2 rule.",
+      "why": "Questions are how you survive a conversation you only half understand. With wer/was/wo/woher you stop being interviewed and start steering — and you meet the position-2 rule in its easiest form.",
       "resources": [
         {
           "label": "Nicos Weg A1",
@@ -219,6 +226,7 @@
       "layer": 3,
       "x": 26,
       "summary": "The German iron law: in a main clause the conjugated verb sits in slot two, whatever comes first — 'Heute gehe ich', not 'Heute ich gehe'. Drill it from scrambled words until it is reflex, because every later structure is built on top of it.",
+      "why": "Once this is reflex, every simple sentence you build for the next year comes out grammatical by default. Miss it and you sound wrong in every single utterance, however good your vocabulary gets.",
       "resources": [
         {
           "label": "Nicos Weg A1",
@@ -244,6 +252,7 @@
       "layer": 4,
       "x": 8,
       "summary": "der/die/das and the plural patterns (-e/-en/-er/-s/umlaut). Your Arabic already accepts arbitrary gender and chaotic broken plurals — the only new habit is learning 'dieLampe, -n' as one single word, never a naked noun.",
+      "why": "The article-always habit decides your accuracy ceiling for the whole plan. Store \"die Lampe, -n\" as one word now and cases, adjective endings and relative pronouns all inherit a gender you already know.",
       "resources": [
         {
           "label": "Nicos Weg A1",
@@ -275,6 +284,7 @@
       "layer": 5,
       "x": 8,
       "summary": "haben plus the accusative — and the good news is that only masculine visibly changes (der→den, ein→einen). Your Arabic naṣb instinct plugs straight in here: skip the 'why do cases exist' phase and go directly to drilling.",
+      "why": "Your first real case, and the cheapest one German sells — one article changes shape. With it you can say what you have, want, buy, eat and need, which is most of what A1 asks you to say.",
       "resources": [
         {
           "label": "Nicos Weg A1",
@@ -299,6 +309,7 @@
       "layer": 5,
       "x": 45,
       "summary": "aufstehen → 'ich stehe um sieben auf': the prefix flies to the end of the clause. Nothing in English or Arabic prepares you for this, so it is pure pattern-drill territory, not explanation territory.",
+      "why": "aufstehen, anfangen, einkaufen, mitkommen — your whole daily routine is separable verbs, so this is what lets you narrate a day. It also builds the ear for clause-final elements that Perfekt and weil demand later.",
       "resources": [
         {
           "label": "Nicos Weg A1",
@@ -323,6 +334,7 @@
       "layer": 6,
       "x": 26,
       "summary": "One clean rule does most of the work: kein negates nouns that carry an indefinite article or none at all, nicht negates everything else. Fifteen mixed items a day for a week and this stops being a decision.",
+      "why": "Half of what you say in a real conversation is what you do not want, do not have or cannot do. Sort kein from nicht and you stop steering around the negative sentence you actually meant to say.",
       "resources": [
         {
           "label": "Nicos Weg A1",
@@ -347,6 +359,7 @@
       "layer": 6,
       "x": 8,
       "summary": "mein/dein/sein/ihr/unser/euer take exactly the same endings as ein/kein — learn them as one family, not three. This is the first place the ein-word ending grid pays a dividend you'll collect again at A2.",
+      "why": "mein Bruder, meine Ausbildung, unser Termin — you cannot talk about your own life without these. And the ein-word ending grid you build here is the same grid that carries the adjective endings at A2.",
       "resources": [
         {
           "label": "Nicos Weg A1",
@@ -367,6 +380,7 @@
       "layer": 6,
       "x": 45,
       "summary": "können/müssen/wollen conjugate irregularly and push the second verb to the very end as an infinitive: 'Ich kann heute nicht kommen.' This bracket is your first real taste of verb-final German — everything from Perfekt to weil-clauses reuses the shape.",
+      "why": "Ability, obligation and intention triple what you can express — and the bracket you install here is the shape that Perfekt, weil-clauses, Futur and the passive all reuse with different filling.",
       "resources": [
         {
           "label": "Nicos Weg A1",
@@ -391,6 +405,7 @@
       "layer": 7,
       "x": 81,
       "summary": "The week-4 rule: forced output starts now, however ugly. Order drinks and food in a role-play and finish the whole exchange without falling back into English — fluency first, accuracy afterwards.",
+      "why": "Week 4 is where most self-learners stall in silent input forever. Finishing one whole exchange without escaping into English breaks that fear early, while the stakes are nothing worse than a coffee.",
       "resources": [
         {
           "label": "G-OUT Blockprozedur",
@@ -416,6 +431,7 @@
       "layer": 7,
       "x": 89,
       "summary": "Official time (14:30) and the colloquial system (halb drei — careful, that's 2:30, not 3:30), plus weekdays and routine verbs. Pairs naturally with separable verbs, since your whole day is aufstehen/anfangen/einkaufen.",
+      "why": "Appointments, opening hours, train departures, shift starts — an Ausbildung runs on the clock. It also lets you narrate a whole day aloud, which is the cheapest daily speaking practice that exists.",
       "resources": [
         {
           "label": "Nicos Weg A1",
@@ -443,6 +459,7 @@
       "layer": 7,
       "x": 8,
       "summary": "für, ohne, gegen, um, durch always take the accusative — no thinking required, just memorise the list as a chant. Learning fixed-case prepositions now makes the two-way prepositions at A2 far less frightening.",
+      "why": "Five words you never have to think about again — and the habit of storing a preposition welded to its case, which is exactly what rescues you when the Wechselpräpositionen arrive at A2.",
       "resources": [
         {
           "label": "Nicos Weg A1",
@@ -470,6 +487,7 @@
       "layer": 8,
       "x": 68,
       "summary": "No new material for a whole week: re-drill every miss from weeks 3–7, sit one big interleaved test, and record a two-minute 'Das bin ich' to compare with your week-1 clip. Score ≥80% and you move on — the 80% rule, not perfection.",
+      "why": "The week that stops small cracks from compounding into a wall. Clear 80% and you enter A1.2 on ground that holds; and the new \"Das bin ich\" recording next to your week-1 clip is proof this is working.",
       "resources": [
         {
           "label": "Kumulativer Test A1.1",
@@ -497,6 +515,7 @@
       "layer": 9,
       "x": 8,
       "summary": "dem/der/dem/den+n, first met as location after in/an/auf/bei answering 'wo?'. Map it to the Arabic majrūr-after-preposition reflex to get started — same instinct, new forms — then drop the crutch fast.",
+      "why": "Asking and answering \"wo?\" — where you live, where you work, where anything is. Your Arabic majrūr-after-preposition reflex transfers straight over, so you skip the confusion phase and go straight to drilling forms.",
       "resources": [
         {
           "label": "Nicos Weg A1",
@@ -524,6 +543,7 @@
       "layer": 9,
       "x": 45,
       "summary": "ge-...-t on regular verbs, with haben conjugated in slot two and the participle at the end — the bracket again. Past tense is survival skill number one; your journal switches to 'Was habe ich heute gemacht?' from here on.",
+      "why": "Past tense is survival skill number one: what you did yesterday, where you have worked, what you have studied. Every interview and every A2 speaking task wants it, and your journal switches to it from here.",
       "resources": [
         {
           "label": "Nicos Weg A1",
@@ -548,6 +568,7 @@
       "layer": 10,
       "x": 8,
       "summary": "mir/dir/ihm/ihr/uns/euch/ihnen — the pronouns that make 'Kannst du mir helfen?' possible. Small set, huge conversational payoff, and it sets up the dative verbs immediately after.",
+      "why": "\"Kannst du mir helfen?\" — a handful of small words that let you ask for help, give things to people and get yourself out of trouble. Tiny set, and it opens the dative verbs immediately after.",
       "resources": [
         {
           "label": "Nicos Weg A1",
@@ -568,6 +589,7 @@
       "layer": 10,
       "x": 96,
       "summary": "Lock in the loop that makes everything else compound: write the page, get it corrected, turn every correction into an Anki cloze. Cards built from your own errors are the highest-value cards in the deck.",
+      "why": "Without a correction loop you spend a year drilling your own mistakes into permanence. Cards built from your own errors are the highest-value ones in the deck — this habit is what makes every other node stick.",
       "resources": [
         {
           "label": "Journalvorlage",
@@ -592,6 +614,7 @@
       "layer": 10,
       "x": 45,
       "summary": "Verbs of movement and change of state take sein, not haben: 'ich bin gefahren', 'er ist eingeschlafen'. Learn the auxiliary as part of the verb card — infinitive on the front, aux + participle on the back, said aloud.",
+      "why": "Getting the auxiliary right separates \"ich habe gegangen\" beginners from people who obviously studied. Movement and change-of-state verbs are precisely the ones you need when telling any story.",
       "resources": [
         {
           "label": "Nicos Weg A1",
@@ -616,6 +639,7 @@
       "layer": 11,
       "x": 37,
       "summary": "helfen, gefallen, gehören, schmecken and friends flip the logic: the thing is the subject and the person is in the dative ('Wie gefällt dir Berlin?'). Learn each one as a whole phrase rather than trying to reason it out mid-sentence.",
+      "why": "\"Wie gefällt dir Berlin?\", \"Das schmeckt gut\", \"Kannst du mir helfen?\" — the phrases small talk is made of. Stored whole, they come out instantly instead of stalling while you hunt for the subject.",
       "resources": [
         {
           "label": "Nicos Weg A1",
@@ -640,6 +664,7 @@
       "layer": 11,
       "x": 8,
       "summary": "größer / am größten, plus the irregulars gut-besser-am besten and viel-mehr, and the als/wie distinction English speakers keep getting wrong. Cheap to acquire and it instantly makes your speech sound less like a beginner list.",
+      "why": "Comparing is how opinions get said out loud: better, cheaper, more important. Cheap to acquire, and it lifts your speech off the flat beginner list into something an examiner can score as range.",
       "resources": [
         {
           "label": "Nicos Weg A1",
@@ -663,6 +688,7 @@
       "layer": 11,
       "x": 45,
       "summary": "The second modal set plus body and health vocabulary, practised as a doctor's-appointment role-play. Directly Ausbildung-relevant: you will need this register long before you need anything literary.",
+      "why": "A doctor visit stops being optional the moment you live there, and sick-leave rules are part of every Ausbildung. dürfen and sollen are also how workplace rules get stated to you on day one.",
       "resources": [
         {
           "label": "Nicos Weg A1",
@@ -687,6 +713,7 @@
       "layer": 11,
       "x": 53,
       "summary": "The top 25 strong participles (gegangen, gesprochen, genommen…) cover most of what you'll actually say about yesterday. Brute-force SRS, always aloud, always with the auxiliary attached.",
+      "why": "Twenty-five forms cover most of what you will ever say about yesterday. Brute-force them now and past narration stops being a search — which is exactly what the A1 and A2 speaking modules measure.",
       "resources": [
         {
           "label": "Nicos Weg A1",
@@ -711,6 +738,7 @@
       "layer": 12,
       "x": 26,
       "summary": "The single most drilled structure of this stage: after weil, dass, wenn the conjugated verb goes to the very end. Nothing in English or Arabic prepared you for this — expect weeks of clunkiness, keep the daily five-sentence drill running, and push through.",
+      "why": "Giving reasons is the whole game: why this Ausbildung, why Germany, why you left the last job. Push through the clunky weeks and you own the verb-final machinery that wenn, obwohl, damit and relative clauses all reuse.",
       "resources": [
         {
           "label": "Nicos Weg A1",
@@ -740,6 +768,7 @@
       "layer": 13,
       "x": 68,
       "summary": "A full Goethe A1 Modellsatz under real exam timing, all four modules. Pass bar is the real one — ≥60% per module — and ≥80% overall means you enter A2 instead of repeating. This is Milestone German A1.",
+      "why": "Your first hard evidence, against the real pass bar, that the plan works. Clear 80% and you walk into A2 instead of repeating a stage — and you learn the exam format while the stakes are still zero.",
       "resources": [
         {
           "label": "Goethe-Institut: Prüfungen & Modellsätze",
@@ -769,6 +798,7 @@
       "layer": 14,
       "x": 45,
       "summary": "Spoken German narrates the past with Perfekt, but sein, haben and the modals use Präteritum instead — war, hatte, konnte, musste, wollte. A small closed set that makes past-state narration sound native rather than translated.",
+      "why": "Past states without the clumsy Perfekt detour: ich war, ich hatte, ich konnte. A small closed set that instantly makes your storytelling sound German rather than translated word by word.",
       "resources": [
         {
           "label": "Nicos Weg A2 (DW)",
@@ -796,6 +826,7 @@
       "layer": 14,
       "x": 93,
       "summary": "Take 30–60 seconds of audio you already understand and repeat aloud with a one-second delay, three passes, matching rhythm. German targets: crisp final consonants, ü/ö, and falling intonation before a clause-final verb.",
+      "why": "The repair for the gap between understanding German and being understood in it. Ten minutes a day on rhythm and final consonants buys you the pronunciation marks in every Goethe speaking module.",
       "resources": [
         {
           "label": "Slow German (Podcast)",
@@ -820,6 +851,7 @@
       "layer": 14,
       "x": 99,
       "summary": "Optional written reinforcement alongside the Nicos Weg spine — and it happens to be the book Goethe Jakarta teaches from, so it aligns you with a possible future course. Cut this first when time is short.",
+      "why": "Written reinforcement plus a head start on the exact book Goethe Jakarta teaches from, so a future intensive course feels like revision. Optional by design — cut it first when a week goes bad, guilt-free.",
       "resources": [
         {
           "label": "Netzwerk neu A2, Kursbuch",
@@ -844,6 +876,7 @@
       "layer": 15,
       "x": 8,
       "summary": "in, an, auf, über, unter, vor, hinter, neben, zwischen take accusative for movement (wohin?) and dative for position (wo?). Draw the classic room diagram once, then drill mixed items — the rule is one line long, the automation takes weeks.",
+      "why": "The difference between \"ich gehe in die Küche\" and \"ich bin in der Küche\". Once it is automatic you can describe any room, route or movement, and a large slice of your remaining case errors simply disappears.",
       "resources": [
         {
           "label": "Nicos Weg A2 (DW)",
@@ -869,6 +902,7 @@
       "layer": 15,
       "x": 45,
       "summary": "Geh! Gehen Sie! Geht! — three forms, one of which drops the pronoun entirely. You need it for instructions, directions and every polite Sie-request you'll make in a shop or an office.",
+      "why": "Giving and following instructions: directions in the street, a colleague telling you what to do next, every sign and form you read. The Sie-form in particular is baseline workplace politeness.",
       "resources": [
         {
           "label": "Nicos Weg A2 (DW)",
@@ -892,6 +926,7 @@
       "layer": 15,
       "x": 96,
       "summary": "The G-LIS protocol done seriously: listen once blind, once with the transcript, then steal three phrases into Anki. Blind-first is the part people skip, and it's the part that actually builds the skill.",
+      "why": "Listening is the module people fail while their grammar is fine. Blind-first training builds the ability to catch meaning at full speed instead of decoding it two seconds too late.",
       "resources": [
         {
           "label": "Slow German (Podcast)",
@@ -916,6 +951,7 @@
       "layer": 16,
       "x": 40,
       "summary": "sich freuen, sich interessieren, sich vorstellen — plus the accusative/dative reflexive split (ich wasche mich vs. ich wasche mir die Hände). This is where feelings and plans become sayable.",
+      "why": "sich freuen, sich interessieren, sich bewerben — feelings, plans, and the verb you will use for every application you send. Without them you can report facts but not talk about yourself.",
       "resources": [
         {
           "label": "Nicos Weg A2 (DW)",
@@ -943,6 +979,7 @@
       "layer": 16,
       "x": 51,
       "summary": "warten auf + Akk, denken an + Akk, sich freuen über/auf — the preposition is arbitrary and must be learnt with the verb, exactly like an Arabic verb's harf jarr. Never store the verb without its preposition and case.",
+      "why": "Getting \"warten auf\" or \"sich bewerben um\" right is what makes you sound like you learned German rather than translated it. One card per pair — verb, preposition and case — exactly as you would store an Arabic verb with its harf jarr.",
       "resources": [
         {
           "label": "Nicos Weg A2 (DW)",
@@ -967,6 +1004,7 @@
       "layer": 16,
       "x": 96,
       "summary": "From A2 the output block goes live: Discord voice rooms and AI conversation at your level, twice a week. Ugly output now beats perfect output never — finish the thought first, fix it afterwards, and feed the fixes to Anki.",
+      "why": "Speaking twice a week from A2 is the difference between holding a certificate and holding an interview. Real voices, real interruptions, real recovery from a sentence that collapsed — none of which Anki can simulate.",
       "resources": [
         {
           "label": "r/German Wiki (Community-Ressourcen)",
@@ -994,6 +1032,7 @@
       "layer": 17,
       "x": 4,
       "summary": "The notorious 'maths equation' — except after the definite article it is only a two-ending pattern, -e or -en. Demystify it by drilling ten minutes a day, interleaved, not by staring at the table.",
+      "why": "The topic everyone warns you about, met at its easiest: two endings, one article set. Start the daily micro-drill here and by B1 endings are a habit rather than the thing that gives you away in every sentence.",
       "resources": [
         {
           "label": "Nicos Weg A2 (DW)",
@@ -1022,6 +1061,7 @@
       "layer": 17,
       "x": 13,
       "summary": "seit, vor, ab, bis, in, während — when things happen and for how long, each locked to a fixed case. Note that seit + present tense means an action still going on, where English forces a perfect.",
+      "why": "Saying when and for how long: seit zwei Jahren, ab Montag, bis Freitag. Needed in every Lebenslauf line and every appointment you book, and seit + present is a standing exam favourite.",
       "resources": [
         {
           "label": "Nicos Weg A2 (DW)",
@@ -1042,6 +1082,7 @@
       "layer": 17,
       "x": 26,
       "summary": "The subordinate-clause family expands, and with it the als-vs-wenn trap: als for a single completed past event, wenn for repeated or present/future ones. Same verb-final machinery you already fought for with weil.",
+      "why": "Conditions and concessions are interview muscles — \"obwohl ich noch lerne\", \"wenn ich die Stelle bekomme\". The als/wenn split is a trap examiners set deliberately, so learn it as a pair.",
       "resources": [
         {
           "label": "Nicos Weg A2 (DW)",
@@ -1066,6 +1107,7 @@
       "layer": 18,
       "x": 4,
       "summary": "After ein/kein/mein the adjective has to carry the gender signal the article fails to show — 'ein guter Mann', 'mein kleines Kind'. Target: error rate under 20% by the end of A2, under 10% by B1. It is drillable, not memorable.",
+      "why": "Here the ending has to carry the gender that ein refuses to show. Drive your error rate under 20% now and the B1 writing module stops leaking marks one adjective at a time.",
       "resources": [
         {
           "label": "Nicos Weg A2 (DW)",
@@ -1090,6 +1132,7 @@
       "layer": 18,
       "x": 13,
       "summary": "der erste, am zweiten, vom 3. bis zum 7. — dates take ordinal numbers with adjective endings, so this quietly doubles as ending practice. Needed for every form, appointment and application you will fill in.",
+      "why": "Every form, appointment, contract and Lebenslauf line needs a date on it. It also smuggles in free adjective-ending practice at precisely the point where you need the extra reps most.",
       "resources": [
         {
           "label": "Nicos Weg A2 (DW)",
@@ -1113,6 +1156,7 @@
       "layer": 18,
       "x": 26,
       "summary": "Three different word orders for three connectors: denn keeps normal order, deshalb and trotzdem take position 1 and kick the verb to slot 2, weil sends it to the end. Sort these out and your reasoning stops sounding like a list.",
+      "why": "Connectors are what a marker hears as a structured argument instead of a shopping list of sentences. Three word orders buys you paragraph-level German for the rest of the track.",
       "resources": [
         {
           "label": "Nicos Weg A2 (DW)",
@@ -1137,6 +1181,7 @@
       "layer": 19,
       "x": 8,
       "summary": "Unpreceded adjectives ('guter Wein', 'mit frischem Brot') take the ending the missing article would have carried. Genuinely nice-to-have at A2 — it appears mostly in menus, recipes and headlines, so cut it first if the week is tight.",
+      "why": "Menus, recipes, headlines and job ads drop the article constantly, so this quietly closes a reading gap. Genuinely optional at A2 though — drop it without guilt the week everything goes sideways.",
       "resources": [
         {
           "label": "Nicos Weg A2 (DW)",
@@ -1157,6 +1202,7 @@
       "layer": 19,
       "x": 21,
       "summary": "der Mann, der …/den … — the relative pronoun looks like the definite article and the verb still goes to the end. This is how you describe people and things precisely: 'der Beruf, den ich machen will'.",
+      "why": "\"Der Beruf, den ich machen will\" — naming exactly which person or thing you mean. Hard to write a decent Bewerbung or defend an opinion without it, and it is dense in every B1 Lesen text.",
       "resources": [
         {
           "label": "Nicos Weg A2 (DW)",
@@ -1184,6 +1230,7 @@
       "layer": 19,
       "x": 31,
       "summary": "'Ich habe vor, nach Deutschland zu gehen' — the zu-infinitive goes to the end, and separable verbs swallow the zu in the middle (anzufangen). The building block for um…zu and for polite written German.",
+      "why": "\"Ich habe vor, eine Ausbildung zu machen\", \"Es ist wichtig, pünktlich zu sein\" — the polite written register in a single structure, and the direct prerequisite for the um…zu sentence every application needs.",
       "resources": [
         {
           "label": "Nicos Weg A2 (DW)",
@@ -1207,6 +1254,7 @@
       "layer": 19,
       "x": 85,
       "summary": "Sehr geehrte Damen und Herren … Mit freundlichen Grüßen: the fixed frame of a German formal message, plus the informal register for friends. The Goethe A2 Schreiben module is exactly this, and so is every Ausbildung enquiry later.",
+      "why": "The Goethe A2 Schreiben module is this and little else, so it is close to guaranteed marks. It is also every enquiry email you send to a company long before you are ready to write a full Bewerbung.",
       "resources": [
         {
           "label": "Goethe-Institut: Prüfungen & Modellsätze",
@@ -1234,6 +1282,7 @@
       "layer": 20,
       "x": 40,
       "summary": "werden + infinitive at the end — another bracket. In practice Germans use the present tense for the future, so the real payoff is that you now own werden, which is the engine of the passive at B1.",
+      "why": "Plans stated in the register an exam expects — and, more valuable, you now own werden, the engine that drives the entire passive system waiting for you at B1.",
       "resources": [
         {
           "label": "Nicos Weg A2 (DW)",
@@ -1257,6 +1306,7 @@
       "layer": 20,
       "x": 51,
       "summary": "würde, könnte, hätte, wäre — the politeness gear of German. 'Könnten Sie mir bitte helfen?' is the register an Ausbildung email or a Goethe speaking module expects, and it costs only six forms to sound grown-up.",
+      "why": "Six forms change how Germans hear you: \"Könnten Sie…\" instead of \"Kannst du…\". That is the register an Ausbildung email, a phone call to an office and the B1 Sprechen module all quietly expect from an adult.",
       "resources": [
         {
           "label": "Nicos Weg A2 (DW)",
@@ -1282,6 +1332,7 @@
       "layer": 20,
       "x": 85,
       "summary": "The German CV is its own genre: tabular, dated, photo-optional, no prose. Draft yours now, while there is still a year to improve it — the document is what turns language study into an actual Ausbildung application.",
+      "why": "The first physical artefact of the whole German track — a document you could actually send. Drafting it a year early means twelve months of improving something real instead of panicking when applications open.",
       "resources": [
         {
           "label": "ausbildung.de",
@@ -1309,6 +1360,7 @@
       "layer": 21,
       "x": 68,
       "summary": "Full Goethe A2 Modellsatz under exam conditions plus your first Lebenslauf draft reviewed. Milestone German A2 — and the point where past narration should feel fluid and adjective endings sit around 80%.",
+      "why": "Halfway proof against the real pass bar. Clearing A2 means past narration flows and endings sit near 80% — the two things that decide whether B1 feels like a grind or a slide.",
       "resources": [
         {
           "label": "Goethe-Institut: Prüfungen & Modellsätze",
@@ -1338,6 +1390,7 @@
       "layer": 22,
       "x": 96,
       "summary": "Street interviews with real speed, real dialect colour and real filler words — the gap between Nicos Weg and life. Protocol: subtitled pass first, unsubtitled second, three stolen phrases into Anki.",
+      "why": "The bridge from textbook German to the speed people actually talk at. Months of this and the B1 Hören module simply stops sounding fast, which by itself is the difference between passing and not.",
       "resources": [
         {
           "label": "Easy German (YouTube)",
@@ -1365,6 +1418,7 @@
       "layer": 22,
       "x": 40,
       "summary": "ging, sprach, nahm, fand — you rarely say these, but you read them constantly, because written narrative German runs on Präteritum. This is a reading-comprehension unlock more than a speaking one.",
+      "why": "A reading unlock: news, stories, reports and every B1 Lesen text stop having holes in them. You will recognise far more of these than you produce, and that asymmetry is exactly right.",
       "resources": [
         {
           "label": "Nicos Weg B1 (DW)",
@@ -1389,6 +1443,7 @@
       "layer": 22,
       "x": 51,
       "summary": "werden + Partizip II: 'Das Formular wird ausgefüllt.' Institutional German — forms, rules, workplace instructions, job ads — is written almost entirely in the passive, so this is a vocational necessity, not a stylistic flourish.",
+      "why": "Opens the German that institutions write at you — your Ausbildungsvertrag, the safety notice on the wall, the \"Bewerbungen werden online eingereicht\" line at the bottom of every job ad.",
       "resources": [
         {
           "label": "Nicos Weg B1 (DW)",
@@ -1414,6 +1469,7 @@
       "layer": 23,
       "x": 40,
       "summary": "hatte/war + Partizip II for the past-before-the-past, almost always paired with nachdem. Short unit, but it is what lets you order events in a story instead of listing them.",
+      "why": "Lets you order events instead of listing them: \"nachdem ich die Ausbildung angefangen hatte…\". A short unit with a big effect on how mature your written German reads to a B1 marker.",
       "resources": [
         {
           "label": "Nicos Weg B1 (DW)",
@@ -1434,6 +1490,7 @@
       "layer": 23,
       "x": 51,
       "summary": "'wurde gebaut', 'ist gebaut worden', 'muss gemacht werden' — the past and modal passives, where the stacking of auxiliaries at the clause end peaks. Read it aloud until the pile-up stops feeling absurd.",
+      "why": "Reports, histories and workplace documentation live in the past passive. Surviving the pile-up of auxiliaries at the clause end is also proof that the Satzklammer is finally automatic instead of calculated.",
       "resources": [
         {
           "label": "Nicos Weg B1 (DW)",
@@ -1458,6 +1515,7 @@
       "layer": 23,
       "x": 8,
       "summary": "des Mannes / der Frau — the fourth case, and the one Arabic's iḍāfa makes intuitive: possession marked on the possessor. Spoken German often dodges it with von, but B1 reading and any formal writing will not.",
+      "why": "The fourth case, handed to you nearly free by your Arabic iḍāfa instinct. It is the register marker of formal writing, and B1 reading texts are full of it whether or not spoken German dodges it.",
       "resources": [
         {
           "label": "Nicos Weg B1 (DW)",
@@ -1482,6 +1540,7 @@
       "layer": 24,
       "x": 4,
       "summary": "A closed class of masculine nouns (Student, Kollege, Mensch, Herr) that add -n or -en in every case except nominative singular. Small, finite, and a favourite of exam correctors — learn the list and it is free marks.",
+      "why": "A short finite list that exam correctors adore: Student, Kollege, Mensch, Herr. Learn the class once and you stop losing marks on \"mit einem Kollege\" for the rest of your German life.",
       "resources": [
         {
           "label": "n-Deklination Wortliste",
@@ -1506,6 +1565,7 @@
       "layer": 24,
       "x": 13,
       "summary": "The genitive prepositions — wegen, trotz, während, innerhalb — are the register marker that separates B1 writing from A2 writing. Colloquial speech uses them with dative; your exam texts should not.",
+      "why": "wegen, trotz and während with the genitive are the cheapest way to make a text read as B1 rather than A2. Your Bewerbung in particular lives or dies on exactly this register.",
       "resources": [
         {
           "label": "Nicos Weg B1 (DW)",
@@ -1526,6 +1586,7 @@
       "layer": 24,
       "x": 26,
       "summary": "darauf, damit, worauf, womit — pronoun substitutes for things after a prepositional verb ('Ich freue mich darauf', 'Worüber sprichst du?'). Impossible to fake, and their absence is a giveaway that you're still translating from English.",
+      "why": "\"Ich freue mich darauf\", \"Worauf wartest du?\" — impossible to fake, and their absence marks you instantly as someone still translating out of English. Natural-sounding German runs on them.",
       "resources": [
         {
           "label": "Nicos Weg B1 (DW)",
@@ -1550,6 +1611,7 @@
       "layer": 25,
       "x": 21,
       "summary": "Dative and genitive relative pronouns (dem, denen, dessen, deren), prepositional relatives ('das Haus, in dem …'), plus wo and was. The single densest structure in B1 Lesen texts.",
+      "why": "Every case you have drilled cashes out at once here. It is the densest structure in B1 Lesen, and it lets you pack a whole qualifying clause into one clean sentence of your Bewerbung.",
       "resources": [
         {
           "label": "Nicos Weg B1 (DW)",
@@ -1575,6 +1637,7 @@
       "layer": 25,
       "x": 45,
       "summary": "'Wenn ich mehr Zeit hätte, würde ich …' — hypotheticals, regrets and advice, including the past form (hätte gemacht). The politeness forms you already have are the same machinery pointed at unreal situations.",
+      "why": "Hypotheticals, regrets and advice: \"Wenn ich die Stelle bekäme…\", \"An deiner Stelle würde ich…\". The B1 speaking module asks you to weigh options, and this is the grammar of weighing options.",
       "resources": [
         {
           "label": "Nicos Weg B1 (DW)",
@@ -1600,6 +1663,7 @@
       "layer": 25,
       "x": 31,
       "summary": "'Können Sie mir sagen, ob/wann/wo …' — questions wrapped in a polite frame, with the verb at the end. This is the single most useful structure for the B1 speaking module and for any real-world counter or phone call.",
+      "why": "The polite way to ask a stranger anything, in an office where blunt gets you a shrug. Rehearse three frames and you can ask about something even when you do not know the word for it.",
       "resources": [
         {
           "label": "Nicos Weg B1 (DW)",
@@ -1620,6 +1684,7 @@
       "layer": 26,
       "x": 21,
       "summary": "Purpose clauses, split by one rule: um…zu when both halves share a subject, damit when they don't. Exactly the sentence you'll need a hundred times in an application — 'Ich lerne Deutsch, um eine Ausbildung zu machen.'",
+      "why": "Purpose is what every interviewer asks about: why Germany, why this Beruf, why now. Answer in one clean clause instead of three broken ones and you sound like someone with an actual plan.",
       "resources": [
         {
           "label": "Nicos Weg B1 (DW)",
@@ -1644,6 +1709,7 @@
       "layer": 26,
       "x": 8,
       "summary": "The final push on endings: mixed der-words, ein-words and no article, at speed, in speech as well as writing. Target is under 10% error — this topic only leaves the rotation after two consecutive weeks below the bar.",
+      "why": "The last mile of the hardest thing in German. Two consecutive weeks under 10% error and endings stop eating working memory — the same memory you need for thinking during a B1 speaking exam.",
       "resources": [
         {
           "label": "Interleaved Endungsdrill auf Zeit",
@@ -1668,6 +1734,7 @@
       "layer": 26,
       "x": 31,
       "summary": "Turning verbs and clauses into nouns — 'beim Lesen', 'die Verbesserung der Situation'. This is the trick that makes written German compress, and it is why official texts look so dense; learning to build them makes them readable.",
+      "why": "Cracks open official German: contracts, Behörden letters, job ads. Once you can build the compressions yourself, the dense paragraph that used to stop you reads at normal speed.",
       "resources": [
         {
           "label": "Nicos Weg B1 (DW)",
@@ -1692,6 +1759,7 @@
       "layer": 27,
       "x": 8,
       "summary": "'die kochende Suppe' / 'die gekochte Suppe' — Partizip I and II used attributively, with full adjective endings. Properly B2 territory; treat it as a bonus that sharpens your reading, and cut it whenever the week is tight.",
+      "why": "A reading bonus — attributive participles are thick in written B1-plus texts, and recognising them stops a long sentence from collapsing on you. Bonus, though: drop it the moment the week tightens.",
       "resources": [
         {
           "label": "Nicos Weg B1 (DW)",
@@ -1712,6 +1780,7 @@
       "layer": 27,
       "x": 81,
       "summary": "Meiner Meinung nach / einerseits … andererseits / das stimmt zwar, aber — the phrase bank that lets you argue a position for two minutes without stalling. The B1 Sprechen module is scored on exactly this.",
+      "why": "Buys you thinking time. With twenty ready-made openers you can start a sentence before you know how it ends, which is what fluency looks like under exam pressure and in a real disagreement at work.",
       "resources": [
         {
           "label": "Redemittel-Liste B1 (Meinung, Pro/Contra)",
@@ -1737,6 +1806,7 @@
       "layer": 27,
       "x": 89,
       "summary": "The content pivot: from here your vocabulary work targets your actual Ausbildung field, not general topics. Two hundred field-specific words beat two thousand generic ones when the goal is a workplace, not a certificate.",
+      "why": "Where language study becomes employable. Two hundred words from your own field get you further in an interview than two thousand general ones, because they prove you can be trained in German.",
       "resources": [
         {
           "label": "ausbildung.de — Berufsprofile",
@@ -1761,6 +1831,7 @@
       "layer": 28,
       "x": 81,
       "summary": "Real job ads as your reading texts: passive constructions, nominalisation, 'Wir erwarten / Sie bringen mit'. It is authentic B1-level input that doubles as market research for the applications you'll send.",
+      "why": "You find out what the market actually demands — qualifications, deadlines, wording — a year before you apply. Real ads turn a vague plan into a target list with dates against it.",
       "resources": [
         {
           "label": "ausbildung.de",
@@ -1781,6 +1852,7 @@
       "layer": 28,
       "x": 89,
       "summary": "The German application letter is a tight genre with fixed moves and a Konjunktiv-II politeness register. Write three, get them corrected, keep them — this is the deliverable the whole German track exists to produce.",
+      "why": "The end product. Everything else in this tree exists so you can send this letter and be taken seriously; three corrected drafts now means a ready template the day the right listing appears.",
       "resources": [
         {
           "label": "ausbildung.de — Bewerbung",
@@ -1806,6 +1878,7 @@
       "layer": 29,
       "x": 59,
       "summary": "One exam module per fortnight, starting with Lesen: task types, matching logic, and above all pacing. Goethe B1 modules can be passed individually, so a weak module is a retake, not a restart — that alone de-risks the timeline.",
+      "why": "Passing one module locks it in permanently. Starting with Lesen converts the biggest single risk in your timeline — a total exam failure — into, at worst, one retake of one module.",
       "resources": [
         {
           "label": "Goethe-Institut: Prüfungen & Modellsätze",
@@ -1827,6 +1900,7 @@
       "layer": 29,
       "x": 65,
       "summary": "Exam listening at native speed, once or twice only, with answers to mark under time pressure. Your Easy German habit is the training base; this node is about the format, the note-taking and the nerve.",
+      "why": "Exam audio runs once, sometimes twice, and there is no rewind button. Train the format now and the only surprise left on exam day is an unfamiliar accent.",
       "resources": [
         {
           "label": "Goethe-Institut: Prüfungen & Modellsätze",
@@ -1851,6 +1925,7 @@
       "layer": 29,
       "x": 71,
       "summary": "Three tasks: informal message, forum post, formal letter — each with a fixed structure you can rehearse. Write to the clock, then autopsy the errors into Anki; the marking rewards structure and connectors as much as accuracy.",
+      "why": "Three rehearsable task shapes, each with a structure you can walk in already knowing. Markers reward structure and connectors, so most of this module can be secured before you ever see the prompt.",
       "resources": [
         {
           "label": "Goethe-Institut: Prüfungen & Modellsätze",
@@ -1876,6 +1951,7 @@
       "layer": 29,
       "x": 77,
       "summary": "Planning something together, then a short presentation with follow-up questions. Twice-weekly speaking simulations from here to exam day — the module rewards keeping the turn going, not being flawless.",
+      "why": "The last module between you and the certificate, and the one you cannot cram. Twice-weekly simulations from here mean exam day is the hundredth time you have done this, not the first.",
       "resources": [
         {
           "label": "Goethe-Institut: Prüfungen & Modellsätze",
@@ -1901,6 +1977,7 @@
       "layer": 30,
       "x": 68,
       "summary": "Two complete Modellsätze under full exam timing, back to back, with a proper error autopsy after each. Timing is what fails candidates who know the grammar, so treat the clock as the thing being trained.",
+      "why": "Two full dress rehearsals so nothing on the day is new except the questions. Candidates who know the grammar still fail on pacing — this is where you find out whether you finish in time.",
       "resources": [
         {
           "label": "Goethe-Institut: Prüfungen & Modellsätze",
@@ -1928,6 +2005,7 @@
       "layer": 31,
       "x": 68,
       "summary": "The real exam at Goethe Jakarta — the certificate that unlocks Ausbildung applications. Book the date first and let it drive the last six weeks; the exam calendar is the boss, everything else negotiates.",
+      "why": "The certificate that converts eighteen months of study into an Ausbildung application an employer can accept. Book the date and everything before it stops being negotiable.",
       "resources": [
         {
           "label": "Goethe-Institut: Prüfungen & Anmeldung",

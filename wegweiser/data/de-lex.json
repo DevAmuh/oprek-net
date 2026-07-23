@@ -1,0 +1,980 @@
+{
+  "version": "1.0",
+  "terms": [
+    {
+      "surface": "Temporale Präpositionen",
+      "gloss": "time prepositions — seit, vor, ab, bis, in, während",
+      "why": "Needed in every Lebenslauf line and every appointment you book. seit plus present tense is a standing exam favourite."
+    },
+    {
+      "surface": "Akkusativpräpositionen",
+      "gloss": "prepositions that always take the accusative: für, ohne, gegen, um, durch",
+      "why": "Five words you never have to think about again — memorise them as a chant, not as a rule."
+    },
+    {
+      "surface": "Konsolidierungswoche",
+      "gloss": "consolidation week — no new material, only re-drilling and testing",
+      "why": "The week that stops small cracks from compounding. Score 80% and you move on; the rule is 80%, not perfection."
+    },
+    {
+      "surface": "Wechselpräpositionen",
+      "gloss": "two-way prepositions — accusative for movement (wohin?), dative for position (wo?)",
+      "why": "The difference between \"ich gehe in die Küche\" and \"ich bin in der Küche\". Automate it and a chunk of your case errors vanish."
+    },
+    {
+      "surface": "Bewerbungsschreiben",
+      "gloss": "the German application letter — a tight genre with fixed moves and a polite register",
+      "why": "Write three, get them corrected, keep them. This is the deliverable the entire German track exists to produce."
+    },
+    {
+      "surface": "Goethe-Zertifikat",
+      "gloss": "the Goethe-Institut’s official German certificate, A1 through C2",
+      "why": "The document employers and offices recognise without argument. B1 is the level your Ausbildung plan needs."
+    },
+    {
+      "surface": "Adjektivendungen",
+      "gloss": "adjective endings — the suffix an adjective takes when it stands in front of a noun",
+      "why": "The single biggest accuracy leak between A2 and B1. Ten drilled minutes a day beats staring at the table for an hour."
+    },
+    {
+      "surface": "Indirekte Fragen",
+      "gloss": "indirect questions — a question wrapped in a polite frame, verb at the end",
+      "why": "The polite way to ask a stranger anything, and directly scored in the B1 speaking module."
+    },
+    {
+      "surface": "Possessivartikel",
+      "gloss": "possessive articles — mein, dein, sein, ihr, unser, euer",
+      "why": "You cannot talk about your own family, job or plans without them, and they share the ein-word ending grid."
+    },
+    {
+      "surface": "Reflexive Verben",
+      "gloss": "reflexive verbs — verbs that need mich/dich/sich: sich freuen, sich bewerben",
+      "why": "Feelings, plans and applications all live here. Without them you can state facts but not talk about yourself."
+    },
+    {
+      "surface": "Reflexivpronomen",
+      "gloss": "the reflexive pronoun mich/dich/sich/uns/euch that certain verbs demand",
+      "why": "It also splits accusative from dative — ich wasche mich vs ich wasche mir die Hände. Worth ten minutes to get straight."
+    },
+    {
+      "surface": "Trennbare Verben",
+      "gloss": "separable verbs — the prefix detaches and flies to the end of the clause",
+      "why": "Your entire daily routine is one: aufstehen, anfangen, einkaufen. Nothing in English or Arabic prepares you, so drill rather than reason."
+    },
+    {
+      "surface": "Nominalisierung",
+      "gloss": "nominalisation — turning verbs and clauses into nouns: beim Lesen, die Verbesserung",
+      "why": "The compression trick behind dense official German. Build them yourself and Behörden letters become readable."
+    },
+    {
+      "surface": "Plusquamperfekt",
+      "gloss": "past perfect: hatte or war plus Partizip II — the past before the past",
+      "why": "Lets you order events in a story instead of listing them. It usually arrives holding hands with nachdem."
+    },
+    {
+      "surface": "Relativpronomen",
+      "gloss": "the relative pronoun (der, den, dem, dessen) that opens a relative clause",
+      "why": "It looks like the definite article but takes its case from its own clause. That swap is the whole trick."
+    },
+    {
+      "surface": "sich vorstellen",
+      "gloss": "to introduce yourself",
+      "why": "The opening of every Goethe speaking module and every conversation you will start in Germany."
+    },
+    {
+      "surface": "Stellenanzeigen",
+      "gloss": "job advertisements",
+      "why": "Authentic B1 reading that doubles as market research: you learn what employers demand a year before you apply."
+    },
+    {
+      "surface": "Fehlerautopsie",
+      "gloss": "error autopsy — going through your corrected mistakes one by one",
+      "why": "Cards built from your own errors are the highest-value cards in the deck. This is what makes everything else stick."
+    },
+    {
+      "surface": "Konsolidierung",
+      "gloss": "consolidation — locking in what you already met instead of adding more",
+      "why": "Adding new material over an unstable base is how people reach B1 on paper and A2 in practice."
+    },
+    {
+      "surface": "Stellenanzeige",
+      "gloss": "a job advertisement",
+      "why": "Written almost entirely in passive and nominalised German, which is exactly why those two topics matter to you."
+    },
+    {
+      "surface": "Dativpronomen",
+      "gloss": "dative pronouns — mir, dir, ihm, ihr, uns, euch, ihnen",
+      "why": "A tiny set with a huge payoff: asking for help, giving things to people, getting out of trouble."
+    },
+    {
+      "surface": "deines Berufs",
+      "gloss": "of your profession — genitive of dein Beruf",
+      "why": "The pivot point: from here your vocabulary work aims at a workplace, not at a certificate."
+    },
+    {
+      "surface": "Kommunikation",
+      "gloss": "communication — using the language in a real situation rather than on a worksheet",
+      "why": "The strand people neglect. Output from week four, however ugly, is what stops the other strands going stale."
+    },
+    {
+      "surface": "Konjunktiv II",
+      "gloss": "the würde/könnte/hätte/wäre forms — politeness and unreal situations",
+      "why": "Six forms buy you the register an Ausbildung email, an office phone call and the B1 Sprechen module all expect."
+    },
+    {
+      "surface": "n-Deklination",
+      "gloss": "a closed group of masculine nouns (Student, Kollege, Herr) that add -n or -en in every case but the nominative",
+      "why": "Small, finite and a favourite of exam correctors. Learn the list once and \"mit einem Kollege\" never costs you a mark again."
+    },
+    {
+      "surface": "Ordinalzahlen",
+      "gloss": "ordinal numbers — der erste, der zweite, am dritten",
+      "why": "Every form, appointment and Lebenslauf line needs a date, and dates smuggle in free adjective-ending practice."
+    },
+    {
+      "surface": "Präpositionen",
+      "gloss": "prepositions — für, mit, auf, wegen; each one governs a fixed case",
+      "why": "Never store one without its case. Same discipline as learning an Arabic verb together with its harf jarr."
+    },
+    {
+      "surface": "unregelmäßige",
+      "gloss": "irregular — forms that do not follow the standard pattern",
+      "why": "German has far fewer irregulars than it feels like, and they are the most frequent verbs, so SRS pays out fast."
+    },
+    {
+      "surface": "Vergangenheit",
+      "gloss": "the past — as a time, not a tense name",
+      "why": "Talking about what you have already done is survival skill number one in an interview."
+    },
+    {
+      "surface": "Fertigkeiten",
+      "gloss": "skills — reading, listening, writing, speaking",
+      "why": "The exam tests four separately, so a weak one is a visible, fixable gap rather than a vague feeling."
+    },
+    {
+      "surface": "Gewohnheiten",
+      "gloss": "habits — the daily routines that turn study into acquisition",
+      "why": "Consistency beats intensity. The floor-mode day that keeps the streak is worth more than a heroic weekend."
+    },
+    {
+      "surface": "Meilensteine",
+      "gloss": "milestones — the fixed checkpoints everything funnels into",
+      "why": "Deadlines you can book. The exam calendar is the boss; everything else in the plan negotiates around it."
+    },
+    {
+      "surface": "Netzwerk neu",
+      "gloss": "a German coursebook series (A1–B1), used as written reinforcement here",
+      "why": "It is what Goethe Jakarta teaches from, so working through it aligns you with a possible future course."
+    },
+    {
+      "surface": "Relativsätze",
+      "gloss": "relative clauses — \"der Beruf, den ich machen will\"",
+      "why": "How you name exactly which person or thing you mean. Dense in B1 Lesen and hard to write a Bewerbung without."
+    },
+    {
+      "surface": "wo-Komposita",
+      "gloss": "wo-compounds — worauf, womit, worüber: asking about a thing after a prepositional verb",
+      "why": "Without them you end up asking \"auf was wartest du?\", which is exactly the tell of a learner."
+    },
+    {
+      "surface": "Wortstellung",
+      "gloss": "word order",
+      "why": "German lets you move almost anything to the front — as long as the verb stays put. That freedom is only usable once the rule is automatic."
+    },
+    {
+      "surface": "automatisch",
+      "gloss": "automatic — done without conscious thought",
+      "why": "The real target for endings and word order. Knowing a rule and not having to think about it are different skills."
+    },
+    {
+      "surface": "Dativverben",
+      "gloss": "verbs that take a dative object: helfen, gefallen, gehören, schmecken",
+      "why": "Store each as a whole phrase — \"Wie gefällt dir …?\" — and small talk stops stalling while you hunt for the subject."
+    },
+    {
+      "surface": "Deklination",
+      "gloss": "declension — changing articles, adjectives and nouns to show case, gender and number",
+      "why": "The machine German runs on. Nail it and reading stops being guesswork about who did what to whom."
+    },
+    {
+      "surface": "Fachsprache",
+      "gloss": "the technical language of a specific trade or field",
+      "why": "Two hundred words from your own field beat two thousand general ones in an interview, because they prove you can be trained."
+    },
+    {
+      "surface": "Höflichkeit",
+      "gloss": "politeness — the register of Könnten Sie, würden Sie, Entschuldigung",
+      "why": "Six polite forms change how Germans hear you. It is the default register for offices, emails and exams."
+    },
+    {
+      "surface": "Hörtraining",
+      "gloss": "listening training",
+      "why": "Blind pass first, transcript second. The blind pass is the part people skip and the part that builds the skill."
+    },
+    {
+      "surface": "KI-Gespräch",
+      "gloss": "a conversation with an AI — KI = künstliche Intelligenz, artificial intelligence",
+      "why": "A partner who never gets bored, stays at your level and corrects gently. Perfect for the ugly-output stage."
+    },
+    {
+      "surface": "Konjugation",
+      "gloss": "conjugation — changing the verb to fit its person: ich gehe, du gehst, er geht",
+      "why": "Arabic already trained you for person-marking, and German’s set is far smaller. This is a discount, not a hurdle."
+    },
+    {
+      "surface": "Konnektoren",
+      "gloss": "connectors — denn, deshalb, trotzdem, weil, and the different word order each demands",
+      "why": "What a marker hears as a structured argument rather than a shopping list of sentences."
+    },
+    {
+      "surface": "Modalverben",
+      "gloss": "modal verbs — können, müssen, wollen, dürfen, sollen, mögen",
+      "why": "They triple what you can express and install the Satzklammer that Perfekt, Futur and the passive all reuse later."
+    },
+    {
+      "surface": "Modellsätze",
+      "gloss": "official practice exam papers — plural of Modellsatz",
+      "why": "Two full timed ones back to back is the dress rehearsal that turns exam day into a repeat performance."
+    },
+    {
+      "surface": "Partizip II",
+      "gloss": "the past participle: gemacht, gegangen, gesprochen",
+      "why": "The word sitting at the end of every Perfekt and every Passiv sentence you will ever build."
+    },
+    {
+      "surface": "Partizipien",
+      "gloss": "participles — plural of Partizip",
+      "why": "The top 25 irregular ones cover most of what you will ever say about yesterday. Pure brute-force SRS territory."
+    },
+    {
+      "surface": "Präposition",
+      "gloss": "preposition — a word like mit, für, auf that forces a case on what follows",
+      "why": "The case is arbitrary and must be memorised with the word. Guessing it is the most common B1 writing error."
+    },
+    {
+      "surface": "regelmäßige",
+      "gloss": "regular — following the standard -e/-st/-t/-en pattern",
+      "why": "Once the regular pattern is automatic, hundreds of verbs switch on at once with no extra work."
+    },
+    {
+      "surface": "Satzklammer",
+      "gloss": "the sentence bracket — conjugated verb in slot two, the rest parked at the very end",
+      "why": "Learn the shape once and Perfekt, modals, Futur and Passiv are the same frame with different filling."
+    },
+    {
+      "surface": "schriftlich",
+      "gloss": "written, in writing",
+      "why": "The written channel is where you can be slow and precise — which is why journal work fixes errors speech cannot."
+    },
+    {
+      "surface": "Tagesablauf",
+      "gloss": "daily routine — the shape of your day from waking to sleeping",
+      "why": "Narrating your own day aloud is the cheapest speaking practice there is, and it drills separable verbs for free."
+    },
+    {
+      "surface": "Ausbildung",
+      "gloss": "a German dual vocational training programme — paid work plus vocational school",
+      "why": "The whole point of this track. B1 is the language bar most Ausbildung places set before they will even read you."
+    },
+    {
+      "surface": "ausgefüllt",
+      "gloss": "filled in — Partizip II of ausfüllen",
+      "why": "The word you meet on every German form you will ever be handed."
+    },
+    {
+      "surface": "Aussprache",
+      "gloss": "pronunciation",
+      "why": "Whatever accent you build in week one is the one you store every future word in. Fix it before the vocabulary piles up."
+    },
+    {
+      "surface": "der-Wörter",
+      "gloss": "the der/die/das family — dieser, jeder, welcher — which all take the same endings",
+      "why": "Learn the family, not the members. One grid covers a dozen words you would otherwise memorise separately."
+    },
+    {
+      "surface": "Diskussion",
+      "gloss": "discussion, debate",
+      "why": "Arguing a position in German is a skill separate from grammar, and it is explicitly on the B1 mark sheet."
+    },
+    {
+      "surface": "ein-Wörter",
+      "gloss": "the ein family — ein, kein and the possessives mein/dein/sein — sharing one ending set",
+      "why": "Recognising the family is what turns three separate tables into one, and it is where the adjective ending rules split."
+    },
+    {
+      "surface": "Komparativ",
+      "gloss": "the comparative — größer, besser, mehr",
+      "why": "Comparing is how opinions get expressed out loud. Cheap to learn, and it lifts you off the flat beginner list."
+    },
+    {
+      "surface": "Konjunktiv",
+      "gloss": "the subjunctive mood — the \"would/could\" gear of German",
+      "why": "Politeness and hypotheticals from one small set of forms. Cheapest possible upgrade from sounding like a learner to sounding grown-up."
+    },
+    {
+      "surface": "Lebenslauf",
+      "gloss": "the German CV — tabular, dated, no prose, photo optional",
+      "why": "The first sendable artefact of this whole plan. Draft it a year early and you get twelve months to improve something real."
+    },
+    {
+      "surface": "Modellsatz",
+      "gloss": "an official practice exam paper published free by the Goethe-Institut",
+      "why": "The only honest measure of readiness. Sit it under real timing — pacing is what fails people who know the grammar."
+    },
+    {
+      "surface": "Präteritum",
+      "gloss": "the simple past — written narrative German, plus war/hatte/konnte in speech",
+      "why": "You read it far more than you say it. It is what stops B1 Lesen texts from having holes in them."
+    },
+    {
+      "surface": "Redemittel",
+      "gloss": "set phrases and sentence openers you keep ready for speaking and writing",
+      "why": "They buy thinking time: you can start a sentence before you know how it ends, which is what fluency looks like under pressure."
+    },
+    {
+      "surface": "Substantiv",
+      "gloss": "noun (also called Nomen) — always capitalised in German",
+      "why": "Each one hides a gender and a plural you must store with it. This is where German’s real difficulty is concentrated."
+    },
+    {
+      "surface": "Superlativ",
+      "gloss": "the superlative — am größten, am besten",
+      "why": "Pairs with the Komparativ; together they are the grammar of preference, which every speaking module asks about."
+    },
+    {
+      "surface": "Verbsystem",
+      "gloss": "the verb system — conjugation plus the whole tense and mood machine built on it",
+      "why": "One lane of the tree runs from \"ich bin\" to \"muss gemacht werden\". Everything in it reuses the same bracket."
+    },
+    {
+      "surface": "vorstellen",
+      "gloss": "to introduce; sich vorstellen = to introduce yourself (or to imagine)",
+      "why": "The reflexive version is the first thing you do in every exam, class and job interview."
+    },
+    {
+      "surface": "Wortschatz",
+      "gloss": "vocabulary — the stock of words you actually own",
+      "why": "Frequency first, then your field. Two hundred vocational words outperform two thousand random ones."
+    },
+    {
+      "surface": "Akkusativ",
+      "gloss": "the accusative case — marks the direct object, the thing being acted on",
+      "why": "Only the masculine article visibly changes (der→den). Your Arabic naṣb instinct already expects this; you just learn new forms."
+    },
+    {
+      "surface": "aufsetzen",
+      "gloss": "to set up",
+      "why": "One evening of setup that decides whether the next 450 hours compound or evaporate."
+    },
+    {
+      "surface": "Bewerbung",
+      "gloss": "a job application — usually a Lebenslauf plus a formal cover letter",
+      "why": "The thing B1 is for. Everything upstream in this tree is building the language to write one that gets read."
+    },
+    {
+      "surface": "harf jarr",
+      "gloss": "Arabic: the preposition that governs a following noun’s case",
+      "why": "You already store Arabic verbs with their preposition. Do exactly that for warten auf and sich bewerben um."
+    },
+    {
+      "surface": "Hauptsatz",
+      "gloss": "main clause — the conjugated verb is the second element, whatever comes first",
+      "why": "The iron law. Once it is reflex, simple sentences come out grammatical without you deciding anything."
+    },
+    {
+      "surface": "Imperativ",
+      "gloss": "the command form: Geh! Gehen Sie! Geht!",
+      "why": "Directions, instructions and every polite Sie-request you will make at a counter or in a workshop."
+    },
+    {
+      "surface": "Indirekte",
+      "gloss": "indirect",
+      "why": "Wrapping a question in a frame is the difference between polite and blunt in a German office."
+    },
+    {
+      "surface": "Infinitiv",
+      "gloss": "the base form of a verb: gehen, machen, sein",
+      "why": "The form that lands at the end of the clause after a modal, after werden and after zu. Expect to see it there constantly."
+    },
+    {
+      "surface": "Komposita",
+      "gloss": "compounds — words built by welding two or more words together",
+      "why": "German builds vocabulary by gluing. Once you can split a compound you can read words nobody ever taught you."
+    },
+    {
+      "surface": "Nebensatz",
+      "gloss": "subordinate clause — the conjugated verb goes right to the end",
+      "why": "weil, dass, wenn, ob and obwohl all trigger it. Nothing in Arabic or English prepared you, so start the daily drill early."
+    },
+    {
+      "surface": "Nicos Weg",
+      "gloss": "Deutsche Welle’s free video course, A1 to B1 — the spine of this plan",
+      "why": "Free, complete and level-sequenced. There is no reason to pay for a course before you have finished it."
+    },
+    {
+      "surface": "Nominativ",
+      "gloss": "the nominative case — the subject, the one doing the verb",
+      "why": "The form every dictionary gives you. Knowing when it is NOT nominative is the entire job of the other three cases."
+    },
+    {
+      "surface": "Prüfungen",
+      "gloss": "exams",
+      "why": "Goethe B1 has four modules that can be passed separately, which turns one big risk into four small ones."
+    },
+    {
+      "surface": "Reflexive",
+      "gloss": "reflexive — the verb’s action points back at the subject",
+      "why": "German uses these where English does not, so they have to be learned as part of the verb."
+    },
+    {
+      "surface": "Schreiben",
+      "gloss": "to write; writing — also the name of the written Goethe exam module",
+      "why": "Three fixed task types you can walk in already knowing the structure of. The most controllable marks in the whole exam."
+    },
+    {
+      "surface": "Temporale",
+      "gloss": "temporal, time-related",
+      "why": "Time expressions are compulsory in a Lebenslauf and in any account of what you have done."
+    },
+    {
+      "surface": "trennbare",
+      "gloss": "separable",
+      "why": "The prefix leaves the verb and waits at the end of the clause. Pure drill territory — no explanation will speed it up."
+    },
+    {
+      "surface": "Adjektiv",
+      "gloss": "adjective — a describing word; it takes an ending whenever it stands in front of a noun",
+      "why": "Those endings are the biggest single accuracy leak between A2 and B1. Every adjective before a noun is a decision you have to make."
+    },
+    {
+      "surface": "Alphabet",
+      "gloss": "the alphabet — plus the German letter names used when spelling names aloud",
+      "why": "You will spell your name on the phone and at counters constantly. Practise it before you need it."
+    },
+    {
+      "surface": "Begrüßen",
+      "gloss": "greeting someone",
+      "why": "The first thirty seconds of any encounter, and the part people judge your German on before you have said anything real."
+    },
+    {
+      "surface": "Endungen",
+      "gloss": "endings — the suffixes on articles, adjectives and nouns that signal case, gender and number",
+      "why": "German hides its grammar in these two or three letters. Reading them fast is comprehension; writing them right is your B1 score."
+    },
+    {
+      "surface": "gefallen",
+      "gloss": "to please, to be liked — \"Wie gefällt dir Berlin?\"",
+      "why": "The thing is the subject and the person is dative. Learn it as a whole phrase and it never trips you again."
+    },
+    {
+      "surface": "Gespräch",
+      "gloss": "a conversation",
+      "why": "Finishing one whole exchange without escaping into English is the week-4 milestone that stops you stalling in silent input."
+    },
+    {
+      "surface": "Negation",
+      "gloss": "negation — saying that something is not the case, with nicht or kein",
+      "why": "Half of real conversation is what you do not want or cannot do. Two words, one rule, enormous coverage."
+    },
+    {
+      "surface": "Partizip",
+      "gloss": "participle — the ge-…-t or ge-…-en form used in Perfekt and Passiv, and as an adjective",
+      "why": "Always store it with its auxiliary, or you will end up saying \"ich habe gegangen\" for years."
+    },
+    {
+      "surface": "Position",
+      "gloss": "position — as in \"Verb an Position 2\", the slot a word occupies",
+      "why": "Counting slots is how you check your own sentences before they leave your mouth."
+    },
+    {
+      "surface": "Pronomen",
+      "gloss": "pronouns — ich, du, er, sie, es, wir, ihr, sie, Sie",
+      "why": "Nine words that every early sentence hangs off. The polite Sie among them is a social decision, not just grammar."
+    },
+    {
+      "surface": "Sprechen",
+      "gloss": "to speak; speaking — also the name of the spoken Goethe exam module",
+      "why": "The one module you cannot cram. It rewards keeping the turn going far more than being flawless."
+    },
+    {
+      "surface": "trotzdem",
+      "gloss": "nevertheless, all the same",
+      "why": "Takes position 1 and kicks the verb to slot 2. Getting that order right is what makes contrast sound deliberate."
+    },
+    {
+      "surface": "W-Fragen",
+      "gloss": "question words starting with W: wer, was, wo, woher, wie, wann",
+      "why": "Six words that turn you from a person being asked things into a person driving the conversation."
+    },
+    {
+      "surface": "Artikel",
+      "gloss": "article — der/die/das and ein/eine, the words carrying gender and case",
+      "why": "Every noun gets learned with its article or the case system has nothing to attach to. Wrong article = failed card."
+    },
+    {
+      "surface": "deshalb",
+      "gloss": "therefore, that is why",
+      "why": "Your everyday \"so\" — and it moves the verb, unlike English. One of three connector patterns worth drilling as a set."
+    },
+    {
+      "surface": "Genitiv",
+      "gloss": "the genitive case — possession marked on the possessor: des Mannes, der Frau",
+      "why": "Arabic iḍāfa makes it intuitive. Speech dodges it with von; B1 reading and your Bewerbung will not let you."
+    },
+    {
+      "surface": "Meinung",
+      "gloss": "opinion — \"meiner Meinung nach\" = in my opinion",
+      "why": "The B1 speaking module scores whether you can hold a position for two minutes. That starts with this phrase."
+    },
+    {
+      "surface": "Perfekt",
+      "gloss": "the spoken past: haben or sein in slot two plus the Partizip II at the very end",
+      "why": "How Germans actually talk about yesterday. Past tense is survival skill number one in any interview."
+    },
+    {
+      "surface": "Präsens",
+      "gloss": "the present tense",
+      "why": "It also does duty as the future in everyday German, so getting it automatic covers two tenses for the price of one."
+    },
+    {
+      "surface": "Prüfung",
+      "gloss": "an exam",
+      "why": "A booked exam date is what converts a study plan into a deadline you actually respect."
+    },
+    {
+      "surface": "Satzbau",
+      "gloss": "sentence structure — the rules for where each element is allowed to sit",
+      "why": "Word order is not decoration in German. Put the verb in the wrong slot and the sentence stops being German."
+    },
+    {
+      "surface": "starker",
+      "gloss": "strong (here genitive plural: \"of strong verbs\") — verbs that change their stem vowel",
+      "why": "ging, sprach, nahm, fand. Recognition matters far more than production: you read these constantly."
+    },
+    {
+      "surface": "starten",
+      "gloss": "to start",
+      "why": "A habit started at the right week costs nothing; started six months late it costs you the timeline."
+    },
+    {
+      "surface": "Uhrzeit",
+      "gloss": "clock time — both official (14:30) and colloquial (halb drei)",
+      "why": "halb drei is 2:30, not 3:30. Getting that wrong costs you an appointment, not just a mark."
+    },
+    {
+      "surface": "während",
+      "gloss": "during; while — takes the genitive as a preposition",
+      "why": "A genitive preposition is a register marker: it makes a B1 text read as B1 rather than dressed-up A2."
+    },
+    {
+      "surface": "Berufs",
+      "gloss": "of the profession — genitive of Beruf",
+      "why": "Genitive in the wild. You will see this ending on every job title in a formal document."
+    },
+    {
+      "surface": "Briefe",
+      "gloss": "letters — the written kind",
+      "why": "The Goethe A2 writing module is essentially this, so the fixed frame is close to guaranteed marks."
+    },
+    {
+      "surface": "dürfen",
+      "gloss": "to be allowed to",
+      "why": "The verb of workplace rules and permissions — you will hear it on the first day of any Ausbildung."
+    },
+    {
+      "surface": "Endung",
+      "gloss": "ending — the case/gender suffix on an article, adjective or noun",
+      "why": "The smallest unit of German accuracy, and the one an examiner counts."
+    },
+    {
+      "surface": "Erstes",
+      "gloss": "first — neuter form of erste",
+      "why": "The first real conversation is a threshold, not a lesson. Everything before it is preparation."
+    },
+    {
+      "surface": "Fragen",
+      "gloss": "questions — also: to ask",
+      "why": "Questions are how you stay in a conversation you only half understand. They let you steer instead of being interviewed."
+    },
+    {
+      "surface": "Goethe",
+      "gloss": "the Goethe-Institut — Germany’s official cultural and language institute; it runs the standard exams",
+      "why": "Its Jakarta branch is where you will sit the real thing, and its free Modellsätze are your best practice material."
+    },
+    {
+      "surface": "helfen",
+      "gloss": "to help — takes a dative object: \"Kannst du mir helfen?\"",
+      "why": "The single most useful sentence for surviving a situation you do not fully understand."
+    },
+    {
+      "surface": "irreal",
+      "gloss": "unreal, hypothetical — as in Konjunktiv II irreal",
+      "why": "The grammar of weighing options: \"wenn ich mehr Zeit hätte\". The B1 speaking module asks for exactly this."
+    },
+    {
+      "surface": "konnte",
+      "gloss": "could, was able to — Präteritum of können",
+      "why": "The modals stay in Präteritum even in speech, so this small set is spoken German, not just written."
+    },
+    {
+      "surface": "majrūr",
+      "gloss": "Arabic: the case a noun takes after a preposition",
+      "why": "Your reflex that a preposition changes what follows is exactly the German dative reflex. Same instinct, new forms."
+    },
+    {
+      "surface": "obwohl",
+      "gloss": "although",
+      "why": "Concession is an interview muscle: \"obwohl ich noch lerne, kann ich schon…\". Verb goes to the end."
+    },
+    {
+      "surface": "Passiv",
+      "gloss": "the passive: werden plus Partizip II — \"das Formular wird ausgefüllt\"",
+      "why": "The register of forms, rules and job ads. You cannot read a Stellenanzeige or a contract without it."
+    },
+    {
+      "surface": "sollen",
+      "gloss": "to be supposed to, should",
+      "why": "How instructions get relayed to you: \"Sie sollen das Formular ausfüllen.\""
+    },
+    {
+      "surface": "Umlaut",
+      "gloss": "the two dots on ä, ö and ü — a genuinely different vowel, not decoration",
+      "why": "schon vs schön, Mutter vs Mütter. Skip the distinction and your plural sounds like a singular to the person listening."
+    },
+    {
+      "surface": "Verben",
+      "gloss": "verbs",
+      "why": "German verbs are regular far more often than Arabic ones. The difficulty is not the form, it is where the form has to sit."
+    },
+    {
+      "surface": "werden",
+      "gloss": "to become — and the auxiliary of both Futur and Passiv",
+      "why": "Learn it once, use it three ways. It is the highest-leverage single verb after sein and haben."
+    },
+    {
+      "surface": "Zahlen",
+      "gloss": "numbers",
+      "why": "Prices, times, dates, house numbers, phone numbers. A large share of A1 listening answers are simply a number."
+    },
+    {
+      "surface": "Beruf",
+      "gloss": "profession, trade, occupation",
+      "why": "The word at the centre of every Ausbildung conversation you will have: \"Welchen Beruf möchten Sie lernen?\""
+    },
+    {
+      "surface": "damit",
+      "gloss": "so that — introduces a purpose clause with a different subject; also \"with it/that\"",
+      "why": "Purpose is what every interviewer asks about. One clean clause beats three broken ones."
+    },
+    {
+      "surface": "Dativ",
+      "gloss": "the dative case — the indirect object, and the case after in/an/auf/bei when nothing is moving",
+      "why": "The case behind every \"where I am\" and \"who I gave it to\". Map it to Arabic majrūr after prepositions to get started fast."
+    },
+    {
+      "surface": "Datum",
+      "gloss": "date — the calendar date, not \"data\"",
+      "why": "Written and said in a fixed order you can rehearse once and reuse in every form you ever fill in."
+    },
+    {
+      "surface": "Fälle",
+      "gloss": "cases — plural of Fall; the four grammatical roles a noun can take",
+      "why": "The declension spine. Every ending you drill anywhere in this tree is a deposit into this one account."
+    },
+    {
+      "surface": "Futur",
+      "gloss": "the future tense: werden plus an infinitive at the end of the clause",
+      "why": "The real prize is werden itself, which turns out to be the engine of the whole passive system at B1."
+    },
+    {
+      "surface": "Genus",
+      "gloss": "grammatical gender — der (m), die (f), das (n)",
+      "why": "Arabic already made you accept arbitrary gender; German just adds a third. No philosophy needed, only the article-always habit."
+    },
+    {
+      "surface": "haben",
+      "gloss": "to have — and the auxiliary for most Perfekt forms",
+      "why": "Two jobs in one verb, which is why it is worth over-drilling early."
+    },
+    {
+      "surface": "hatte",
+      "gloss": "had — Präteritum of haben",
+      "why": "Pairs with war for describing how things used to be, which is most of what an interview asks about your past."
+    },
+    {
+      "surface": "Hören",
+      "gloss": "listening — also the name of the Goethe listening exam module",
+      "why": "The module people fail while their grammar is fine. Audio runs once and there is no rewind."
+    },
+    {
+      "surface": "iḍāfa",
+      "gloss": "Arabic: the possessive construction, \"the X of Y\"",
+      "why": "German Genitiv is the same idea with different machinery, so you skip the conceptual stage entirely."
+    },
+    {
+      "surface": "Kasus",
+      "gloss": "case — the four roles (Nominativ, Akkusativ, Dativ, Genitiv) a noun can play in a sentence",
+      "why": "German marks the role on the article, not on the noun ending. That is the one structural difference from Arabic iʻrab you have to rewire."
+    },
+    {
+      "surface": "Lesen",
+      "gloss": "to read; reading — also the name of the Goethe reading exam module",
+      "why": "Pacing, not vocabulary, is what fails people here — and the module can be passed and banked on its own."
+    },
+    {
+      "surface": "Modul",
+      "gloss": "module — one of the four exam parts: Lesen, Hören, Schreiben, Sprechen",
+      "why": "At B1 each module is passed and banked separately, so a bad day costs you one retake, not the whole certificate."
+    },
+    {
+      "surface": "mögen",
+      "gloss": "to like — and its polite form möchte, \"would like\"",
+      "why": "möchte is how you order, request and ask for anything without sounding demanding."
+    },
+    {
+      "surface": "nicht",
+      "gloss": "not — negates verbs, adjectives and definite nouns",
+      "why": "One half of the negation rule. Sorting it from kein is a week of drills and then a lifetime of not thinking about it."
+    },
+    {
+      "surface": "Nomen",
+      "gloss": "noun — the other everyday word for Substantiv",
+      "why": "Article, noun and plural travel as one unit on one card. That single habit protects your accuracy for a year."
+    },
+    {
+      "surface": "trotz",
+      "gloss": "despite — takes the genitive",
+      "why": "Concession in one word, and a marker of formal register in a Bewerbung."
+    },
+    {
+      "surface": "volle",
+      "gloss": "full, complete — plural/weak form of voll",
+      "why": "A full paper under real timing tests something a chapter exercise never does: your pacing."
+    },
+    {
+      "surface": "wegen",
+      "gloss": "because of — takes the genitive in careful German",
+      "why": "Colloquial speech uses it with dative; your exam texts should not. It is a cheap register upgrade."
+    },
+    {
+      "surface": "werde",
+      "gloss": "become / will — first person of werden",
+      "why": "The auxiliary that builds both future and passive. Worth recognising instantly in any form."
+    },
+    {
+      "surface": "woher",
+      "gloss": "from where",
+      "why": "The second question anyone asks you in Germany, right after your name."
+    },
+    {
+      "surface": "alle",
+      "gloss": "all",
+      "why": "Relative pronouns in all four cases is the densest structure in B1 reading — and where every case you drilled pays out."
+    },
+    {
+      "surface": "also",
+      "gloss": "so, therefore — a false friend; it does NOT mean English \"also\"",
+      "why": "A classic trap for English speakers. Using it wrongly is a small tell that you are translating."
+    },
+    {
+      "surface": "Arzt",
+      "gloss": "doctor",
+      "why": "A doctor visit stops being optional once you live there, and the vocabulary is directly Ausbildung-relevant."
+    },
+    {
+      "surface": "dass",
+      "gloss": "that — introduces a clause and sends the verb to the end",
+      "why": "Reporting what someone said or thinks. Half of any conversation about other people needs it."
+    },
+    {
+      "surface": "denn",
+      "gloss": "because, for — keeps normal word order, unlike weil",
+      "why": "The connector that lets you give a reason without the verb-final gymnastics. Useful when speaking under pressure."
+    },
+    {
+      "surface": "Ende",
+      "gloss": "end",
+      "why": "The end of the clause is where German parks its most important verb. That single fact reshapes how you listen."
+    },
+    {
+      "surface": "kein",
+      "gloss": "no, not a — negates nouns that have an indefinite article or none at all",
+      "why": "One clean rule covers most negation you will ever need. Fifteen mixed items a day for a week settles it."
+    },
+    {
+      "surface": "nach",
+      "gloss": "after; to (a place); according to — takes the dative",
+      "why": "Three common meanings, one case. High frequency, so worth over-learning early."
+    },
+    {
+      "surface": "naṣb",
+      "gloss": "Arabic: the accusative case, marked with fatḥa",
+      "why": "You already expect a noun to change when it becomes an object. German just moves the marking onto the article."
+    },
+    {
+      "surface": "ohne",
+      "gloss": "without — always takes the accusative",
+      "why": "One of the five fixed accusative prepositions. No thinking required once the chant is in."
+    },
+    {
+      "surface": "sein",
+      "gloss": "to be — also the Perfekt auxiliary for movement and change-of-state verbs; and \"his\" as a possessive",
+      "why": "The most irregular and most used verb in the language. Everything in your first month hangs off it."
+    },
+    {
+      "surface": "sich",
+      "gloss": "oneself — the reflexive pronoun in a verb’s dictionary form",
+      "why": "If the dictionary shows sich, the verb needs it. Store it as part of the verb, never separately."
+    },
+    {
+      "surface": "weil",
+      "gloss": "because — sends the conjugated verb right to the end of the clause",
+      "why": "Giving reasons is the whole game: why this Ausbildung, why Germany, why now. Expect weeks of clunkiness; push through."
+    },
+    {
+      "surface": "wenn",
+      "gloss": "if, when(ever) — for repeated or future events; verb goes to the end",
+      "why": "The als/wenn split is a trap examiners set on purpose. Learn the two as a pair, never separately."
+    },
+    {
+      "surface": "Zwei",
+      "gloss": "two",
+      "why": "Two full timed papers back to back is the point where exam day stops holding surprises."
+    },
+    {
+      "surface": "Akk",
+      "gloss": "short for Akkusativ — the direct-object case",
+      "why": "Drill sheets label columns this way; recognising it saves a second per item, and you will do thousands of items."
+    },
+    {
+      "surface": "als",
+      "gloss": "when (single past event); than (in comparisons); as (a role)",
+      "why": "Three jobs in three letters. The als-versus-wenn distinction is a standing exam question."
+    },
+    {
+      "surface": "ans",
+      "gloss": "contraction of an + das",
+      "why": "German contracts preposition and article constantly — recognising them is half of listening comprehension."
+    },
+    {
+      "surface": "auf",
+      "gloss": "on, onto — accusative for movement, dative for position",
+      "why": "One of the nine two-way prepositions. The case you pick is the whole meaning."
+    },
+    {
+      "surface": "bei",
+      "gloss": "at, near, at the home/premises of — takes the dative",
+      "why": "beim Arzt, bei der Arbeit. The everyday location word that pulls dative every time."
+    },
+    {
+      "surface": "da-",
+      "gloss": "the da-prefix that replaces a thing after a preposition: darauf, damit, davon",
+      "why": "Impossible to fake, and its absence marks you instantly as someone translating out of English."
+    },
+    {
+      "surface": "das",
+      "gloss": "the (neuter) — also \"that\" as a demonstrative or relative pronoun",
+      "why": "The third gender English does not have and Arabic does not either. Learn it welded to the noun."
+    },
+    {
+      "surface": "Dat",
+      "gloss": "short for Dativ — the indirect-object case",
+      "why": "The third column on every interleaved case sheet you will fill in from week 9 onward."
+    },
+    {
+      "surface": "der",
+      "gloss": "the (masculine nominative / feminine dative and genitive) — also a relative pronoun",
+      "why": "One form, several jobs. The context tells you which, and reading that context fast is a B1 skill."
+    },
+    {
+      "surface": "die",
+      "gloss": "the (feminine and plural) — also a relative pronoun",
+      "why": "The most frequent word in German. Every noun you learn must arrive with its own der/die/das attached."
+    },
+    {
+      "surface": "ein",
+      "gloss": "a, an (masculine and neuter)",
+      "why": "Where the article stops showing gender, the adjective ending has to take over. That handover is the A2 grind."
+    },
+    {
+      "surface": "mit",
+      "gloss": "with — always takes the dative",
+      "why": "The most common dative trigger in the language, so it is your best drill anchor for the case."
+    },
+    {
+      "surface": "neu",
+      "gloss": "new",
+      "why": "Also the marketing word on half the textbooks you will meet."
+    },
+    {
+      "surface": "Nom",
+      "gloss": "short for Nominativ — the subject case",
+      "why": "You will see it abbreviated on every drill sheet and case table you use."
+    },
+    {
+      "surface": "Ort",
+      "gloss": "place, location",
+      "why": "Answering \"wo?\" is the first job the dative does for you, and the most frequent one."
+    },
+    {
+      "surface": "und",
+      "gloss": "and",
+      "why": "Neutral joining, no word-order effect — unlike deshalb or weil, which both move the verb."
+    },
+    {
+      "surface": "war",
+      "gloss": "was — Präteritum of sein",
+      "why": "Past states without the clumsy Perfekt detour. One of five forms that instantly make you sound less translated."
+    },
+    {
+      "surface": "was",
+      "gloss": "what",
+      "why": "Also the informal relative pronoun after alles, etwas and nichts."
+    },
+    {
+      "surface": "wer",
+      "gloss": "who",
+      "why": "The question word that keeps a conversation moving when you missed the name."
+    },
+    {
+      "surface": "wie",
+      "gloss": "how; as, like",
+      "why": "Also does the \"as … as\" comparison, where English speakers keep reaching for als by mistake."
+    },
+    {
+      "surface": "an",
+      "gloss": "at, on (a vertical surface), to — two-way preposition",
+      "why": "an der Wand versus an die Wand: the case decides whether anything moved."
+    },
+    {
+      "surface": "im",
+      "gloss": "contraction of in + dem — \"in the\" (dative)",
+      "why": "You will hear the contraction far more often than the full form, so learn it as its own word."
+    },
+    {
+      "surface": "in",
+      "gloss": "in, into — accusative for movement, dative for position",
+      "why": "The first two-way preposition you meet, and the model for the other eight."
+    },
+    {
+      "surface": "ob",
+      "gloss": "whether, if — introduces an indirect question, verb at the end",
+      "why": "\"Können Sie mir sagen, ob…\" is the politest way to ask a stranger for information."
+    },
+    {
+      "surface": "um",
+      "gloss": "at (a time); around — takes the accusative; also part of um…zu",
+      "why": "um sieben Uhr, um die Ecke, and \"um … zu machen\". Three high-frequency jobs."
+    },
+    {
+      "surface": "wo",
+      "gloss": "where",
+      "why": "The question the dative answers. Pair them and both get easier."
+    },
+    {
+      "surface": "zu",
+      "gloss": "to; too — and the particle in front of an infinitive",
+      "why": "The zu-infinitive is the polite written register in one structure, and the base of um…zu."
+    }
+  ]
+}
